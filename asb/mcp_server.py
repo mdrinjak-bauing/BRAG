@@ -15,7 +15,7 @@ from asb import config, storage
 from asb.http_bridge import pdf_link
 from asb.search.query import search as run_search
 
-mcp = FastMCP("academic-second-brain")
+mcp = FastMCP("academic-rag-and-second-brain")
 
 PREVIEW_CHARS = 1000  # tables are never truncated, text gets a preview
 

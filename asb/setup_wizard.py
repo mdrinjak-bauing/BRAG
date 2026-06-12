@@ -27,7 +27,7 @@ def ask(prompt: str, default: str = "") -> str:
 
 
 def main():
-    print("\n=== Academic Second Brain — Setup (terminal) ===")
+    print("\n=== Academic RAG and Second Brain — Setup (terminal) ===")
     print(PROFILE_INFO)
     choice = ""
     while choice not in PROFILE_KEYS:
@@ -59,7 +59,7 @@ def main():
     if not claude_ok:
         import json
         print("  Add this entry manually to claude_desktop_config.json:")
-        print(json.dumps({"academic-second-brain": setup_core.MCP_ENTRY}, indent=2))
+        print(json.dumps({"academic-rag-and-second-brain": setup_core.MCP_ENTRY}, indent=2))
     setup_core.mark_setup_complete()
 
     print("\n=== Setup complete ===")

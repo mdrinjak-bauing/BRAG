@@ -7,7 +7,7 @@ to read and write it.
 
 1. Install [Obsidian](https://obsidian.md) (free).
 2. "Open folder as vault" → choose the `vault/` folder inside your
-   Academic Second Brain directory.
+   Academic RAG and Second Brain directory.
 3. Done. Literature notes appear in `notes/`, your saved passages in
    `passages/`, your own thinking goes into `wiki/`.
 

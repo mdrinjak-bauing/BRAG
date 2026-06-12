@@ -15,7 +15,7 @@ folder and run `./setup.command` (Mac) or `setup.bat` (Windows).
    a window close is not enough.
 2. Check the container is running: `docker ps` should list `asb-app`.
 3. Check the config file (see [OBSIDIAN.md](OBSIDIAN.md) for the path)
-   contains the `academic-second-brain` entry.
+   contains the `academic-rag-and-second-brain` entry.
 
 ## Indexing
 

@@ -6,7 +6,7 @@ from asb.watcher import run_watcher
 
 
 def main():
-    print(f"Academic Second Brain — profile: {config.PROFILE_NAME}, "
+    print(f"Academic RAG and Second Brain — profile: {config.PROFILE_NAME}, "
           f"collection: {config.COLLECTION_NAME}")
     # Seed an empty/custom vault with the template (CLAUDE.md, folders);
     # never overwrites existing files.

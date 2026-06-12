@@ -1,4 +1,4 @@
-# Academic Second Brain
+# Academic RAG and Second Brain
 
 **🇬🇧 [English](README.md) | 🇩🇪 Deutsch**
 

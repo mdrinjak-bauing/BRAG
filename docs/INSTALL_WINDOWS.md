@@ -22,10 +22,10 @@ Download from <https://claude.com/download> and install. Sign in once.
 1. Go to <https://aistudio.google.com/apikey> (Google account required).
 2. Click "Create API key" and copy it.
 
-## 4. Download and set up Academic Second Brain
+## 4. Download and set up Academic RAG and Second Brain
 
 1. On the GitHub page: green **Code** button → **Download ZIP**, unpack it
-   (e.g. to `C:\Users\<you>\academic-second-brain`).
+   (e.g. to `C:\Users\<you>\academic-rag-and-second-brain`).
 2. Double-click **`setup.bat`**.
    - If Windows SmartScreen warns: "More info" → "Run anyway".
 3. Answer the three questions (profile, API key, document language).

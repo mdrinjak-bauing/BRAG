@@ -17,7 +17,7 @@ Download from <https://claude.com/download> and install. Sign in once.
 1. Go to <https://aistudio.google.com/apikey> (Google account required).
 2. Click "Create API key" and copy it — you'll paste it into the setup.
 
-## 4. Download and set up Academic Second Brain
+## 4. Download and set up Academic RAG and Second Brain
 
 1. On the GitHub page, click the green **Code** button → **Download ZIP**, unpack it (e.g. into your home folder — see note below about iCloud).
 2. Double-click **`setup.command`**.
