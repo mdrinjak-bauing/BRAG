@@ -1,0 +1,37 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.17.1
+    container_name: asb-qdrant
+    restart: unless-stopped
+    volumes:
+      # Named volume: immune to cloud-sync corruption (iCloud/OneDrive),
+      # Spotlight/Time Machine races, and wrong-path mounts.
+      - qdrant_data:/qdrant/storage
+    # Qdrant is only reachable from the app container, not from the host —
+    # uncomment to expose the dashboard at http://localhost:6333/dashboard
+    # ports:
+    #   - "6333:6333"
+
+  app:
+    build: .
+    image: academic-second-brain:latest
+    container_name: asb-app
+    restart: unless-stopped
+    depends_on:
+      - qdrant
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+    volumes:
+      - ${VAULT_PATH:-./vault}:/vault
+      - models_cache:/models
+    ports:
+      - "8765:8765"   # HTTP bridge: PDF links in search results
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # reach LM Studio/Ollama on the host (Linux)
+
+volumes:
+  qdrant_data:
+  models_cache:

@@ -1,0 +1,9 @@
+# Academic Second Brain — pinned versions (proven combination)
+docling==2.91.0
+qdrant-client==1.17.1
+google-genai==1.73.1
+fastembed==0.8.0
+sentence-transformers==5.4.1
+mcp==1.27.0
+python-dotenv==1.2.2
+watchdog==6.0.0
