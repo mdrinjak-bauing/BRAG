@@ -163,18 +163,54 @@ Decision guide and model recommendations: [docs/PROFILES.md](docs/PROFILES.md).
 models are mathematically incompatible — the system handles this safely, but
 the work runs again).
 
-## A typical day with it
+## Day-to-day knowledge work
 
-1. A colleague sends you a paper → you drop it into `sources/papers/`.
-2. Twenty minutes later you ask Claude: *"Does the new paper contradict what
-   Müller 2021 says about rework cost drivers? Compare them."*
-3. Claude searches both, answers with page-linked citations; you click one
-   and the PDF opens at the page.
-4. *"Save the second quote for my chapter on quality costs."* → lands in
-   `passages/quality_costs.md`.
-5. You jot your own take in `wiki/Rework_Cost_Drivers.md` — Obsidian, or ask
-   Claude to draft it via the notebook connection. It will never show up as
-   a "search hit" later. That's the point.
+The principle behind everything: **chats forget — your vault doesn't.**
+A conversation with Claude is gone when the window closes. So every
+conversation that produces something worth keeping deposits it *into the
+vault* — as a saved passage, a literature note, a concept page — and every
+future conversation can pick it up from there. Knowledge accumulates in
+your files, which you own, version and back up; the chat is just the
+workbench.
+
+**When new literature arrives** — a paper from a colleague, a book chapter,
+an industry report:
+
+1. Drop it into `sources/` → indexed within minutes.
+2. *"What does this add to what I already have on rework costs? Does it
+   contradict Müller 2021? Compare them."* — answers come with page-linked
+   citations; one click opens the PDF at the right spot.
+3. Reuse it anywhere: *"Draft three exam questions from chapter 4, with
+   page references"* (teaching), *"Summarize the method for my related-work
+   section"* (writing), *"Is this worth a deep read for my project?"* (triage).
+
+**When you develop an idea** — the loop that makes it a *second brain*:
+
+1. Brainstorm grounded in your corpus: *"What do my sources say about
+   maturity models? Where do they disagree? What's missing?"*
+2. Keep the result: *"Write this up as a concept note in `wiki/`, with the
+   open questions at the end."* (via the notebook connection — or paste it
+   into Obsidian yourself)
+3. Days later, in a **fresh chat**: *"Open my concept note on maturity
+   models — let's continue with open question 2."* The new conversation
+   starts exactly where the old one ended.
+
+**When you write:**
+
+- While reading, collect quotable passages per topic: *"Save this quote for
+  the quality-costs chapter."* → `passages/quality_costs.md`
+- When drafting: *"What have I collected on quality costs? Draft the
+  paragraph from those passages, keep the citations."*
+
+### Keep Claude's instructions growing
+
+The third pillar next to library and notebook: **`vault/CLAUDE.md`** (and
+the project instructions in Claude Desktop). It tells Claude who you are,
+how to search your corpus, and how to cite — and it should grow with you.
+Rule of thumb: whenever you correct Claude twice about the same thing, that
+correction belongs in CLAUDE.md, not in the next chat. A well-maintained
+instruction file is what turns a generic assistant into *your* assistant —
+guide with examples: [docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md).
 
 ## Documentation
 

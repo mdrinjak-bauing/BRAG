@@ -166,19 +166,57 @@ Entscheidungshilfe und Modell-Empfehlungen: [docs/PROFILES.md](docs/PROFILES.md)
 (Embedding-Modelle sind mathematisch inkompatibel — das System fängt das
 sicher ab, aber die Arbeit läuft erneut).
 
-## Ein typischer Tag damit
+## Tägliche Wissensarbeit damit
 
-1. Eine Kollegin schickt dir ein Paper → du legst es in `sources/Paper/`.
-2. Zwanzig Minuten später fragst du Claude: *„Widerspricht das neue Paper
-   dem, was Müller 2021 zu Nacharbeitskosten sagt? Vergleiche."*
-3. Claude durchsucht beide, antwortet mit seitenverlinkten Belegen; du
-   klickst — das PDF öffnet sich an der Stelle.
-4. *„Speichere das zweite Zitat für mein Kapitel Qualitätskosten."* → landet
-   in `passages/qualitaetskosten.md`.
-5. Deine eigene Einordnung schreibst du in `wiki/Nacharbeitskosten.md` —
-   in Obsidian, oder du lässt Claude über den Notizbuch-Anschluss einen
-   Entwurf anlegen. Als „Suchtreffer" taucht sie später nie auf. Genau das
-   ist der Zweck.
+Das Prinzip hinter allem: **Chats vergessen — dein Vault nicht.**
+Ein Gespräch mit Claude ist weg, sobald das Fenster zugeht. Deshalb legt
+jedes Gespräch, das etwas Bleibendes erzeugt, sein Ergebnis *im Vault* ab —
+als gespeicherte Passage, Literaturnotiz oder Konzeptseite — und jedes
+künftige Gespräch kann genau dort weitermachen. Wissen akkumuliert in
+deinen Dateien, die dir gehören und die du sichern kannst; der Chat ist nur
+die Werkbank.
+
+**Wenn neue Literatur eintrifft** — ein Paper von einer Kollegin, ein
+Buchkapitel, ein Branchenbericht:
+
+1. In `sources/` ablegen → in Minuten indexiert.
+2. *„Was ergänzt das zu dem, was ich schon zu Nacharbeitskosten habe?
+   Widerspricht es Müller 2021? Vergleiche."* — Antworten kommen mit
+   seitenverlinkten Belegen; ein Klick öffnet das PDF an der Stelle.
+3. Überall wiederverwenden: *„Entwirf drei Klausurfragen aus Kapitel 4,
+   mit Seitenangaben"* (Lehre), *„Fasse die Methodik für meinen
+   Stand-der-Forschung-Abschnitt zusammen"* (Schreiben), *„Lohnt sich das
+   gründliche Lesen für mein Projekt?"* (Sichtung).
+
+**Wenn du eine Idee entwickelst** — die Schleife, die daraus ein *zweites
+Gehirn* macht:
+
+1. Brainstorming auf Basis deines Korpus: *„Was sagen meine Quellen zu
+   Reifegradmodellen? Wo widersprechen sie sich? Was fehlt?"*
+2. Ergebnis festhalten: *„Schreib das als Konzeptnotiz nach `wiki/`, mit
+   den offenen Fragen am Ende."* (über den Notizbuch-Anschluss — oder du
+   überträgst es selbst in Obsidian)
+3. Tage später, in einem **neuen Chat**: *„Öffne meine Konzeptnotiz zu
+   Reifegradmodellen — lass uns mit offener Frage 2 weitermachen."* Das
+   neue Gespräch beginnt exakt dort, wo das alte endete.
+
+**Wenn du schreibst:**
+
+- Beim Lesen zitierfähige Passagen je Thema sammeln: *„Speichere dieses
+  Zitat fürs Kapitel Qualitätskosten."* → `passages/qualitaetskosten.md`
+- Beim Entwerfen: *„Was habe ich zu Qualitätskosten gesammelt? Entwirf den
+  Absatz aus diesen Passagen, Belege beibehalten."*
+
+### Claudes Instruktionen mitwachsen lassen
+
+Die dritte Säule neben Bibliothek und Notizbuch: **`vault/CLAUDE.md`** (und
+die Projekt-Anweisungen in Claude Desktop). Sie sagt Claude, wer du bist,
+wie es deinen Korpus durchsuchen und wie es zitieren soll — und sie sollte
+mit dir wachsen. Faustregel: Wenn du Claude zweimal dieselbe Sache
+korrigierst, gehört die Korrektur in die CLAUDE.md, nicht in den nächsten
+Chat. Eine gepflegte Instruktionsdatei macht aus einem generischen
+Assistenten *deinen* Assistenten — Anleitung mit Beispielen:
+[docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md).
 
 ## Dokumentation
 
