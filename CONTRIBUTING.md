@@ -14,10 +14,10 @@ what you did, what happened, and the relevant lines from
 - Keep the target audience in mind: **non-developers**. Every error a user can
   hit needs a plain-language message that says what to do next.
 - Python code and comments in English. No hardcoded paths, no user-specific
-  values — everything configurable via `.env` (see `studiolo/config.py`).
+  values — everything configurable via `.env` (see `asb/config.py`).
 - Don't store zero vectors, don't swallow ingest errors silently — failed
   chunks go to the failed-chunks log.
-- Before a PR: `python -m compileall studiolo` must pass, and
+- Before a PR: `python -m compileall asb` must pass, and
   `docker compose build` must succeed.
 
 ## Scope

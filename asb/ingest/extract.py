@@ -9,8 +9,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from studiolo import config
-from studiolo.ingest.chunking import split_long_table, split_text
+from asb import config
+from asb.ingest.chunking import split_long_table, split_text
 
 
 @dataclass

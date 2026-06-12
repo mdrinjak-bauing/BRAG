@@ -15,12 +15,12 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from studiolo import config, storage
-from studiolo.embeddings import get_embedder
-from studiolo.embeddings.sparse import embed_sparse_documents
-from studiolo.ingest.contextualize import contextualize
-from studiolo.ingest.extract import extract
-from studiolo.ingest.notes import write_note
+from asb import config, storage
+from asb.embeddings import get_embedder
+from asb.embeddings.sparse import embed_sparse_documents
+from asb.ingest.contextualize import contextualize
+from asb.ingest.extract import extract
+from asb.ingest.notes import write_note
 
 UPSERT_BATCH = 100
 
@@ -128,7 +128,7 @@ def ingest(path: Path) -> bool:
 
 def remove_source(source_file: str) -> int:
     """Remove a deleted document from the index and clean up its note."""
-    from studiolo.ingest.notes import delete_note
+    from asb.ingest.notes import delete_note
     client = storage.get_client()
     try:
         n = storage.delete_chunks_by_source(client, source_file)

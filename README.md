@@ -1,4 +1,4 @@
-# Studiolo
+# Academic Second Brain
 
 **🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**
 
@@ -13,11 +13,6 @@ the original PDF.
 
 Built for researchers, professors and PhD students — **no programming
 required**. Everything runs in Docker.
-
-> **Why “Studiolo”?** The studiolo was the Renaissance scholar's private
-> study — the one room where the books and the scholar's own writing lived
-> side by side. That is exactly what this is: your library and your notebook
-> in one place, and Claude holds a key.
 
 ---
 

@@ -14,9 +14,9 @@ Design notes ported from the originating production system:
 
 import re
 
-from studiolo import config
-from studiolo.ingest.extract import Chunk
-from studiolo.llm_backends import get_llm
+from asb import config
+from asb.ingest.extract import Chunk
+from asb.llm_backends import get_llm
 
 CONTEXT_TAG = re.compile(r'<context id="(\d+)">(.*?)</context>', re.DOTALL)
 

@@ -1,10 +1,10 @@
 #!/bin/bash
-# Studiolo — one-click setup for macOS.
+# Academic Second Brain — one-click setup for macOS.
 # Double-click this file. It starts the app and opens the setup assistant
 # in your browser; this window finishes the restart afterwards.
 cd "$(dirname "$0")"
 
-echo "=== Studiolo ==="
+echo "=== Academic Second Brain ==="
 echo
 
 if ! command -v docker >/dev/null 2>&1; then

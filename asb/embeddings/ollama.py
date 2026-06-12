@@ -3,8 +3,8 @@
 import json
 import urllib.request
 
-from studiolo import config
-from studiolo.embeddings.base import EmbeddingBackend
+from asb import config
+from asb.embeddings.base import EmbeddingBackend
 
 
 class OllamaEmbedder(EmbeddingBackend):

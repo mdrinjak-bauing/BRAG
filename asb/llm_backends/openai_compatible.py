@@ -12,8 +12,8 @@ import time
 import urllib.error
 import urllib.request
 
-from studiolo import config
-from studiolo.llm_backends.base import LLMBackend
+from asb import config
+from asb.llm_backends.base import LLMBackend
 
 THINK_TAG = re.compile(r"<think>.*?</think>", re.DOTALL)
 TIMEOUT_SECONDS = 900  # generous: local models on weak hardware are slow

@@ -8,9 +8,9 @@ hard score floor cuts legitimate top hits on factual queries, so scores are
 reported transparently instead of filtered.
 """
 
-from studiolo import config
-from studiolo.embeddings import get_embedder
-from studiolo.embeddings.sparse import embed_sparse_query
+from asb import config
+from asb.embeddings import get_embedder
+from asb.embeddings.sparse import embed_sparse_query
 
 _reranker = None
 
@@ -53,7 +53,7 @@ def search(query: str, top_k: int = None, reranking: bool = None,
            max_chunks_per_source: int = None, **filters) -> list[dict]:
     """Run hybrid search, return ranked hits as plain dicts."""
     from qdrant_client.models import FusionQuery, Prefetch
-    from studiolo import storage
+    from asb import storage
 
     top_k = top_k or config.DEFAULT_TOP_K
     if reranking is None:

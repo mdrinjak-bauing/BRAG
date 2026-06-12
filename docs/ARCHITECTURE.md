@@ -6,14 +6,14 @@ folder, Claude Desktop as the user interface.
 ```
  HOST                                   DOCKER
 ┌──────────────────┐                   ┌─────────────────────────────────┐
-│ Claude Desktop   │── docker exec ───▶│ studiolo-app                         │
+│ Claude Desktop   │── docker exec ───▶│ asb-app                         │
 │  (MCP, stdio)    │   (mcp_server)    │  ├─ watcher (polling)           │
 │                  │                   │  ├─ ingest pipeline             │
 │ Browser ◀────────┼── localhost:8765 ─┤  ├─ http bridge (PDF links)    │
 │  (PDF at page N) │                   │  └─ search (hybrid + rerank)   │
 │                  │                   │            │                    │
 │ vault/  ◀────────┼─── bind mount ───▶│            ▼                    │
-│  sources/ notes/ │                   │ studiolo-qdrant (vector DB,          │
+│  sources/ notes/ │                   │ asb-qdrant (vector DB,          │
 │  passages/ wiki/ │                   │  named volume — no sync risk)   │
 │                  │                   └─────────────────────────────────┘
 │ LM Studio/Ollama ◀── host.docker.internal (profiles B/C only)
@@ -22,7 +22,7 @@ folder, Claude Desktop as the user interface.
 
 ## Ingest pipeline (per document)
 
-1. **Extract** (`studiolo/ingest/extract.py`) — Docling parses layout: chapters,
+1. **Extract** (`asb/ingest/extract.py`) — Docling parses layout: chapters,
    sections, tables, figure captions, page numbers. Table mode is pinned to
    ACCURATE so library updates cannot silently degrade quality.
 2. **Chunk** (`chunking.py`) — paragraph-level sliding window (2000 chars,

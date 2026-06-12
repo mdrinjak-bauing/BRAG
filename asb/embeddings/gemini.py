@@ -1,8 +1,8 @@
 """Gemini embedding backend (Profile A)."""
 
-from studiolo import config
-from studiolo.embeddings.base import EmbeddingBackend
-from studiolo.llm_backends.retry import call_with_retry
+from asb import config
+from asb.embeddings.base import EmbeddingBackend
+from asb.llm_backends.retry import call_with_retry
 
 
 class GeminiEmbedder(EmbeddingBackend):

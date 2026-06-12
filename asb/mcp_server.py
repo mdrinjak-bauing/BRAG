@@ -1,6 +1,6 @@
 """MCP server for Claude Desktop (stdio transport).
 
-Claude Desktop starts this via `docker exec -i studiolo-app python -m studiolo.mcp_server`
+Claude Desktop starts this via `docker exec -i asb-app python -m asb.mcp_server`
 inside the running container — the setup wizard writes that config entry.
 
 Tools: search, list_sources, inspect_chunks, save_passage, list_passages.
@@ -11,11 +11,11 @@ from datetime import date
 
 from mcp.server.fastmcp import FastMCP
 
-from studiolo import config, storage
-from studiolo.http_bridge import pdf_link
-from studiolo.search.query import search as run_search
+from asb import config, storage
+from asb.http_bridge import pdf_link
+from asb.search.query import search as run_search
 
-mcp = FastMCP("studiolo")
+mcp = FastMCP("academic-second-brain")
 
 PREVIEW_CHARS = 1000  # tables are never truncated, text gets a preview
 

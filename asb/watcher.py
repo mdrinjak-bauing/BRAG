@@ -14,8 +14,8 @@ from pathlib import Path
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver
 
-from studiolo import config, storage
-from studiolo.ingest.pipeline import ingest, remove_source
+from asb import config, storage
+from asb.ingest.pipeline import ingest, remove_source
 
 _processing: set[str] = set()
 

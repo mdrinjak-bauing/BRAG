@@ -1,8 +1,8 @@
 """Gemini LLM backend (Profile A)."""
 
-from studiolo import config
-from studiolo.llm_backends.base import LLMBackend
-from studiolo.llm_backends.retry import call_with_retry
+from asb import config
+from asb.llm_backends.base import LLMBackend
+from asb.llm_backends.retry import call_with_retry
 
 
 class GeminiLLM(LLMBackend):
