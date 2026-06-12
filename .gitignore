@@ -1,5 +1,7 @@
 # Secrets & user config — never commit
 .env
+.setup_complete
+.claude-config-unset/
 
 # User data
 vault/

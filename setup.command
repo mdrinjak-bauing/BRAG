@@ -1,6 +1,7 @@
 #!/bin/bash
 # Academic Second Brain — one-click setup for macOS.
-# Double-click this file (or run it in Terminal).
+# Double-click this file. It starts the app and opens the setup assistant
+# in your browser; this window finishes the restart afterwards.
 cd "$(dirname "$0")"
 
 echo "=== Academic Second Brain ==="
@@ -22,22 +23,37 @@ if ! docker info >/dev/null 2>&1; then
   exit 1
 fi
 
+# Remember where Claude Desktop keeps its config (used by the wizard)
+CLAUDE_DIR="$HOME/Library/Application Support/Claude"
+mkdir -p "$CLAUDE_DIR"
+if [ ! -f .env ]; then
+  echo "CLAUDE_CONFIG_DIR=$CLAUDE_DIR" > .env
+elif ! grep -q "^CLAUDE_CONFIG_DIR=" .env; then
+  echo "CLAUDE_CONFIG_DIR=$CLAUDE_DIR" >> .env
+fi
+export CLAUDE_CONFIG_DIR="$CLAUDE_DIR"
+
 echo "Building the application (first run downloads ~3 GB, please be patient)..."
 docker compose build || { echo "Build failed — see message above."; read -r -p "Press Enter to close..."; exit 1; }
 
-CLAUDE_DIR="$HOME/Library/Application Support/Claude"
-mkdir -p "$CLAUDE_DIR"
+echo "Starting..."
+rm -f .setup_complete
+docker compose up -d || { echo "Start failed — see message above."; read -r -p "Press Enter to close..."; exit 1; }
 
 echo
-docker compose run --rm \
-  -v "$PWD":/workspace \
-  -v "$CLAUDE_DIR":/claude-config \
-  app python -m asb.setup_wizard || { read -r -p "Press Enter to close..."; exit 1; }
+echo "Opening the setup assistant in your browser..."
+sleep 3
+open "http://localhost:8765/setup"
 
 echo
-echo "Starting the application..."
-docker compose up -d
+echo "Finish the setup in your browser — this window waits for you."
+while [ ! -f .setup_complete ]; do
+  sleep 2
+done
+
+echo "Applying your settings..."
+docker compose up -d --force-recreate app >/dev/null 2>&1
 
 echo
-echo "All running. Quit Claude Desktop completely (Cmd+Q) and reopen it."
+echo "All done! Quit Claude Desktop completely (Cmd+Q) and reopen it."
 read -r -p "Press Enter to close..."

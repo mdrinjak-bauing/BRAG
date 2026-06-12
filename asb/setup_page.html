@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Academic Second Brain — Setup</title>
+<style>
+  :root { --accent:#4a6fa5; --ok:#2e7d32; --warn:#c62828; --muted:#667; }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,Segoe UI,system-ui,sans-serif; margin:0;
+         background:#f4f6f9; color:#1c2733; line-height:1.55; }
+  .wrap { max-width:680px; margin:0 auto; padding:32px 20px 60px; }
+  h1 { font-size:1.5rem; } h2 { font-size:1.15rem; margin-top:0; }
+  h3 { font-size:1rem; }
+  .card { background:#fff; border-radius:12px; padding:28px;
+          box-shadow:0 1px 4px rgba(20,40,70,.08); margin-bottom:16px; }
+  .step { display:none; } .step.active { display:block; }
+  button { font-size:1rem; padding:10px 22px; border-radius:8px; border:1px solid #cdd6e0;
+           background:#fff; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.big { display:block; width:100%; text-align:left; padding:16px; margin:10px 0; }
+  button.big small { display:block; color:var(--muted); font-weight:normal; }
+  button.primary small { color:#dce6f5; }
+  input, select { font-size:1rem; padding:10px; border-radius:8px;
+                  border:1px solid #cdd6e0; width:100%; }
+  .row { display:flex; gap:10px; margin-top:18px; align-items:center; }
+  .row .spacer { flex:1; }
+  .hint { color:var(--muted); font-size:.92rem; }
+  .ok { color:var(--ok); } .warn { color:var(--warn); }
+  .pill { display:inline-block; background:#e8eef6; color:var(--accent);
+          border-radius:99px; padding:2px 12px; font-size:.85rem; margin-bottom:8px; }
+  .pill.ok { background:#e6f2e7; color:var(--ok); }
+  .two { display:flex; gap:14px; flex-wrap:wrap; }
+  .two > div { flex:1; min-width:240px; background:#f7f9fc; border-radius:10px; padding:16px; }
+  details { margin-top:14px; } summary { cursor:pointer; color:var(--accent); }
+  .check { margin:6px 0; }
+  a { color:var(--accent); }
+  ol li { margin:10px 0; }
+  code, .cmd { background:#eef2f7; border-radius:6px; padding:2px 7px; font-size:.92rem; }
+  .cmd { display:flex; justify-content:space-between; align-items:center;
+         padding:9px 12px; margin:6px 0; font-family:ui-monospace,Menlo,Consolas,monospace; }
+  .cmd button { font-size:.8rem; padding:4px 10px; }
+  table { border-collapse:collapse; width:100%; font-size:.92rem; }
+  td, th { text-align:left; padding:6px 10px; border-bottom:1px solid #eef1f5; }
+  .linkish { background:none; border:none; color:var(--accent);
+             text-decoration:underline; padding:0; font-size:.9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📚 Academic Second Brain</h1>
+
+  <!-- STEP 0: welcome -->
+  <div class="card step active" id="s0">
+    <span class="pill">Setup · 3–10 minutes</span>
+    <h2>Your personal research knowledge base</h2>
+    <p>Drop PDFs into a folder — ask questions about your literature in
+       Claude, with page-precise citations and one-click access to the
+       original document.</p>
+    <p class="hint">This assistant asks a few plain questions and configures
+       everything, including Claude Desktop. Nothing is sent anywhere except
+       what you explicitly choose.</p>
+    <div class="row"><span class="spacer"></span>
+      <button class="primary" onclick="show('s1')">Start</button></div>
+  </div>
+
+  <!-- STEP 1: privacy question -->
+  <div class="card step" id="s1">
+    <span class="pill">Step 1 — choose where AI runs</span>
+    <h2>Do your documents contain confidential data that must not leave your computer?</h2>
+    <p class="hint">To make documents searchable, their text is analyzed by an
+       AI — either by Google's free cloud service (fast, works on any
+       computer) or by an AI running on your own machine (private, needs a
+       capable computer and ~10 extra minutes of setup).</p>
+    <button class="big primary" onclick="setProfile('cloud')">
+      No, cloud is fine <small>→ Google Gemini, free, recommended — works on any computer</small>
+    </button>
+    <button class="big" onclick="show('s1b')">
+      Yes, everything must stay on my computer <small>→ local AI (one more question)</small>
+    </button>
+  </div>
+
+  <!-- STEP 1b: hardware question -->
+  <div class="card step" id="s1b">
+    <span class="pill">Step 1 — choose where AI runs</span>
+    <h2>Is your computer powerful?</h2>
+    <p class="hint">Local AI needs muscle. "Powerful" here means: an Apple
+       Mac with an M-series chip and at least 32 GB of memory.
+       (Apple menu → About This Mac shows both.)</p>
+    <button class="big" onclick="setProfile('hybrid')">
+      Yes — a strong Mac (M-series, 32 GB+)
+      <small>→ best local quality, via the free LM Studio app</small>
+    </button>
+    <button class="big" onclick="setProfile('local')">
+      No / Windows / older machine
+      <small>→ works too, a bit slower, via the free Ollama app</small>
+    </button>
+    <div class="row"><button onclick="show('s1')">← Back</button></div>
+  </div>
+
+  <!-- STEP 2: API key (cloud) -->
+  <div class="card step" id="s2">
+    <span class="pill">Step 2 — your free Google AI key</span>
+    <h2>Get and check your key</h2>
+    <ol>
+      <li>Open <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> (Google account needed)</li>
+      <li>Click <b>“Create API key”</b></li>
+      <li>Copy the key and paste it here:</li>
+    </ol>
+    <input id="apikey" placeholder="AIza..." autocomplete="off">
+    <p id="keymsg" class="hint"></p>
+    <div class="row">
+      <button onclick="show('s1')">← Back</button><span class="spacer"></span>
+      <button class="primary" id="keybtn" onclick="checkKey()">Check key & continue</button>
+    </div>
+  </div>
+
+  <!-- STEP 2h: LM Studio guide (hybrid) -->
+  <div class="card step" id="s2h">
+    <span class="pill">Step 2 — set up LM Studio</span>
+    <h2>Install LM Studio and load a model</h2>
+    <ol>
+      <li><b>Install LM Studio</b> (free): <a href="https://lmstudio.ai" target="_blank">lmstudio.ai</a> → Download → open it once.</li>
+      <li><b>Download a model</b> — in LM Studio, click the 🔍 search icon and
+        download the one matching your memory:
+        <table>
+          <tr><th>Your Mac</th><th>Recommended model</th></tr>
+          <tr><td>32 GB memory</td><td><code>qwen2.5-14b-instruct</code></td></tr>
+          <tr><td>64 GB or more</td><td><code>gemma-3-27b-it</code></td></tr>
+        </table>
+      </li>
+      <li><b>Start the server:</b> in LM Studio open the <b>Developer</b> tab
+          (terminal icon) and switch the server <b>ON</b> (it shows
+          <code>localhost:1234</code>). Load the downloaded model.</li>
+    </ol>
+    <div class="row">
+      <button class="primary" onclick="checkLocal('hybrid')">Check connection</button>
+      <span id="localmsg-hybrid" class="hint"></span>
+    </div>
+    <div id="modelpick-hybrid" style="display:none; margin-top:14px;">
+      <p><b>Found these models — which one should do the document analysis?</b></p>
+      <select id="modelsel-hybrid"></select>
+    </div>
+    <div class="row">
+      <button onclick="show('s1b')">← Back</button><span class="spacer"></span>
+      <button class="linkish" onclick="show('s3')">skip check, continue anyway</button>
+      <button class="primary" id="cont-hybrid" disabled onclick="pickModel('hybrid')">Continue</button>
+    </div>
+  </div>
+
+  <!-- STEP 2l: Ollama guide (local) -->
+  <div class="card step" id="s2l">
+    <span class="pill">Step 2 — set up Ollama</span>
+    <h2>Install Ollama and download two models</h2>
+    <ol>
+      <li><b>Install Ollama</b> (free): <a href="https://ollama.com" target="_blank">ollama.com</a> → Download → install. It runs quietly in the background (menu bar / tray icon).</li>
+      <li><b>Download the models</b> — open the Terminal (Mac: Spotlight →
+          “Terminal”; Windows: Start → “cmd”) and run these two lines, one
+          after the other (each downloads a few GB):
+        <div class="cmd"><span>ollama pull nomic-embed-text</span><button onclick="copyCmd(this)">copy</button></div>
+        <div class="cmd"><span>ollama pull llama3.1</span><button onclick="copyCmd(this)">copy</button></div>
+        <p class="hint">16 GB memory → stay with <code>llama3.1</code>.
+           Stronger machine? <code>ollama pull qwen2.5:14b</code> gives better
+           analysis quality.</p>
+      </li>
+    </ol>
+    <div class="row">
+      <button class="primary" onclick="checkLocal('local')">Check connection</button>
+      <span id="localmsg-local" class="hint"></span>
+    </div>
+    <div id="modelpick-local" style="display:none; margin-top:14px;">
+      <p><b>Found these models — which one should do the document analysis?</b></p>
+      <select id="modelsel-local"></select>
+    </div>
+    <div class="row">
+      <button onclick="show('s1b')">← Back</button><span class="spacer"></span>
+      <button class="linkish" onclick="show('s3')">skip check, continue anyway</button>
+      <button class="primary" id="cont-local" disabled onclick="pickModel('local')">Continue</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: language -->
+  <div class="card step" id="s3">
+    <span class="pill">Step 3 — your documents</span>
+    <h2>Which language are most of your documents in?</h2>
+    <p class="hint">This tunes the keyword search and the language of
+       generated notes. Mixed corpora: pick the majority language.</p>
+    <select id="language">
+      <option value="english">English</option>
+      <option value="german">German / Deutsch</option>
+      <option value="french">French / Français</option>
+      <option value="spanish">Spanish / Español</option>
+      <option value="italian">Italian / Italiano</option>
+      <option value="dutch">Dutch / Nederlands</option>
+      <option value="portuguese">Portuguese / Português</option>
+    </select>
+    <details>
+      <summary>Advanced options</summary>
+      <p><b>Knowledge folder.</b> By default your documents live in the
+         <code>vault</code> folder next to this program. To use a different
+         folder on your computer, enter its full path:</p>
+      <input id="vaultpath" placeholder="default: ./vault">
+      <p id="cloudadv"><b>AI quality during indexing</b> (Cloud profile):</p>
+      <select id="llmmodel">
+        <option value="">Bulk-safe (default) — no daily request limit</option>
+        <option value="gemini-2.5-flash">Higher quality — capped at 10,000 requests/day</option>
+      </select>
+      <p class="hint">Start bulk-safe for your initial corpus; switch to
+         higher quality later in the .env file.</p>
+    </details>
+    <div class="row">
+      <button onclick="back2()">← Back</button><span class="spacer"></span>
+      <button class="primary" onclick="apply()">Finish setup</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: applying -->
+  <div class="card step" id="s4">
+    <h2>Setting things up…</h2>
+    <div id="applylog"></div>
+  </div>
+
+  <!-- STEP 5: finished -->
+  <div class="card step" id="s5">
+    <span class="pill ok">✓ Setup complete</span>
+    <h2>How your second brain works</h2>
+    <div class="two">
+      <div>
+        <h3>📚 Your library</h3>
+        <p><code>vault/sources/</code></p>
+        <p>Drop documents here — they are indexed automatically. Claude
+           searches them and cites with page numbers. You never edit these;
+           you just collect.</p>
+      </div>
+      <div>
+        <h3>📓 Your notebook</h3>
+        <p><code>vault/wiki/</code> &amp; <code>notes/</code></p>
+        <p>Your own thinking. Deliberately <b>not</b> in the search index —
+           otherwise you'd one day cite your own notes as “evidence” without
+           noticing. Claude can still read &amp; write it via the optional
+           <a href="https://github.com/jacksteamdev/obsidian-mcp-tools" target="_blank">Obsidian connection</a>.</p>
+      </div>
+    </div>
+    <h3>Next steps</h3>
+    <ol>
+      <li><b>Quit Claude Desktop completely</b> (Cmd+Q / tray icon → Quit) and reopen it.</li>
+      <li>Drop a PDF into <code>vault/sources/</code>.</li>
+      <li>Ask Claude: <i>“What documents are in my knowledge base?”</i></li>
+    </ol>
+    <p class="hint" id="claudenote"></p>
+    <p class="hint">You can close this window. The setup window in the
+       Terminal finishes the restart automatically.</p>
+  </div>
+</div>
+
+<script>
+const state = { profile:'cloud', apikey:'', localModel:'' };
+
+function show(id){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function setProfile(p){
+  state.profile = p;
+  show(p==='cloud' ? 's2' : (p==='hybrid' ? 's2h' : 's2l'));
+}
+function back2(){
+  show(state.profile==='cloud' ? 's2' : (state.profile==='hybrid' ? 's2h' : 's2l'));
+}
+function copyCmd(btn){
+  navigator.clipboard.writeText(btn.parentElement.firstElementChild.textContent);
+  btn.textContent='copied ✓'; setTimeout(()=>btn.textContent='copy', 1500);
+}
+
+async function checkKey(){
+  const key = document.getElementById('apikey').value.trim();
+  const msg = document.getElementById('keymsg');
+  const btn = document.getElementById('keybtn');
+  if(!key){ msg.textContent='Please paste your key first.'; msg.className='warn'; return; }
+  btn.disabled = true; msg.textContent='Checking…'; msg.className='hint';
+  try{
+    const r = await fetch('/api/validate-key', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({key})});
+    const d = await r.json();
+    if(d.ok){ state.apikey = key; msg.textContent='✓ '+d.message; msg.className='ok';
+              setTimeout(()=>show('s3'), 600); }
+    else { msg.textContent=d.message; msg.className='warn'; }
+  }catch(e){ msg.textContent='Could not reach the setup service — is it still running?'; msg.className='warn'; }
+  btn.disabled = false;
+}
+
+async function checkLocal(profile){
+  const msg = document.getElementById('localmsg-'+profile);
+  msg.textContent='Checking…'; msg.className='hint';
+  try{
+    const r = await fetch('/api/check-local', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({profile})});
+    const d = await r.json();
+    msg.textContent=(d.ok?'✓ ':'')+d.message; msg.className=d.ok?'ok':'warn';
+    if(d.models && d.models.length){
+      const sel = document.getElementById('modelsel-'+profile);
+      sel.innerHTML = d.models.map(m=>`<option>${m}</option>`).join('');
+      document.getElementById('modelpick-'+profile).style.display='block';
+    }
+    document.getElementById('cont-'+profile).disabled = !d.ok;
+  }catch(e){
+    msg.textContent='Could not reach the setup service — is it still running?';
+    msg.className='warn';
+  }
+}
+function pickModel(profile){
+  const sel = document.getElementById('modelsel-'+profile);
+  state.localModel = sel && sel.value ? sel.value : '';
+  show('s3');
+}
+
+async function apply(){
+  show('s4');
+  const log = document.getElementById('applylog');
+  const add = (t, cls) => { const p=document.createElement('p');
+    p.className='check '+(cls||''); p.textContent=t; log.appendChild(p); };
+  const llm = state.profile==='cloud'
+    ? document.getElementById('llmmodel').value
+    : state.localModel;
+  try{
+    const r = await fetch('/api/setup', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        profile: state.profile,
+        api_key: state.apikey,
+        language: document.getElementById('language').value,
+        vault_path: document.getElementById('vaultpath').value.trim(),
+        llm_model: llm,
+      })});
+    const d = await r.json();
+    (d.steps||[]).forEach(s=>add((s.ok?'✓ ':'⚠ ')+s.message, s.ok?'ok':'warn'));
+    if(d.claude_manual_snippet){
+      document.getElementById('claudenote').textContent =
+        'Note: Claude Desktop could not be configured automatically — see the FAQ for the manual one-line entry.';
+    }
+    setTimeout(()=>show('s5'), 900);
+  }catch(e){
+    add('Something went wrong: '+e, 'warn');
+    add('Close this window and run the setup script again — nothing is broken.', 'hint');
+  }
+}
+</script>
+</body>
+</html>

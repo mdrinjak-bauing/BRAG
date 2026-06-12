@@ -27,8 +27,17 @@ services:
     volumes:
       - ${VAULT_PATH:-./vault}:/vault
       - models_cache:/models
+      # Project dir + Claude Desktop config: needed by the browser setup
+      # wizard (writes .env and the MCP entry). CLAUDE_CONFIG_DIR is set
+      # by setup.command / setup.bat.
+      - ./:/workspace
+      - ${CLAUDE_CONFIG_DIR:-./.claude-config-unset}:/claude-config
     ports:
-      - "8765:8765"   # HTTP bridge: PDF links in search results
+      # localhost only — the bridge serves your documents and the setup
+      # page; it must not be reachable from the local network.
+      # If 8765 is taken on your machine, set BRIDGE_HOST_PORT and
+      # BRIDGE_PUBLIC_URL in .env.
+      - "127.0.0.1:${BRIDGE_HOST_PORT:-8765}:8765"
     extra_hosts:
       - "host.docker.internal:host-gateway"   # reach LM Studio/Ollama on the host (Linux)
 
