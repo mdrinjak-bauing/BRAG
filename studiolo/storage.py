@@ -1,6 +1,6 @@
 """Qdrant access: client factory, collection setup, deletion helpers."""
 
-from asb import config
+from studiolo import config
 
 
 def get_client():

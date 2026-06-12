@@ -1,12 +1,12 @@
 """Terminal fallback for the setup (the primary path is the browser wizard
 at http://localhost:8765/setup). Run via:
   docker compose run --rm -v "$PWD":/workspace \
-    -v "<claude config dir>":/claude-config app python -m asb.setup_wizard
+    -v "<claude config dir>":/claude-config app python -m studiolo.setup_wizard
 """
 
 import sys
 
-from asb import setup_core
+from studiolo import setup_core
 
 PROFILE_INFO = """
 Choose your backend profile:
@@ -27,7 +27,7 @@ def ask(prompt: str, default: str = "") -> str:
 
 
 def main():
-    print("\n=== Academic Second Brain — Setup (terminal) ===")
+    print("\n=== Studiolo — Setup (terminal) ===")
     print(PROFILE_INFO)
     choice = ""
     while choice not in PROFILE_KEYS:
@@ -59,7 +59,7 @@ def main():
     if not claude_ok:
         import json
         print("  Add this entry manually to claude_desktop_config.json:")
-        print(json.dumps({"academic-second-brain": setup_core.MCP_ENTRY}, indent=2))
+        print(json.dumps({"studiolo": setup_core.MCP_ENTRY}, indent=2))
     setup_core.mark_setup_complete()
 
     print("\n=== Setup complete ===")

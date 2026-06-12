@@ -1,7 +1,7 @@
 services:
   qdrant:
     image: qdrant/qdrant:v1.17.1
-    container_name: asb-qdrant
+    container_name: studiolo-qdrant
     restart: unless-stopped
     volumes:
       # Named volume: immune to cloud-sync corruption (iCloud/OneDrive),
@@ -14,8 +14,8 @@ services:
 
   app:
     build: .
-    image: academic-second-brain:latest
-    container_name: asb-app
+    image: studiolo:latest
+    container_name: studiolo-app
     restart: unless-stopped
     depends_on:
       - qdrant

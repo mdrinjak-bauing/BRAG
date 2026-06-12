@@ -13,7 +13,7 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from asb import config
+from studiolo import config
 
 MIME = {
     ".pdf": "application/pdf",
@@ -52,7 +52,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/validate-key":
-            from asb.setup_core import validate_gemini_key
+            from studiolo.setup_core import validate_gemini_key
             ok, message = validate_gemini_key(str(body.get("key", "")))
             self._send_json(200, {"ok": ok, "message": message})
         elif parsed.path == "/api/check-local":
@@ -106,7 +106,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         })
 
     def _apply_setup(self, body: dict):
-        from asb import setup_core
+        from studiolo import setup_core
         steps = []
         try:
             setup_core.write_env(

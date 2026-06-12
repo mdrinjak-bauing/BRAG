@@ -13,9 +13,9 @@ folder and run `./setup.command` (Mac) or `setup.bat` (Windows).
 **Claude Desktop doesn't show the tools.**
 1. Quit Claude Desktop **completely** (Cmd+Q / tray icon → Quit) and reopen —
    a window close is not enough.
-2. Check the container is running: `docker ps` should list `asb-app`.
+2. Check the container is running: `docker ps` should list `studiolo-app`.
 3. Check the config file (see [OBSIDIAN.md](OBSIDIAN.md) for the path)
-   contains the `academic-second-brain` entry.
+   contains the `studiolo` entry.
 
 ## Indexing
 
@@ -38,7 +38,7 @@ Profiles B/C are slower than A.
 **"Rate limit" messages during indexing (Cloud profile).**
 The free Gemini tier has per-minute/per-day limits. The system waits and
 retries automatically — let it run; nothing is lost. Failed chunks are
-recorded in `vault/.asb/failed_chunks.jsonl`.
+recorded in `vault/.studiolo/failed_chunks.jsonl`.
 
 ## Searching
 

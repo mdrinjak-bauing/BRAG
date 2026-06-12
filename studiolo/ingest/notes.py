@@ -3,8 +3,8 @@ Obsidian-compatible, written to vault/notes/."""
 
 from datetime import date
 
-from asb import config
-from asb.ingest.extract import Chunk
+from studiolo import config
+from studiolo.ingest.extract import Chunk
 
 
 def write_note(chunks: list[Chunk]) -> None:

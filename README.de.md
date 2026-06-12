@@ -1,4 +1,4 @@
-# Academic Second Brain
+# Studiolo
 
 **🇬🇧 [English](README.md) | 🇩🇪 Deutsch**
 
@@ -14,6 +14,11 @@ entfernt.
 
 Gebaut für Forschende, Professorinnen und Doktoranden — **ohne
 Programmierkenntnisse nutzbar**. Alles läuft in Docker.
+
+> **Warum „Studiolo“?** Das Studiolo war das private Studierzimmer der
+> Renaissance-Gelehrten — der eine Raum, in dem die Bücher und die eigenen
+> Schriften nebeneinander standen. Genau das ist dieses Projekt: deine
+> Bibliothek und dein Notizbuch an einem Ort, und Claude hat einen Schlüssel.
 
 ---
 

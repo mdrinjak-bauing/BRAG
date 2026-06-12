@@ -1,6 +1,6 @@
 """BM25 sparse vectors via fastembed, with language-aware Snowball stemming."""
 
-from asb import config
+from studiolo import config
 
 _model = None
 

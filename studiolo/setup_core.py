@@ -12,7 +12,7 @@ SETUP_MARKER = WORKSPACE / ".setup_complete"
 
 MCP_ENTRY = {
     "command": "docker",
-    "args": ["exec", "-i", "asb-app", "python", "-m", "asb.mcp_server"],
+    "args": ["exec", "-i", "studiolo-app", "python", "-m", "studiolo.mcp_server"],
 }
 
 
@@ -33,7 +33,7 @@ def write_env(profile: str, api_key: str, language: str,
     existing = read_existing_env()
     answer_lang = "German" if language == "german" else "English"
     lines = [
-        "# Academic Second Brain — written by the setup wizard.",
+        "# Studiolo — written by the setup wizard.",
         "# Re-run setup to change these safely. Full reference: .env.example",
         f"PROFILE={profile}",
         f"GEMINI_API_KEY={api_key}",
@@ -88,7 +88,7 @@ def write_claude_config() -> tuple[bool, str]:
         backup = config_path.with_suffix(".json.backup")
         shutil.copy(config_path, backup)
         existing = {}
-    existing.setdefault("mcpServers", {})["academic-second-brain"] = MCP_ENTRY
+    existing.setdefault("mcpServers", {})["studiolo"] = MCP_ENTRY
     config_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
     return True, "Claude Desktop configured"
 
