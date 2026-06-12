@@ -17,7 +17,11 @@ PROFILES = {
         "embedding_model": "gemini-embedding-001",
         "embedding_dim": 3072,
         "llm_backend": "gemini",
-        "llm_model": "gemini-2.5-flash",
+        # flash-lite: no requests-per-day cap — bulk-indexing a whole corpus
+        # must not die at the 10k/day limit of the larger flash models.
+        # Users can switch to a stronger model in .env once the initial
+        # bulk ingest is done (LLM_MODEL=gemini-2.5-flash).
+        "llm_model": "gemini-2.5-flash-lite",
         "llm_base_url": None,
     },
     # Profile B — Hybrid (local embeddings + local LLM via LM Studio)
