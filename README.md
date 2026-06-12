@@ -37,6 +37,8 @@ confuses one for the other.
 
 ## How it works
 
+![Architecture: vault, Docker containers, Claude Desktop and the two MCP connections](docs/assets/architecture.svg)
+
 ```
  you drop a PDF into vault/sources/
         │

@@ -38,6 +38,8 @@ Claude arbeitet mit beidem — verwechselt sie aber nie.
 
 ## So funktioniert es
 
+![Architektur: Vault, Docker-Container, Claude Desktop und die zwei MCP-Anschlüsse](docs/assets/architecture.svg)
+
 ```
  du legst ein PDF in vault/sources/
         │
