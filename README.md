@@ -39,27 +39,21 @@ confuses one for the other.
 
 ![Architecture: vault, Docker containers, Claude Desktop and the two MCP connections](docs/assets/architecture.svg)
 
-```
- you drop a PDF into vault/sources/
-        │
-        ▼ (automatic, ~1–3 min per paper)
- parse layout → split into chunks → AI adds context  → hybrid index
- (tables,        (tables kept       to every chunk      (semantic +
-  figures,        intact)            for better          keyword)
-  chapters,                          retrieval
-  pages)
-        │
-        ▼
- you ask Claude Desktop a question
-        │
-        ▼
- Claude searches your corpus → answers with citations →
- every citation links to the PDF, opened at the right page
-```
-
 Everything runs in two Docker containers on your machine. In the recommended
 Cloud profile, document text is processed by Google's free Gemini API; in the
 local profiles, nothing leaves your computer (see [Profiles](#choose-your-profile)).
+
+### Under the hood: the two pipelines
+
+![Pipeline: ingest (parsing, chunking, contextual retrieval, embeddings, index) and query (prefetch, RRF fusion, cross-encoder reranking, cited answer)](docs/assets/pipeline.svg)
+
+Two stages do the heavy lifting for answer quality: **contextual retrieval**
+during indexing (an AI writes 1–2 sentences locating every chunk in the
+document's argument — terse academic prose becomes findable) and the
+**cross-encoder reranker** during search (it reads your question together
+with each candidate passage and re-orders by true fit, not just similarity).
+Both are on by default; every parameter is documented in
+[`.env.example`](.env.example).
 
 ## The two Claude connections (MCP)
 
@@ -181,16 +175,6 @@ the work runs again).
 5. You jot your own take in `wiki/Rework_Cost_Drivers.md` — Obsidian, or ask
    Claude to draft it via the notebook connection. It will never show up as
    a "search hit" later. That's the point.
-
-## Why not RAGFlow / RAG-Anything / …?
-
-Excellent projects — different goals. [RAGFlow](https://github.com/infiniflow/ragflow)
-is an enterprise platform (7 services, 16 GB+ RAM, its own web UI).
-[RAG-Anything](https://github.com/HKUDS/RAG-Anything) is a research framework
-built on knowledge graphs, without page-precise citations. **Academic Second
-Brain is deliberately small**: one container + one database, Claude Desktop as
-the interface, citations that hold up in academic writing, and a plain-files
-vault you fully own.
 
 ## Documentation
 

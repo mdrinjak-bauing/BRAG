@@ -40,28 +40,22 @@ Claude arbeitet mit beidem — verwechselt sie aber nie.
 
 ![Architektur: Vault, Docker-Container, Claude Desktop und die zwei MCP-Anschlüsse](docs/assets/architecture.svg)
 
-```
- du legst ein PDF in vault/sources/
-        │
-        ▼ (automatisch, ~1–3 Min pro Paper)
- Layout auslesen → in Chunks teilen → KI ergänzt zu     → hybrider Index
- (Tabellen,        (Tabellen bleiben   jedem Chunk         (semantisch +
-  Abbildungen,      intakt)             Kontext für         Stichwort)
-  Kapitel,                              bessere Treffer
-  Seiten)
-        │
-        ▼
- du stellst Claude Desktop eine Frage
-        │
-        ▼
- Claude durchsucht deinen Korpus → antwortet mit Belegen →
- jeder Beleg verlinkt aufs PDF, geöffnet an der richtigen Seite
-```
-
 Alles läuft in zwei Docker-Containern auf deinem Rechner. Im empfohlenen
 Cloud-Profil verarbeitet Googles kostenlose Gemini-API die Dokumenttexte; in
 den Lokal-Profilen verlässt nichts deinen Rechner (siehe
 [Profile](#wähle-dein-profil)).
+
+### Unter der Haube: die zwei Pipelines
+
+![Pipeline: Einlesen (Parsing, Chunking, Contextual Retrieval, Embeddings, Index) und Abfrage (Prefetch, RRF-Fusion, Cross-Encoder-Reranking, belegte Antwort)](docs/assets/pipeline.svg)
+
+Zwei Stufen leisten die Hauptarbeit für die Antwortqualität: das
+**Contextual Retrieval** beim Einlesen (eine KI schreibt zu jedem Chunk 1–2
+Sätze, die ihn im Argument des Dokuments verorten — knapper Wissenschaftstext
+wird dadurch auffindbar) und der **Cross-Encoder-Reranker** bei der Suche
+(er liest deine Frage zusammen mit jedem Kandidaten und sortiert nach
+tatsächlicher Passung statt bloßer Ähnlichkeit). Beides ist standardmäßig
+aktiv; alle Parameter sind in [`.env.example`](.env.example) dokumentiert.
 
 ## Die zwei Claude-Anschlüsse (MCP)
 
@@ -185,16 +179,6 @@ sicher ab, aber die Arbeit läuft erneut).
    in Obsidian, oder du lässt Claude über den Notizbuch-Anschluss einen
    Entwurf anlegen. Als „Suchtreffer" taucht sie später nie auf. Genau das
    ist der Zweck.
-
-## Warum nicht RAGFlow / RAG-Anything / …?
-
-Hervorragende Projekte — andere Ziele. [RAGFlow](https://github.com/infiniflow/ragflow)
-ist eine Enterprise-Plattform (7 Services, 16 GB+ RAM, eigene Web-UI).
-[RAG-Anything](https://github.com/HKUDS/RAG-Anything) ist ein Forschungs-
-Framework auf Wissensgraph-Basis, ohne seitengenaue Belege. **Academic Second
-Brain ist bewusst klein**: ein Container + eine Datenbank, Claude Desktop als
-Oberfläche, Zitate, die wissenschaftlichem Arbeiten standhalten, und ein
-Vault aus einfachen Dateien, der dir vollständig gehört.
 
 ## Dokumentation
 
