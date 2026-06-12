@@ -127,6 +127,35 @@ Umbenennen oder Löschen in `sources/` wird automatisch nachgezogen (Index
 und Literaturnotiz folgen). Unterordner-Namen werden zum filterbaren
 Dokumenttyp: `sources/Paper/`, `sources/Fachbuecher/`, `sources/Berichte/` …
 
+### Deine eigenen Metadaten (Projekte, Kurse, Auftraggeber …)
+
+Die eingebauten Metadaten — Autor, Jahr, Typ, Kapitel, Seite — werden
+automatisch abgeleitet. Für alles, was **nur du wissen kannst** — zu welchem
+Bauprojekt ein Leistungsverzeichnis gehört, zu welchem Modul und Semester
+ein Vorlesungsskript — legst du eine `_meta.txt` in einen beliebigen Ordner
+unter `sources/`:
+
+```
+# sources/Projekte/Schulzentrum/_meta.txt
+projekt: Schulzentrum
+auftraggeber: Stadt Hamm
+```
+
+Eine Zeile pro `schlüssel: wert`, mehr muss niemand lernen. Jedes Dokument
+in diesem Ordner (und seinen Unterordnern) trägt diese Felder; tiefere
+Ordner können Felder ergänzen oder überschreiben. Im Gespräch filtert
+Claude danach:
+
+> *„Such **nur im Projekt Schulzentrum**: Welche Position deckt die
+> Erdarbeiten ab?"*
+
+— ohne diesen Filter würden Treffer aus anderen Projekten in die Ergebnisse
+mischen. Über denselben Mechanismus lassen sich auch `author`, `year` oder
+`doc_type` korrigieren, wenn der Dateiname sie nicht hergibt. Hinweis: Die
+`_meta.txt` wird beim Einlesen gelesen — nach einer Änderung ein Dokument
+kurz aus dem Ordner heraus- und wieder hineinschieben, damit der Eintrag
+aktualisiert wird.
+
 ## Voraussetzungen
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (kostenlos)

@@ -14,3 +14,7 @@ it however you like.
 `CLAUDE.md` tells Claude how to work with your research — fill in the
 placeholders, it makes a real difference. `sources/_inbox/` (create it if
 you want) is a staging area the indexer ignores.
+
+**Own metadata:** put a `_meta.txt` (one `key: value` per line, e.g.
+`project: School Center`) into any folder under `sources/` — all documents
+in it carry those fields, and Claude can filter searches by them.

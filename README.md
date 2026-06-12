@@ -124,6 +124,32 @@ Renaming or deleting a file in `sources/` is handled automatically (the index
 and the literature note follow). Subfolder names become the document type you
 can filter by: `sources/papers/`, `sources/books/`, `sources/reports/` …
 
+### Your own metadata (projects, courses, clients …)
+
+The built-in metadata — author, year, type, chapter, page — is derived
+automatically. For everything **only you can know** — which construction
+project a bill of quantities belongs to, which course and semester a lecture
+script is for — put a `_meta.txt` file into any folder under `sources/`:
+
+```
+# sources/projects/School_Center/_meta.txt
+project: School Center
+client: City of Hamm
+```
+
+One `key: value` per line, nothing else to learn. Every document in that
+folder (and its subfolders) carries these fields; deeper folders can add or
+override fields. In a conversation, Claude filters by them:
+
+> *"Search **only in the School Center project**: which position covers the
+> earthworks?"*
+
+— without that filter, hits from other projects would mix into the results.
+The same mechanism can correct `author`, `year` or `doc_type` when a
+filename can't express them. Note: `_meta.txt` is read at indexing time —
+after changing it, move a document out of the folder and back in to refresh
+its entry.
+
 ## Requirements
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (free)

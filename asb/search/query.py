@@ -24,7 +24,7 @@ def _get_reranker():
 
 
 def _build_filter(doc_type=None, chunk_type=None, year_min=None, year_max=None,
-                  author=None, source_file=None):
+                  author=None, source_file=None, meta=None):
     from qdrant_client.models import FieldCondition, Filter, MatchValue, Range
     must = []
     if doc_type:
@@ -43,6 +43,9 @@ def _build_filter(doc_type=None, chunk_type=None, year_min=None, year_max=None,
             gte=int(year_min) if year_min else None,
             lte=int(year_max) if year_max else None,
         )))
+    # User-defined metadata fields from _meta.txt (e.g. project, course)
+    for key, value in (meta or {}).items():
+        must.append(FieldCondition(key=key, match=MatchValue(value=value)))
     return Filter(must=must) if must else None
 
 

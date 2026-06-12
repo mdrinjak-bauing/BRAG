@@ -28,6 +28,7 @@ class Chunk:
     year: str
     language: str = "en"
     context: str = ""        # LLM-generated context (contextual retrieval)
+    custom_meta: dict = field(default_factory=dict)  # user fields from _meta.txt
     chunk_id: str = field(default="")
 
     def __post_init__(self):
@@ -53,7 +54,61 @@ class Chunk:
             "year_num": int(self.year) if self.year.isdigit() else 0,
             "language": self.language, "chunk_id": self.chunk_id,
             "ingest_timestamp": datetime.now().isoformat(timespec="seconds"),
-        }
+        } | {k: v for k, v in self.custom_meta.items()
+             if k not in RESERVED_KEYS and k not in OVERRIDABLE_KEYS}
+
+
+# Payload keys owned by the system — user metadata may override the three
+# descriptive ones (author, year, doc_type) but never the structural ones.
+RESERVED_KEYS = {
+    "text", "context", "chunk_type", "source_file", "rel_path",
+    "page_start", "page_end", "chapter", "section", "year_num",
+    "language", "chunk_id", "ingest_timestamp",
+}
+OVERRIDABLE_KEYS = {"author", "year", "doc_type"}
+
+
+def _parse_meta_file(path: Path) -> dict:
+    """Parse a `_meta.txt` file: one `key: value` per line, `#` comments.
+    Deliberately the most forgiving format possible — no JSON/YAML syntax
+    errors for non-technical users."""
+    meta: dict[str, str] = {}
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or ":" not in line:
+                continue
+            key, _, value = line.partition(":")
+            key = key.strip().lower().replace(" ", "_")
+            if key and key not in RESERVED_KEYS and value.strip():
+                meta[key] = value.strip()
+    except OSError:
+        pass
+    return meta
+
+
+def load_folder_meta(file_path: Path) -> dict:
+    """Collect user metadata for a document by merging `_meta.txt` files
+    from sources/ down to the document's folder — deeper folders win.
+
+    Example: sources/projects/_meta.txt sets `client: City of Hamm`,
+    sources/projects/School_Center/_meta.txt sets `project: School Center`
+    → every document in that folder carries both fields, filterable in
+    search ("only hits where project = School Center")."""
+    meta: dict[str, str] = {}
+    try:
+        rel_parts = file_path.parent.resolve().relative_to(
+            config.SOURCES_DIR.resolve()).parts
+    except ValueError:
+        rel_parts = ()
+    folder = config.SOURCES_DIR
+    for part in ("",) + rel_parts:
+        if part:
+            folder = folder / part
+        meta_file = folder / "_meta.txt"
+        if meta_file.exists():
+            meta.update(_parse_meta_file(meta_file))
+    return meta
 
 
 def parse_filename(stem: str) -> tuple[str, str]:
@@ -99,6 +154,13 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
     stem = config.normalize_source_key(path.stem)
     author, year = parse_filename(stem)
     doc_type = doc_type_from_path(path)
+    # User metadata from _meta.txt files (folder-inherited). The three
+    # descriptive fields may be overridden; everything else becomes a
+    # custom, filterable payload field.
+    custom_meta = load_folder_meta(path)
+    author = custom_meta.pop("author", author)
+    year = custom_meta.pop("year", year)
+    doc_type = custom_meta.pop("doc_type", doc_type)
     try:
         rel_path = str(path.relative_to(config.VAULT))
     except ValueError:
@@ -130,7 +192,7 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
         base = dict(
             source_file=stem, rel_path=rel_path, chapter=chapter,
             section=section, doc_type=doc_type, author=author,
-            year=year, language=language,
+            year=year, language=language, custom_meta=custom_meta,
         )
         base.update(kw)
         return base

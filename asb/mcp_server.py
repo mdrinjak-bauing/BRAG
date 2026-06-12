@@ -43,19 +43,32 @@ def _format_hit(i: int, hit: dict) -> str:
 @mcp.tool()
 def search(query: str, top_k: int = 15, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
-           source_file: str = "", reranking: bool = True) -> str:
+           source_file: str = "", meta_filter: str = "",
+           reranking: bool = True) -> str:
     """Hybrid search (semantic + keyword) over the document corpus.
 
     Try multiple phrasings (synonyms, English/native-language variants).
     Use chunk_type='table' for numbers/statistics, 'figure' for diagrams.
+    meta_filter restricts hits by the user's own metadata fields (defined
+    in _meta.txt files in the vault), format 'key=value' with commas for
+    several, e.g. meta_filter='project=School Center' or
+    'course=Construction Management, semester=WS25'. If the user names a
+    project/course/client context, ALWAYS set this filter — otherwise hits
+    from unrelated projects mix into the results.
     Every hit header is a clickable link that opens the PDF at the right
     page — ALWAYS carry that link into your answer when citing the source.
     """
+    meta = {}
+    for part in meta_filter.split(","):
+        if "=" in part:
+            key, _, value = part.partition("=")
+            if key.strip() and value.strip():
+                meta[key.strip().lower().replace(" ", "_")] = value.strip()
     hits = run_search(
         query, top_k=top_k, reranking=reranking,
         doc_type=doc_type or None, chunk_type=chunk_type or None,
         year_min=year_min or None, year_max=year_max or None,
-        source_file=source_file or None,
+        source_file=source_file or None, meta=meta or None,
     )
     if not hits:
         return ("No hits. Try different phrasing, fewer filters, or check "
@@ -125,8 +138,20 @@ def inspect_chunks(source_file: str, page: int = 0, limit: int = 10) -> str:
         return (f"No chunks found for '{source_file}'"
                 + (f" on page {page}" if page else "")
                 + ". Check the exact name via list_sources().")
+    standard_keys = {
+        "text", "context", "chunk_type", "source_file", "rel_path",
+        "page_start", "page_end", "chapter", "section", "doc_type",
+        "author", "year", "year_num", "language", "chunk_id",
+        "ingest_timestamp",
+    }
     out = [f"**{len(points)} chunks** for `{source_file}`"
            + (f", page {page}" if page else "") + "\n"]
+    first_pl = points[0].payload or {}
+    custom = {k: v for k, v in first_pl.items() if k not in standard_keys}
+    if custom:
+        out.append("Custom metadata: "
+                   + ", ".join(f"`{k}={v}`" for k, v in sorted(custom.items()))
+                   + "\n")
     for p in sorted(points, key=lambda x: (x.payload or {}).get("page_start", 0)):
         pl = p.payload or {}
         out.append(
