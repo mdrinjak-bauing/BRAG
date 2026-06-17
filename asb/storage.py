@@ -67,6 +67,23 @@ def delete_chunks_by_source(client, source_file: str) -> int:
     return count
 
 
+def patch_source_metadata(client, source_file: str, payload: dict) -> int:
+    """Update the filename-derived payload fields (source_file, author, year,
+    doc_type, rel_path, custom fields) for all chunks of a source IN PLACE —
+    no re-embedding. Used when a file is renamed/moved but its content is
+    unchanged. Returns the number of points updated."""
+    from qdrant_client.models import FieldCondition, Filter, MatchValue
+
+    key = config.normalize_source_key(source_file)
+    flt = Filter(must=[FieldCondition(key="source_file", match=MatchValue(value=key))])
+    count = client.count(config.COLLECTION_NAME, count_filter=flt, exact=True).count
+    if count:
+        client.set_payload(
+            collection_name=config.COLLECTION_NAME, payload=payload, points=flt,
+        )
+    return count
+
+
 def list_corpus_sources(client) -> set[str]:
     """All source_file values currently in the collection (NFC-normalized)."""
     sources: set[str] = set()

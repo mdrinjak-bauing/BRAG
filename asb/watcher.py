@@ -15,7 +15,7 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver
 
 from asb import config, storage
-from asb.ingest.pipeline import ingest, remove_source
+from asb.ingest.pipeline import ingest, remove_source, rename_source
 
 _processing: set[str] = set()
 
@@ -80,15 +80,40 @@ class DocumentHandler(FileSystemEventHandler):
         if event.is_directory:
             return
         src, dest = Path(event.src_path), Path(event.dest_path)
-        if _is_relevant(src):
+        src_ok, dest_ok = _is_relevant(src), _is_relevant(dest)
+
+        # Rename/move WITHIN sources/: same content, only the name changed —
+        # patch the filename-derived metadata in place instead of re-embedding.
+        if src_ok and dest_ok:
+            if str(dest) in _processing:
+                return
+            _processing.add(str(dest))
+            try:
+                n = rename_source(src.stem, dest)
+                if n:
+                    print(f"document renamed: {dest.name} — metadata updated on "
+                          f"{n} chunks (no re-ingest)")
+                else:
+                    print(f"renamed file {dest.name} was not indexed yet — ingesting")
+                    if _wait_for_stable_file(dest):
+                        ingest(dest)
+            except Exception as e:  # noqa: BLE001 — watcher must survive anything
+                print(f"rename handling error for {dest.name}: {e}")
+            finally:
+                _processing.discard(str(dest))
+            return
+
+        # Moved OUT of sources/ (e.g. into _inbox or trash): drop old chunks.
+        if src_ok:
             try:
                 remove_source(src.stem)
             except Exception as e:  # noqa: BLE001
                 print(f"cleanup error for {src.name}: {e}")
-        if _is_relevant(dest) and str(dest) not in _processing:
+        # Moved INTO sources/ from elsewhere: index it fresh.
+        if dest_ok and str(dest) not in _processing:
             _processing.add(str(dest))
             try:
-                print(f"document renamed/moved: {dest.name} — re-indexing")
+                print(f"document moved in: {dest.name} — indexing")
                 if _wait_for_stable_file(dest):
                     ingest(dest)
             except Exception as e:  # noqa: BLE001

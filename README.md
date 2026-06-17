@@ -235,8 +235,11 @@ wissensspeicher/
 └── wiki/          ← 📓 your own thinking — never indexed
 ```
 
-Renaming/deleting in `sources/` is handled automatically. Subfolder names become
-the filterable document type (`sources/papers/`, `sources/reports/` …).
+Renaming or deleting in `sources/` is handled automatically: renaming an
+**already-indexed** file just updates its metadata (author, year, type, PDF
+path) in place — **no re-ingest** (no re-embedding, no API cost); deleting it
+removes it from the database. Subfolder names become the filterable document
+type (`sources/papers/`, `sources/reports/` …).
 
 **Your own metadata** (project, course, client …) goes into a `_meta.txt` in any
 folder under `sources/` — one `key: value` per line:
