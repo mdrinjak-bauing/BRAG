@@ -15,13 +15,14 @@ from pathlib import Path
 
 from asb import config
 
-MIME = {
-    ".pdf": "application/pdf",
-    ".md": "text/markdown; charset=utf-8",
-    ".html": "text/html; charset=utf-8",
-}
-
 SETUP_PAGE = Path(__file__).parent / "setup_page.html"
+
+# Only requests addressed to the loopback interface are served. The bridge
+# binds 0.0.0.0 (Docker port-publishing connects via the container's eth0, so
+# binding 127.0.0.1 in-container would break the host mapping), so this
+# Host-header allowlist is what actually enforces "localhost only" and defeats
+# DNS-rebinding attacks against the setup API.
+LOOPBACK_NAMES = ("localhost", "127.0.0.1", "::1")
 
 
 class BridgeHandler(BaseHTTPRequestHandler):
@@ -30,6 +31,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
     # ── GET ─────────────────────────────────────────────────────
     def do_GET(self):  # noqa: N802 — http.server API
+        if not self._host_ok():
+            self._send(403, b"forbidden", "text/plain")
+            return
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/healthz":
             self._send(200, b"ok", "text/plain")
@@ -43,6 +47,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
     # ── POST (setup API) ────────────────────────────────────────
     def do_POST(self):  # noqa: N802
+        if not self._host_ok() or not self._origin_ok():
+            self._send_json(403, {"ok": False, "message": "forbidden"})
+            return
         parsed = urllib.parse.urlparse(self.path)
         try:
             length = int(self.headers.get("Content-Length", 0))
@@ -144,6 +151,23 @@ class BridgeHandler(BaseHTTPRequestHandler):
         })
 
     # ── helpers ─────────────────────────────────────────────────
+    def _host_ok(self) -> bool:
+        """Accept only requests addressed to localhost (anti DNS-rebinding)."""
+        host = self.headers.get("Host", "")
+        name = host.rsplit(":", 1)[0].strip("[]").lower() if host else ""
+        return name in LOOPBACK_NAMES
+
+    def _origin_ok(self) -> bool:
+        """For state-changing POSTs, reject cross-origin browser requests."""
+        origin = self.headers.get("Origin")
+        if not origin:
+            return True  # non-browser caller; the Host check still applies
+        try:
+            name = (urllib.parse.urlparse(origin).hostname or "").lower()
+        except ValueError:
+            return False
+        return name in LOOPBACK_NAMES
+
     def _serve_vault_file(self, rel: str):
         target = (config.VAULT / rel).resolve()
         try:
@@ -154,14 +178,23 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if not target.is_file():
             self._send(404, b"file not found", "text/plain")
             return
-        mime = MIME.get(target.suffix.lower(), "application/octet-stream")
-        self._send(200, target.read_bytes(), mime)
+        if target.suffix.lower() == ".pdf":
+            # PDFs render inline so the browser can jump to #page=N.
+            self._send(200, target.read_bytes(), "application/pdf")
+        else:
+            # Never serve vault content (.html/.md/…) as active, same-origin
+            # HTML — hand it back as a download (stored-XSS hardening).
+            self._send(200, target.read_bytes(), "application/octet-stream",
+                       extra={"Content-Disposition": "attachment"})
 
-    def _send(self, code: int, body: bytes, mime: str):
+    def _send(self, code: int, body: bytes, mime: str, extra: dict | None = None):
         self.send_response(code)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        for key, value in (extra or {}).items():
+            self.send_header(key, value)
         self.end_headers()
         self.wfile.write(body)
 

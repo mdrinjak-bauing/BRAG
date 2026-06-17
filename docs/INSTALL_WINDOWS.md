@@ -92,6 +92,8 @@ Now ask Claude:
 
 ## How do I know it's running?
 
+- **Easiest:** double-click **`status.bat`** — a one-click check of Docker,
+  Qdrant, the watcher, the corpus and the AI connection, with a ✓/✗ per item.
 - In **Docker Desktop** the status reads "running".
 - `docker ps` (Command Prompt, in the project folder) lists the two containers
   **`asb-app`** and **`asb-qdrant`**.

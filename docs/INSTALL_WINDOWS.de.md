@@ -95,6 +95,9 @@ Stelle Claude jetzt eine Frage:
 
 ## Woran erkenne ich, dass alles läuft?
 
+- **Am einfachsten:** Doppelklick auf **`status.bat`** — prüft mit einem Klick
+  Docker, Qdrant, den Watcher, den Korpus und den KI-Anschluss und zeigt für
+  jeden Punkt ✓/✗.
 - In **Docker Desktop** steht der Status auf „running".
 - `docker ps` (in der Eingabeaufforderung im Projektordner) zeigt die zwei
   Container **`asb-app`** und **`asb-qdrant`**.

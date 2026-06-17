@@ -35,7 +35,7 @@ built-in text recognition won't embed a layer — use `ocrmypdf` or similar).
 **Indexing is slow.**
 The first document downloads the layout-analysis models once. A 50-page
 paper typically takes 1–3 minutes; a 500-page book proportionally longer.
-Profiles B/C are slower than A.
+The hybrid/local profiles are slower than the cloud profiles.
 
 **"Rate limit" messages during indexing (Cloud profile).**
 The free Gemini tier has per-minute/per-day limits. The system waits and
@@ -87,6 +87,13 @@ Set `VAULT_LANGUAGE` in `.env` to your language (affects keyword stemming)
 and `ANSWER_LANGUAGE` for generated text, then re-index new documents.
 
 ## Operations
+
+**How do I check with one click that everything works?**
+Double-click **`status.command`** (Mac) or **`status.bat`** (Windows) in the
+project folder. It reports ✓/✗ for: Docker running, the `asb-app` and
+`asb-qdrant` containers up, Qdrant reachable, the corpus indexed (with source/
+chunk counts), the watcher running, the AI text model reachable, and Claude
+Desktop wired up. Each ✗ tells you what to do.
 
 **How do I stop / start everything?**
 `docker compose down` / `docker compose up -d` in the project folder.

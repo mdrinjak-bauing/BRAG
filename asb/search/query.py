@@ -25,7 +25,7 @@ def _get_reranker():
 
 def _build_filter(doc_type=None, chunk_type=None, year_min=None, year_max=None,
                   author=None, source_file=None, meta=None):
-    from qdrant_client.models import FieldCondition, Filter, MatchValue, Range
+    from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue, Range
     must = []
     if doc_type:
         must.append(FieldCondition(key="doc_type", match=MatchValue(value=doc_type)))
@@ -34,9 +34,11 @@ def _build_filter(doc_type=None, chunk_type=None, year_min=None, year_max=None,
     if author:
         must.append(FieldCondition(key="author", match=MatchValue(value=author)))
     if source_file:
+        # NFC/NFD/raw triple-probe: a single-NFC filter misses payloads written
+        # under a different normalization (snapshot restore, cross-OS import).
         must.append(FieldCondition(
             key="source_file",
-            match=MatchValue(value=config.normalize_source_key(source_file)),
+            match=MatchAny(any=config.source_key_variants(source_file)),
         ))
     if year_min or year_max:
         must.append(FieldCondition(key="year_num", range=Range(
