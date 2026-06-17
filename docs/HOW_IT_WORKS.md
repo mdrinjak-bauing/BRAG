@@ -15,18 +15,62 @@ Docker runs a ready-made box that already contains everything, identically on
 every computer. You install Docker once; it runs the rest. That's why setup is
 "double-click and answer three questions" instead of a page of commands.
 
-**The app container** — the worker inside that box. It watches your folder,
-reads documents, and answers searches.
+Two "appliances" run side by side inside that box:
 
-**Qdrant** — a *search database for meaning*. A normal database finds exact
-words; Qdrant finds text that *means* something similar, even if it uses
-different words. It's what lets you ask "rules for extra payments" and get a
-passage that says "Nachtragsmanagement". It runs as a second small box next to
-the app.
+**1. The app container** (`asb-app`) — the actual worker. You never start it by
+hand; it bundles several small subsystems:
 
-**Claude Desktop** — your interface. You don't open the app or the database;
-you just talk to Claude, and Claude quietly uses them through a connection
-called MCP.
+- **The watcher** — the lookout. Every ~10 seconds it checks your `sources/`
+  folder: anything new? renamed or deleted? Accordingly it triggers ingest or
+  cleans up the index. So you never "import" anything — dropping in a file is
+  enough, the watcher notices on its own.
+- **The ingest pipeline** — processes a newly spotted document: read, cut,
+  enrich with context, embed, store (details below).
+- **Search** — answers every question from Claude (two searches + reranker, see
+  below).
+- **The HTTP bridge** — a tiny web server on `localhost:8765`. It's what makes
+  the links in answers open your PDF in the browser at the exact cited page.
+- **The MCP server** — the speaking link to Claude Desktop. Whenever Claude
+  searches, a short-lived process spins up in this container, fetches the
+  results and hands them back.
+
+**2. Qdrant** (`asb-qdrant`) — a *search database for meaning*. A normal
+database finds exact words; Qdrant finds text that *means* something similar,
+even if it uses different words. It's what lets you ask "rules for extra
+payments" and get a passage that says "Nachtragsmanagement". It runs as a second
+small box next to the app.
+
+**Claude Desktop** — your interface, running normally on your machine (not in
+Docker). You don't open the app or the database; you just talk to Claude, and
+Claude quietly uses them through a connection called MCP.
+
+---
+
+## Where does this get installed on my computer?
+
+There are **two** places — and it really helps to keep them apart:
+
+**1. The project folder — the one you created yourself.** When you unpacked the
+ZIP from GitHub, a folder appeared exactly where you unpacked it (e.g.
+`~/academic-rag-and-second-brain` on a Mac or
+`C:\Users\<you>\academic-rag-and-second-brain` on Windows). It holds: the setup
+files, the `docker-compose.yml`, your settings file `.env`, and by default the
+`vault/` folder with your documents. You can see, back up and move this folder —
+it's yours.
+
+**2. Docker's own storage — which you never touch directly.** On first launch
+Docker downloads the program code and the AI models (~3 GB together) and puts
+them in its own managed area — *not* in your project folder. The Qdrant database
+lives there too (as a "named volume"). That's deliberate: the database never
+ends up in iCloud/OneDrive (where it would get corrupted), and the 3 GB of
+models don't clutter your project folder. Uninstall Docker and this area is
+gone — your project folder and vault stay untouched.
+
+In short: **your files live in the project folder (visible, yours); the running
+system and the search index live in Docker (invisible, managed automatically).**
+
+To check everything is running, open a terminal in the project folder and type
+`docker ps` — you should see the two boxes `asb-app` and `asb-qdrant`.
 
 ---
 
@@ -72,6 +116,27 @@ runs five steps:
    the exact word or only the idea.
 
 5. **File it in Qdrant** + write a short literature note in `notes/`.
+
+### What about figures?
+
+Figures **are looked at**: on ingest the system renders each image and sends it
+to the (multimodal) text AI, which writes one or two honest sentences about
+*what* it shows — the figure type, main elements, legible axes or labels. That
+description is embedded too, so you can find a figure by its **content**, not
+just its caption.
+
+To keep it from inventing things, the task is deliberately sober: only describe
+what is clearly legible, don't guess illegible text, never invent numbers.
+
+This **vision pass is on by default** and works with any multimodal model — all
+cloud presets (Gemini, OpenAI, Claude) can do it. On the local profile you need
+a vision model; if there is none (or a figure has no image), the system falls
+back automatically to the safe "caption + chapter only" path. You can turn the
+vision pass off with `VISION_ENABLED=false` in `.env` (saves cost and time).
+
+> ⚠️ With a cloud profile, the **image** is sent to the provider too. For
+> confidential or licensed figures, use a local profile or `VISION_ENABLED=false`
+> (see [LEGAL.md](LEGAL.md)).
 
 A short paper takes 1–3 minutes; a book, longer. You don't wait — it happens in
 the background, and a removed file is cleaned out of the index automatically.

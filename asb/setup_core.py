@@ -35,7 +35,7 @@ def write_env(profile: str, api_key: str, language: str,
     existing = read_existing_env()
     answer_lang = "German" if language == "german" else "English"
     lines = [
-        "# Academic RAG and Second Brain — written by the setup wizard.",
+        "# ASB — Academic RAG & Second Brain — written by the setup wizard.",
         "# Re-run setup to change these safely. Full reference: .env.example",
         f"PROFILE={profile}",
         f"VAULT_LANGUAGE={language}",

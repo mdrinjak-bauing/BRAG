@@ -20,6 +20,11 @@ TIMEOUT_SECONDS = 900  # generous: local models on weak hardware are slow
 
 
 class OpenAICompatibleLLM(LLMBackend):
+    # Whether the loaded local model is multimodal is unknown up front; we
+    # attempt vision and the caller falls back to caption-only context if the
+    # model rejects the image (text-only models like llama3.1).
+    vision_capable = True
+
     def __init__(self):
         if not config.LLM_BASE_URL:
             raise EnvironmentError("LLM_BASE_URL is not set for the local profile.")
@@ -32,10 +37,21 @@ class OpenAICompatibleLLM(LLMBackend):
         except OSError:
             return False
 
-    def chat(self, prompt: str, max_tokens: int = 1024) -> str | None:
+    def chat(
+        self, prompt: str, max_tokens: int = 1024, images: list[str] | None = None
+    ) -> str | None:
+        if images:
+            content: list = [{"type": "text", "text": prompt}]
+            for img in images:
+                content.append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{img}"},
+                })
+        else:
+            content = prompt
         payload = {
             "model": config.LLM_MODEL,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [{"role": "user", "content": content}],
             "max_tokens": max_tokens,
             "temperature": 0.2,
         }

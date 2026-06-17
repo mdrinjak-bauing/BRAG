@@ -6,9 +6,12 @@ Design notes ported from the originating production system:
 - hierarchical context (table of contents + current chapter) instead of the
   whole document — better grounding at lower token cost
 - chunks are processed in batches of CR_BATCH_SIZE per LLM call
-- figure-caption chunks get an HONEST prompt: the model has not seen the
-  image, so it must locate the figure in its chapter, never describe content
-  (otherwise hallucinated descriptions poison the embeddings permanently)
+- figures: when VISION_ENABLED and the LLM is multimodal, the figure's image
+  is sent to the model for an honest description (embedded so figures become
+  findable by content). Without a usable image or a multimodal model, figures
+  fall back to the HONEST caption-only prompt: the model has not seen the
+  image, so it only locates the figure in its chapter and never describes
+  content (otherwise hallucinated descriptions poison the embeddings)
 - a failed LLM call leaves the context empty — never blocks the ingest
 """
 
@@ -86,6 +89,62 @@ def _build_prompt(doc_context: str, batch: list[tuple[int, Chunk]], figures_only
     )
 
 
+def _vision_prompt(doc_context: str) -> str:
+    task = (
+        "You are shown a figure (image) from an academic document, together "
+        "with its surrounding context. In 1-3 concise sentences, describe what "
+        "the figure actually shows for semantic search: the figure type (e.g. "
+        "diagram, photo, chart), its main elements, and any axes, labels or "
+        "relationships that are clearly legible. Do not guess illegible text "
+        "and never invent data or numbers."
+    )
+    return (
+        f"{doc_context}\n\n{task}\n\n"
+        f"Respond in {config.ANSWER_LANGUAGE}. Give the description only, no preamble."
+    )
+
+
+def _contextualize_batched(llm, group, full_markdown, toc, contexts, figures_only):
+    """Original batched contextual-retrieval path (text chunks, and figures
+    that have no usable image / when vision is off)."""
+    for start in range(0, len(group), config.CR_BATCH_SIZE):
+        batch = group[start : start + config.CR_BATCH_SIZE]
+        prompt = _build_prompt(
+            _doc_context(full_markdown, toc, batch[0][1].chapter),
+            batch, figures_only,
+        )
+        answer = llm.chat(prompt, max_tokens=200 * len(batch) + 100) or ""
+        parsed = dict(CONTEXT_TAG.findall(answer))
+        for local_i, (idx, _) in enumerate(batch):
+            ctx = parsed.get(str(local_i), "").strip()
+            if ctx:
+                contexts[idx] = ctx
+
+
+def _contextualize_figures_vision(llm, figures, full_markdown, toc, contexts):
+    """Send each figure's image to the multimodal LLM for an honest
+    description. Returns the figures that could NOT be described this way (no
+    image, or the model is not multimodal) for the caption-only fallback."""
+    leftover, described, vision_alive = [], 0, True
+    for idx, chunk in figures:
+        if vision_alive and chunk.image_b64:
+            prompt = _vision_prompt(_doc_context(full_markdown, toc, chunk.chapter))
+            desc = llm.chat(prompt, max_tokens=220, images=[chunk.image_b64])
+            if desc and desc.strip():
+                contexts[idx] = desc.strip()
+                described += 1
+                continue
+            # First failure with an image present: assume the model cannot see
+            # images; stop trying and fall back for all remaining figures.
+            vision_alive = False
+            print("  [vision] figure description unavailable — falling back to "
+                  "caption-only context for remaining figures")
+        leftover.append((idx, chunk))
+    if described:
+        print(f"  [vision] described {described} figure(s)")
+    return leftover
+
+
 def contextualize(chunks: list[Chunk], full_markdown: str) -> list[Chunk]:
     if not config.CR_ENABLED or not full_markdown:
         return chunks
@@ -95,30 +154,23 @@ def contextualize(chunks: list[Chunk], full_markdown: str) -> list[Chunk]:
     text_like = [(i, c) for i, c in enumerate(chunks) if c.chunk_type != "figure"]
     figures = [(i, c) for i, c in enumerate(chunks) if c.chunk_type == "figure"]
     contexts = [""] * len(chunks)
-    done, total = 0, len(chunks)
 
-    for group, figures_only in ((text_like, False), (figures, True)):
-        for start in range(0, len(group), config.CR_BATCH_SIZE):
-            batch = group[start : start + config.CR_BATCH_SIZE]
-            prompt = _build_prompt(
-                _doc_context(full_markdown, toc, batch[0][1].chapter),
-                batch, figures_only,
-            )
-            answer = llm.chat(prompt, max_tokens=200 * len(batch) + 100) or ""
-            parsed = dict(CONTEXT_TAG.findall(answer))
-            missing = 0
-            for local_i, (idx, _) in enumerate(batch):
-                ctx = parsed.get(str(local_i), "").strip()
-                contexts[idx] = ctx
-                missing += 0 if ctx else 1
-                done += 1
-            if missing:
-                print(f"  [CR] {missing}/{len(batch)} chunks without context tag")
-            if done % 25 == 0 or done == total:
-                print(f"  context {done}/{total} done")
+    _contextualize_batched(llm, text_like, full_markdown, toc, contexts, False)
+
+    if figures:
+        vision_on = config.VISION_ENABLED and getattr(llm, "vision_capable", False)
+        leftover = (
+            _contextualize_figures_vision(llm, figures, full_markdown, toc, contexts)
+            if vision_on else figures
+        )
+        if leftover:
+            _contextualize_batched(llm, leftover, full_markdown, toc, contexts, True)
+        # image bytes are no longer needed (never stored in Qdrant)
+        for _, chunk in figures:
+            chunk.image_b64 = ""
 
     for chunk, ctx in zip(chunks, contexts):
         chunk.context = ctx
     generated = sum(1 for c in chunks if c.context)
-    print(f"  {generated}/{total} chunks contextualized")
+    print(f"  {generated}/{len(chunks)} chunks contextualized")
     return chunks

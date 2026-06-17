@@ -1,5 +1,7 @@
 # Architecture
 
+**🇬🇧 English | 🇩🇪 [Deutsch](ARCHITECTURE.de.md)**
+
 For the curious and for contributors. Two containers, one bind-mounted
 folder, Claude Desktop as the user interface.
 
@@ -24,13 +26,19 @@ folder, Claude Desktop as the user interface.
 
 1. **Extract** (`asb/ingest/extract.py`) — Docling parses layout: chapters,
    sections, tables, figure captions, page numbers. Table mode is pinned to
-   ACCURATE so library updates cannot silently degrade quality.
+   ACCURATE so library updates cannot silently degrade quality. With the vision
+   pass on, figure images are rendered (`generate_picture_images`) and described
+   in the contextualize step.
 2. **Chunk** (`chunking.py`) — paragraph-level sliding window (2000 chars,
    200 overlap); long tables split by rows with the header replicated per
    part; a hard splitter handles OCR text without paragraph boundaries.
 3. **Contextualize** (`contextualize.py`) — each chunk gets 1–2 sentences of
-   LLM context (table of contents + current chapter as grounding). Figure
-   captions get an honest prompt that forbids describing unseen images.
+   LLM context (table of contents + current chapter as grounding), processed in
+   batches (5 chunks per LLM call by default). Figures go through the **vision
+   pass** (`VISION_ENABLED`, on by default): the rendered image is sent to the
+   multimodal LLM for an honest description that is embedded too. Without a
+   vision model or image, it falls back to the honest caption-only prompt (never
+   describe unseen content).
 4. **Embed** — dense vector (profile-dependent) + BM25 sparse vector with
    language-aware stemming. Failed embeddings are logged and skipped — never
    stored as zero vectors.

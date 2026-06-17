@@ -28,6 +28,7 @@ class Chunk:
     year: str
     language: str = "en"
     context: str = ""        # LLM-generated context (contextual retrieval)
+    image_b64: str = ""      # base64 PNG of a figure (vision pass); not stored
     custom_meta: dict = field(default_factory=dict)  # user fields from _meta.txt
     chunk_id: str = field(default="")
 
@@ -142,6 +143,26 @@ def detect_language(sample: str) -> str:
     return "de" if de >= en else "en"
 
 
+def _picture_image_b64(item, doc) -> str:
+    """Return a figure's rendered image as a base64 PNG string, or "" if the
+    image is unavailable. Never raises — a missing image just means no vision
+    description for that figure (it still gets caption-only context)."""
+    import base64
+    import io
+
+    try:
+        pil_image = item.get_image(doc)
+        if pil_image is None:
+            return ""
+        if pil_image.mode not in ("RGB", "L"):
+            pil_image = pil_image.convert("RGB")
+        buf = io.BytesIO()
+        pil_image.save(buf, format="PNG")
+        return base64.b64encode(buf.getvalue()).decode("ascii")
+    except Exception:
+        return ""
+
+
 def extract(path: Path) -> tuple[list[Chunk], str]:
     """Run Docling and build chunks. Returns (chunks, full_markdown)."""
     from docling.datamodel.base_models import InputFormat
@@ -172,6 +193,11 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
     opts.do_table_structure = True
     opts.table_structure_options.mode = TableFormerMode.ACCURATE
     opts.table_structure_options.do_cell_matching = True
+    # Render figure images only when the vision pass needs them — keeps
+    # extraction fast and memory-light when vision is disabled.
+    if config.VISION_ENABLED:
+        opts.generate_picture_images = True
+        opts.images_scale = config.VISION_IMAGE_SCALE
     converter = DocumentConverter(
         format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=opts)}
     )
@@ -253,9 +279,11 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
                 pass
             header = f"[Chapter: {chapter}] [Section: {section}]\n" if chapter else ""
             display = caption or "No caption available"
+            image_b64 = _picture_image_b64(item, doc) if config.VISION_ENABLED else ""
             chunks.append(Chunk(
                 text=f"{header}**Figure (p. {page}):** {display}",
-                chunk_type="figure", page_start=page, page_end=page, **meta(),
+                chunk_type="figure", page_start=page, page_end=page,
+                image_b64=image_b64, **meta(),
             ))
             buf_page_start = page
 

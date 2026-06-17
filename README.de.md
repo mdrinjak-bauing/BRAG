@@ -1,21 +1,66 @@
-# Academic RAG and Second Brain
+# ASB — Academic RAG & Second Brain
 
-**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**
+**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.2.0** ([Änderungen](#versionen))
 
-**Deine persönliche, durchsuchbare Forschungs-Wissensbasis — sprich über
-Claude Desktop mit deinem Literaturkorpus.**
+> **Sprich mit deiner eigenen Fachliteratur.** PDFs in einen Ordner werfen —
+> Paper, Bücher, Berichte, Projektkram — und Claude in normaler Sprache fragen.
+> Die Antwort steht **belegt in deinen eigenen Quellen**: seitengenau, mit Zitat
+> und einem Klick aufs Original-PDF. Läuft komplett auf deinem Rechner.
 
-PDFs in einen Ordner legen — sie werden automatisch ausgelesen (inklusive
-Tabellen und Abbildungsunterschriften), mit KI-generiertem Kontext
-angereichert und für die hybride Suche (semantisch + Stichwort) indexiert.
-Danach stellst du Claude Fragen zu deiner Literatur — die Antworten sind in
-deinen Quellen verankert, seitengenau belegt und einen Klick vom Original-PDF
-entfernt.
+Kurz **ASB** — *Academic Second Brain* (das RAG steckt im Motor). Ein „zweites
+Gehirn" für die Forschung ist nichts Neues, und ich bin nicht der Erste, der
+sowas baut. Aber ich finde, das hier ist ein **richtig solides Setup**, das im
+Alltag echt was bringt — und ich teile es, weil ich selbst dabei lerne und weil
+andere was davon haben. Kein Hype, kein Lock-in: einfache Dateien, die dir
+gehören, eine starke Suche drüber, und Claude als Gegenüber, das nie ohne Beleg
+antwortet.
 
-Gebaut für Forschende, Professorinnen und Doktoranden — **ohne
-Programmierkenntnisse nutzbar**. Alles läuft in Docker.
+**Für wen?** Forschende, Lehrende, Promovierende — und genauso Praktiker, die im
+Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und
+Fachliteratur behalten müssen. **Ohne Programmierkenntnisse nutzbar.**
 
 ---
+
+## Was du damit machst
+
+- 🔎 **Finden statt blättern** — *„Was sagt mein Korpus zum Nachtragsmanagement?"*
+  Antwort mit Seitenbeleg, ein Klick öffnet das PDF an genau der Stelle.
+- 📊 **Zahlen & Tabellen ziehen** — *„Finde Tabellen mit Kostenkennzahlen zu
+  Nacharbeit"* — auch Abbildungen werden inhaltlich beschrieben und sind so
+  auffindbar.
+- ✍️ **Schreiben mit Belegen** — beim Lesen zitierfähige Passagen sammeln, beim
+  Entwerfen *„Bau den Absatz aus diesen Passagen, Belege beibehalten."*
+- 🎓 **Lehre vorbereiten** — *„Entwirf drei Klausurfragen aus Kapitel 4, mit
+  Seitenangaben."*
+- 🧠 **Denken festhalten** — Ergebnisse landen als Notiz in deinem Vault; ein
+  neuer Chat Tage später macht genau dort weiter, wo der letzte aufhörte.
+- 🗂️ **Nach Projekt/Kurs filtern** — *„Such **nur im Projekt Schulzentrum**:
+  Welche Position deckt die Erdarbeiten ab?"*
+
+Der Kerngedanke: **Chats vergessen — dein Vault nicht.** Wissen sammelt sich in
+deinen Dateien an, nicht in einem flüchtigen Chatverlauf.
+
+## In 5 Minuten startklar
+
+**Du brauchst** (alles kostenlos): [Docker Desktop](https://www.docker.com/products/docker-desktop/),
+[Claude Desktop](https://claude.com/download) und einen API-Schlüssel —
+am einfachsten [Gemini](https://aistudio.google.com/apikey) (Free Tier);
+alternativ [OpenAI](https://platform.openai.com/api-keys) oder
+[Anthropic](https://console.anthropic.com/). Lieber alles lokal? Geht auch —
+mit [LM Studio](https://lmstudio.ai) oder [Ollama](https://ollama.com).
+
+1. **Herunterladen:** grüner „Code"-Knopf → „Download ZIP" → entpacken.
+2. **Doppelklick** auf `setup.command` (Mac) bzw. `setup.bat` (Windows). Der
+   Assistent öffnet sich **im Browser** und fragt in einfacher Sprache: wo die
+   KI rechnen soll, deinen Schlüssel (mit Live-Prüfung), die Dokumentsprache.
+   Er schreibt die ganze Konfiguration selbst — **du editierst nie eine Datei.**
+3. **Claude Desktop komplett beenden** (Cmd+Q / Tray → Beenden) und neu öffnen.
+4. **Ein PDF in `vault/sources/` legen** — binnen Sekunden automatisch indexiert.
+5. Claude fragen: *„Welche Dokumente sind in meiner Wissensbasis?"*
+
+Der erste Start lädt einmalig ~3 GB Analyse-Modelle. Ausführlich, mit „was du
+siehst": [Installation macOS](docs/INSTALL_MAC.de.md) ·
+[Windows](docs/INSTALL_WINDOWS.de.md).
 
 ## Die Idee: eine Bibliothek und ein Notizbuch
 
@@ -25,171 +70,90 @@ Trennung ist der Kern dieses Designs:
 |  | 📚 **Deine Bibliothek** | 📓 **Dein Notizbuch** |
 |---|---|---|
 | Ordner | `vault/sources/` | `vault/wiki/`, `vault/notes/`, `vault/passages/` |
-| Enthält | externe Quellen: Paper, Bücher, Berichte | **dein eigenes Denken**: Konzepte, Entwürfe, Entscheidungen, Lesenotizen |
-| Von Claude durchsuchbar? | ja — hybride Volltextsuche mit seitengenauen Belegen | bewusst **nein** |
-| Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die optionale Obsidian-Anbindung (siehe unten) |
+| Enthält | externe Quellen: Paper, Bücher, Berichte | **dein eigenes Denken**: Konzepte, Entwürfe, Lesenotizen |
+| Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | bewusst **nein** |
+| Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die optionale Obsidian-Anbindung |
 
 **Warum ist das Notizbuch vom Suchindex ausgeschlossen?** Wegen des
 Echo-Effekts: Wären deine eigenen Notizen indexiert, würdest du eines Tages
 deine eigene Zusammenfassung eines Papers „finden" und als Beleg zitieren —
-ohne zu merken, dass du dich selbst zitierst. Die Bibliothek beantwortet
-*„Was sagen meine Quellen?"*; das Notizbuch enthält, *was du daraus machst*.
-Claude arbeitet mit beidem — verwechselt sie aber nie.
+ohne zu merken, dass du dich selbst zitierst. Die Bibliothek beantwortet *„Was
+sagen meine Quellen?"*; das Notizbuch enthält, *was du daraus machst*. Claude
+arbeitet mit beidem — verwechselt sie aber nie.
 
-## So funktioniert es
+## Wie es funktioniert
 
 ![Architektur: Vault, Docker-Container, Claude Desktop und die zwei MCP-Anschlüsse](docs/assets/architecture.svg)
 
-Alles läuft in zwei Docker-Containern auf deinem Rechner. Im empfohlenen
-Cloud-Profil verarbeitet Googles kostenlose Gemini-API die Dokumenttexte; in
-den Lokal-Profilen verlässt nichts deinen Rechner (siehe
-[Profile](#wähle-dein-profil)).
+Alles läuft in zwei Docker-Containern auf deinem Rechner. Im Cloud-Profil
+verarbeitet ein KI-Anbieter nur die Dokumenttexte; in den Lokal-Profilen
+verlässt nichts deinen Rechner. Eine ausführliche, technikfreie Erklärung steht
+in **[So funktioniert's](docs/HOW_IT_WORKS.de.md)** — hier das Wichtigste.
 
-### Unter der Haube: die zwei Pipelines
+**Was ist Docker?** Statt Python, Datenbanken und KI-Bibliotheken einzeln zu
+installieren (und mit Versionskonflikten zu kämpfen), startet Docker eine fertig
+geschnürte Box, die auf jedem Rechner identisch ist. Du installierst einmal
+Docker Desktop; den Rest startet das Projekt. Die ~3 GB Modelle liegen in Dockers
+verwaltetem Speicher — **nicht** in deinem Projektordner; dein `vault/` enthält
+nur deine eigenen Dateien.
 
-![Pipeline: Einlesen (Parsing, Chunking, Contextual Retrieval, Embeddings, Index) und Abfrage (Prefetch, RRF-Fusion, Cross-Encoder-Reranking, belegte Antwort)](docs/assets/pipeline.svg)
+![Pipeline: Einlesen und Abfrage](docs/assets/pipeline.svg)
 
-Zwei Stufen leisten die Hauptarbeit für die Antwortqualität: das
-**Contextual Retrieval** beim Einlesen (eine KI schreibt zu jedem Chunk 1–2
-Sätze, die ihn im Argument des Dokuments verorten — knapper Wissenschaftstext
-wird dadurch auffindbar) und der **Cross-Encoder-Reranker** bei der Suche
-(er liest deine Frage zusammen mit jedem Kandidaten und sortiert nach
-tatsächlicher Passung statt bloßer Ähnlichkeit). Beides ist standardmäßig
-aktiv; alle Parameter sind in [`.env.example`](.env.example) dokumentiert.
+Die Antwortqualität entsteht in zwei Abläufen:
+
+**Beim Einlesen** schreibt eine KI zu jedem Textabschnitt 1–2 einordnende Sätze
+(*Contextual Retrieval*) — knapper Fachtext wird so überhaupt erst auffindbar.
+Abbildungen werden von einem multimodalen Modell beschrieben (*Vision-Pass*).
+Jeder Abschnitt bekommt zwei „Fingerabdrücke": einen für die **Bedeutung**
+(semantische Suche) und einen für **exakte Begriffe** (Stichwortsuche).
+
+**Bei jeder Frage** läuft die Abfragepipeline — von der Frage bis zum Beleg:
+
+1. **Zwei Suchen gleichzeitig** — Bedeutungssuche (findet Sinnverwandtes, auch
+   mit anderen Worten) **und** Stichwortsuche (BM25; findet exakte Begriffe wie
+   Abkürzungen, Paragraphen, Aktenzeichen). Je ~150 Kandidaten.
+2. **Zusammenführen (RRF)** — beide Listen verschmelzen; ~80 bleiben übrig.
+3. **Reranker** — ein Cross-Encoder liest deine Frage gemeinsam mit jeder Stelle
+   und sortiert nach echter Passung. Der Unterschied zwischen „enthält die
+   Suchworte" und „beantwortet die Frage".
+4. **Kürzen** — die besten Treffer bleiben (Standard 15, max. 3 je Quelle).
+5. **Antworten** — Claude formuliert aus genau diesen Stellen, jede Aussage mit
+   Quelle und Seite belegt.
+
+Mehr Tiefe (mit Zahlen) in [So funktioniert's](docs/HOW_IT_WORKS.de.md) und
+[Architektur](docs/ARCHITECTURE.de.md); alle Parameter in [`.env.example`](.env.example).
 
 ## Die zwei Claude-Anschlüsse (MCP)
 
-Claude Desktop spricht über zwei MCP-Server mit deinem Second Brain — einer
-pro Hälfte:
+Claude Desktop spricht über zwei MCP-Server mit deinem Second Brain:
 
-### 1. Der Such-Anschluss (dieses Projekt — wird automatisch eingerichtet)
+**1. Der Such-Anschluss** (dieses Projekt — wird automatisch eingerichtet) gibt
+Claude diese Werkzeuge:
 
-Der Setup-Assistent trägt ihn für dich in Claude Desktop ein. Er gibt Claude
-diese Werkzeuge:
-
-| Werkzeug | Was es tut | Beispielfrage an Claude |
+| Werkzeug | Was es tut | Beispielfrage |
 |---|---|---|
-| `search` | Hybride Suche mit Filtern (Dokumenttyp, Jahr, nur Tabellen/Abbildungen, Quelle) | *„Was sagt mein Korpus zum Nachtragsmanagement?"* — *„Finde Tabellen mit Kostenzahlen zu Nacharbeit."* |
+| `search` | Hybride Suche mit Filtern (Typ, Jahr, nur Tabellen/Abbildungen, Quelle) | *„Was sagt mein Korpus zum Nachtragsmanagement?"* |
 | `list_sources` | Inventar aller indexierten Dokumente | *„Welche Dokumente sind in meiner Wissensbasis?"* |
-| `inspect_chunks` | Zeigt, was zu einer Quelle wirklich gespeichert ist — dein Diagnose-Röntgenbild | *„Zeig mir, was von Müller 2023, Seite 14 indexiert wurde."* |
-| `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema in `passages/` | *„Speichere dieses Zitat für mein Methodenkapitel."* |
-| `list_passages` | Zeigt gespeicherte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
+| `inspect_chunks` | Zeigt, was zu einer Quelle gespeichert ist (Diagnose) | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |
+| `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema | *„Speichere dieses Zitat fürs Methodenkapitel."* |
+| `list_passages` | Zeigt gesammelte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
 
-Jeder Suchtreffer trägt einen klickbaren Link, der das PDF **an der
-zitierten Seite** im Browser öffnet.
+**2. Der Notizbuch-Anschluss** (optional, ~5 Minuten) lässt Claude über das
+Plugin **MCP Tools für Obsidian** auch deine Notizen lesen und fortschreiben,
+während der Suchindex unberührt bleibt. Anleitung: [docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
 
-### 2. Der Notizbuch-Anschluss (optional — 5 Minuten Handarbeit)
-
-Damit Claude auch dein Notizbuch (`wiki/`, `notes/`) lesen und fortschreiben
-kann, ergänzt du das Community-Plugin **MCP Tools für Obsidian**. Dann kann
-Claude deine Notizen zusammenfassen, Konzeptseiten pflegen und
-Literaturnotizen ergänzen — während der Suchindex unberührt bleibt.
-Schritt-für-Schritt-Anleitung: **[docs/OBSIDIAN.md](docs/OBSIDIAN.md)**.
-
-Mit beiden Anschlüssen geht das in einem einzigen Gespräch:
-*„Such in meinem Korpus nach Definitionen von Prozessreife (Bibliothek),
-vergleiche sie mit meiner Konzeptnotiz zu Reifegradmodellen (Notizbuch) und
-ergänze die Notiz um das, was fehlt — mit Belegen."*
-
-## Warum Obsidian?
-
-Du musst es nicht nutzen — der Vault ist ein normaler Ordner mit Markdown-
-und PDF-Dateien, der dir vollständig gehört. Aber
-[Obsidian](https://obsidian.md) (kostenlos) ist der ideale Betrachter dafür:
-
-- **Einfache Dateien, kein Lock-in** — Obsidian arbeitet direkt auf dem Ordner; nichts wird importiert oder konvertiert.
-- **Wikilinks & Graph** — Konzeptnotizen mit `[[Links]]` verbinden und das eigene Denken als Netz sehen.
-- **Suche & tägliche Notizen** — komfortables Schreiben für die Notizbuch-Hälfte.
-- Es ist das Standardwerkzeug der akademischen Notiz-Community — Anleitungen und Plugins gibt es reichlich.
-
-Den `vault/`-Ordner als Obsidian-Vault öffnen — fertig
-([docs/OBSIDIAN.md](docs/OBSIDIAN.md), Teil 1).
-
-## Dein Wissensordner (der Vault)
-
-Der Vault ist **ein Ordner auf deinem Rechner** — standardmäßig `vault/` im
-Projektverzeichnis. Beim Setup kannst du stattdessen jeden anderen Ordner
-angeben (Erweiterte Optionen → eigener Pfad), z. B. eine bestehende
-Literatursammlung. Die Struktur:
-
-```
-vault/
-├── CLAUDE.md      ← bringt Claude DEINE Forschung bei — ausfüllen!
-├── AGENTS.md      ← Zusatzregeln für autonome Agenten-Aufgaben
-├── sources/       ← 📚 Dokumente hier ablegen (PDF, DOCX); Unterordner = Dokumenttypen
-│   └── _inbox/    ← Staging-Bereich, wird vom Indexer ignoriert (bei Bedarf anlegen)
-├── notes/         ← auto-generierte Literaturnotiz pro Quelle (+ deine Ergänzungen)
-├── passages/      ← über Claude gespeicherte Zitate, nach Themen gruppiert
-└── wiki/          ← 📓 dein eigenes Denken — wird nie indexiert
-```
-
-Umbenennen oder Löschen in `sources/` wird automatisch nachgezogen (Index
-und Literaturnotiz folgen). Unterordner-Namen werden zum filterbaren
-Dokumenttyp: `sources/Paper/`, `sources/Fachbuecher/`, `sources/Berichte/` …
-
-### Deine eigenen Metadaten (Projekte, Kurse, Auftraggeber …)
-
-Die eingebauten Metadaten — Autor, Jahr, Typ, Kapitel, Seite — werden
-automatisch abgeleitet. Für alles, was **nur du wissen kannst** — zu welchem
-Bauprojekt ein Leistungsverzeichnis gehört, zu welchem Modul und Semester
-ein Vorlesungsskript — legst du eine `_meta.txt` in einen beliebigen Ordner
-unter `sources/`:
-
-```
-# sources/Projekte/Schulzentrum/_meta.txt
-projekt: Schulzentrum
-auftraggeber: Stadt Hamm
-```
-
-Eine Zeile pro `schlüssel: wert`, mehr muss niemand lernen. Jedes Dokument
-in diesem Ordner (und seinen Unterordnern) trägt diese Felder; tiefere
-Ordner können Felder ergänzen oder überschreiben. Im Gespräch filtert
-Claude danach:
-
-> *„Such **nur im Projekt Schulzentrum**: Welche Position deckt die
-> Erdarbeiten ab?"*
-
-— ohne diesen Filter würden Treffer aus anderen Projekten in die Ergebnisse
-mischen. Über denselben Mechanismus lassen sich auch `author`, `year` oder
-`doc_type` korrigieren, wenn der Dateiname sie nicht hergibt. Hinweis: Die
-`_meta.txt` wird beim Einlesen gelesen — nach einer Änderung ein Dokument
-kurz aus dem Ordner heraus- und wieder hineinschieben, damit der Eintrag
-aktualisiert wird.
-
-## Voraussetzungen
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (kostenlos)
-- [Claude Desktop](https://claude.com/download) (kostenlos)
-- Ein Cloud-Profil: ein API-Schlüssel deines Anbieters — [Gemini](https://aistudio.google.com/apikey) (Free Tier), [OpenAI](https://platform.openai.com/api-keys) oder [Anthropic](https://console.anthropic.com/)
-- Lokal-Profile: [LM Studio](https://lmstudio.ai) oder [Ollama](https://ollama.com) (der Setup-Assistent führt dich durch — inklusive der Frage, welches Modell du laden solltest)
-
-## Schnellstart
-
-1. **Herunterladen:** dieses Repository (grüner „Code"-Knopf → „Download ZIP") und entpacken.
-2. **Doppelklick auf `setup.command`** (Mac) bzw. **`setup.bat`** (Windows).
-   Der Setup-Assistent öffnet sich **im Browser** und führt dich durch:
-   - wo die KI-Verarbeitung laufen soll (zwei Alltagsfragen, kein Fachjargon),
-   - deinen API-Schlüssel (mit Live-Prüfung) *oder* die lokale KI-App (mit
-     Modell-Empfehlungen für deine Hardware und Verbindungstest),
-   - die Sprache deiner Dokumente und optional einen eigenen Vault-Ordner.
-   Er schreibt die gesamte Konfiguration **inklusive des Claude-Desktop-
-   Eintrags** — du editierst nie eine Config-Datei.
-3. **Claude Desktop komplett beenden** (Cmd+Q / Tray → Beenden) und neu öffnen.
-4. **Ein PDF in `vault/sources/` legen** — wird binnen Sekunden automatisch indexiert.
-5. Claude fragen: *„Welche Dokumente sind in meiner Wissensbasis?"*
-
-Der erste Build lädt einmalig ~3 GB Dokumentanalyse-Modelle.
-Ausführliche Anleitungen: [macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md)
+Mit beiden zusammen: *„Such Definitionen von Prozessreife (Bibliothek),
+vergleiche mit meiner Konzeptnotiz (Notizbuch) und ergänze, was fehlt — mit
+Belegen."*
 
 ## Wähle dein Profil
 
-Das Profil wählt nur die **Text-KI** (die den Chunk-Kontext schreibt,
-Abbildungen beschreibt und Dokumente klassifiziert). Der **Bedeutungs-Index
-(Embeddings) läuft immer lokal** auf deinem Rechner (arctic-Modell, keine GPU
-nötig) — genau wie der Reranker es ohnehin schon tut. Du kannst den KI-Anbieter
-unten also jederzeit wechseln, **ohne den Korpus neu zu indexieren.**
+Das Profil wählt nur die **Text-KI** (Kontext schreiben, Abbildungen
+beschreiben, klassifizieren). Der **Bedeutungs-Index (Embeddings) läuft immer
+lokal** (arctic-Modell, keine GPU nötig) — du kannst den Anbieter also jederzeit
+wechseln, **ohne neu zu indexieren.**
 
-| Profil | Text-KI-Anbieter | Günstigstes Modell | Hardware | Dokumenttext verlässt Rechner |
+| Profil | Text-KI | Günstigstes Modell | Hardware | Daten verlassen Rechner |
 |---|---|---|---|---|
 | **Gemini** (Standard) | Google Gemini (Free Tier) | gemini-2.5-flash-lite | jeder Laptop | ja (Google) |
 | **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini | jeder Laptop | ja (OpenAI) |
@@ -197,85 +161,154 @@ unten also jederzeit wechseln, **ohne den Korpus neu zu indexieren.**
 | **Hybrid** | LM Studio (auf deinem Mac) | dein lokales Modell | Apple Silicon, 32 GB+ | nein |
 | **Lokal** | Ollama (auf deinem Rechner) | llama3.1 | ordentliche CPU, 16 GB+ | nein |
 
-Bei einem Cloud-Profil wird nur der **Text** jedes Chunks zur Kontext-Erzeugung
-an den Anbieter geschickt — nie deine ganzen Dateien und nie die Embeddings.
-Bei den beiden lokalen Profilen verlässt nichts den Rechner.
+Bei einem Cloud-Profil geht der **Textauszug** jedes Abschnitts an den Anbieter —
+bei aktivem Vision-Pass (Standard) zusätzlich die **Bilder deiner Abbildungen**.
+Nie übermittelt werden ganze Dateien und die Embeddings. Bei lokalen Profilen
+verlässt nichts den Rechner.
 
-Entscheidungshilfe und Modell-Empfehlungen: [docs/PROFILES.md](docs/PROFILES.md).
-**Hinweis:** Der Wechsel des KI-Anbieters erfordert KEINE Neu-Indexierung. Nur
-das Opt-in zu *Cloud-Embeddings* (eine fortgeschrittene `.env`-Option für
-schnellen Massen-Ingest auf schwacher Hardware) ändert den Index und löst einen
-einmaligen Re-Ingest aus — sicher in eine separate Collection.
+> ⚠️ **Datenschutz, kurz und ehrlich:** Beim **kostenlosen Gemini-Tarif**
+> (Standard) darf Google die übermittelten Texte/Bilder auswerten. Faustregel:
+> Was du Claude bisher nicht anvertraut hättest, lädst du auch hier nicht hoch.
+> Für Vertrauliches oder Personenbezogenes nimmst du einfach ein **lokales
+> Profil** (dann verlässt nichts den Rechner) oder schaltest den Bildversand mit
+> `VISION_ENABLED=false` ab. Und wer's elegant will, baut sich eine
+> Anonymisierung als eigenes Tool davor (siehe [Ausbau](#ausbau--automatisierung-mit-claude-code--co)).
+> Mehr unter [Rechtliches & Datenschutz](#rechtliches--datenschutz).
 
-## Tägliche Wissensarbeit damit
+**Kosten:** Jedes Profil ist auf sein günstigstes brauchbares Modell
+voreingestellt; für einen typischen Korpus bleiben die Kosten im **Cent-Bereich**.
+**Hardware:** Starke Hardware brauchst du nur für eine *lokale* Text-KI — die
+Embeddings laufen überall auf der CPU. Details, Modell-Empfehlungen und das
+Cloud-Embedding-Opt-in: [docs/PROFILES.de.md](docs/PROFILES.de.md).
 
-Das Prinzip hinter allem: **Chats vergessen — dein Vault nicht.**
-Ein Gespräch mit Claude ist weg, sobald das Fenster zugeht. Deshalb legt
-jedes Gespräch, das etwas Bleibendes erzeugt, sein Ergebnis *im Vault* ab —
-als gespeicherte Passage, Literaturnotiz oder Konzeptseite — und jedes
-künftige Gespräch kann genau dort weitermachen. Wissen akkumuliert in
-deinen Dateien, die dir gehören und die du sichern kannst; der Chat ist nur
-die Werkbank.
+## Dein Wissensordner (der Vault)
 
-**Wenn neue Literatur eintrifft** — ein Paper von einer Kollegin, ein
-Buchkapitel, ein Branchenbericht:
+Der Vault ist **ein Ordner auf deinem Rechner** — standardmäßig `vault/`. Beim
+Setup kannst du jeden anderen Ordner angeben (z. B. eine bestehende
+Literatursammlung).
 
-1. In `sources/` ablegen → in Minuten indexiert.
-2. *„Was ergänzt das zu dem, was ich schon zu Nacharbeitskosten habe?
-   Widerspricht es Müller 2021? Vergleiche."* — Antworten kommen mit
-   seitenverlinkten Belegen; ein Klick öffnet das PDF an der Stelle.
-3. Überall wiederverwenden: *„Entwirf drei Klausurfragen aus Kapitel 4,
-   mit Seitenangaben"* (Lehre), *„Fasse die Methodik für meinen
-   Stand-der-Forschung-Abschnitt zusammen"* (Schreiben), *„Lohnt sich das
-   gründliche Lesen für mein Projekt?"* (Sichtung).
+```
+vault/
+├── CLAUDE.md      ← bringt Claude DEINE Forschung bei — ausfüllen!
+├── AGENTS.md      ← Zusatzregeln für autonome Agenten-Aufgaben
+├── sources/       ← 📚 Dokumente hier ablegen (PDF, DOCX); Unterordner = Dokumenttypen
+│   └── _inbox/    ← Staging-Bereich, wird vom Indexer ignoriert
+├── notes/         ← auto-generierte Literaturnotiz pro Quelle
+├── passages/      ← über Claude gespeicherte Zitate, nach Themen
+└── wiki/          ← 📓 dein eigenes Denken — wird nie indexiert
+```
 
-**Wenn du eine Idee entwickelst** — die Schleife, die daraus ein *zweites
-Gehirn* macht:
+Umbenennen/Löschen in `sources/` wird automatisch nachgezogen. Unterordner-Namen
+werden zum filterbaren Dokumenttyp (`sources/Paper/`, `sources/Berichte/` …).
 
-1. Brainstorming auf Basis deines Korpus: *„Was sagen meine Quellen zu
-   Reifegradmodellen? Wo widersprechen sie sich? Was fehlt?"*
-2. Ergebnis festhalten: *„Schreib das als Konzeptnotiz nach `wiki/`, mit
-   den offenen Fragen am Ende."* (über den Notizbuch-Anschluss — oder du
-   überträgst es selbst in Obsidian)
-3. Tage später, in einem **neuen Chat**: *„Öffne meine Konzeptnotiz zu
-   Reifegradmodellen — lass uns mit offener Frage 2 weitermachen."* Das
-   neue Gespräch beginnt exakt dort, wo das alte endete.
+**Eigene Metadaten** (Projekt, Kurs, Auftraggeber …) gibst du über eine
+`_meta.txt` in einem Ordner unter `sources/` an — eine Zeile pro `schlüssel: wert`:
 
-**Wenn du schreibst:**
+```
+# sources/Projekte/Schulzentrum/_meta.txt
+projekt: Schulzentrum
+auftraggeber: Stadt Hamm
+```
 
-- Beim Lesen zitierfähige Passagen je Thema sammeln: *„Speichere dieses
-  Zitat fürs Kapitel Qualitätskosten."* → `passages/qualitaetskosten.md`
-- Beim Entwerfen: *„Was habe ich zu Qualitätskosten gesammelt? Entwirf den
-  Absatz aus diesen Passagen, Belege beibehalten."*
+Jedes Dokument im Ordner trägt diese Felder; Claude filtert im Gespräch danach.
+So mischen sich keine Treffer aus anderen Projekten in deine Ergebnisse.
 
-### Claudes Instruktionen mitwachsen lassen
+## Im Alltag: so wächst dein Wissen
 
-Die dritte Säule neben Bibliothek und Notizbuch: **`vault/CLAUDE.md`** (und
-die Projekt-Anweisungen in Claude Desktop). Sie sagt Claude, wer du bist,
-wie es deinen Korpus durchsuchen und wie es zitieren soll — und sie sollte
-mit dir wachsen. Faustregel: Wenn du Claude zweimal dieselbe Sache
-korrigierst, gehört die Korrektur in die CLAUDE.md, nicht in den nächsten
-Chat. Eine gepflegte Instruktionsdatei macht aus einem generischen
-Assistenten *deinen* Assistenten — Anleitung mit Beispielen:
-[docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md).
+**Neue Literatur trifft ein:** in `sources/` ablegen → in Minuten indexiert →
+*„Was ergänzt das zu dem, was ich schon zu Nacharbeitskosten habe? Widerspricht
+es Müller 2021?"* — Antwort mit seitenverlinkten Belegen.
+
+**Eine Idee entwickeln:** *„Was sagen meine Quellen zu Reifegradmodellen? Wo
+widersprechen sie sich?"* → Ergebnis als Konzeptnotiz nach `wiki/` schreiben →
+Tage später im neuen Chat genau dort weitermachen.
+
+**Beim Schreiben:** zitierfähige Passagen je Thema sammeln, dann den Absatz
+daraus entwerfen lassen — Belege bleiben erhalten.
+
+**Claude mitwachsen lassen:** Korrigierst du Claude zweimal dieselbe Sache,
+gehört die Korrektur in **`vault/CLAUDE.md`**, nicht in den nächsten Chat. Eine
+gepflegte Instruktionsdatei macht aus einem generischen Assistenten *deinen* —
+Beispiele: [docs/CUSTOMIZE_CLAUDE.de.md](docs/CUSTOMIZE_CLAUDE.de.md).
+
+## Ausbau & Automatisierung (mit Claude Code & Co.)
+
+Das Fundament ist bewusst offen: einfache Dateien, übersichtliche Python-Module,
+Docker und **MCP** — derselbe offene Standard, über den Claude seine Werkzeuge
+anspricht. Das macht das Projekt zu einer **Basis zum Weiterbauen**, nicht zu
+einer geschlossenen App. Mit **Claude Code** oder einem anderen Coding-Agenten
+kannst du den Code lesen lassen, neue Werkzeuge ergänzen und Abläufe
+automatisieren — die [Architektur](docs/ARCHITECTURE.de.md) ist dafür
+dokumentiert.
+
+Mögliche Ausbaurichtungen (offene Architektur, noch nicht fertig eingebaut):
+
+- **Weitere Datenquellen anbinden** — E-Mail und Kalender, Cloud-Speicher,
+  Referenzmanager (z. B. Zotero), Webseiten/Feeds: als zusätzliche Quellen oder
+  als eigene MCP-Werkzeuge, die Claude im selben Gespräch nutzt.
+- **Fachsoftware integrieren** — projektspezifische Anbindungen an die Programme
+  deines Felds (z. B. AVA/Baukalkulation, ERP, Dokumentenmanagement), damit
+  Claude auch dort nachschlagen oder Einträge vorbereiten kann.
+- **Automatisierungen** — automatische Datei-Benennung, regelmäßige
+  Zusammenfassungen neuer Quellen, watcher-getriggerte Reports, geplante
+  Aufgaben über Agenten-Sitzungen (Regeln dafür in `vault/AGENTS.md`).
+
+Ein Coding-Agent kann genau solche Erweiterungen Schritt für Schritt umsetzen —
+ein neues MCP-Werkzeug hier, ein zusätzlicher Pipeline-Schritt dort. Wenn du in
+diese Richtung baust, freue ich mich über Beiträge zurück ins Projekt.
+
+## Rechtliches & Datenschutz
+
+Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs/LEGAL.de.md)**.
+
+- **Ohne Gewähr.** Open Source unter [MIT](LICENSE), „wie besehen", ohne
+  Garantie für Datenschutz oder Rechtskonformität. Nutzung auf eigene
+  Verantwortung.
+- **Datenschutz — die ehrliche Faustregel.** Lokale Profile: nichts verlässt
+  den Rechner. Cloud-Profile: Textauszüge (und bei Vision die Abbildungsbilder)
+  gehen an den Anbieter, und der **kostenlose Gemini-Tarif** darf sie auswerten.
+  Heißt: Was du Claude bisher nicht gezeigt hättest, gehört auch hier nicht in
+  die Cloud — Personenbezogenes oder Vertrauliches läuft übers **lokale Profil**
+  (und wer mag, baut sich eine Anonymisierung davor). Enthalten Dokumente
+  personenbezogene Daten, bist im Cloud-Fall in der Regel **du** der
+  DSGVO-Verantwortliche.
+- **Urheberrecht.** Klar, technisch kannst du alles in den Ordner legen — aber
+  für die Rechte an deinen Quellen bist du verantwortlich. Eigene
+  wissenschaftliche Analyse rechtmäßig zugänglicher Werke kann unter die
+  Text-und-Data-Mining-Schranken fallen (§ 60d / § 44b UrhG); Lizenzbedingungen
+  können das einschränken. Für lizenzierte oder vertrauliche Werke ist die
+  Antwort simpel: lokales Profil, dann bleibt alles auf deinem Rechner.
+
+*Kein Rechtsrat (Stand Juni 2026). Im Zweifel fachkundigen Rat einholen.*
 
 ## Dokumentation
 
 - **[So funktioniert's — in einfachen Worten](docs/HOW_IT_WORKS.de.md)** (kein Technik-Wissen nötig)
-- [Installation macOS](docs/INSTALL_MAC.md) · [Installation Windows](docs/INSTALL_WINDOWS.md)
-- [Backend-Profile](docs/PROFILES.md) · [Obsidian + Notizbuch-MCP anbinden](docs/OBSIDIAN.md)
-- [Claude auf deine Forschung einstellen](docs/CUSTOMIZE_CLAUDE.md)
-- [FAQ & Fehlersuche](docs/FAQ.md) · [Architektur](docs/ARCHITECTURE.md)
+- [Installation macOS](docs/INSTALL_MAC.de.md) · [Installation Windows](docs/INSTALL_WINDOWS.de.md)
+- [Backend-Profile](docs/PROFILES.de.md) · [Obsidian + Notizbuch-MCP anbinden](docs/OBSIDIAN.de.md)
+- [Claude auf deine Forschung einstellen](docs/CUSTOMIZE_CLAUDE.de.md)
+- [FAQ & Fehlersuche](docs/FAQ.de.md) · [Architektur](docs/ARCHITECTURE.de.md)
+- ⚖️ [Rechtliche Hinweise (Datenschutz, Urheberrecht)](docs/LEGAL.de.md)
 
-*(Die Detail-Dokumentation ist derzeit auf Englisch; deutsche Fassungen
-folgen.)*
+## Versionen
+
+Aktuelle Version: **0.2.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
+
+- **0.2.0** — Neben Google Gemini jetzt auch **OpenAI/ChatGPT** und
+  **Anthropic/Claude** als Cloud-Anbieter. Zweisprachiger Einrichtungs-Assistent.
+  Der Bedeutungs-Index (arctic) läuft in **jedem** Profil lokal (Anbieterwechsel
+  ohne Neu-Indexierung). Überarbeitete Anleitung (Abfragepipeline, Docker, Kosten,
+  Hardware, Recht). Neu: der **Vision-Pass** — Abbildungen werden inhaltlich
+  beschrieben (Standard an, abschaltbar mit `VISION_ENABLED=false`).
+- **0.1.0** — Erste Veröffentlichung: Gemini-Cloud-Profil, hybride Suche mit
+  Reranking, Vault-Struktur und Such-MCP für Claude Desktop.
 
 ## Status
 
-Frühe Version. Das Cloud-Profil (A) ist der getestete Hauptweg; die Profile
-B/C funktionieren, sind aber weniger erprobt. Roadmap: KI-Bildbeschreibungen
-für Abbildungen (Vision-Pass), automatische Dateibenennung, Korpus-
-Überblicksmodi (Coverage/Cluster), optionale Wissensgraph-Ebene.
+Frühe Version (0.2.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
+übrigen Profile funktionieren, sind aber weniger erprobt. Roadmap: automatische
+Dateibenennung, Korpus-Überblicksmodi (Coverage/Cluster), optionale
+Wissensgraph-Ebene — und die oben skizzierten Anbindungen.
 
 ## Lizenz
 

@@ -81,6 +81,15 @@ CONTEXT_DOC_CHARS = int(_env("CONTEXT_DOC_CHARS", 15000))
 TOC_MAX_CHARS = int(_env("TOC_MAX_CHARS", 3000))
 CHAPTER_CONTEXT_CHARS = int(_env("CHAPTER_CONTEXT_CHARS", 10000))
 
+# ── Vision pass (figure descriptions) ───────────────────────────
+# When enabled, each figure's image is sent to the (multimodal) text LLM for an
+# honest 1-3 sentence description, which is embedded so figures become findable
+# by content. On by default; needs a multimodal model (all cloud presets are —
+# for local profiles load a vision model, else it falls back to caption-only).
+# Disabling it also skips rendering figure images during extraction.
+VISION_ENABLED = _env("VISION_ENABLED", "true").lower() == "true"
+VISION_IMAGE_SCALE = float(_env("VISION_IMAGE_SCALE", 2.0))
+
 # ── Retrieval ───────────────────────────────────────────────────
 RERANKER_MODEL = _env("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
 RERANK_ENABLED = _env("RERANK_ENABLED", "true").lower() == "true"
