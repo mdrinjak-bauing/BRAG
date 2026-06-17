@@ -46,6 +46,15 @@ Der kostenlose Gemini-Tarif hat Limits pro Minute/Tag. Das System wartet und
 versucht es automatisch erneut — einfach laufen lassen; nichts geht verloren.
 Fehlgeschlagene Abschnitte werden in `vault/.asb/failed_chunks.jsonl` vermerkt.
 
+**Werden Abbildungen/Bilder ausgewertet?**
+Aktuell wird nur die **Bildunterschrift** einer Abbildung indexiert, nicht der
+Bildinhalt selbst — es ist noch kein Vision-Modell aktiv. Eine Abbildung ist
+also über ihre Caption und ihr Kapitel auffindbar (z. B. „die Abbildung mit dem
+Ablaufdiagramm in Kapitel 4"), aber nicht anhand dessen, was im Bild gezeichnet
+ist. Eine erfundene Bildbeschreibung wird bewusst vermieden, um den Index nicht
+zu vergiften. Ein Vision-Pass, der die Bilder ansieht und beschreibt, ist auf
+der Roadmap.
+
 ## Leistung
 
 **Ist die Nutzung in Docker langsamer als nativ auf dem Rechner?**

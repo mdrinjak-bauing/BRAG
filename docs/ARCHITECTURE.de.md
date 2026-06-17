@@ -27,7 +27,9 @@ Claude Desktop als Benutzeroberfläche.
 1. **Extract** (`asb/ingest/extract.py`) — Docling analysiert das Layout:
    Kapitel, Abschnitte, Tabellen, Abbildungsunterschriften, Seitenzahlen. Der
    Tabellenmodus ist fest auf ACCURATE gesetzt, damit Bibliotheks-Updates die
-   Qualität nicht still verschlechtern können.
+   Qualität nicht still verschlechtern können. Abbildungen liefern nur ihre
+   Bildunterschrift — die Bildpixel werden nicht analysiert (ein Vision-Pass
+   steht auf der Roadmap).
 2. **Chunk** (`chunking.py`) — gleitendes Fenster auf Absatzebene (2000 Zeichen,
    200 Überlappung); lange Tabellen werden zeilenweise geteilt, die Kopfzeile je
    Teil wiederholt; ein „harter" Splitter behandelt OCR-Text ohne

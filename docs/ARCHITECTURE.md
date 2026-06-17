@@ -26,7 +26,9 @@ folder, Claude Desktop as the user interface.
 
 1. **Extract** (`asb/ingest/extract.py`) — Docling parses layout: chapters,
    sections, tables, figure captions, page numbers. Table mode is pinned to
-   ACCURATE so library updates cannot silently degrade quality.
+   ACCURATE so library updates cannot silently degrade quality. Figures
+   contribute their caption only — image pixels are not analyzed (a vision pass
+   is on the roadmap).
 2. **Chunk** (`chunking.py`) — paragraph-level sliding window (2000 chars,
    200 overlap); long tables split by rows with the header replicated per
    part; a hard splitter handles OCR text without paragraph boundaries.

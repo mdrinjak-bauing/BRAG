@@ -42,6 +42,14 @@ The free Gemini tier has per-minute/per-day limits. The system waits and
 retries automatically — let it run; nothing is lost. Failed chunks are
 recorded in `vault/.asb/failed_chunks.jsonl`.
 
+**Are figures/images analyzed?**
+Currently only a figure's **caption** is indexed, not the image content itself —
+no vision model is active yet. So a figure is findable via its caption and
+chapter (e.g. "the figure with the flowchart in chapter 4"), but not by what is
+drawn in it. An invented image description is deliberately avoided so the index
+is not poisoned. A vision pass that looks at and describes the images is on the
+roadmap.
+
 ## Performance
 
 **Is running in Docker slower than natively on the machine?**

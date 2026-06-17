@@ -126,6 +126,24 @@ durchläuft fünf Schritte:
 
 5. **In Qdrant ablegen** + eine kurze Literaturnotiz in `notes/` schreiben.
 
+### Und was ist mit Abbildungen?
+
+Wichtig zu wissen: Derzeit wird der **Bildinhalt nicht angeschaut**. Beim
+Einlesen erkennt Docling jede Abbildung und übernimmt ihre **Bildunterschrift**
+(Caption) samt dem Kapitel, in dem sie steht — dieser Text wird als
+„figure"-Abschnitt durchsuchbar. Du findest eine Abbildung also über ihre
+Unterschrift und ihren Kontext, **nicht** über das, was im Bild zu sehen ist.
+Fehlt die Unterschrift, wird nur ihre Position vermerkt („No caption available").
+
+Das ist Absicht: Eine KI, die ein **ungesehenes** Bild „beschreibt", würde raten
+— und eine erfundene Beschreibung würde den Index dauerhaft vergiften. Deshalb
+bekommt die Kontext-KI für Abbildungen einen bewusst ehrlichen Auftrag: die
+Abbildung nur im Kapitel verorten, **nie** ihren Inhalt erfinden.
+
+Ein echtes **Vision-Modell**, das die Bilder tatsächlich ansieht und beschreibt
+(Diagramme, Schaubilder, Fotos), ist geplant (siehe Roadmap), aber noch nicht
+aktiv.
+
 Ein kurzes Paper dauert 1–3 Minuten, ein Buch länger. Du wartest nicht — es
 passiert im Hintergrund, und eine gelöschte Datei wird automatisch aus dem Index
 entfernt.

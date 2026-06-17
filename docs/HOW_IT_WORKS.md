@@ -117,6 +117,22 @@ runs five steps:
 
 5. **File it in Qdrant** + write a short literature note in `notes/`.
 
+### What about figures?
+
+Important to know: the **image content is not looked at** (yet). On ingest,
+Docling detects each figure and takes its **caption** plus the chapter it sits
+in — that text becomes a searchable "figure" chunk. So you find a figure through
+its caption and context, **not** through what the image actually shows. If a
+figure has no caption, only its position is recorded ("No caption available").
+
+This is deliberate: an AI "describing" an **unseen** image would be guessing —
+and an invented description would permanently poison the index. So for figures
+the context AI gets a deliberately honest task: only locate the figure in its
+chapter, **never** invent its content.
+
+A true **vision model** that actually looks at and describes the images
+(diagrams, charts, photos) is planned (see the roadmap) but not active yet.
+
 A short paper takes 1–3 minutes; a book, longer. You don't wait — it happens in
 the background, and a removed file is cleaned out of the index automatically.
 
