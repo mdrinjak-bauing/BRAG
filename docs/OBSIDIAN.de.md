@@ -2,10 +2,10 @@
 
 **🇬🇧 [English](OBSIDIAN.md) | 🇩🇪 Deutsch**
 
-Dein Vault ist ein Ordner aus einfachen Markdown-Dateien — Obsidian ist der
+Dein Wissensordner ist ein Ordner aus einfachen Markdown-Dateien — Obsidian ist der
 ideale Weg, ihn zu lesen und zu beschreiben.
 
-## Teil 1: Den Vault in Obsidian öffnen
+## Teil 1: Den Wissensordner in Obsidian öffnen
 
 1. [Obsidian](https://obsidian.md) installieren (kostenlos).
 2. „Ordner als Vault öffnen" → den Ordner `vault/` innerhalb deines
@@ -23,7 +23,7 @@ Community-Plugin „MCP Tools":
    API** installieren und aktivieren.
 2. **MCP Tools** (von Jack Steam) installieren und aktivieren. In den
    Einstellungen auf **„Install Server"** klicken — das lädt ein kleines
-   Hilfsprogramm in deinen Vault.
+   Hilfsprogramm in deinen Wissensordner.
 3. In den Einstellungen von **Local REST API** den **API-Schlüssel** kopieren.
 4. Einen zweiten Eintrag in deine Claude-Desktop-Konfigurationsdatei ergänzen
    (macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`,
@@ -31,7 +31,7 @@ Community-Plugin „MCP Tools":
 
 ```json
 "obsidian-mcp-tools": {
-  "command": "<vollständiger Pfad zu deinem Vault>/.obsidian/plugins/mcp-tools/bin/mcp-server",
+  "command": "<vollständiger Pfad zu deinem Wissensordner>/.obsidian/plugins/mcp-tools/bin/mcp-server",
   "env": { "OBSIDIAN_API_KEY": "<der kopierte Schlüssel>" }
 }
 ```

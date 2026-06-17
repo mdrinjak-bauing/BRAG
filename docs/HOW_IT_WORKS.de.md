@@ -68,7 +68,7 @@ Projektordner. Dort lebt auch die Qdrant-Datenbank (als „benanntes Volume").
 Das ist Absicht: So landet die Datenbank nie versehentlich in iCloud/OneDrive
 (wo sie beschädigt würde), und die 3 GB Modelle müllen deinen Projektordner
 nicht zu. Deinstallierst du Docker, verschwindet dieser Bereich wieder — dein
-Projektordner und dein Vault bleiben unberührt.
+Projektordner und dein Wissensordner bleiben unberührt.
 
 Kurz gesagt: **Deine Dateien liegen im Projektordner (sichtbar, deins). Das
 laufende System und der Suchindex liegen in Docker (unsichtbar, automatisch
@@ -85,7 +85,7 @@ auftauchen.
 | Was | Wo | Hinweis |
 |---|---|---|
 | Deine Dokumente & Notizen | der Ordner `vault/` auf deinem Rechner | einfache PDF-/Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
-| Der Suchindex (Qdrant) | in Docker, in einem verwalteten Speicherbereich | jederzeit aus dem Vault neu aufbaubar; nie in iCloud/OneDrive legen |
+| Der Suchindex (Qdrant) | in Docker, in einem verwalteten Speicherbereich | jederzeit aus deinem Wissensordner neu aufbaubar; nie in iCloud/OneDrive legen |
 | Programmcode & KI-Modelle | im Docker-Image | einmal beim ersten Build geladen (~3 GB); fasst du nie an |
 | Einstellungen & API-Schlüssel | die Datei `.env` im Projektordner | vom Setup-Assistenten geschrieben; nie teilen |
 

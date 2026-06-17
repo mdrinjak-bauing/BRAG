@@ -32,15 +32,19 @@ Fachliteratur behalten müssen. **Ohne Programmierkenntnisse nutzbar.**
   Entwerfen *„Bau den Absatz aus diesen Passagen, Belege beibehalten."*
 - 🎓 **Lehre vorbereiten** — *„Entwirf drei Klausurfragen aus Kapitel 4, mit
   Seitenangaben."*
-- 🧠 **Denken festhalten** — Ergebnisse landen als Notiz in deinem Vault; ein
+- 🧠 **Denken festhalten** — Ergebnisse landen als Notiz in deinem Wissensordner; ein
   neuer Chat Tage später macht genau dort weiter, wo der letzte aufhörte.
 - 🗂️ **Nach Projekt/Kurs filtern** — *„Such **nur im Projekt Schulzentrum**:
   Welche Position deckt die Erdarbeiten ab?"*
 
-Der Kerngedanke: **Chats vergessen — dein Vault nicht.** Wissen sammelt sich in
+Der Kerngedanke: **Chats vergessen — dein Wissensordner nicht.** Wissen sammelt sich in
 deinen Dateien an, nicht in einem flüchtigen Chatverlauf.
 
-## In 5 Minuten startklar
+## Einrichten — realistisch etwa 1 Stunde
+
+Aktiv zu tun ist wenig; die Zeit geht fast komplett für **Downloads** drauf
+(Docker Desktop, Claude Desktop und einmalig ~3 GB Analyse-Modelle beim ersten
+Start).
 
 **Du brauchst** (alles kostenlos): [Docker Desktop](https://www.docker.com/products/docker-desktop/),
 [Claude Desktop](https://claude.com/download) und einen API-Schlüssel —
@@ -49,7 +53,12 @@ alternativ [OpenAI](https://platform.openai.com/api-keys) oder
 [Anthropic](https://console.anthropic.com/). Lieber alles lokal? Geht auch —
 mit [LM Studio](https://lmstudio.ai) oder [Ollama](https://ollama.com).
 
-1. **Herunterladen:** grüner „Code"-Knopf → „Download ZIP" → entpacken.
+1. **Herunterladen & ablegen:** grüner „Code"-Knopf → „Download ZIP". Leg die
+   ZIP an einen festen, gut erreichbaren Ort — z. B. in dein Projekt- oder
+   Arbeitsverzeichnis oder einen übergeordneten Ordner (gern auch in OneDrive) —
+   und **entpacke sie dort**. Dieser Projektordner bleibt dauerhaft liegen (er
+   enthält die Steuerung, deine Konfiguration und standardmäßig deinen
+   Wissensordner) — verschieben ist ok, löschen nicht.
 2. **Doppelklick** auf `setup.command` (Mac) bzw. `setup.bat` (Windows). Der
    Assistent öffnet sich **im Browser** und fragt in einfacher Sprache: wo die
    KI rechnen soll, deinen Schlüssel (mit Live-Prüfung), die Dokumentsprache.
@@ -81,9 +90,37 @@ ohne zu merken, dass du dich selbst zitierst. Die Bibliothek beantwortet *„Was
 sagen meine Quellen?"*; das Notizbuch enthält, *was du daraus machst*. Claude
 arbeitet mit beidem — verwechselt sie aber nie.
 
+### Dein Notizbuch — und warum einfache Markdown-Dateien
+
+Das Notizbuch (`wiki/`) ist der Teil, der aus der Suche ein *zweites Gehirn*
+macht: Hier steht **dein** Denken — Konzeptseiten, Argumentationslinien, offene
+Fragen, Entscheidungen. Nicht, was die Quellen sagen, sondern was *du* daraus
+machst.
+
+**Warum als einfache Markdown-Dateien (`.md`)?** Markdown ist nur Text mit ein
+paar Zeichen für Überschriften, Listen und Links. Klingt unspektakulär — ist
+aber der entscheidende Vorteil:
+
+- **Es gehört dir und hält.** Eine `.md`-Datei öffnest du in 20 Jahren noch, mit
+  jedem Editor, ohne Spezialprogramm und ohne Abo. Kein proprietäres Format,
+  kein Anbieter, der dichtmacht — kein Lock-in.
+- **Es läuft überall.** Dieselbe Datei lesen und schreiben Obsidian, Claude,
+  dein Texteditor, dein Backup, Git. Verschieben, kopieren, sichern wie jede
+  andere Datei.
+- **Es lässt sich verknüpfen.** Mit `[[Wikilinks]]` verbindest du Konzepte zu
+  einem Netz — dein Wissen wird durchwanderbar statt in Dokumenten vergraben.
+
+**Der unbequeme Teil:** Ein zweites Gehirn entsteht nicht von allein — du musst
+dir das **Dokumentieren angewöhnen.** Die Quellen sammeln sich automatisch,
+deine Erkenntnisse nicht. Faustregel: nach einem guten Gespräch mit Claude oder
+einer wichtigen Lesestelle **kurz festhalten, was hängenbleibt** — lieber drei
+unfertige Sätze als die perfekte Notiz, die nie entsteht. Claude kann dir beim
+Schreiben helfen (über die Obsidian-Anbindung). Mit der Zeit wird daraus, was
+kein Chatverlauf je sein kann: **dein** wachsendes, durchsuchbares Wissen.
+
 ## Wie es funktioniert
 
-![Architektur: Vault, Docker-Container, Claude Desktop und die zwei MCP-Anschlüsse](docs/assets/architecture.svg)
+![Architektur: Wissensordner, Docker-Container, Claude Desktop und die zwei MCP-Anschlüsse](docs/assets/architecture.svg)
 
 Alles läuft in zwei Docker-Containern auf deinem Rechner. Im Cloud-Profil
 verarbeitet ein KI-Anbieter nur die Dokumenttexte; in den Lokal-Profilen
@@ -181,9 +218,10 @@ voreingestellt; für einen typischen Korpus bleiben die Kosten im **Cent-Bereich
 Embeddings laufen überall auf der CPU. Details, Modell-Empfehlungen und das
 Cloud-Embedding-Opt-in: [docs/PROFILES.de.md](docs/PROFILES.de.md).
 
-## Dein Wissensordner (der Vault)
+## Dein Wissensordner
 
-Der Vault ist **ein Ordner auf deinem Rechner** — standardmäßig `vault/`. Beim
+Dein Wissensordner ist **ein Ordner auf deinem Rechner** — standardmäßig
+`vault/` im Projektordner. Beim
 Setup kannst du jeden anderen Ordner angeben (z. B. eine bestehende
 Literatursammlung).
 
@@ -306,7 +344,7 @@ Aktuelle Version: **0.2.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHA
   Hardware, Recht). Neu: der **Vision-Pass** — Abbildungen werden inhaltlich
   beschrieben (Standard an, abschaltbar mit `VISION_ENABLED=false`).
 - **0.1.0** — Erste Veröffentlichung: Gemini-Cloud-Profil, hybride Suche mit
-  Reranking, Vault-Struktur und Such-MCP für Claude Desktop.
+  Reranking, Ordnerstruktur und Such-MCP für Claude Desktop.
 
 ## Status
 
