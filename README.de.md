@@ -220,10 +220,23 @@ Cloud-Embedding-Opt-in: [docs/PROFILES.de.md](docs/PROFILES.de.md).
 
 ## Dein Wissensspeicher
 
-Dein Wissensspeicher ist **ein Ordner auf deinem Rechner** — standardmäßig
-`wissensspeicher/` im Projektordner. Beim
-Setup kannst du jeden anderen Ordner angeben (z. B. eine bestehende
-Literatursammlung).
+Hier die wichtigste Unterscheidung — **zwei Ordner, zwei Rollen:**
+
+- **Der Projektordner** = das **Programm** (die entpackte ZIP). Den brauchst du
+  zum Starten/Stoppen; **nicht löschen.** *Wo* er liegt, ist egal
+  (Arbeits-/Projektverzeichnis, OneDrive …) — Hauptsache, er bleibt liegen.
+- **Dein Wissensspeicher** = deine **Inhalte**. Standardmäßig ist das der
+  Unterordner `wissensspeicher/` *im* Projektordner. Beim Setup kannst du
+  stattdessen einen **bestehenden Ordner** angeben — z. B. deinen vorhandenen
+  „Projekt XY"-Ordner — und ihm beim Einrichten Zugriff geben.
+
+**Die eine Regel, die alles erklärt:** Durchsucht wird genau **dieser eine
+Ordner**. Alles, was du in `sources/` legst, wandert automatisch in die
+Suchdatenbank (den Index); nimmst du eine Datei wieder heraus oder löschst sie,
+verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem
+Rechner angefasst.
+
+So ist der Wissensspeicher aufgebaut:
 
 ```
 wissensspeicher/
@@ -250,6 +263,17 @@ auftraggeber: Stadt Hamm
 
 Jedes Dokument im Ordner trägt diese Felder; Claude filtert im Gespräch danach.
 So mischen sich keine Treffer aus anderen Projekten in deine Ergebnisse.
+
+### Obsidian: ein schönerer Blick auf denselben Ordner
+
+Du kannst den Wissensspeicher mit [Obsidian](https://obsidian.md) (kostenlos)
+öffnen — es stellt die Markdown-Dateien viel schöner dar und macht das Schreiben
+im Notizbuch angenehm. Wichtig zu verstehen: **Obsidian ist kein zweiter
+Speicher, sondern nur eine Ansicht auf genau denselben Ordner.** Es arbeitet
+direkt auf den Dateien — **löschst du eine Datei in Obsidian, ist sie auch im
+normalen Ordner (und damit aus dem Index) weg.** Nichts wird importiert oder
+kopiert; es ist dieselbe Struktur, nur bequemer zu bedienen. Schritt für Schritt:
+[docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
 
 ## Im Alltag: so wächst dein Wissen
 

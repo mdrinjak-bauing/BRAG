@@ -205,10 +205,24 @@ strong hardware for a *local* text AI — embeddings run on CPU everywhere.
 Details, model recommendations and the cloud-embedding opt-in:
 [docs/PROFILES.md](docs/PROFILES.md).
 
-## Your knowledge folder (the knowledge store)
+## Your knowledge store
 
-The knowledge store is **one folder on your computer** — `wissensspeicher/` by default. During setup
-you can point it at any other folder (e.g. an existing literature collection).
+Here's the most important distinction — **two folders, two roles:**
+
+- **The project folder** = the **program** (the unpacked ZIP). You need it to
+  start/stop the app; **don't delete it.** *Where* it lives doesn't matter
+  (your work/project directory, OneDrive …) — just keep it.
+- **Your knowledge store** = your **content**. By default that's the
+  `wissensspeicher/` subfolder *inside* the project folder. During setup you can
+  instead point it at an **existing folder** — e.g. your current "Project XY"
+  folder — and grant access to it.
+
+**The one rule that explains everything:** exactly **this one folder** is
+searched. Anything you put in `sources/` is automatically added to the search
+database (the index); take a file back out or delete it and it disappears from
+the database too. Nothing else on your computer is touched.
+
+This is how the knowledge store is laid out:
 
 ```
 wissensspeicher/
@@ -235,6 +249,16 @@ client: City of Hamm
 
 Every document in that folder carries these fields; Claude filters by them in a
 conversation, so hits from other projects don't bleed into your results.
+
+### Obsidian: a nicer view of the same folder
+
+You can open the knowledge store with [Obsidian](https://obsidian.md) (free) —
+it renders the Markdown files far more nicely and makes writing in the notebook
+pleasant. Important to understand: **Obsidian is not a second copy, just a view
+onto the exact same folder.** It works directly on the files — **delete a file
+in Obsidian and it's gone from the normal folder (and the index) too.** Nothing
+is imported or copied; it's the same structure, just nicer to work with.
+Step by step: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
 
 ## Day to day: how your knowledge grows
 
