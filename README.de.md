@@ -1,6 +1,6 @@
 # Academic RAG and Second Brain
 
-**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**
+**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.2.0** ([Änderungen](#versionen))
 
 **Deine persönliche, durchsuchbare Forschungs-Wissensbasis — sprich über
 Claude Desktop mit deinem Literaturkorpus.**
@@ -45,17 +45,72 @@ Cloud-Profil verarbeitet Googles kostenlose Gemini-API die Dokumenttexte; in
 den Lokal-Profilen verlässt nichts deinen Rechner (siehe
 [Profile](#wähle-dein-profil)).
 
+### Was ist Docker — und wo liegen die ~3 GB?
+
+Docker ist eine Art versiegeltes Mini-System. Statt Python, Datenbanken und
+KI-Bibliotheken einzeln zu installieren und mit Versionskonflikten zu kämpfen,
+startet Docker eine fertig geschnürte Box, in der bereits alles passend
+zusammengestellt ist — auf jedem Rechner identisch. Du installierst einmal
+Docker Desktop; den Rest startet das Projekt selbst. Genau das macht die
+Einrichtung zu „doppelklicken und drei Fragen beantworten" statt einer Seite
+voller Befehle.
+
+Zwei dieser Boxen laufen nebeneinander: der **App-Container** (liest Dokumente
+und beantwortet Suchen) und **Qdrant** (die Suchdatenbank). Beim ersten Start
+lädt Docker einmalig die Programmbausteine und die KI-Modelle für die
+Dokumentanalyse herunter — zusammen rund **3 GB**. Diese Dateien liegen nicht
+in deinem Projektordner, sondern in Dockers eigenem, verwaltetem Speicher (dem
+Docker-Image sowie einem benannten Volume für die Datenbank). Du fasst sie nie
+direkt an; deinstallierst du Docker, verschwinden sie wieder. Dein
+`vault/`-Ordner bleibt davon vollständig unberührt — er enthält ausschließlich
+deine eigenen Dateien.
+
 ### Unter der Haube: die zwei Pipelines
 
 ![Pipeline: Einlesen (Parsing, Chunking, Contextual Retrieval, Embeddings, Index) und Abfrage (Prefetch, RRF-Fusion, Cross-Encoder-Reranking, belegte Antwort)](docs/assets/pipeline.svg)
 
-Zwei Stufen leisten die Hauptarbeit für die Antwortqualität: das
-**Contextual Retrieval** beim Einlesen (eine KI schreibt zu jedem Chunk 1–2
-Sätze, die ihn im Argument des Dokuments verorten — knapper Wissenschaftstext
-wird dadurch auffindbar) und der **Cross-Encoder-Reranker** bei der Suche
-(er liest deine Frage zusammen mit jedem Kandidaten und sortiert nach
-tatsächlicher Passung statt bloßer Ähnlichkeit). Beides ist standardmäßig
-aktiv; alle Parameter sind in [`.env.example`](.env.example) dokumentiert.
+Die Antwortqualität entsteht in zwei Arbeitsabläufen — einem beim **Einlesen**
+eines Dokuments und einem bei jeder **Frage**.
+
+**Beim Einlesen** ist der entscheidende Schritt das *Contextual Retrieval*:
+Eine KI schreibt zu jedem Textabschnitt ein bis zwei einordnende Sätze, die ihn
+im Argument des Dokuments verorten — knapper Wissenschaftstext wird so
+überhaupt erst auffindbar. Parallel erhält jeder Abschnitt zwei
+„Fingerabdrücke": einen für die **Bedeutung** (das Embedding, für die
+semantische Suche) und einen für **exakte Begriffe** (für die Stichwortsuche).
+
+**Bei jeder Frage** durchläuft deine Anfrage die folgende Abfragepipeline —
+von der Frage in Claude bis zur belegten Antwort:
+
+1. **Zwei Suchen gleichzeitig.** Die Frage läuft parallel durch die
+   *Bedeutungssuche* (sie findet sinnverwandte Stellen, auch mit anderen
+   Worten — „Regeln für Mehrkosten" trifft „Nachtragsmanagement") und die
+   *Stichwortsuche* (Verfahren BM25: sie findet exakte Begriffe, bei denen es
+   nicht auf Bedeutung, sondern auf den genauen Wortlaut ankommt — Abkürzungen
+   wie GEG, Paragraphen wie § 71, Eigennamen, Aktenzeichen). Jede Suche liefert
+   ihre besten rund 150 Kandidaten.
+2. **Zusammenführen (RRF).** Beide Trefferlisten werden zu einer einzigen
+   verschmolzen. Stellen, die *beide* Verfahren für relevant halten, steigen
+   nach oben; rund 80 Kandidaten bleiben übrig.
+3. **Neu sortieren — der Reranker.** Wozu dieser Schritt? Die ersten beiden
+   Stufen sind schnell, aber grob: Sie messen Ähnlichkeit, nicht, ob eine
+   Stelle die Frage tatsächlich *beantwortet*. Der Reranker (ein sogenannter
+   Cross-Encoder) liest deine Frage gemeinsam mit jeder der rund 80 Stellen und
+   bewertet die wirkliche Passung. Das ist der Unterschied zwischen „enthält
+   die Suchworte" und „beantwortet die Frage" — und der größte Hebel für die
+   Präzision der Antwort.
+4. **Kürzen und mischen.** Die besten Treffer bleiben übrig (standardmäßig 15,
+   davon höchstens 3 aus derselben Quelle, damit ein einzelnes Buch nicht alle
+   Plätze belegt). Diese Anzahl heißt *top-K*.
+5. **Antworten.** Claude liest ausschließlich diese ausgewählten Stellen und
+   formuliert daraus die Antwort — jede Aussage mit Quelle und Seite belegt,
+   ein Klick öffnet das PDF genau an der zitierten Stelle.
+
+Die Relevanzwerte werden dabei offen ausgewiesen, statt schwache Treffer zu
+verbergen — so behältst du die Kontrolle darüber, was du glaubst. Beide
+Qualitätsstufen — Contextual Retrieval beim Einlesen und der Reranker bei der
+Suche — sind standardmäßig aktiv; alle Parameter sind in
+[`.env.example`](.env.example) dokumentiert.
 
 ## Die zwei Claude-Anschlüsse (MCP)
 
@@ -207,6 +262,60 @@ das Opt-in zu *Cloud-Embeddings* (eine fortgeschrittene `.env`-Option für
 schnellen Massen-Ingest auf schwacher Hardware) ändert den Index und löst einen
 einmaligen Re-Ingest aus — sicher in eine separate Collection.
 
+### Welches Modell spart Geld?
+
+Du musst nichts von Hand auswählen — jedes Cloud-Profil ist bereits auf sein
+**günstigstes brauchbares Modell** voreingestellt:
+
+| Anbieter | Voreingestelltes Modell | Warum diese Wahl |
+|---|---|---|
+| Google Gemini | `gemini-2.5-flash-lite` | kostenloser Tarif, **kein** Tageslimit beim Masseneinlesen |
+| OpenAI / ChatGPT | `gpt-4o-mini` | günstigstes leistungsfähiges Chat-Modell von OpenAI |
+| Anthropic / Claude | `claude-haiku-4-5` | günstigstes Claude-Modell |
+
+Entscheidend fürs Budget: An den Anbieter geht **nur der Textauszug jedes
+Abschnitts** zur Kontext-Erzeugung — nie ganze Dateien, nie die Embeddings und
+auch nicht deine späteren Fragen (die beantwortet Claude Desktop separat). Für
+einen typischen Korpus bleiben die Kosten damit im **Cent-Bereich**. Wer
+bewusst ein stärkeres (und teureres) Modell einsetzen möchte, trägt es als
+`LLM_MODEL` in der `.env` ein — etwa `gemini-2.5-flash` für etwas mehr Qualität
+(gedeckelt auf 10.000 Anfragen/Tag, daher erst *nach* dem ersten Masseneinlesen
+sinnvoll). Praktischer Spartipp: Das Masseneinlesen ist der einzige Schritt,
+der viele Anfragen erzeugt. Mit dem günstigen Modell einlesen und bei Bedarf
+erst danach für einzelne Aufgaben ein stärkeres wählen — das hält die Rechnung
+niedrig.
+
+### Der Bedeutungs-Index (Embeddings) und deine Hardware
+
+Hier bitte zwei Modellarten nicht verwechseln:
+
+- Die **Text-KI** (das LLM aus der Tabelle oben) schreibt den Kontext. *Sie*
+  hängt am Anbieter und an den Kosten (Cloud) bzw. an deiner Hardware (lokal).
+- Der **Bedeutungs-Index** — das *Embedding-Modell* — wandelt jeden Abschnitt
+  in einen durchsuchbaren Vektor. Den musst du **nicht auswählen**: In jedem
+  Profil läuft dafür automatisch das lokale Modell **arctic**
+  (`snowflake-arctic-embed-l-v2.0`, 1024 Dimensionen) — auf der CPU, **ohne
+  GPU**, auf jedem Laptop. Es lädt einmalig rund 2,3 GB in den Modell-Cache und
+  ist danach kostenlos; deine Dokument-Vektoren verlassen den Rechner nie.
+
+**Brauche ich starke Hardware?** Für die Embeddings nicht — arctic läuft überall
+auf der CPU. Leistungsfähige Hardware ist nur nötig, wenn du die **Text-KI
+lokal** betreiben willst (Profile Hybrid/Lokal). Faustregeln dafür: LM Studio
+auf einem Apple-Silicon-Mac — `qwen2.5-14b-instruct` ab 32 GB RAM,
+`gemma-3-27b-it` ab 64 GB; für Ollama genügen 16 GB (Standardmodell
+`llama3.1`), eine GPU beschleunigt deutlich.
+
+**Wann lohnt ein anderes Embedding-Modell?** Nur in einem Fall: schwache
+Hardware *und* ein sehr großer Korpus, bei dem das lokale Einlesen zu langsam
+wird. Dann kannst du in der `.env` auf ein **Cloud-Embedding** umstellen
+(`gemini-embedding-001` mit 3072 Dimensionen oder OpenAI
+`text-embedding-3-small` mit 1536) — das ist beim Masseneinlesen spürbar
+schneller. Der Preis dafür: Die Dokument-Vektoren werden dann beim Anbieter
+berechnet, verlassen also den Rechner, und es ist die **einzige** Umstellung,
+die eine einmalige Neu-Indexierung auslöst (sicher in eine separate
+Collection). Für die allermeisten ist arctic die richtige Wahl; Details in
+[docs/PROFILES.md](docs/PROFILES.md).
+
 ## Tägliche Wissensarbeit damit
 
 Das Prinzip hinter allem: **Chats vergessen — dein Vault nicht.**
@@ -270,12 +379,27 @@ Assistenten *deinen* Assistenten — Anleitung mit Beispielen:
 *(Die Detail-Dokumentation ist derzeit auf Englisch; deutsche Fassungen
 folgen.)*
 
+## Versionen
+
+Aktuelle Version: **0.2.0** (Juni 2026). Die vollständige Liste aller
+Änderungen steht in [CHANGELOG.md](CHANGELOG.md).
+
+- **0.2.0** — Neben Google Gemini stehen jetzt auch **OpenAI/ChatGPT** und
+  **Anthropic/Claude** als Cloud-Anbieter zur Wahl. Der Einrichtungs-Assistent
+  ist zweisprachig (Deutsch/Englisch). Der Bedeutungs-Index (arctic) läuft in
+  **jedem** Profil lokal, sodass ein Anbieterwechsel keine Neu-Indexierung mehr
+  erfordert. Diese Anleitung wurde überarbeitet — mit der vollständigen
+  Abfragepipeline sowie neuen Abschnitten zu Docker, Kosten und Hardware.
+- **0.1.0** — Erste Veröffentlichung: Cloud-Profil mit Google Gemini, hybride
+  Suche mit Reranking, Vault-Struktur und Such-MCP für Claude Desktop.
+
 ## Status
 
-Frühe Version. Das Cloud-Profil (A) ist der getestete Hauptweg; die Profile
-B/C funktionieren, sind aber weniger erprobt. Roadmap: KI-Bildbeschreibungen
-für Abbildungen (Vision-Pass), automatische Dateibenennung, Korpus-
-Überblicksmodi (Coverage/Cluster), optionale Wissensgraph-Ebene.
+Frühe Version (0.2.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
+übrigen Profile funktionieren, sind aber weniger erprobt. Roadmap:
+KI-Bildbeschreibungen für Abbildungen (Vision-Pass), automatische
+Dateibenennung, Korpus-Überblicksmodi (Coverage/Cluster), optionale
+Wissensgraph-Ebene.
 
 ## Lizenz
 

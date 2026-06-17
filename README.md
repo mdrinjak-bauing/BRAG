@@ -1,6 +1,6 @@
 # Academic RAG and Second Brain
 
-**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**
+**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.2.0** ([changes](#versions))
 
 **Your personal, searchable research knowledge base — talk to your document
 corpus through Claude Desktop.**
@@ -43,17 +43,64 @@ Everything runs in two Docker containers on your machine. In the recommended
 Cloud profile, document text is processed by Google's free Gemini API; in the
 local profiles, nothing leaves your computer (see [Profiles](#choose-your-profile)).
 
+### What is Docker — and where do the ~3 GB live?
+
+Docker is a kind of sealed mini-system. Instead of installing Python,
+databases and AI libraries one by one (and fighting version conflicts), Docker
+starts a ready-made box that already contains everything, identically on any
+machine. You install Docker Desktop once; the project starts the rest. That is
+what turns setup into "double-click and answer three questions" instead of a
+page of commands.
+
+Two of these boxes run side by side: the **app container** (reads documents,
+answers searches) and **Qdrant** (the search database). On first launch Docker
+downloads the program building blocks and the document-analysis AI models once
+— about **3 GB** together. These files do not live in your project folder but
+in Docker's own managed storage (the Docker image plus a named volume for the
+database). You never touch them directly; uninstall Docker and they are gone.
+Your `vault/` folder is completely untouched by all this — it holds only your
+own files.
+
 ### Under the hood: the two pipelines
 
 ![Pipeline: ingest (parsing, chunking, contextual retrieval, embeddings, index) and query (prefetch, RRF fusion, cross-encoder reranking, cited answer)](docs/assets/pipeline.svg)
 
-Two stages do the heavy lifting for answer quality: **contextual retrieval**
-during indexing (an AI writes 1–2 sentences locating every chunk in the
-document's argument — terse academic prose becomes findable) and the
-**cross-encoder reranker** during search (it reads your question together
-with each candidate passage and re-orders by true fit, not just similarity).
-Both are on by default; every parameter is documented in
-[`.env.example`](.env.example).
+Answer quality comes from two workflows — one when a document is **ingested**,
+and one on every **question**.
+
+**On ingest**, the decisive step is *contextual retrieval*: an AI writes 1–2
+sentences locating every chunk in the document's argument — terse academic
+prose becomes findable. In parallel each chunk gets two "fingerprints": one for
+**meaning** (the embedding, for semantic search) and one for **exact terms**
+(for keyword search).
+
+**On every question**, your query runs through this query pipeline — from the
+question in Claude to the cited answer:
+
+1. **Two searches at once.** The question runs in parallel through the
+   *meaning search* (finds related passages even in different words —
+   "rules for extra costs" hits "change-order management") and the *keyword
+   search* (the BM25 method: finds exact terms where wording matters more than
+   meaning — abbreviations, section numbers like § 71, proper names, file
+   references). Each returns its best ~150 candidates.
+2. **Merge (RRF).** The two hit lists are fused into one. Passages that *both*
+   methods consider relevant rise to the top; about 80 candidates remain.
+3. **Re-order — the reranker.** Why this step? The first two stages are fast
+   but coarse: they measure similarity, not whether a passage actually
+   *answers* the question. The reranker (a cross-encoder) reads your question
+   together with each of the ~80 passages and scores the real fit. That is the
+   difference between "contains the search terms" and "answers the question" —
+   and the biggest lever for precision.
+4. **Trim and mix.** The best hits remain (15 by default, at most 3 from the
+   same source so a single book can't take every slot). This count is *top-K*.
+5. **Answer.** Claude reads only these selected passages and writes the answer
+   — every statement cited with source and page, one click opening the PDF at
+   the exact spot.
+
+Relevance scores are shown openly rather than hiding weak hits — you stay in
+control of what you believe. Both quality stages — contextual retrieval on
+ingest and the reranker on search — are on by default; every parameter is
+documented in [`.env.example`](.env.example).
 
 ## The two Claude connections (MCP)
 
@@ -203,6 +250,55 @@ Decision guide and model recommendations: [docs/PROFILES.md](docs/PROFILES.md).
 hardware) changes the index and triggers a one-time re-ingest — the system
 handles this safely into a separate collection.
 
+### Which model saves money?
+
+You don't have to pick anything by hand — each cloud profile is already preset
+to its **cheapest capable model**:
+
+| Provider | Preset model | Why this one |
+|---|---|---|
+| Google Gemini | `gemini-2.5-flash-lite` | free tier, **no** daily cap for bulk ingest |
+| OpenAI / ChatGPT | `gpt-4o-mini` | cheapest capable OpenAI chat model |
+| Anthropic / Claude | `claude-haiku-4-5` | cheapest Claude model |
+
+What matters for the bill: only the **text excerpt of each chunk** is sent to
+the provider for context generation — never whole files, never the embeddings,
+and never your later questions (Claude Desktop answers those separately). For a
+typical corpus that keeps the cost in the **cents range**. If you deliberately
+want a stronger (pricier) model, set it as `LLM_MODEL` in `.env` — e.g.
+`gemini-2.5-flash` for a bit more quality (capped at 10,000 requests/day, so
+best used *after* the initial bulk ingest). Money-saving tip: bulk ingest is
+the only step that generates many requests. Ingest with the cheap model and, if
+needed, switch to a stronger one for individual tasks afterwards.
+
+### The meaning index (embeddings) and your hardware
+
+Don't confuse two kinds of model here:
+
+- The **text AI** (the LLM in the table above) writes the context. *It* depends
+  on the provider and cost (cloud) or on your hardware (local).
+- The **meaning index** — the *embedding model* — turns each chunk into a
+  searchable vector. You **don't choose** it: every profile automatically uses
+  the local model **arctic** (`snowflake-arctic-embed-l-v2.0`, 1024 dimensions)
+  — on the CPU, **no GPU**, on any laptop. It downloads ~2.3 GB into the model
+  cache once and is free afterwards; your document vectors never leave the
+  machine.
+
+**Do I need strong hardware?** Not for embeddings — arctic runs anywhere on
+CPU. Capable hardware is only needed if you want to run the **text AI locally**
+(Hybrid/Local profiles): rules of thumb — LM Studio on an Apple Silicon Mac
+with `qwen2.5-14b-instruct` from 32 GB RAM, `gemma-3-27b-it` from 64 GB; Ollama
+needs 16 GB (default model `llama3.1`), and a GPU helps a lot.
+
+**When is a different embedding model worth it?** Only in one case: weak
+hardware *and* a very large corpus where local ingest is too slow. Then you can
+switch in `.env` to a **cloud embedding** (`gemini-embedding-001`, 3072 dims,
+or OpenAI `text-embedding-3-small`, 1536) — noticeably faster for bulk ingest.
+The price: document vectors are then computed at the provider (so they leave the
+machine), and this is the **only** change that triggers a one-time re-ingest
+(safely into a separate collection). For almost everyone arctic is the right
+choice; details in [docs/PROFILES.md](docs/PROFILES.md).
+
 ## Day-to-day knowledge work
 
 The principle behind everything: **chats forget — your vault doesn't.**
@@ -260,12 +356,25 @@ guide with examples: [docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md).
 - [Customize Claude for your research](docs/CUSTOMIZE_CLAUDE.md)
 - [FAQ & troubleshooting](docs/FAQ.md) · [Architecture](docs/ARCHITECTURE.md)
 
+## Versions
+
+Current version: **0.2.0** (June 2026). The full list of changes lives in
+[CHANGELOG.md](CHANGELOG.md).
+
+- **0.2.0** — Added **OpenAI/ChatGPT** and **Anthropic/Claude** as cloud
+  providers alongside Google Gemini; the setup wizard is bilingual (EN/DE); the
+  meaning index (arctic) now runs locally in **every** profile, so switching
+  provider no longer requires re-indexing; this guide was reworked — full query
+  pipeline plus new sections on Docker, cost and hardware.
+- **0.1.0** — Initial release: Google Gemini cloud profile, hybrid search with
+  reranking, the vault structure and the search MCP for Claude Desktop.
+
 ## Status
 
-Early release. The Cloud profile (A) is the tested happy path; profiles B/C
-are functional but less battle-tested. Roadmap: AI image descriptions for
-figures (vision pass), automatic file naming, corpus overview modes
-(coverage/clusters), optional knowledge-graph layer.
+Early release (0.2.0). The **Gemini profile** is the tested happy path; the
+other profiles are functional but less battle-tested. Roadmap: AI image
+descriptions for figures (vision pass), automatic file naming, corpus overview
+modes (coverage/clusters), optional knowledge-graph layer.
 
 ## License
 
