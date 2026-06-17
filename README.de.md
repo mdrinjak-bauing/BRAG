@@ -183,24 +183,29 @@ Ausführliche Anleitungen: [macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTAL
 
 ## Wähle dein Profil
 
-Du wählst, wo die KI läuft — der Setup-Assistent führt dich durch.
+Das Profil wählt nur die **Text-KI** (die den Chunk-Kontext schreibt,
+Abbildungen beschreibt und Dokumente klassifiziert). Der **Bedeutungs-Index
+(Embeddings) läuft immer lokal** auf deinem Rechner (arctic-Modell, keine GPU
+nötig) — genau wie der Reranker es ohnehin schon tut. Du kannst den KI-Anbieter
+unten also jederzeit wechseln, **ohne den Korpus neu zu indexieren.**
 
-| Profil | KI-Anbieter | Günstigstes Modell | Hardware | Dokumente verlassen Rechner |
+| Profil | Text-KI-Anbieter | Günstigstes Modell | Hardware | Dokumenttext verlässt Rechner |
 |---|---|---|---|---|
 | **Gemini** (Standard) | Google Gemini (Free Tier) | gemini-2.5-flash-lite | jeder Laptop | ja (Google) |
-| **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini + text-embedding-3-small | jeder Laptop | ja (OpenAI) |
-| **Claude** | Anthropic Claude | claude-haiku-4-5 (+ lokale Embeddings*) | jeder Laptop | ja (Anthropic) |
+| **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini | jeder Laptop | ja (OpenAI) |
+| **Claude** | Anthropic Claude | claude-haiku-4-5 | jeder Laptop | ja (Anthropic) |
 | **Hybrid** | LM Studio (auf deinem Mac) | dein lokales Modell | Apple Silicon, 32 GB+ | nein |
-| **Lokal** | Ollama (auf deinem Rechner) | nomic-embed-text + llama3.1 | ordentliche CPU, 16 GB+ | nein |
+| **Lokal** | Ollama (auf deinem Rechner) | llama3.1 | ordentliche CPU, 16 GB+ | nein |
 
-\* Anthropic bietet keinen Embedding-Dienst, daher baut das Claude-Profil den
-Bedeutungs-Index lokal auf deinem Rechner (keine GPU nötig), während Claude
-Haiku die Textarbeit macht.
+Bei einem Cloud-Profil wird nur der **Text** jedes Chunks zur Kontext-Erzeugung
+an den Anbieter geschickt — nie deine ganzen Dateien und nie die Embeddings.
+Bei den beiden lokalen Profilen verlässt nichts den Rechner.
 
 Entscheidungshilfe und Modell-Empfehlungen: [docs/PROFILES.md](docs/PROFILES.md).
-**Hinweis:** Ein späterer Profilwechsel erfordert Neu-Indexierung
-(Embedding-Modelle sind mathematisch inkompatibel — das System fängt das
-sicher ab, aber die Arbeit läuft erneut).
+**Hinweis:** Der Wechsel des KI-Anbieters erfordert KEINE Neu-Indexierung. Nur
+das Opt-in zu *Cloud-Embeddings* (eine fortgeschrittene `.env`-Option für
+schnellen Massen-Ingest auf schwacher Hardware) ändert den Index und löst einen
+einmaligen Re-Ingest aus — sicher in eine separate Collection.
 
 ## Tägliche Wissensarbeit damit
 

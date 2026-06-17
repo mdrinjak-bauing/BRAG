@@ -12,13 +12,15 @@ PROFILE_INFO = """
 Choose your backend profile:
 
   [1] Gemini (RECOMMENDED) — Google Gemini cloud API (free tier), any computer.
-  [2] OpenAI — ChatGPT cloud API (gpt-4o-mini + text-embedding-3-small).
-  [3] Claude — Anthropic Claude Haiku for the text work; embeddings run LOCALLY
-      (Anthropic has no embedding service).
-  [4] Hybrid — local AI via LM Studio (strong Apple Silicon Mac needed).
-  [5] Local — local AI via Ollama (cross-platform, slower).
+  [2] OpenAI — ChatGPT cloud API (gpt-4o-mini).
+  [3] Claude — Anthropic Claude Haiku.
+  [4] Hybrid — local LLM via LM Studio (strong Apple Silicon Mac needed).
+  [5] Local — local LLM via Ollama (cross-platform, slower).
 
-Profiles 1-3 send document text to the chosen cloud provider; 4-5 keep it local.
+The profile picks the TEXT AI only. Embeddings always run locally on your
+computer in every profile, so you can switch provider later WITHOUT
+re-indexing. Profiles 1-3 send document text to the chosen cloud provider for
+that text work; 4-5 keep everything local.
 """
 
 PROFILE_KEYS = {"1": "gemini", "2": "openai", "3": "anthropic",

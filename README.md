@@ -179,22 +179,29 @@ Detailed guides: [macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.
 
 Pick where the AI runs. The setup assistant walks you through it.
 
-| Profile | AI provider | Cheapest model preset | Hardware | Docs leave machine |
+The profile chooses only the **text AI** (which writes chunk context, describes
+figures and classifies documents). The **meaning-index (embeddings) always runs
+locally** on your computer (arctic model, no GPU needed) — the same way the
+re-ranker already does. So you can switch the AI provider below at any time
+**without re-indexing your corpus.**
+
+| Profile | Text AI provider | Cheapest model preset | Hardware | Doc text leaves machine |
 |---|---|---|---|---|
 | **Gemini** (default) | Google Gemini (free tier) | gemini-2.5-flash-lite | any laptop | yes (Google) |
-| **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini + text-embedding-3-small | any laptop | yes (OpenAI) |
-| **Claude** | Anthropic Claude | claude-haiku-4-5 (+ local embeddings*) | any laptop | yes (Anthropic) |
+| **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini | any laptop | yes (OpenAI) |
+| **Claude** | Anthropic Claude | claude-haiku-4-5 | any laptop | yes (Anthropic) |
 | **Hybrid** | LM Studio (on your Mac) | your local model | Apple Silicon, 32 GB+ | no |
-| **Local** | Ollama (on your machine) | nomic-embed-text + llama3.1 | decent CPU, 16 GB+ | no |
+| **Local** | Ollama (on your machine) | llama3.1 | decent CPU, 16 GB+ | no |
 
-\* Anthropic offers no embedding service, so the Claude profile builds the
-meaning-index locally on your computer (no GPU needed) while Claude Haiku does
-the text work.
+With a cloud profile, only the **text** of each chunk is sent to the provider
+to generate context — never your whole files, and never the embeddings. On the
+two local profiles nothing leaves the machine at all.
 
 Decision guide and model recommendations: [docs/PROFILES.md](docs/PROFILES.md).
-**Note:** switching profiles later requires re-indexing (different embedding
-models are mathematically incompatible — the system handles this safely, but
-the work runs again).
+**Note:** switching the AI provider needs no re-indexing. Only opting into
+*cloud embeddings* (an advanced `.env` option for fast bulk ingest on weak
+hardware) changes the index and triggers a one-time re-ingest — the system
+handles this safely into a separate collection.
 
 ## Day-to-day knowledge work
 
