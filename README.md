@@ -154,7 +154,7 @@ its entry.
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (free)
 - [Claude Desktop](https://claude.com/download) (free)
-- Cloud profile: a free [Gemini API key](https://aistudio.google.com/apikey)
+- A cloud profile: an API key from your provider — [Gemini](https://aistudio.google.com/apikey) (free tier), [OpenAI](https://platform.openai.com/api-keys), or [Anthropic](https://console.anthropic.com/)
 - Local profiles: [LM Studio](https://lmstudio.ai) or [Ollama](https://ollama.com) (the setup assistant guides you, including which model to download)
 
 ## Quickstart
@@ -177,12 +177,19 @@ Detailed guides: [macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.
 
 ## Choose your profile
 
-| | A — Cloud (default) | B — Hybrid | C — Local |
-|---|---|---|---|
-| AI processing | Google Gemini API (free tier) | LM Studio on your machine | Ollama on your machine |
-| Hardware needed | any laptop | Mac with Apple Silicon, 32 GB+ | decent CPU, 16 GB+ |
-| Documents leave your machine | yes (Google) | no | no |
-| Speed | fast | medium | slow |
+Pick where the AI runs. The setup assistant walks you through it.
+
+| Profile | AI provider | Cheapest model preset | Hardware | Docs leave machine |
+|---|---|---|---|---|
+| **Gemini** (default) | Google Gemini (free tier) | gemini-2.5-flash-lite | any laptop | yes (Google) |
+| **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini + text-embedding-3-small | any laptop | yes (OpenAI) |
+| **Claude** | Anthropic Claude | claude-haiku-4-5 (+ local embeddings*) | any laptop | yes (Anthropic) |
+| **Hybrid** | LM Studio (on your Mac) | your local model | Apple Silicon, 32 GB+ | no |
+| **Local** | Ollama (on your machine) | nomic-embed-text + llama3.1 | decent CPU, 16 GB+ | no |
+
+\* Anthropic offers no embedding service, so the Claude profile builds the
+meaning-index locally on your computer (no GPU needed) while Claude Haiku does
+the text work.
 
 Decision guide and model recommendations: [docs/PROFILES.md](docs/PROFILES.md).
 **Note:** switching profiles later requires re-indexing (different embedding
@@ -240,6 +247,7 @@ guide with examples: [docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md).
 
 ## Documentation
 
+- **[How it works — in plain words](docs/HOW_IT_WORKS.md)** (no tech background needed)
 - [Install on macOS](docs/INSTALL_MAC.md) · [Install on Windows](docs/INSTALL_WINDOWS.md)
 - [Backend profiles](docs/PROFILES.md) · [Connect Obsidian + notebook MCP](docs/OBSIDIAN.md)
 - [Customize Claude for your research](docs/CUSTOMIZE_CLAUDE.md)

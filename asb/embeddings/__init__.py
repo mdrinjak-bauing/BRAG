@@ -11,6 +11,9 @@ def get_embedder():
         if config.EMBEDDING_BACKEND == "gemini":
             from asb.embeddings.gemini import GeminiEmbedder
             _embedder = GeminiEmbedder()
+        elif config.EMBEDDING_BACKEND == "openai":
+            from asb.embeddings.openai import OpenAIEmbedder
+            _embedder = OpenAIEmbedder()
         elif config.EMBEDDING_BACKEND == "local_st":
             from asb.embeddings.local_st import SentenceTransformerEmbedder
             _embedder = SentenceTransformerEmbedder()

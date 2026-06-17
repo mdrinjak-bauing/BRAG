@@ -56,7 +56,11 @@ EMBEDDING_DIM = int(_env("EMBEDDING_DIM", _profile["embedding_dim"]))
 LLM_BACKEND = _env("LLM_BACKEND", _profile["llm_backend"])
 LLM_MODEL = _env("LLM_MODEL", _profile["llm_model"])
 LLM_BASE_URL = _env("LLM_BASE_URL", _profile["llm_base_url"])
+
+# Cloud API keys — one per provider; only the active provider's key is needed.
 GEMINI_API_KEY = _env("GEMINI_API_KEY", "")
+OPENAI_API_KEY = _env("OPENAI_API_KEY", "")
+ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY", "")
 
 # Collection name is tied to the embedding backend — switching backends
 # automatically targets a different collection (no silent dimension clash).

@@ -11,13 +11,19 @@ from asb import setup_core
 PROFILE_INFO = """
 Choose your backend profile:
 
-  [1] Cloud (RECOMMENDED) — free Google Gemini API, works on any computer.
-      Document text is sent to Google for processing.
-  [2] Hybrid — local AI via LM Studio (strong Apple Silicon Mac needed).
-  [3] Local — local AI via Ollama (cross-platform, slower).
+  [1] Gemini (RECOMMENDED) — Google Gemini cloud API (free tier), any computer.
+  [2] OpenAI — ChatGPT cloud API (gpt-4o-mini + text-embedding-3-small).
+  [3] Claude — Anthropic Claude Haiku for the text work; embeddings run LOCALLY
+      (Anthropic has no embedding service).
+  [4] Hybrid — local AI via LM Studio (strong Apple Silicon Mac needed).
+  [5] Local — local AI via Ollama (cross-platform, slower).
+
+Profiles 1-3 send document text to the chosen cloud provider; 4-5 keep it local.
 """
 
-PROFILE_KEYS = {"1": "cloud", "2": "hybrid", "3": "local"}
+PROFILE_KEYS = {"1": "gemini", "2": "openai", "3": "anthropic",
+                "4": "hybrid", "5": "local"}
+CLOUD_PROFILES = {"gemini", "openai", "anthropic"}
 
 
 def ask(prompt: str, default: str = "") -> str:
@@ -31,17 +37,22 @@ def main():
     print(PROFILE_INFO)
     choice = ""
     while choice not in PROFILE_KEYS:
-        choice = ask("Profile (1/2/3)", "1")
+        choice = ask("Profile (1/2/3/4/5)", "1")
     profile = PROFILE_KEYS[choice]
 
+    KEY_URLS = {
+        "gemini": "https://aistudio.google.com/apikey",
+        "openai": "https://platform.openai.com/api-keys",
+        "anthropic": "https://console.anthropic.com/",
+    }
     api_key = ""
-    if profile == "cloud":
-        print("\nGet your free API key at: https://aistudio.google.com/apikey")
-        api_key = ask("Paste your Gemini API key")
+    if profile in CLOUD_PROFILES:
+        print(f"\nGet your API key at: {KEY_URLS[profile]}")
+        api_key = ask(f"Paste your {profile} API key")
         if not api_key:
-            print("No API key — cannot continue with the Cloud profile.")
+            print("No API key — cannot continue with a cloud profile.")
             sys.exit(1)
-        ok, message = setup_core.validate_gemini_key(api_key)
+        ok, message = setup_core.validate_api_key(profile, api_key)
         print(f"  {'OK:' if ok else 'WARNING:'} {message}")
         if not ok and ask("Continue anyway? (y/n)", "n").lower() != "y":
             sys.exit(1)

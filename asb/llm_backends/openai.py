@@ -1,0 +1,43 @@
+"""OpenAI / ChatGPT LLM backend (Profile: openai). Raw HTTP, no extra dependency."""
+
+import json
+import urllib.request
+
+from asb import config
+from asb.llm_backends.base import LLMBackend
+from asb.llm_backends.retry import call_with_retry
+
+DEFAULT_URL = "https://api.openai.com/v1"
+
+
+class OpenAILLM(LLMBackend):
+    def __init__(self):
+        if not config.OPENAI_API_KEY:
+            raise EnvironmentError(
+                "OPENAI_API_KEY is not set. Add it to your .env file "
+                "(get a key at https://platform.openai.com/api-keys)."
+            )
+
+    def chat(self, prompt: str, max_tokens: int = 1024) -> str | None:
+        def call():
+            payload = json.dumps({
+                "model": config.LLM_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": max_tokens,
+                "temperature": 0.2,
+            }).encode()
+            req = urllib.request.Request(
+                f"{DEFAULT_URL}/chat/completions", data=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {config.OPENAI_API_KEY}",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                data = json.loads(resp.read())
+            text = data["choices"][0]["message"]["content"] or ""
+            if not text:
+                raise ValueError("empty response")
+            return text
+
+        return call_with_retry(call, label="openai chat")

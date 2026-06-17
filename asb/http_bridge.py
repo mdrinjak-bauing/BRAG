@@ -52,8 +52,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/validate-key":
-            from asb.setup_core import validate_gemini_key
-            ok, message = validate_gemini_key(str(body.get("key", "")))
+            from asb.setup_core import validate_api_key
+            ok, message = validate_api_key(
+                str(body.get("provider", "gemini")), str(body.get("key", "")))
             self._send_json(200, {"ok": ok, "message": message})
         elif parsed.path == "/api/check-local":
             self._check_local(body)

@@ -160,7 +160,7 @@ aktualisiert wird.
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (kostenlos)
 - [Claude Desktop](https://claude.com/download) (kostenlos)
-- Cloud-Profil: ein kostenloser [Gemini-API-Schlüssel](https://aistudio.google.com/apikey)
+- Ein Cloud-Profil: ein API-Schlüssel deines Anbieters — [Gemini](https://aistudio.google.com/apikey) (Free Tier), [OpenAI](https://platform.openai.com/api-keys) oder [Anthropic](https://console.anthropic.com/)
 - Lokal-Profile: [LM Studio](https://lmstudio.ai) oder [Ollama](https://ollama.com) (der Setup-Assistent führt dich durch — inklusive der Frage, welches Modell du laden solltest)
 
 ## Schnellstart
@@ -183,12 +183,19 @@ Ausführliche Anleitungen: [macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTAL
 
 ## Wähle dein Profil
 
-| | A — Cloud (Standard) | B — Hybrid | C — Lokal |
-|---|---|---|---|
-| KI-Verarbeitung | Google Gemini API (Free Tier) | LM Studio auf deinem Rechner | Ollama auf deinem Rechner |
-| Benötigte Hardware | jeder Laptop | Mac mit Apple Silicon, 32 GB+ | ordentliche CPU, 16 GB+ |
-| Dokumente verlassen den Rechner | ja (Google) | nein | nein |
-| Geschwindigkeit | schnell | mittel | langsam |
+Du wählst, wo die KI läuft — der Setup-Assistent führt dich durch.
+
+| Profil | KI-Anbieter | Günstigstes Modell | Hardware | Dokumente verlassen Rechner |
+|---|---|---|---|---|
+| **Gemini** (Standard) | Google Gemini (Free Tier) | gemini-2.5-flash-lite | jeder Laptop | ja (Google) |
+| **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini + text-embedding-3-small | jeder Laptop | ja (OpenAI) |
+| **Claude** | Anthropic Claude | claude-haiku-4-5 (+ lokale Embeddings*) | jeder Laptop | ja (Anthropic) |
+| **Hybrid** | LM Studio (auf deinem Mac) | dein lokales Modell | Apple Silicon, 32 GB+ | nein |
+| **Lokal** | Ollama (auf deinem Rechner) | nomic-embed-text + llama3.1 | ordentliche CPU, 16 GB+ | nein |
+
+\* Anthropic bietet keinen Embedding-Dienst, daher baut das Claude-Profil den
+Bedeutungs-Index lokal auf deinem Rechner (keine GPU nötig), während Claude
+Haiku die Textarbeit macht.
 
 Entscheidungshilfe und Modell-Empfehlungen: [docs/PROFILES.md](docs/PROFILES.md).
 **Hinweis:** Ein späterer Profilwechsel erfordert Neu-Indexierung
@@ -249,6 +256,7 @@ Assistenten *deinen* Assistenten — Anleitung mit Beispielen:
 
 ## Dokumentation
 
+- **[So funktioniert's — in einfachen Worten](docs/HOW_IT_WORKS.de.md)** (kein Technik-Wissen nötig)
 - [Installation macOS](docs/INSTALL_MAC.md) · [Installation Windows](docs/INSTALL_WINDOWS.md)
 - [Backend-Profile](docs/PROFILES.md) · [Obsidian + Notizbuch-MCP anbinden](docs/OBSIDIAN.md)
 - [Claude auf deine Forschung einstellen](docs/CUSTOMIZE_CLAUDE.md)
