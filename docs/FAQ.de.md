@@ -97,6 +97,13 @@ Dokumente neu indexieren.
 
 ## Betrieb
 
+**Wie prüfe ich mit einem Klick, ob alles läuft?**
+Doppelklick auf **`status.command`** (Mac) bzw. **`status.bat`** (Windows) im
+Projektordner. Der Check meldet ✓/✗ für: Docker läuft, die Container `asb-app`
+und `asb-qdrant` sind oben, Qdrant erreichbar, der Korpus ist indexiert (mit
+Anzahl Quellen/Chunks), der Watcher läuft, das KI-Textmodell ist erreichbar, und
+Claude Desktop ist angebunden. Bei einem ✗ steht direkt dabei, was zu tun ist.
+
 **Wie stoppe / starte ich alles?**
 `docker compose down` / `docker compose up -d` im Projektordner. Der Autostart
 von Docker Desktop bringt es nach einem Neustart zurück.

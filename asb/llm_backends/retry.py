@@ -9,7 +9,7 @@ DNS hiccups that were treated as fatal).
 import random
 import time
 
-RATE_LIMIT_MARKERS = ("429", "503", "RESOURCE_EXHAUSTED", "UNAVAILABLE", "overloaded")
+RATE_LIMIT_MARKERS = ("429", "503", "529", "RESOURCE_EXHAUSTED", "UNAVAILABLE", "overloaded")
 NETWORK_MARKERS = (
     "Network is unreachable", "nodename nor servname", "Connection refused",
     "Connection reset", "Connection aborted", "Read timed out",

@@ -80,21 +80,40 @@ def seed_vault_if_empty(vault: Path) -> None:
 
 
 def write_claude_config() -> tuple[bool, str]:
-    """Add the MCP entry to Claude Desktop's config. Returns (ok, message)."""
+    """Add the MCP entry to Claude Desktop's config — safely.
+
+    - Never discards a recoverable config: on invalid JSON we back it up and
+      refuse, rather than overwriting and losing the user's other MCP servers.
+    - Always backs up a valid config before changing it.
+    - Writes atomically (temp file + os.replace) so a crash mid-write cannot
+      corrupt the shared Claude config.
+    """
+    import os
+
+    # The compose mount only sets a real config dir when the launcher exported
+    # CLAUDE_CONFIG_DIR; otherwise it mounts a throwaway sentinel.
+    if os.environ.get("CLAUDE_CONFIG_MOUNTED") != "1":
+        return False, "Claude Desktop config folder not detected — add the MCP entry manually"
     if not CLAUDE_CONFIG_DIR.exists():
         return False, "Claude config folder not mounted"
+
     config_path = CLAUDE_CONFIG_DIR / "claude_desktop_config.json"
-    try:
-        existing = (
-            json.loads(config_path.read_text(encoding="utf-8"))
-            if config_path.exists() else {}
-        )
-    except json.JSONDecodeError:
-        backup = config_path.with_suffix(".json.backup")
-        shutil.copy(config_path, backup)
-        existing = {}
+    existing: dict = {}
+    if config_path.exists():
+        try:
+            existing = json.loads(config_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            backup = config_path.with_suffix(".json.backup")
+            shutil.copy(config_path, backup)
+            return False, (f"Existing Claude config is not valid JSON — backed it up to "
+                           f"{backup.name}; add the MCP entry manually")
+        # Back up the valid config before modifying it.
+        shutil.copy(config_path, config_path.with_suffix(".json.backup"))
+
     existing.setdefault("mcpServers", {})["academic-rag-and-second-brain"] = MCP_ENTRY
-    config_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+    tmp = config_path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+    os.replace(tmp, config_path)
     return True, "Claude Desktop configured"
 
 

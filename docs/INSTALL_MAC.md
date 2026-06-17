@@ -88,6 +88,8 @@ Now ask Claude:
 
 ## How do I know it's running?
 
+- **Easiest:** double-click **`status.command`** — a one-click check of Docker,
+  Qdrant, the watcher, the corpus and the AI connection, with a ✓/✗ per item.
 - The **whale icon** in the menu bar is steady → Docker is running.
 - `docker ps` (Terminal, in the project folder) lists the two containers
   **`asb-app`** and **`asb-qdrant`**.

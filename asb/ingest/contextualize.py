@@ -125,7 +125,8 @@ def _contextualize_figures_vision(llm, figures, full_markdown, toc, contexts):
     """Send each figure's image to the multimodal LLM for an honest
     description. Returns the figures that could NOT be described this way (no
     image, or the model is not multimodal) for the caption-only fallback."""
-    leftover, described, vision_alive = [], 0, True
+    leftover, described = [], 0
+    vision_alive, consecutive_fail = True, 0
     for idx, chunk in figures:
         if vision_alive and chunk.image_b64:
             prompt = _vision_prompt(_doc_context(full_markdown, toc, chunk.chapter))
@@ -133,12 +134,16 @@ def _contextualize_figures_vision(llm, figures, full_markdown, toc, contexts):
             if desc and desc.strip():
                 contexts[idx] = desc.strip()
                 described += 1
+                consecutive_fail = 0
                 continue
-            # First failure with an image present: assume the model cannot see
-            # images; stop trying and fall back for all remaining figures.
-            vision_alive = False
-            print("  [vision] figure description unavailable — falling back to "
-                  "caption-only context for remaining figures")
+            # Don't disable vision on a single transient empty response; only
+            # latch off after two in a row (then assume a non-multimodal model)
+            # so one hiccup can't cost a whole document's figure descriptions.
+            consecutive_fail += 1
+            if consecutive_fail >= 2:
+                vision_alive = False
+                print("  [vision] figure description unavailable — falling back to "
+                      "caption-only context for remaining figures")
         leftover.append((idx, chunk))
     if described:
         print(f"  [vision] described {described} figure(s)")

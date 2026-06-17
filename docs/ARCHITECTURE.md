@@ -18,7 +18,7 @@ folder, Claude Desktop as the user interface.
 │  sources/ notes/ │                   │ asb-qdrant (vector DB,          │
 │  passages/ wiki/ │                   │  named volume — no sync risk)   │
 │                  │                   └─────────────────────────────────┘
-│ LM Studio/Ollama ◀── host.docker.internal (profiles B/C only)
+│ LM Studio/Ollama ◀── host.docker.internal (hybrid/local profiles only)
 └──────────────────┘
 ```
 

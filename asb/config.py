@@ -114,3 +114,19 @@ def normalize_source_key(value) -> str:
     if value is None:
         return ""
     return unicodedata.normalize("NFC", str(value)).strip()
+
+
+def source_key_variants(value) -> list[str]:
+    """NFC, NFD and raw forms of a source key, for filters that must match
+    payloads written under different Unicode normalizations (snapshot restore,
+    manual import, cross-OS moves). A single-NFC filter silently returns zero
+    hits for such payloads — the exact 'found nothing, exit 0' failure mode."""
+    import unicodedata
+    raw = "" if value is None else str(value).strip()
+    candidates = [normalize_source_key(raw), unicodedata.normalize("NFD", raw), raw]
+    seen, out = set(), []
+    for c in candidates:
+        if c and c not in seen:
+            seen.add(c)
+            out.append(c)
+    return out
