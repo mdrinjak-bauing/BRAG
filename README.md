@@ -263,6 +263,11 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
   confidential material runs on a **local profile** (build an anonymizer in
   front if you like). If your documents contain personal data, in the cloud case
   you are generally the GDPR controller.
+- **Professional use.** In a company or public body — especially with personal
+  data — clear it up front with the responsible bodies (data protection officer,
+  IT security, works council where applicable). From a data-security standpoint
+  **local profiles are clearly preferable**; IT departments can harden ASB for
+  organizational use.
 - **Copyright.** Sure, technically you can put anything in the folder — but you
   are responsible for the rights to your sources. Your own scientific analysis
   of lawfully accessible works may fall under the text-and-data-mining

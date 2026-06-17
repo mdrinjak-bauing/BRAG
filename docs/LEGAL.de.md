@@ -53,6 +53,28 @@ Prüfe dann eigenverantwortlich u. a. Rechtsgrundlage, Auftragsverarbeitung (AVV
 mit dem Anbieter und einen etwaigen Drittlandtransfer. Dieses Projekt stellt
 keine AVV bereit und garantiert keine DSGVO-Konformität.
 
+## Einsatz im beruflichen oder organisationalen Kontext
+
+Wer ASB beruflich einsetzt — besonders mit **personenbezogenen** oder
+geschäftskritischen Daten — sollte das **vor** dem Einsatz mit den zuständigen
+Stellen abstimmen: Datenschutzbeauftragte/r, IT-Sicherheit, ggf. Betriebs- oder
+Personalrat und die Rechtsabteilung. Das ist kein Formalismus, sondern schützt
+dich und deine Organisation.
+
+Aus Sicht der Datensicherheit sind in diesem Kontext **lokale Profile klar zu
+bevorzugen** (Hybrid/Lokal): Dokumenttexte und Bilder verlassen den Rechner
+nicht, es entsteht kein Drittlandtransfer und keine Auftragsverarbeitung mit
+externen Anbietern. Für vertrauliche oder personenbezogene Unterlagen ist das
+der bedenkenlose Standardweg.
+
+**IT-Abteilungen** können ASB für den organisationalen Einsatz
+**professionalisieren** — etwa durch: ausschließlich lokale Modelle
+(LM Studio/Ollama oder ein selbst gehostetes Inferenz-Backend), zentral
+verwaltete Konfiguration und Schlüssel, Zugriffs- und Netzwerkbeschränkungen,
+Backup- und Löschkonzepte für Vault und Index sowie eine dokumentierte Bewertung
+(z. B. eine Datenschutz-Folgenabschätzung, sofern erforderlich). Die offene
+Architektur (Docker, einfache Module, MCP) ist genau dafür ausgelegt.
+
 ## Urheberrecht und lizenzierte Werke
 
 Du bist **allein dafür verantwortlich**, nur Dokumente einzulesen und zu

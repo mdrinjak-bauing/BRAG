@@ -272,6 +272,11 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
   (und wer mag, baut sich eine Anonymisierung davor). Enthalten Dokumente
   personenbezogene Daten, bist im Cloud-Fall in der Regel **du** der
   DSGVO-Verantwortliche.
+- **Beruflicher Einsatz.** Im Unternehmen oder in der Behörde — vor allem mit
+  personenbezogenen Daten — vorab mit den zuständigen Stellen abstimmen
+  (Datenschutzbeauftragte/r, IT-Sicherheit, ggf. Betriebsrat). Aus
+  Datensicherheitssicht sind **lokale Profile bedenkenlos vorzuziehen**;
+  IT-Abteilungen können ASB für den Unternehmenseinsatz professionalisieren.
 - **Urheberrecht.** Klar, technisch kannst du alles in den Ordner legen — aber
   für die Rechte an deinen Quellen bist du verantwortlich. Eigene
   wissenschaftliche Analyse rechtmäßig zugänglicher Werke kann unter die
