@@ -1,55 +1,63 @@
 # Backend Profiles — which one is for you?
 
-The profile decides **where the AI processing happens** during indexing and
-search. You choose it once during setup; you can switch later, but switching
-embedding models requires re-indexing all documents (the vectors of different
-models are mathematically incompatible — the system handles this safely by
-using a separate collection per model, but the work runs again).
+The profile decides **which AI writes the text work** — the 1–2 sentence
+context for each chunk during indexing, figure descriptions, and document
+classification. You choose it once during setup and can switch later.
+
+**The meaning-index (embeddings) always runs locally**, in every profile
+(`snowflake-arctic-embed-l-v2.0`, 1024 dim, on CPU — no GPU needed). So:
+
+- **Switching the AI provider** (Gemini ↔ OpenAI ↔ Claude ↔ a local LLM)
+  needs **no re-indexing** — every profile writes into the same collection.
+- The embeddings are **free** (no embedding API cost) and your document
+  vectors **never leave the machine**.
+
+The cross-encoder re-ranker already runs locally on CPU for every profile, so
+doing the embeddings locally too is consistent. The trade-off: the first
+ingest downloads the arctic model (~2.3 GB into the model cache) and bulk
+ingest on a weak CPU is slower than a cloud embedding API would be.
 
 ## Quick decision guide
 
-- *"I just want it to work, on this laptop."* → **A — Cloud**
-- *"My documents are confidential / I have a strong Mac."* → **B — Hybrid**
-- *"Confidential documents, but on Windows/Linux or an older Mac."* → **C — Local**
+- *"I just want it to work, on this laptop."* → **Gemini** (free tier)
+- *"I already pay for ChatGPT / Claude and want to use it."* → **OpenAI** / **Claude**
+- *"My documents are confidential and I have a strong Mac."* → **Hybrid**
+- *"Confidential documents, on Windows/Linux or an older Mac."* → **Local**
 
-## A — Cloud (recommended default)
+## Cloud-LLM profiles (any laptop, need an API key)
 
-| | |
-|---|---|
-| Embeddings | Google `gemini-embedding-001` (3072 dim) |
-| Context generation | Google Gemini Flash |
-| Needs | free API key from <https://aistudio.google.com/apikey> |
-| Hardware | anything that runs Docker |
-| Privacy | document text is sent to Google for processing |
-| Cost | free tier covers steady personal use; heavy bulk indexing may hit daily limits (the system backs off and retries automatically) |
+All three use local arctic embeddings; only the text LLM differs. With a cloud
+profile, the **text** of each chunk is sent to the provider for context
+generation — never the whole files, never the embeddings.
 
-## B — Hybrid (Apple Silicon Macs)
+| Profile | Text LLM | Cheapest preset | Get a key |
+|---|---|---|---|
+| **Gemini** (default) | Google Gemini | `gemini-2.5-flash-lite` | <https://aistudio.google.com/apikey> (free tier) |
+| **OpenAI** | OpenAI / ChatGPT | `gpt-4o-mini` | <https://platform.openai.com/api-keys> |
+| **Claude** | Anthropic Claude | `claude-haiku-4-5` | <https://console.anthropic.com/> |
 
-| | |
-|---|---|
-| Embeddings | `snowflake-arctic-embed-l-v2.0`, local (1024 dim) |
-| Context generation | your model in [LM Studio](https://lmstudio.ai) |
-| Needs | LM Studio installed and running on the host with a loaded model |
-| Hardware | M-series Mac, 32 GB RAM recommended |
-| Privacy | nothing leaves your machine |
+Gemini's free tier covers steady personal use; heavy bulk indexing may hit
+daily limits (the system backs off and retries automatically). OpenAI and
+Anthropic are paid per token — the cheapest models above keep this to a few
+cents for a typical corpus.
 
-Note: the app runs in Docker and reaches LM Studio on your Mac via
-`host.docker.internal:1234`. In LM Studio, enable the local server
-(Developer → Start Server) and load a mid-size instruct model.
-Embeddings run inside the container on CPU — fine for steady use, slow for
-bulk re-indexing of hundreds of documents.
+## Local-LLM profiles (nothing leaves your machine)
 
-## C — Local (cross-platform, privacy-first)
+| | **Hybrid** (Apple Silicon Mac) | **Local** (cross-platform) |
+|---|---|---|
+| Text LLM | your model in [LM Studio](https://lmstudio.ai) | your model via [Ollama](https://ollama.com) (default `llama3.1`) |
+| Needs | LM Studio running on the host with a loaded model | Ollama installed; `ollama pull llama3.1` once |
+| Hardware | M-series Mac, 32 GB RAM recommended | 16 GB RAM minimum; a GPU helps a lot |
+| Privacy | nothing leaves your machine | nothing leaves your machine |
 
-| | |
-|---|---|
-| Embeddings | `nomic-embed-text` via [Ollama](https://ollama.com) (768 dim) |
-| Context generation | your model via Ollama (default `llama3.1`) |
-| Needs | Ollama installed; run `ollama pull nomic-embed-text` and `ollama pull llama3.1` once |
-| Hardware | 16 GB RAM minimum; a GPU helps a lot |
-| Privacy | nothing leaves your machine |
+You **don't** pull an embedding model — arctic runs inside the container on its
+own. The app runs in Docker and reaches LM Studio / Ollama on the host via
+`host.docker.internal` (port 1234 / 11434).
 
 ## Mixing (advanced)
 
-Every component can be overridden individually in `.env` — e.g. cloud
-embeddings with a local LLM for context generation. See `.env.example`.
+Every component can be overridden individually in `.env`. The main reason to do
+so: **fast cloud embeddings** on weak hardware with a large corpus — set
+`EMBEDDING_BACKEND=gemini` (or `openai`) with the matching `EMBEDDING_MODEL` /
+`EMBEDDING_DIM`. Note this is the one change that *does* require a one-time
+re-ingest (into a separate collection, handled safely). See `.env.example`.
