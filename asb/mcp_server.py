@@ -117,11 +117,11 @@ def list_sources(doc_type: str = "") -> str:
 def inspect_chunks(source_file: str, page: int = 0, limit: int = 10) -> str:
     """Show what is actually stored in the index for a source (debugging:
     'why doesn't the search find X?'). Optionally filter by page number."""
-    from qdrant_client.models import FieldCondition, Filter, MatchValue
+    from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
     must = [FieldCondition(
         key="source_file",
-        match=MatchValue(value=config.normalize_source_key(source_file)),
+        match=MatchAny(any=config.source_key_variants(source_file)),
     )]
     if page:
         must.append(FieldCondition(key="page_start", match=MatchValue(value=page)))

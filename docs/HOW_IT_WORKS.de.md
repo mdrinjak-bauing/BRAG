@@ -188,5 +188,5 @@ Du hältst einfache Dateien in einem Ordner; die App macht daraus still einen
 bedeutungs-bewussten Index; und Claude beantwortet deine Fragen aus *deinen*
 Dokumenten, mit seitengenauen Belegen — alles auf deinem eigenen Rechner.
 
-Siehe auch: [Architektur-Diagramm & Voreinstellungen](ARCHITECTURE.md) ·
-[Backend-Profile](PROFILES.md)
+Siehe auch: [Architektur-Diagramm & Voreinstellungen](ARCHITECTURE.de.md) ·
+[Backend-Profile](PROFILES.de.md)

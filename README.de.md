@@ -67,6 +67,10 @@ mit [LM Studio](https://lmstudio.ai) oder [Ollama](https://ollama.com).
 4. **Ein PDF in `wissensspeicher/sources/` legen** — binnen Sekunden automatisch indexiert.
 5. Claude fragen: *„Welche Dokumente sind in meiner Wissensbasis?"*
 
+**Läuft alles?** Doppelklick auf `status.command` (Mac) bzw. `status.bat`
+(Windows) prüft mit einem Klick Docker, Qdrant, den Watcher, den Korpus und den
+KI-Anschluss — ✓/✗ pro Punkt.
+
 Der erste Start lädt einmalig ~3 GB Analyse-Modelle. Ausführlich, mit „was du
 siehst": [Installation macOS](docs/INSTALL_MAC.de.md) ·
 [Windows](docs/INSTALL_WINDOWS.de.md).

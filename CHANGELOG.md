@@ -4,6 +4,39 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — unreleased
+
+### Added
+- **One-click status check** (`status.command` / `status.bat`) and an
+  `asb.health` module: verifies Docker, the `asb-app`/`asb-qdrant` containers,
+  Qdrant, the corpus index, the folder watcher, the AI text backend, and the
+  Claude Desktop connection, with a ✓/✗ per item.
+
+### Security
+- HTTP bridge now enforces a **localhost Host-header allowlist** (and an Origin
+  check on POSTs), defeating DNS-rebinding attacks against the setup API that
+  writes the API key and the Claude Desktop config.
+- Vault files other than PDFs are served as downloads with
+  `X-Content-Type-Options: nosniff` instead of active `text/html` — closes a
+  stored-XSS-to-config-write path on the bridge's own origin.
+- Claude Desktop config writes are now **atomic** (temp file + replace), always
+  back up a valid config first, and **refuse** (rather than discard) an existing
+  config that is not valid JSON. Added `no-new-privileges` to the app container
+  and a `CLAUDE_CONFIG_MOUNTED` guard so the wizard no longer reports success
+  when no real Claude config dir is mounted.
+
+### Fixed
+- `source_file` filters (search, `inspect_chunks`, delete) now use an
+  **NFC/NFD/raw triple-probe** instead of NFC-only, so a source whose payload
+  was written under a different Unicode normalization is still found.
+- Query embeddings are truncated to the same bound as document embeddings
+  (`MAX_INPUT_CHARS`), keeping query/document input regimes symmetric.
+- Retry classifier treats HTTP **529** (Anthropic overload) as retryable.
+- A single transient empty vision response no longer disables figure
+  descriptions for the rest of a document (latches off only after two in a row).
+- Docs: corrected leftover "profile B/C" naming in `ARCHITECTURE.md` and
+  `FAQ.md`; fixed a German "see also" link that pointed at the English docs.
+
 ## [0.2.0] — 2026-06
 
 ### Added

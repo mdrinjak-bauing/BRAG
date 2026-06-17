@@ -61,6 +61,10 @@ Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai) or
 4. **Drop a PDF into `wissensspeicher/sources/`** — indexed automatically within seconds.
 5. Ask Claude: *"What documents are in my knowledge base?"*
 
+**Everything working?** Double-click `status.command` (Mac) / `status.bat`
+(Windows) for a one-click check of Docker, Qdrant, the watcher, the corpus and
+the AI connection — ✓/✗ per item.
+
 First run downloads ~3 GB of analysis models once. Detailed, with "what you
 see": [Install macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md).
 

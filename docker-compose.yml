@@ -22,8 +22,13 @@ services:
     env_file:
       - path: .env
         required: false
+    security_opt:
+      - no-new-privileges:true
     environment:
       - QDRANT_URL=http://qdrant:6333
+      # "1" only when the launcher exported CLAUDE_CONFIG_DIR; lets the wizard
+      # tell a real Claude config mount from the throwaway sentinel.
+      - CLAUDE_CONFIG_MOUNTED=${CLAUDE_CONFIG_DIR:+1}
     volumes:
       - ${VAULT_PATH:-./wissensspeicher}:/vault
       - models_cache:/models

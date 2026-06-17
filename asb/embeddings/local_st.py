@@ -23,6 +23,8 @@ class SentenceTransformerEmbedder(EmbeddingBackend):
         return self._model.encode(text[:MAX_INPUT_CHARS]).tolist()
 
     def embed_query(self, text: str) -> list[float]:
+        # Same input bound as documents — keep query/document regimes symmetric.
+        text = text[:MAX_INPUT_CHARS]
         # arctic-embed uses a dedicated query prompt; fall back gracefully
         try:
             return self._model.encode(text, prompt_name="query").tolist()

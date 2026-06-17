@@ -54,10 +54,11 @@ def ensure_collection(client=None):
 
 def delete_chunks_by_source(client, source_file: str) -> int:
     """Remove all chunks of one source. Returns the number deleted."""
-    from qdrant_client.models import FieldCondition, Filter, FilterSelector, MatchValue
+    from qdrant_client.models import FieldCondition, Filter, FilterSelector, MatchAny
 
-    key = config.normalize_source_key(source_file)
-    flt = Filter(must=[FieldCondition(key="source_file", match=MatchValue(value=key))])
+    flt = Filter(must=[FieldCondition(
+        key="source_file", match=MatchAny(any=config.source_key_variants(source_file)),
+    )])
     count = client.count(config.COLLECTION_NAME, count_filter=flt, exact=True).count
     if count:
         client.delete(
