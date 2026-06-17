@@ -1,7 +1,7 @@
 """HTTP bridge (port 8765, mapped to localhost only on the host).
 
 Serves:
-- /file/<vault-relative-path>   vault documents for the browser, so search
+- /file/<store-relative-path>   knowledge-store documents for the browser, so search
                                 results can deep-link to a PDF page (#page=N)
 - /setup + /api/...             the browser-based setup wizard
 - /healthz                      liveness probe
@@ -121,7 +121,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 profile=str(body.get("profile", "cloud")),
                 api_key=str(body.get("api_key", "")),
                 language=str(body.get("language", "english")),
-                vault_path=str(body.get("vault_path", "")).strip() or "./vault",
+                vault_path=str(body.get("vault_path", "")).strip() or "./wissensspeicher",
                 llm_model=str(body.get("llm_model", "")).strip(),
             )
             steps.append({"ok": True, "message": "Configuration saved"})
@@ -137,7 +137,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         else:
             created = setup_core.create_vault()
             steps.append({"ok": True, "message":
-                          "Knowledge folder created (vault/)" if created
+                          "Knowledge folder created (wissensspeicher/)" if created
                           else "Knowledge folder already exists — kept untouched"})
 
         claude_ok, claude_msg = setup_core.write_claude_config()

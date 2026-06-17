@@ -66,7 +66,7 @@ confidential or personal material this is the safe default.
 **IT departments** can **harden ASB for organizational use** — e.g. local
 models only (LM Studio/Ollama or a self-hosted inference backend), centrally
 managed configuration and keys, access and network restrictions, backup and
-deletion policies for the vault and index, and a documented assessment (such as
+deletion policies for the knowledge store and index, and a documented assessment (such as
 a data-protection impact assessment, where required). The open architecture
 (Docker, small modules, MCP) is built for exactly that.
 

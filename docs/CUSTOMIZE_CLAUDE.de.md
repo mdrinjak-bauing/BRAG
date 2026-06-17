@@ -3,7 +3,7 @@
 **🇬🇧 [English](CUSTOMIZE_CLAUDE.md) | 🇩🇪 Deutsch**
 
 Das Wirkungsvollste, was du nach der Installation tun kannst, ist, die Datei
-**`vault/CLAUDE.md`** auszufüllen. Sie wird von Claude automatisch gelesen (in
+**`wissensspeicher/CLAUDE.md`** auszufüllen. Sie wird von Claude automatisch gelesen (in
 Claude-Desktop-Projekten und in Claude Code) und macht aus einem generischen
 Assistenten einen, der dein Fachgebiet, deine Konventionen und deinen Korpus
 kennt.
@@ -23,7 +23,7 @@ Korrektur in die CLAUDE.md.
 
 ## Was in die AGENTS.md gehört
 
-`vault/AGENTS.md` enthält **Zusatzregeln für autonomes Arbeiten** — wenn Claude
+`wissensspeicher/AGENTS.md` enthält **Zusatzregeln für autonomes Arbeiten** — wenn Claude
 eigenständig agiert (lange Aufgaben, geplante Jobs, Agenten-Sitzungen) statt im
 Gespräch mit dir. Typischer Inhalt: „nie Dateien in sources/ löschen",
 „Änderungen vorschlagen statt massenhaft zu editieren", „zusammenfassen, was

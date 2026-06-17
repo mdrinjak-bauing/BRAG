@@ -58,7 +58,7 @@ ZIP-Datei von GitHub entpackt hast, ist ein Ordner entstanden — genau dort, wo
 du entpackt hast (z. B. `~/academic-rag-and-second-brain` auf dem Mac oder
 `C:\Users\<du>\academic-rag-and-second-brain` unter Windows). Darin liegen: die
 Setup-Dateien, die `docker-compose.yml`, deine Einstellungsdatei `.env` und
-standardmäßig der `vault/`-Ordner mit deinen Dokumenten. Diesen Ordner kannst du
+standardmäßig der `wissensspeicher/`-Ordner mit deinen Dokumenten. Diesen Ordner kannst du
 sehen, sichern, verschieben — er gehört dir.
 
 **2. Dockers eigener Speicher — den du nie direkt anfasst.** Beim ersten Start
@@ -68,7 +68,7 @@ Projektordner. Dort lebt auch die Qdrant-Datenbank (als „benanntes Volume").
 Das ist Absicht: So landet die Datenbank nie versehentlich in iCloud/OneDrive
 (wo sie beschädigt würde), und die 3 GB Modelle müllen deinen Projektordner
 nicht zu. Deinstallierst du Docker, verschwindet dieser Bereich wieder — dein
-Projektordner und dein Wissensordner bleiben unberührt.
+Projektordner und dein Wissensspeicher bleiben unberührt.
 
 Kurz gesagt: **Deine Dateien liegen im Projektordner (sichtbar, deins). Das
 laufende System und der Suchindex liegen in Docker (unsichtbar, automatisch
@@ -84,8 +84,8 @@ auftauchen.
 
 | Was | Wo | Hinweis |
 |---|---|---|
-| Deine Dokumente & Notizen | der Ordner `vault/` auf deinem Rechner | einfache PDF-/Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
-| Der Suchindex (Qdrant) | in Docker, in einem verwalteten Speicherbereich | jederzeit aus deinem Wissensordner neu aufbaubar; nie in iCloud/OneDrive legen |
+| Deine Dokumente & Notizen | der Ordner `wissensspeicher/` auf deinem Rechner | einfache PDF-/Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
+| Der Suchindex (Qdrant) | in Docker, in einem verwalteten Speicherbereich | jederzeit aus deinem Wissensspeicher neu aufbaubar; nie in iCloud/OneDrive legen |
 | Programmcode & KI-Modelle | im Docker-Image | einmal beim ersten Build geladen (~3 GB); fasst du nie an |
 | Einstellungen & API-Schlüssel | die Datei `.env` im Projektordner | vom Setup-Assistenten geschrieben; nie teilen |
 
@@ -98,7 +98,7 @@ Dateien neu auf.
 
 ## Was beim Ablegen eines Dokuments passiert (Einlesen)
 
-Du legst ein PDF in `vault/sources/`. Binnen Sekunden bemerkt die App es und
+Du legst ein PDF in `wissensspeicher/sources/`. Binnen Sekunden bemerkt die App es und
 durchläuft fünf Schritte:
 
 1. **Das Layout lesen — „Docling".** Docling ist das Werkzeug, das *die Seite

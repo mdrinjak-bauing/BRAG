@@ -40,7 +40,7 @@ The hybrid/local profiles are slower than the cloud profiles.
 **"Rate limit" messages during indexing (Cloud profile).**
 The free Gemini tier has per-minute/per-day limits. The system waits and
 retries automatically — let it run; nothing is lost. Failed chunks are
-recorded in `vault/.asb/failed_chunks.jsonl`.
+recorded in `wissensspeicher/.asb/failed_chunks.jsonl`.
 
 **Are figures/images analyzed?**
 Yes. The **vision pass** is on by default: on ingest each figure image is sent
@@ -101,11 +101,11 @@ Docker Desktop's autostart brings it back after a reboot.
 
 **How do I update to a new version?**
 Download the new release, replace the folder contents (keep your `.env` and
-`vault/`), then `docker compose build && docker compose up -d`.
+`wissensspeicher/`), then `docker compose build && docker compose up -d`.
 
 **How do I back up?**
-Your documents and notes are in `vault/` — back that folder up like any
-other folder. The search index can always be rebuilt from the vault (delete
+Your documents and notes are in `wissensspeicher/` — back that folder up like any
+other folder. The search index can always be rebuilt from the knowledge store (delete
 nothing, just let reconciliation re-index after a restore).
 
 **How do I remove a document?**
@@ -115,7 +115,7 @@ cleaned up automatically.
 **Can I delete the project folder or the ZIP?**
 You can delete the **ZIP** after unpacking. But **keep the project folder** (the
 unpacked ZIP) — it holds your configuration (`.env`), the controls
-(`docker-compose.yml`) and, by default, your vault (`vault/`) with all your
+(`docker-compose.yml`) and, by default, your knowledge store (`wissensspeicher/`) with all your
 documents. Deleting it would remove your knowledge base and make starting/
 stopping impossible. Moving it is fine. The ~3 GB of models live in Docker's
 storage, not in the folder, so deleting it won't free that space.

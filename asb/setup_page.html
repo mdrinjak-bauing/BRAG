@@ -199,7 +199,7 @@
     <details>
       <summary data-i="advanced"></summary>
       <p data-i="adv_folder"></p>
-      <input id="vaultpath" placeholder="default: ./vault">
+      <input id="vaultpath" placeholder="default: ./wissensspeicher">
     </details>
     <div class="row">
       <button onclick="back3()" data-i="back"></button><span class="spacer"></span>
@@ -218,8 +218,8 @@
     <span class="pill ok" data-i="done_badge"></span>
     <h2 data-i="done_h"></h2>
     <div class="two">
-      <div><h3 data-i="lib_h"></h3><p><code>vault/sources/</code></p><p data-i="lib_p"></p></div>
-      <div><h3 data-i="note_h"></h3><p><code>vault/wiki/</code></p><p data-i="note_p"></p></div>
+      <div><h3 data-i="lib_h"></h3><p><code>wissensspeicher/sources/</code></p><p data-i="lib_p"></p></div>
+      <div><h3 data-i="note_h"></h3><p><code>wissensspeicher/wiki/</code></p><p data-i="note_p"></p></div>
     </div>
     <h3 data-i="next_h"></h3>
     <ol>
@@ -265,16 +265,16 @@ const STR = {
     badge_step3:"Step 3 — your documents",
     doclang_h:"Which language are most of your documents in?",
     doclang_p:"This tunes the keyword search and the language of generated notes. Mixed corpora: pick the majority language.",
-    advanced:"Advanced options", adv_folder:"Knowledge folder — by default vault/ next to this program. To use another folder, enter its full path:",
+    advanced:"Advanced options", adv_folder:"Knowledge folder — by default wissensspeicher/ next to this program. To use another folder, enter its full path:",
     finish:"Finish setup", applying:"Setting things up…",
     done_badge:"✓ Setup complete", done_h:"How your second brain works",
     lib_h:"📚 Your library", lib_p:"Drop documents here — they are indexed automatically and cited with page numbers. You only collect; you never edit these.",
     note_h:"📓 Your notebook", note_p:"Your own thinking. Deliberately not in the search index — so you never cite your own notes as “evidence” by accident.",
     next_h:"Next steps",
     next_1:"Quit Claude Desktop completely (Cmd+Q / tray → Quit) and reopen it.",
-    next_2:"Drop a PDF into the vault/sources/ folder.",
+    next_2:"Drop a PDF into the wissensspeicher/sources/ folder.",
     next_3:"Ask Claude: “What documents are in my knowledge base?”",
-    next_4:"Open vault/CLAUDE.md and fill in the blanks — it teaches Claude your field, citation style and how to search.",
+    next_4:"Open wissensspeicher/CLAUDE.md and fill in the blanks — it teaches Claude your field, citation style and how to search.",
     done_close:"You can close this window. The setup window in the Terminal finishes the restart automatically.",
   },
   de: {
@@ -310,16 +310,16 @@ const STR = {
     badge_step3:"Schritt 3 — deine Dokumente",
     doclang_h:"In welcher Sprache sind die meisten deiner Dokumente?",
     doclang_p:"Das stellt die Stichwortsuche und die Sprache der erzeugten Notizen ein. Bei gemischten Beständen die Mehrheitssprache wählen.",
-    advanced:"Erweiterte Optionen", adv_folder:"Wissensordner — standardmäßig vault/ neben diesem Programm. Für einen anderen Ordner dessen vollständigen Pfad eingeben:",
+    advanced:"Erweiterte Optionen", adv_folder:"Wissensspeicher — standardmäßig wissensspeicher/ neben diesem Programm. Für einen anderen Ordner dessen vollständigen Pfad eingeben:",
     finish:"Einrichtung abschließen", applying:"Wird eingerichtet…",
     done_badge:"✓ Einrichtung fertig", done_h:"So funktioniert dein zweites Gehirn",
     lib_h:"📚 Deine Bibliothek", lib_p:"Dokumente hier ablegen — sie werden automatisch indexiert und mit Seitenzahlen zitiert. Du sammelst nur, du bearbeitest sie nie.",
     note_h:"📓 Dein Notizbuch", note_p:"Dein eigenes Denken. Bewusst NICHT im Suchindex — damit du nie versehentlich deine eigenen Notizen als „Beleg“ zitierst.",
     next_h:"Nächste Schritte",
     next_1:"Claude Desktop komplett beenden (Cmd+Q / Tray → Beenden) und neu öffnen.",
-    next_2:"Ein PDF in den Ordner vault/sources/ legen.",
+    next_2:"Ein PDF in den Ordner wissensspeicher/sources/ legen.",
     next_3:"Claude fragen: „Welche Dokumente sind in meiner Wissensbasis?“",
-    next_4:"vault/CLAUDE.md öffnen und die Platzhalter ausfüllen — das bringt Claude dein Fachgebiet, deine Zitierweise und dein Suchverhalten bei.",
+    next_4:"wissensspeicher/CLAUDE.md öffnen und die Platzhalter ausfüllen — das bringt Claude dein Fachgebiet, deine Zitierweise und dein Suchverhalten bei.",
     done_close:"Du kannst dieses Fenster schließen. Das Terminal-Fenster schließt den Neustart automatisch ab.",
   },
 };

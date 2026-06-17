@@ -32,12 +32,12 @@ and trade literature in everyday project work. **No programming required.**
   *"draft the paragraph from these passages, keep the citations."*
 - 🎓 **Prep teaching** — *"Draft three exam questions from chapter 4, with page
   references."*
-- 🧠 **Capture thinking** — results land as a note in your vault; a fresh chat
+- 🧠 **Capture thinking** — results land as a note in your knowledge store; a fresh chat
   days later picks up exactly where the last one stopped.
 - 🗂️ **Filter by project/course** — *"Search **only in the School Center
   project**: which position covers the earthworks?"*
 
-The core idea: **chats forget — your vault doesn't.** Knowledge accumulates in
+The core idea: **chats forget — your knowledge store doesn't.** Knowledge accumulates in
 your files, not in a throwaway chat log.
 
 ## Setup — realistically about an hour
@@ -58,7 +58,7 @@ Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai) or
    should run, your key (with a live check), your document language. It writes
    the whole configuration itself — **you never edit a file.**
 3. **Quit Claude Desktop completely** (Cmd+Q / tray → Quit) and reopen it.
-4. **Drop a PDF into `vault/sources/`** — indexed automatically within seconds.
+4. **Drop a PDF into `wissensspeicher/sources/`** — indexed automatically within seconds.
 5. Ask Claude: *"What documents are in my knowledge base?"*
 
 **Everything working?** Double-click `status.command` (Mac) / `status.bat`
@@ -75,7 +75,7 @@ the heart of the design:
 
 |  | 📚 **Your library** | 📓 **Your notebook** |
 |---|---|---|
-| Folder | `vault/sources/` | `vault/wiki/`, `vault/notes/`, `vault/passages/` |
+| Folder | `wissensspeicher/sources/` | `wissensspeicher/wiki/`, `wissensspeicher/notes/`, `wissensspeicher/passages/` |
 | Contains | external sources: papers, books, reports | **your own thinking**: concepts, drafts, reading notes |
 | Searchable by Claude? | yes — hybrid search with page-precise citations | deliberately **no** |
 | Claude can read/write it? | read-only (via search) | yes — via the optional Obsidian connection |
@@ -114,7 +114,7 @@ growing, searchable knowledge.
 
 ## How it works
 
-![Architecture: vault, Docker containers, Claude Desktop and the two MCP connections](docs/assets/architecture.svg)
+![Architecture: knowledge store, Docker containers, Claude Desktop and the two MCP connections](docs/assets/architecture.svg)
 
 Everything runs in two Docker containers on your machine. In a cloud profile an
 AI provider only processes document text; in the local profiles nothing leaves
@@ -125,7 +125,7 @@ your computer. A thorough, jargon-free explanation lives in
 hand (and fighting version conflicts), Docker runs a ready-made box that is
 identical on every machine. You install Docker Desktop once; the project starts
 the rest. The ~3 GB of models live in Docker's managed storage — **not** in your
-project folder; your `vault/` holds only your own files.
+project folder; your `wissensspeicher/` holds only your own files.
 
 ![Pipeline: ingest and query](docs/assets/pipeline.svg)
 
@@ -209,13 +209,27 @@ strong hardware for a *local* text AI — embeddings run on CPU everywhere.
 Details, model recommendations and the cloud-embedding opt-in:
 [docs/PROFILES.md](docs/PROFILES.md).
 
-## Your knowledge folder (the vault)
+## Your knowledge store
 
-The vault is **one folder on your computer** — `vault/` by default. During setup
-you can point it at any other folder (e.g. an existing literature collection).
+Here's the most important distinction — **two folders, two roles:**
+
+- **The project folder** = the **program** (the unpacked ZIP). You need it to
+  start/stop the app; **don't delete it.** *Where* it lives doesn't matter
+  (your work/project directory, OneDrive …) — just keep it.
+- **Your knowledge store** = your **content**. By default that's the
+  `wissensspeicher/` subfolder *inside* the project folder. During setup you can
+  instead point it at an **existing folder** — e.g. your current "Project XY"
+  folder — and grant access to it.
+
+**The one rule that explains everything:** exactly **this one folder** is
+searched. Anything you put in `sources/` is automatically added to the search
+database (the index); take a file back out or delete it and it disappears from
+the database too. Nothing else on your computer is touched.
+
+This is how the knowledge store is laid out:
 
 ```
-vault/
+wissensspeicher/
 ├── CLAUDE.md      ← teaches Claude about YOUR research — fill it in!
 ├── AGENTS.md      ← extra rules for autonomous agent tasks
 ├── sources/       ← 📚 drop documents here (PDF, DOCX); subfolders = document types
@@ -240,6 +254,16 @@ client: City of Hamm
 Every document in that folder carries these fields; Claude filters by them in a
 conversation, so hits from other projects don't bleed into your results.
 
+### Obsidian: a nicer view of the same folder
+
+You can open the knowledge store with [Obsidian](https://obsidian.md) (free) —
+it renders the Markdown files far more nicely and makes writing in the notebook
+pleasant. Important to understand: **Obsidian is not a second copy, just a view
+onto the exact same folder.** It works directly on the files — **delete a file
+in Obsidian and it's gone from the normal folder (and the index) too.** Nothing
+is imported or copied; it's the same structure, just nicer to work with.
+Step by step: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
+
 ## Day to day: how your knowledge grows
 
 **New literature arrives:** drop it into `sources/` → indexed in minutes →
@@ -254,7 +278,7 @@ in a fresh chat, continue exactly there.
 drafted from them — citations preserved.
 
 **Let Claude grow with you:** whenever you correct Claude twice about the same
-thing, that correction belongs in **`vault/CLAUDE.md`**, not in the next chat. A
+thing, that correction belongs in **`wissensspeicher/CLAUDE.md`**, not in the next chat. A
 well-kept instruction file turns a generic assistant into *yours* — examples:
 [docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md).
 
@@ -277,7 +301,7 @@ Possible directions (open architecture, not yet built in):
   so Claude can look things up there or prepare entries.
 - **Automations** — automatic file naming, periodic summaries of new sources,
   watcher-triggered reports, scheduled tasks via agent sessions (rules in
-  `vault/AGENTS.md`).
+  `wissensspeicher/AGENTS.md`).
 
 A coding agent can implement exactly these extensions step by step — a new MCP
 tool here, an extra pipeline stage there. If you build in this direction,
@@ -328,7 +352,7 @@ Current version: **0.2.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
   pipeline, Docker, cost, hardware, legal). New: the **vision pass** — figures
   are described by content (on by default, disable with `VISION_ENABLED=false`).
 - **0.1.0** — Initial release: Gemini cloud profile, hybrid search with
-  reranking, the vault structure and the search MCP for Claude Desktop.
+  reranking, the knowledge store structure and the search MCP for Claude Desktop.
 
 ## Status
 

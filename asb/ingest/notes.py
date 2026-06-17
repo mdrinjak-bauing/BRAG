@@ -1,5 +1,5 @@
 """Auto-generated literature notes: one markdown file per ingested source,
-Obsidian-compatible, written to vault/notes/."""
+Obsidian-compatible, written to wissensspeicher/notes/."""
 
 from datetime import date
 

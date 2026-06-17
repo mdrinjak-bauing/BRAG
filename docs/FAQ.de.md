@@ -44,7 +44,7 @@ Cloud-Profile.
 **„Rate limit"-Meldungen während der Indexierung (Cloud-Profil).**
 Der kostenlose Gemini-Tarif hat Limits pro Minute/Tag. Das System wartet und
 versucht es automatisch erneut — einfach laufen lassen; nichts geht verloren.
-Fehlgeschlagene Abschnitte werden in `vault/.asb/failed_chunks.jsonl` vermerkt.
+Fehlgeschlagene Abschnitte werden in `wissensspeicher/.asb/failed_chunks.jsonl` vermerkt.
 
 **Werden Abbildungen/Bilder ausgewertet?**
 Ja. Standardmäßig ist der **Vision-Pass** aktiv: Jedes Abbildungsbild wird beim
@@ -110,11 +110,11 @@ von Docker Desktop bringt es nach einem Neustart zurück.
 
 **Wie aktualisiere ich auf eine neue Version?**
 Die neue Version herunterladen, den Ordnerinhalt ersetzen (deine `.env` und
-`vault/` behalten), dann `docker compose build && docker compose up -d`.
+`wissensspeicher/` behalten), dann `docker compose build && docker compose up -d`.
 
 **Wie sichere ich meine Daten?**
-Deine Dokumente und Notizen liegen in `vault/` — sichere diesen Ordner wie jeden
-anderen. Der Suchindex lässt sich jederzeit aus deinem Wissensordner neu aufbauen (nichts
+Deine Dokumente und Notizen liegen in `wissensspeicher/` — sichere diesen Ordner wie jeden
+anderen. Der Suchindex lässt sich jederzeit aus deinem Wissensspeicher neu aufbauen (nichts
 löschen; nach einer Wiederherstellung gleicht das System nach einem Neustart neu
 ab).
 
@@ -125,8 +125,8 @@ werden automatisch bereinigt.
 **Kann ich den Projektordner oder die ZIP-Datei löschen?**
 Die **ZIP-Datei** kannst du nach dem Entpacken löschen. Den **Projektordner**
 (die entpackte ZIP) aber **behalten** — er enthält deine Konfiguration (`.env`),
-die Steuerung (`docker-compose.yml`) und standardmäßig deinen Wissensordner
-(`vault/`) mit allen Dokumenten. Löschen würde deine Wissensbasis entfernen und
+die Steuerung (`docker-compose.yml`) und standardmäßig deinen Wissensspeicher
+(`wissensspeicher/`) mit allen Dokumenten. Löschen würde deine Wissensbasis entfernen und
 das Starten/Stoppen unmöglich machen. Verschieben ist in Ordnung. Die ~3 GB
 Modelle liegen ohnehin in Dockers Speicher, nicht im Ordner — Löschen gibt
 diesen Platz also nicht frei.

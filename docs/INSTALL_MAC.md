@@ -56,7 +56,7 @@ plain language:
 - **Where should the AI run?** (cloud or local) — pick "Cloud" to start.
 - **Provider & key:** choose Gemini and paste the copied key. The assistant
   checks it **live** and shows a green check when it's valid.
-- **Your document language** and, optionally, a custom vault folder.
+- **Your document language** and, optionally, a custom knowledge store folder.
 
 At the end the assistant writes the whole configuration itself — including the
 Claude Desktop entry. **You never edit a single file.** The Terminal then builds
@@ -68,7 +68,7 @@ minutes, first time only).
 
 ## 5. First document
 
-**What to do:** Put a PDF into the `vault/sources/` folder (inside the project
+**What to do:** Put a PDF into the `wissensspeicher/sources/` folder (inside the project
 folder).
 
 **What you see:** Nothing visible — processing runs in the background. A short
@@ -99,7 +99,7 @@ Now ask Claude:
 
 ## Notes
 
-- **iCloud:** It is fine to keep the project folder (and the vault) in an
+- **iCloud:** It is fine to keep the project folder (and the knowledge store) in an
   iCloud-synced location — the database itself lives inside Docker, safely
   outside any sync folder.
 - **Stopping/starting:** Docker Desktop starts the app automatically after boot.
