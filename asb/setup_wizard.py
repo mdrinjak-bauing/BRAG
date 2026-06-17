@@ -35,7 +35,7 @@ def ask(prompt: str, default: str = "") -> str:
 
 
 def main():
-    print("\n=== Academic RAG and Second Brain — Setup (terminal) ===")
+    print("\n=== ASB — Academic RAG & Second Brain — Setup (terminal) ===")
     print(PROFILE_INFO)
     choice = ""
     while choice not in PROFILE_KEYS:

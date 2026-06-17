@@ -14,7 +14,7 @@ services:
 
   app:
     build: .
-    image: academic-rag-and-second-brain:latest
+    image: asb:latest
     container_name: asb-app
     restart: unless-stopped
     depends_on:

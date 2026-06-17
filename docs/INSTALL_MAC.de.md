@@ -43,7 +43,7 @@ nichts weiter tun.
 > Inhalte (Google darf die Texte auswerten). Für solche Inhalte später ein
 > lokales Profil wählen — siehe [LEGAL.de.md](LEGAL.de.md) und [PROFILES.de.md](PROFILES.de.md).
 
-## 4. Academic RAG and Second Brain herunterladen und einrichten
+## 4. ASB herunterladen und einrichten
 
 **Was du tust:**
 1. Auf der GitHub-Seite den grünen Knopf **`Code`** → **`Download ZIP`** klicken.

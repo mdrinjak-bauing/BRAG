@@ -39,7 +39,7 @@ set up automatically in step 4 — nothing to do here yet.
 > may use the text). For such content, choose a local profile later — see
 > [LEGAL.md](LEGAL.md) and [PROFILES.md](PROFILES.md).
 
-## 4. Download and set up Academic RAG and Second Brain
+## 4. Download and set up ASB
 
 **What to do:**
 1. On the GitHub page, click the green **`Code`** button → **`Download ZIP`**.

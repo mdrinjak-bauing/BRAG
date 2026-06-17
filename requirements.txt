@@ -1,4 +1,4 @@
-# Academic RAG and Second Brain — pinned versions (proven combination)
+# ASB — Academic RAG & Second Brain — pinned versions (proven combination)
 docling==2.91.0
 qdrant-client==1.17.1
 google-genai==1.73.1
