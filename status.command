@@ -1,9 +1,9 @@
 #!/bin/bash
-# ASB — Academic RAG & Second Brain — one-click status check for macOS.
+# BRAG — Building Retrieval-Augmented Generation — one-click status check for macOS.
 # Double-click this file to see whether the whole system is working.
 cd "$(dirname "$0")"
 
-echo "=== ASB — Status check ==="
+echo "=== BRAG — Status check ==="
 echo
 
 # 1. Docker running?

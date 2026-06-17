@@ -1,9 +1,9 @@
 @echo off
-REM ASB - Academic RAG and Second Brain - one-click status check for Windows.
+REM BRAG - Building Retrieval-Augmented Generation - one-click status check for Windows.
 REM Double-click this file to see whether the whole system is working.
 cd /d "%~dp0"
 
-echo === ASB - Status check ===
+echo === BRAG - Status check ===
 echo.
 
 REM 1. Docker running?

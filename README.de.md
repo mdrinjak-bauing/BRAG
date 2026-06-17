@@ -1,13 +1,15 @@
-# ASB — Academic RAG & Second Brain
+# BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.2.0** ([Änderungen](#versionen))
+**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.3.0** ([Änderungen](#versionen))
 
 > **Sprich mit deiner eigenen Fachliteratur.** PDFs in einen Ordner werfen —
 > Paper, Bücher, Berichte, Projektkram — und Claude in normaler Sprache fragen.
 > Die Antwort steht **belegt in deinen eigenen Quellen**: seitengenau, mit Zitat
 > und einem Klick aufs Original-PDF. Läuft komplett auf deinem Rechner.
 
-Kurz **ASB** — *Academic Second Brain* (das RAG steckt im Motor). Ein „zweites
+Kurz **BRAG** — *Building Retrieval-Augmented Generation*. Der Name spielt auf
+mein Fach (Bauingenieurwesen) an und darauf, was das Tool tut: Es **baut** dein
+Wissen auf, und eine RAG-Maschine ruft es bei Bedarf ab. Ein „zweites
 Gehirn" für die Forschung ist nichts Neues, und ich bin nicht der Erste, der
 sowas baut. Aber ich finde, das hier ist ein **richtig solides Setup**, das im
 Alltag echt was bringt — und ich teile es, weil ich selbst dabei lerne und weil
@@ -346,7 +348,7 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
   personenbezogenen Daten — vorab mit den zuständigen Stellen abstimmen
   (Datenschutzbeauftragte/r, IT-Sicherheit, ggf. Betriebsrat). Aus
   Datensicherheitssicht sind **lokale Profile bedenkenlos vorzuziehen**;
-  IT-Abteilungen können ASB für den Unternehmenseinsatz professionalisieren.
+  IT-Abteilungen können BRAG für den Unternehmenseinsatz professionalisieren.
 - **Urheberrecht.** Klar, technisch kannst du alles in den Ordner legen — aber
   für die Rechte an deinen Quellen bist du verantwortlich. Eigene
   wissenschaftliche Analyse rechtmäßig zugänglicher Werke kann unter die
@@ -368,8 +370,16 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 
 ## Versionen
 
-Aktuelle Version: **0.2.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
+Aktuelle Version: **0.3.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.3.0** — Projekt umbenannt in **BRAG** (*Building Retrieval-Augmented
+  Generation*). **Ein-Klick-Statuscheck** (Docker, Qdrant, Watcher, Korpus,
+  KI-Backend, Claude-Anbindung). **Umbenennen einer indexierten Datei** ist jetzt
+  ein leichtgewichtiges Metadaten-Update statt einer vollen Neu-Indexierung.
+  Sicherheits-Härtung der Setup-Bridge (Host-Header-Allowlist, statische Dateien
+  nur als Download, atomare Config-Schreibvorgänge). Wissensspeicher-Ordner
+  umbenannt `vault/` → `wissensspeicher/`. Neues Dokument: welche Claude-Oberfläche
+  wann (Chat / Cowork / Code).
 - **0.2.0** — Neben Google Gemini jetzt auch **OpenAI/ChatGPT** und
   **Anthropic/Claude** als Cloud-Anbieter. Zweisprachiger Einrichtungs-Assistent.
   Der Bedeutungs-Index (arctic) läuft in **jedem** Profil lokal (Anbieterwechsel
@@ -381,7 +391,7 @@ Aktuelle Version: **0.2.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHA
 
 ## Status
 
-Frühe Version (0.2.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
+Frühe Version (0.3.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
 übrigen Profile funktionieren, sind aber weniger erprobt. Roadmap: automatische
 Dateibenennung, Korpus-Überblicksmodi (Coverage/Cluster), optionale
 Wissensgraph-Ebene — und die oben skizzierten Anbindungen.

@@ -1,10 +1,10 @@
 #!/bin/bash
-# ASB — Academic RAG & Second Brain — one-click setup for macOS.
+# BRAG — Building Retrieval-Augmented Generation — one-click setup for macOS.
 # Double-click this file. It starts the app and opens the setup assistant
 # in your browser; this window finishes the restart afterwards.
 cd "$(dirname "$0")"
 
-echo "=== ASB — Academic RAG & Second Brain ==="
+echo "=== BRAG — Building Retrieval-Augmented Generation ==="
 echo
 
 if ! command -v docker >/dev/null 2>&1; then

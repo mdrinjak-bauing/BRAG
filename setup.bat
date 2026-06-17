@@ -1,10 +1,10 @@
 @echo off
-REM ASB - Academic RAG and Second Brain - one-click setup for Windows.
+REM BRAG - Building Retrieval-Augmented Generation - one-click setup for Windows.
 REM Double-click this file. It starts the app and opens the setup assistant
 REM in your browser; this window finishes the restart afterwards.
 cd /d "%~dp0"
 
-echo === ASB - Academic RAG and Second Brain ===
+echo === BRAG - Building Retrieval-Augmented Generation ===
 echo.
 
 where docker >nul 2>nul

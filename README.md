@@ -1,13 +1,15 @@
-# ASB — Academic RAG & Second Brain
+# BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.2.0** ([changes](#versions))
+**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.0** ([changes](#versions))
 
 > **Talk to your own research literature.** Drop your PDFs into a folder —
 > papers, books, reports, project files — and ask Claude in plain language. The
 > answer is **grounded in your own sources**: page-precise, with the citation
 > and one click to the original PDF. It all runs on your machine.
 
-Short: **ASB** — *Academic Second Brain* (the RAG is in the engine). A "second
+Short: **BRAG** — *Building Retrieval-Augmented Generation*. The name nods to my
+field (civil engineering) and to what the tool does: it **builds up** your
+knowledge, and a RAG engine retrieves it on demand. A "second
 brain" for research isn't a new idea, and I'm not the first to build one. But I
 think this is a **genuinely solid setup** that actually helps day to day — and
 I'm sharing it because I learn from it myself and because others can get
@@ -326,7 +328,7 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 - **Professional use.** In a company or public body — especially with personal
   data — clear it up front with the responsible bodies (data protection officer,
   IT security, works council where applicable). From a data-security standpoint
-  **local profiles are clearly preferable**; IT departments can harden ASB for
+  **local profiles are clearly preferable**; IT departments can harden BRAG for
   organizational use.
 - **Copyright.** Sure, technically you can put anything in the folder — but you
   are responsible for the rights to your sources. Your own scientific analysis
@@ -348,8 +350,15 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 ## Versions
 
-Current version: **0.2.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.3.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.3.0** — Renamed the project to **BRAG** (*Building Retrieval-Augmented
+  Generation*). **One-click status check** (Docker, Qdrant, watcher, corpus, AI
+  backend, Claude connection). **Renaming an indexed file** is now a lightweight
+  metadata update instead of a full re-ingest. Security hardening of the setup
+  bridge (Host-header allowlist, download-only static files, atomic config
+  writes). Knowledge-store folder renamed `vault/` → `wissensspeicher/`. New
+  doc: which Claude surface to use (Chat / Cowork / Code).
 - **0.2.0** — Added **OpenAI/ChatGPT** and **Anthropic/Claude** alongside Google
   Gemini. Bilingual setup wizard. The meaning index (arctic) runs locally in
   **every** profile (switch provider without re-indexing). Reworked guide (query
@@ -360,7 +369,7 @@ Current version: **0.2.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
 ## Status
 
-Early release (0.2.0). The **Gemini profile** is the tested happy path; the
+Early release (0.3.0). The **Gemini profile** is the tested happy path; the
 other profiles work but are less battle-tested. Roadmap: automatic file naming,
 corpus overview modes (coverage/clusters), optional knowledge-graph layer — and
 the integrations sketched above.

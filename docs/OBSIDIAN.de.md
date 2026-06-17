@@ -9,7 +9,7 @@ ideale Weg, ihn zu lesen und zu beschreiben.
 
 1. [Obsidian](https://obsidian.md) installieren (kostenlos).
 2. „Ordner als Vault öffnen" → den Ordner `wissensspeicher/` innerhalb deines
-   ASB-Verzeichnisses wählen.
+   BRAG-Verzeichnisses wählen.
 3. Fertig. Literaturnotizen erscheinen in `notes/`, deine gespeicherten
    Passagen in `passages/`, dein eigenes Denken kommt nach `wiki/`.
 

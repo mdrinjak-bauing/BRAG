@@ -55,7 +55,7 @@ keine AVV bereit und garantiert keine DSGVO-Konformität.
 
 ## Einsatz im beruflichen oder organisationalen Kontext
 
-Wer ASB beruflich einsetzt — besonders mit **personenbezogenen** oder
+Wer BRAG beruflich einsetzt — besonders mit **personenbezogenen** oder
 geschäftskritischen Daten — sollte das **vor** dem Einsatz mit den zuständigen
 Stellen abstimmen: Datenschutzbeauftragte/r, IT-Sicherheit, ggf. Betriebs- oder
 Personalrat und die Rechtsabteilung. Das ist kein Formalismus, sondern schützt
@@ -67,7 +67,7 @@ nicht, es entsteht kein Drittlandtransfer und keine Auftragsverarbeitung mit
 externen Anbietern. Für vertrauliche oder personenbezogene Unterlagen ist das
 der bedenkenlose Standardweg.
 
-**IT-Abteilungen** können ASB für den organisationalen Einsatz
+**IT-Abteilungen** können BRAG für den organisationalen Einsatz
 **professionalisieren** — etwa durch: ausschließlich lokale Modelle
 (LM Studio/Ollama oder ein selbst gehostetes Inferenz-Backend), zentral
 verwaltete Konfiguration und Schlüssel, Zugriffs- und Netzwerkbeschränkungen,

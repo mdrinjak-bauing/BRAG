@@ -4,36 +4,36 @@
 
 Anthropic bietet Claude in mehreren „Oberflächen" an, die auf denselben Modellen
 laufen, sich aber darin unterscheiden, **für wen** sie gedacht sind und **wie viel
-sie eigenständig erledigen**. Für ASB lautet die kurze Antwort: **nimm den Chat in
+sie eigenständig erledigen**. Für BRAG lautet die kurze Antwort: **nimm den Chat in
 Claude Desktop.** Warum — und wann die anderen sinnvoll sind. (Mit den offiziellen
 Anthropic-Beschreibungen abgeglichen; Quellen am Ende. Stand Juni 2026.)
 
 ## Auf einen Blick
 
-| Oberfläche | Was sie ist (offizielle Einordnung) | Läuft wo | Am besten für | Eignung für ASB |
+| Oberfläche | Was sie ist (offizielle Einordnung) | Läuft wo | Am besten für | Eignung für BRAG |
 |---|---|---|---|---|
-| **Claude (Chat)** | „Denken, Entwerfen und Analyse, du bei jedem Schritt dabei" — Zug um Zug | die Claude-Desktop-App; deine MCP-Server laufen auf deinem Rechner | belegte Recherche, Schreiben, Fragen an deinen Korpus | ✅ **ASBs Zuhause** |
-| **Claude Cowork** | „Gib ihm ein Ziel, und Claude arbeitet auf deinem Rechner, mit lokalen Dateien und Apps, und liefert ein fertiges Ergebnis" — autonom | eine **sandboxed Linux-VM in der Claude-Desktop-App** (Pro/Max/Team) | mehrstufige Datei-/App-Aufgaben im Hintergrund | ⚠️ nicht der ASB-Weg |
-| **Claude Code** | „Der Entwickler-Agent für Code, Git und Terminal — plant und führt aus, du prüfst die Diffs" | dein Terminal / IDE / Web | das System bauen & erweitern | 🛠️ um **ASB zu verbessern** |
+| **Claude (Chat)** | „Denken, Entwerfen und Analyse, du bei jedem Schritt dabei" — Zug um Zug | die Claude-Desktop-App; deine MCP-Server laufen auf deinem Rechner | belegte Recherche, Schreiben, Fragen an deinen Korpus | ✅ **BRAGs Zuhause** |
+| **Claude Cowork** | „Gib ihm ein Ziel, und Claude arbeitet auf deinem Rechner, mit lokalen Dateien und Apps, und liefert ein fertiges Ergebnis" — autonom | eine **sandboxed Linux-VM in der Claude-Desktop-App** (Pro/Max/Team) | mehrstufige Datei-/App-Aufgaben im Hintergrund | ⚠️ nicht der BRAG-Weg |
+| **Claude Code** | „Der Entwickler-Agent für Code, Git und Terminal — plant und führt aus, du prüfst die Diffs" | dein Terminal / IDE / Web | das System bauen & erweitern | 🛠️ um **BRAG zu verbessern** |
 
-## Warum der Chat das richtige Zuhause für ASB ist
+## Warum der Chat das richtige Zuhause für BRAG ist
 
-ASB ist in den **Chat von Claude Desktop** eingebunden — und genau dafür ist es
+BRAG ist in den **Chat von Claude Desktop** eingebunden — und genau dafür ist es
 gebaut:
 
-- Der Einrichtungs-Assistent trägt ASB als **lokalen MCP-Server** ein (er schreibt
+- Der Einrichtungs-Assistent trägt BRAG als **lokalen MCP-Server** ein (er schreibt
   einen `docker exec … asb.mcp_server`-Eintrag in die
   `claude_desktop_config.json`). Die Werkzeuge `search`, `list_sources`,
   `inspect_chunks`, … erscheinen dann **direkt im Chat**.
 - Die **PDF-Deep-Links** in jeder Antwort öffnen im Browser an der zitierten Seite
   — ein Desktop-/Chat-Ablauf.
-- Über **Projekte** in Claude Desktop lädst du deine `vault/CLAUDE.md`-Anweisungen,
+- Über **Projekte** in Claude Desktop lädst du deine `wissensspeicher/CLAUDE.md`-Anweisungen,
   sodass jeder Chat mit deinem Fach und deiner Zitierweise startet.
 - Du bleibst **in der Schleife**: fragen, die belegten Stellen lesen, nachschärfen.
-  Genau dieser Recherche-Rhythmus ist ASBs Idee — und er ist am
+  Genau dieser Recherche-Rhythmus ist BRAGs Idee — und er ist am
   token-sparsamsten (siehe unten).
 
-## Was Cowork ist — und warum es nicht der ASB-Weg ist
+## Was Cowork ist — und warum es nicht der BRAG-Weg ist
 
 **Cowork** ist Anthropics **autonomer Agent für Wissensarbeit** (allgemein
 verfügbar seit 9. April 2026), gebaut für Forschende, Analystinnen, Operations-,
@@ -42,23 +42,23 @@ arbeiten und ihre Zeit lieber in die Urteilsentscheidungen als in die Fleißarbe
 stecken". Du gibst ein Ziel vor, es arbeitet im Hintergrund und liefert ein
 Ergebnis.
 
-Entscheidend für ASB: Cowork **läuft in einer sandboxed Linux-VM** auf deinem Mac
+Entscheidend für BRAG: Cowork **läuft in einer sandboxed Linux-VM** auf deinem Mac
 oder Windows-PC (Ubuntu, per Apple-Virtualization-Framework hardware-isoliert, mit
 bubblewrap/seccomp-Sandbox). Es sieht nur den **Ordner, den du ausdrücklich
 freigibst**, und ist auf **Remote-MCP-Connectors** aus einem Katalog ausgelegt —
-nicht auf einen host-seitigen `docker exec`-Server wie den von ASB. Community-
+nicht auf einen host-seitigen `docker exec`-Server wie den von BRAG. Community-
 Anleitungen, lokale MCP-Server in Cowork zu bekommen, gibt es, aber das ist
 bewusst nicht der Standardweg.
 
 Also: Cowork ist großartig für „erledige diese ganze mehrstufige Aufgabe für mich"
-— aber die **belegte Recherche im Chat**, die ASB bietet, lebt im normalen
+— aber die **belegte Recherche im Chat**, die BRAG bietet, lebt im normalen
 **Chat**. Verfügbar in den Tarifen Pro, Max und Team (Team-Admins können es
 freischalten).
 
 ## Wofür Claude Code da ist
 
 **Claude Code** ist der **Entwickler-Agent** — Terminal, Dateisystem, Git, und du
-prüfst die Diffs. Es ist das richtige Werkzeug, um **ASB zu bauen und zu
+prüfst die Diffs. Es ist das richtige Werkzeug, um **BRAG zu bauen und zu
 erweitern**: ein neues MCP-Werkzeug ergänzen, die Pipeline härten, einen Audit-Fix
 einspielen. (Dieses Repository wird mit Claude Code entwickelt.) Es ist nicht die
 Oberfläche für die tägliche Literaturrecherche. Eine Randnotiz zur Verwandtschaft:
@@ -67,7 +67,7 @@ Entwickler laufen.
 
 ## Token-/Kostenverbrauch (was die Rechnung wirklich treibt)
 
-- **Chat + ASB-Suche:** Eine Frage schickt nur die **top-K-Treffer** (standardmäßig
+- **Chat + BRAG-Suche:** Eine Frage schickt nur die **top-K-Treffer** (standardmäßig
   15) an das Modell — schlank. Dein gesamter Korpus geht nie ans Modell, nur die
   passenden Ausschnitte. Eine Breitensuche schickt *bewusst* mehr.
 - **Cowork:** Ein autonomer Lauf liest Dateien, plant und iteriert über viele
@@ -83,7 +83,7 @@ hält.
 ## In einem Satz
 
 **Chat = deine Wissensbasis nutzen · Code = ihre Werkzeuge bauen · Cowork = eine
-ganze Aufgabe abgeben.** ASB ist für das Erste gebaut.
+ganze Aufgabe abgeben.** BRAG ist für das Erste gebaut.
 
 ---
 
