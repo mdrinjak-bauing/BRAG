@@ -6,7 +6,7 @@
 corpus through Claude Desktop.**
 
 Drop PDFs into a folder. They are automatically parsed (including tables and
-figure captions), enriched with AI-generated context, and indexed for hybrid
+figures, with AI image descriptions), enriched with AI-generated context, and indexed for hybrid
 semantic + keyword search. Then ask Claude questions about your literature —
 with answers grounded in your sources, page-precise, and one click away from
 the original PDF.
@@ -240,14 +240,16 @@ re-ranker already does. So you can switch the AI provider below at any time
 | **Hybrid** | LM Studio (on your Mac) | your local model | Apple Silicon, 32 GB+ | no |
 | **Local** | Ollama (on your machine) | llama3.1 | decent CPU, 16 GB+ | no |
 
-With a cloud profile, only the **text** of each chunk is sent to the provider
-to generate context — never your whole files, and never the embeddings. On the
-two local profiles nothing leaves the machine at all.
+With a cloud profile, the **text** of each chunk is sent to the provider to
+generate context — and, with the vision pass on (the default), the **images of
+your figures** too. Whole files and the embeddings are never sent. On the two
+local profiles nothing leaves the machine at all.
 
 > ⚠️ **Privacy note:** On the **free Gemini tier** (the default), Google may use
-> the submitted text to improve its products, and it may be reviewed by humans.
-> For confidential, personal or licensed content, choose a **local profile** or
-> a paid tier. Details and the full legal notice: **[docs/LEGAL.md](docs/LEGAL.md)**.
+> the submitted text and images to improve its products, and they may be
+> reviewed by humans. For confidential, personal or licensed content, choose a
+> **local profile** or a paid tier (image upload is off with `VISION_ENABLED=false`).
+> Details and the full legal notice: **[docs/LEGAL.md](docs/LEGAL.md)**.
 
 Decision guide and model recommendations: [docs/PROFILES.md](docs/PROFILES.md).
 **Note:** switching the AI provider needs no re-indexing. Only opting into
@@ -266,9 +268,10 @@ to its **cheapest capable model**:
 | OpenAI / ChatGPT | `gpt-4o-mini` | cheapest capable OpenAI chat model |
 | Anthropic / Claude | `claude-haiku-4-5` | cheapest Claude model |
 
-What matters for the bill: only the **text excerpt of each chunk** is sent to
-the provider for context generation — never whole files, never the embeddings,
-and never your later questions (Claude Desktop answers those separately). For a
+What matters for the bill: the **text excerpt of each chunk** is sent to the
+provider for context generation (plus your figure images when the vision pass is
+on) — never whole files, never the embeddings, and never your later questions
+(Claude Desktop answers those separately). For a
 typical corpus that keeps the cost in the **cents range**. If you deliberately
 want a stronger (pricier) model, set it as `LLM_MODEL` in `.env` — e.g.
 `gemini-2.5-flash` for a bit more quality (capped at 10,000 requests/day, so
@@ -371,16 +374,18 @@ Current version: **0.2.0** (June 2026). The full list of changes lives in
   providers alongside Google Gemini; the setup wizard is bilingual (EN/DE); the
   meaning index (arctic) now runs locally in **every** profile, so switching
   provider no longer requires re-indexing; this guide was reworked — full query
-  pipeline plus new sections on Docker, cost and hardware.
+  pipeline plus new sections on Docker, cost and hardware. Also new: the
+  **vision pass** — figures are described by a multimodal model so they become
+  findable by content (on by default, disable with `VISION_ENABLED=false`).
 - **0.1.0** — Initial release: Google Gemini cloud profile, hybrid search with
   reranking, the vault structure and the search MCP for Claude Desktop.
 
 ## Status
 
 Early release (0.2.0). The **Gemini profile** is the tested happy path; the
-other profiles are functional but less battle-tested. Roadmap: AI image
-descriptions for figures (vision pass), automatic file naming, corpus overview
-modes (coverage/clusters), optional knowledge-graph layer.
+other profiles are functional but less battle-tested. Roadmap: automatic file
+naming, corpus overview modes (coverage/clusters), optional knowledge-graph
+layer.
 
 ## License
 

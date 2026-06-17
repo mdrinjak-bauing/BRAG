@@ -11,6 +11,8 @@ DEFAULT_URL = "https://api.openai.com/v1"
 
 
 class OpenAILLM(LLMBackend):
+    vision_capable = True  # the default gpt-4o-mini is multimodal
+
     def __init__(self):
         if not config.OPENAI_API_KEY:
             raise EnvironmentError(
@@ -18,11 +20,23 @@ class OpenAILLM(LLMBackend):
                 "(get a key at https://platform.openai.com/api-keys)."
             )
 
-    def chat(self, prompt: str, max_tokens: int = 1024) -> str | None:
+    def chat(
+        self, prompt: str, max_tokens: int = 1024, images: list[str] | None = None
+    ) -> str | None:
+        if images:
+            content: list = [{"type": "text", "text": prompt}]
+            for img in images:
+                content.append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{img}"},
+                })
+        else:
+            content = prompt
+
         def call():
             payload = json.dumps({
                 "model": config.LLM_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": [{"role": "user", "content": content}],
                 "max_tokens": max_tokens,
                 "temperature": 0.2,
             }).encode()

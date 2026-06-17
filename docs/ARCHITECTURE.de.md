@@ -27,18 +27,20 @@ Claude Desktop als Benutzeroberfläche.
 1. **Extract** (`asb/ingest/extract.py`) — Docling analysiert das Layout:
    Kapitel, Abschnitte, Tabellen, Abbildungsunterschriften, Seitenzahlen. Der
    Tabellenmodus ist fest auf ACCURATE gesetzt, damit Bibliotheks-Updates die
-   Qualität nicht still verschlechtern können. Abbildungen liefern nur ihre
-   Bildunterschrift — die Bildpixel werden nicht analysiert (ein Vision-Pass
-   steht auf der Roadmap).
+   Qualität nicht still verschlechtern können. Bei aktivem Vision-Pass werden
+   Abbildungsbilder gerendert (`generate_picture_images`) und im
+   Contextualize-Schritt beschrieben.
 2. **Chunk** (`chunking.py`) — gleitendes Fenster auf Absatzebene (2000 Zeichen,
    200 Überlappung); lange Tabellen werden zeilenweise geteilt, die Kopfzeile je
    Teil wiederholt; ein „harter" Splitter behandelt OCR-Text ohne
    Absatzgrenzen.
 3. **Contextualize** (`contextualize.py`) — jeder Abschnitt erhält 1–2 Sätze
-   LLM-Kontext (Inhaltsverzeichnis + aktuelles Kapitel als Verankerung).
-   Abbildungsunterschriften bekommen einen ehrlichen Prompt, der das Beschreiben
-   ungesehener Bilder untersagt. Verarbeitung in Batches (Standard 5 Abschnitte
-   pro LLM-Aufruf).
+   LLM-Kontext (Inhaltsverzeichnis + aktuelles Kapitel als Verankerung),
+   Verarbeitung in Batches (Standard 5 Abschnitte pro LLM-Aufruf). Abbildungen
+   durchlaufen den **Vision-Pass** (`VISION_ENABLED`, Standard an): das
+   gerenderte Bild geht an das multimodale LLM für eine ehrliche Beschreibung,
+   die mit eingebettet wird. Ohne Vision-Modell oder Bild Rückfall auf den
+   ehrlichen Nur-Bildunterschrift-Prompt (nie ungesehene Inhalte erfinden).
 4. **Embed** — dichter Vektor (arctic, 1024 Dim.) + dünnbesetzter BM25-Vektor
    mit sprachabhängiger Wortstamm-Reduktion. Fehlgeschlagene Embeddings werden
    protokolliert und übersprungen — nie als Null-Vektoren gespeichert.

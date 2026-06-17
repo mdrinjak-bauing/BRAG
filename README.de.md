@@ -6,7 +6,7 @@
 Claude Desktop mit deinem Literaturkorpus.**
 
 PDFs in einen Ordner legen — sie werden automatisch ausgelesen (inklusive
-Tabellen und Abbildungsunterschriften), mit KI-generiertem Kontext
+Tabellen und Abbildungen, samt KI-Bildbeschreibungen), mit KI-generiertem Kontext
 angereichert und für die hybride Suche (semantisch + Stichwort) indexiert.
 Danach stellst du Claude Fragen zu deiner Literatur — die Antworten sind in
 deinen Quellen verankert, seitengenau belegt und einen Klick vom Original-PDF
@@ -252,14 +252,16 @@ unten also jederzeit wechseln, **ohne den Korpus neu zu indexieren.**
 | **Hybrid** | LM Studio (auf deinem Mac) | dein lokales Modell | Apple Silicon, 32 GB+ | nein |
 | **Lokal** | Ollama (auf deinem Rechner) | llama3.1 | ordentliche CPU, 16 GB+ | nein |
 
-Bei einem Cloud-Profil wird nur der **Text** jedes Chunks zur Kontext-Erzeugung
-an den Anbieter geschickt — nie deine ganzen Dateien und nie die Embeddings.
-Bei den beiden lokalen Profilen verlässt nichts den Rechner.
+Bei einem Cloud-Profil wird der **Text** jedes Chunks zur Kontext-Erzeugung an
+den Anbieter geschickt — und bei aktivem Vision-Pass (Standard) zusätzlich die
+**Bilder deiner Abbildungen**. Nie übermittelt werden ganze Dateien und die
+Embeddings. Bei den beiden lokalen Profilen verlässt nichts den Rechner.
 
 > ⚠️ **Datenschutz-Hinweis:** Beim **kostenlosen Gemini-Tarif** (Standard) kann
-> Google die übermittelten Texte zur Produktverbesserung nutzen und von Menschen
-> prüfen lassen. Für vertrauliche, personenbezogene oder lizenzierte Inhalte
-> daher ein **lokales Profil** oder einen kostenpflichtigen Tarif wählen.
+> Google die übermittelten Texte und Bilder zur Produktverbesserung nutzen und
+> von Menschen prüfen lassen. Für vertrauliche, personenbezogene oder
+> lizenzierte Inhalte daher ein **lokales Profil** oder einen kostenpflichtigen
+> Tarif wählen (Bildversand abschaltbar mit `VISION_ENABLED=false`).
 > Einzelheiten und der vollständige Rechtshinweis: **[docs/LEGAL.de.md](docs/LEGAL.de.md)**.
 
 Entscheidungshilfe und Modell-Empfehlungen: [docs/PROFILES.md](docs/PROFILES.md).
@@ -279,9 +281,10 @@ Du musst nichts von Hand auswählen — jedes Cloud-Profil ist bereits auf sein
 | OpenAI / ChatGPT | `gpt-4o-mini` | günstigstes leistungsfähiges Chat-Modell von OpenAI |
 | Anthropic / Claude | `claude-haiku-4-5` | günstigstes Claude-Modell |
 
-Entscheidend fürs Budget: An den Anbieter geht **nur der Textauszug jedes
-Abschnitts** zur Kontext-Erzeugung — nie ganze Dateien, nie die Embeddings und
-auch nicht deine späteren Fragen (die beantwortet Claude Desktop separat). Für
+Entscheidend fürs Budget: An den Anbieter geht der **Textauszug jedes
+Abschnitts** zur Kontext-Erzeugung (bei aktivem Vision-Pass zusätzlich die
+Bilder deiner Abbildungen) — nie ganze Dateien, nie die Embeddings und auch
+nicht deine späteren Fragen (die beantwortet Claude Desktop separat). Für
 einen typischen Korpus bleiben die Kosten damit im **Cent-Bereich**. Wer
 bewusst ein stärkeres (und teureres) Modell einsetzen möchte, trägt es als
 `LLM_MODEL` in der `.env` ein — etwa `gemini-2.5-flash` für etwas mehr Qualität
@@ -393,15 +396,17 @@ Aktuelle Version: **0.2.0** (Juni 2026). Die vollständige Liste aller
   ist zweisprachig (Deutsch/Englisch). Der Bedeutungs-Index (arctic) läuft in
   **jedem** Profil lokal, sodass ein Anbieterwechsel keine Neu-Indexierung mehr
   erfordert. Diese Anleitung wurde überarbeitet — mit der vollständigen
-  Abfragepipeline sowie neuen Abschnitten zu Docker, Kosten und Hardware.
+  Abfragepipeline sowie neuen Abschnitten zu Docker, Kosten und Hardware. Neu
+  außerdem der **Vision-Pass**: Abbildungen werden von einem multimodalen Modell
+  beschrieben und damit über ihren Inhalt auffindbar (standardmäßig an,
+  abschaltbar mit `VISION_ENABLED=false`).
 - **0.1.0** — Erste Veröffentlichung: Cloud-Profil mit Google Gemini, hybride
   Suche mit Reranking, Vault-Struktur und Such-MCP für Claude Desktop.
 
 ## Status
 
 Frühe Version (0.2.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
-übrigen Profile funktionieren, sind aber weniger erprobt. Roadmap:
-KI-Bildbeschreibungen für Abbildungen (Vision-Pass), automatische
+übrigen Profile funktionieren, sind aber weniger erprobt. Roadmap: automatische
 Dateibenennung, Korpus-Überblicksmodi (Coverage/Cluster), optionale
 Wissensgraph-Ebene.
 

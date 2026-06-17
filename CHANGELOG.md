@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows
 ## [0.2.0] — 2026-06
 
 ### Added
+- **Vision pass for figures** (`VISION_ENABLED`, on by default): each figure
+  image is rendered and sent to the multimodal text LLM for an honest 1–3
+  sentence description that is embedded, so figures become findable by content.
+  Works with any multimodal model (all cloud presets; local profiles need a
+  vision model) and falls back safely to caption-only otherwise. With a cloud
+  profile the figure images are sent to the provider (documented in LEGAL).
 - **OpenAI/ChatGPT** and **Anthropic/Claude** cloud providers alongside Google
   Gemini, each preset to its cheapest capable model (`gpt-4o-mini`,
   `claude-haiku-4-5`, `gemini-2.5-flash-lite`).

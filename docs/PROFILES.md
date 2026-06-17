@@ -30,7 +30,8 @@ ingest on a weak CPU is slower than a cloud embedding API would be.
 
 All three use local arctic embeddings; only the text LLM differs. With a cloud
 profile, the **text** of each chunk is sent to the provider for context
-generation — never the whole files, never the embeddings.
+generation — and, with the vision pass on (the default), the images of your
+figures too — never the whole files, never the embeddings.
 
 | Profile | Text LLM | Cheapest preset | Get a key |
 |---|---|---|---|

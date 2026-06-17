@@ -23,9 +23,11 @@ What leaves your machine depends on the chosen **profile**:
   document text nor embeddings. The meaning index is computed locally in every
   profile anyway.
 - **Cloud profiles (Gemini, OpenAI, Claude):** to generate context, the **text
-  excerpt of each chunk** is sent to the respective provider (never whole files,
-  never the embeddings, never your later chat questions). So content from your
-  documents leaves your machine and is subject to the provider's terms.
+  excerpt of each chunk** is sent to the respective provider — and, with the
+  **vision pass** on (the default), the **rendered images of your figures** as
+  well. Whole files, the embeddings and your later chat questions are not sent.
+  So content from your documents leaves your machine and is subject to the
+  provider's terms. You can disable the image upload with `VISION_ENABLED=false`.
 
 **Important — free Gemini tier (the default):** On the *free* tier of Google AI
 Studio, Google may **use** the submitted inputs and outputs to **improve its

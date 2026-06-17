@@ -34,7 +34,8 @@ langsamer als eine Cloud-Embedding-API es wäre.
 
 Alle drei nutzen lokale arctic-Embeddings; nur das Text-LLM unterscheidet sich.
 Bei einem Cloud-Profil wird der **Text** jedes Abschnitts zur Kontext-Erzeugung
-an den Anbieter geschickt — nie die ganzen Dateien, nie die Embeddings.
+an den Anbieter geschickt — und bei aktivem Vision-Pass (Standard) auch die
+Bilder deiner Abbildungen — nie die ganzen Dateien, nie die Embeddings.
 
 | Profil | Text-LLM | Günstigste Voreinstellung | Schlüssel holen |
 |---|---|---|---|

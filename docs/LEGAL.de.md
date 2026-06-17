@@ -23,10 +23,12 @@ Was deinen Rechner verlässt, hängt vom gewählten **Profil** ab:
   weder Dokumenttext noch Embeddings. Der Bedeutungs-Index wird ohnehin in jedem
   Profil lokal erzeugt.
 - **Cloud-Profile (Gemini, OpenAI, Claude):** Zur Kontext-Erzeugung wird der
-  **Textauszug jedes Abschnitts** an den jeweiligen Anbieter übermittelt (nie
-  ganze Dateien, nie die Embeddings, nie deine späteren Chat-Fragen). Damit
-  verlassen Inhalte deiner Dokumente deinen Rechner und unterliegen den
-  Bedingungen des Anbieters.
+  **Textauszug jedes Abschnitts** an den jeweiligen Anbieter übermittelt — und
+  bei aktivem **Vision-Pass** (standardmäßig an) zusätzlich die **gerenderten
+  Bilder deiner Abbildungen**. Nicht übermittelt werden ganze Dateien, die
+  Embeddings und deine späteren Chat-Fragen. Damit verlassen Inhalte deiner
+  Dokumente deinen Rechner und unterliegen den Bedingungen des Anbieters. Den
+  Bildversand kannst du mit `VISION_ENABLED=false` abschalten.
 
 **Wichtig — kostenloser Gemini-Tarif (Standard):** Beim *kostenlosen* Tarif von
 Google AI Studio kann Google die übermittelten Eingaben und Ausgaben zur

@@ -128,21 +128,25 @@ durchläuft fünf Schritte:
 
 ### Und was ist mit Abbildungen?
 
-Wichtig zu wissen: Derzeit wird der **Bildinhalt nicht angeschaut**. Beim
-Einlesen erkennt Docling jede Abbildung und übernimmt ihre **Bildunterschrift**
-(Caption) samt dem Kapitel, in dem sie steht — dieser Text wird als
-„figure"-Abschnitt durchsuchbar. Du findest eine Abbildung also über ihre
-Unterschrift und ihren Kontext, **nicht** über das, was im Bild zu sehen ist.
-Fehlt die Unterschrift, wird nur ihre Position vermerkt („No caption available").
+Abbildungen werden **angeschaut**: Beim Einlesen rendert das System jedes Bild
+und schickt es an die (multimodale) Text-KI, die in ein, zwei ehrlichen Sätzen
+beschreibt, *was* zu sehen ist — Diagrammtyp, Hauptelemente, lesbare Achsen oder
+Beschriftungen. Diese Beschreibung wird mit eingebettet, sodass du eine
+Abbildung über ihren **Inhalt** findest, nicht nur über ihre Bildunterschrift.
 
-Das ist Absicht: Eine KI, die ein **ungesehenes** Bild „beschreibt", würde raten
-— und eine erfundene Beschreibung würde den Index dauerhaft vergiften. Deshalb
-bekommt die Kontext-KI für Abbildungen einen bewusst ehrlichen Auftrag: die
-Abbildung nur im Kapitel verorten, **nie** ihren Inhalt erfinden.
+Damit nichts erfunden wird, ist der Auftrag bewusst nüchtern: nur beschreiben,
+was klar erkennbar ist, unlesbaren Text nicht raten, keine Zahlen erfinden.
 
-Ein echtes **Vision-Modell**, das die Bilder tatsächlich ansieht und beschreibt
-(Diagramme, Schaubilder, Fotos), ist geplant (siehe Roadmap), aber noch nicht
-aktiv.
+Dieser **Vision-Pass ist standardmäßig aktiv** und funktioniert mit jedem
+multimodalen Modell — alle Cloud-Voreinstellungen (Gemini, OpenAI, Claude)
+können es. Im lokalen Profil brauchst du ein Vision-Modell; fehlt eines (oder
+hat eine Abbildung kein Bild), fällt das System automatisch auf den sicheren Weg
+„nur Bildunterschrift + Kapitel" zurück. Abschalten lässt sich der Vision-Pass
+mit `VISION_ENABLED=false` in der `.env` (spart Kosten und Zeit).
+
+> ⚠️ Bei einem Cloud-Profil wird dabei auch das **Bild** an den Anbieter
+> übermittelt. Für vertrauliche oder lizenzierte Abbildungen ein lokales Profil
+> oder `VISION_ENABLED=false` nutzen (siehe [LEGAL.de.md](LEGAL.de.md)).
 
 Ein kurzes Paper dauert 1–3 Minuten, ein Buch länger. Du wartest nicht — es
 passiert im Hintergrund, und eine gelöschte Datei wird automatisch aus dem Index

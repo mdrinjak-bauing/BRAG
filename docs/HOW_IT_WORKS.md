@@ -119,19 +119,24 @@ runs five steps:
 
 ### What about figures?
 
-Important to know: the **image content is not looked at** (yet). On ingest,
-Docling detects each figure and takes its **caption** plus the chapter it sits
-in — that text becomes a searchable "figure" chunk. So you find a figure through
-its caption and context, **not** through what the image actually shows. If a
-figure has no caption, only its position is recorded ("No caption available").
+Figures **are looked at**: on ingest the system renders each image and sends it
+to the (multimodal) text AI, which writes one or two honest sentences about
+*what* it shows — the figure type, main elements, legible axes or labels. That
+description is embedded too, so you can find a figure by its **content**, not
+just its caption.
 
-This is deliberate: an AI "describing" an **unseen** image would be guessing —
-and an invented description would permanently poison the index. So for figures
-the context AI gets a deliberately honest task: only locate the figure in its
-chapter, **never** invent its content.
+To keep it from inventing things, the task is deliberately sober: only describe
+what is clearly legible, don't guess illegible text, never invent numbers.
 
-A true **vision model** that actually looks at and describes the images
-(diagrams, charts, photos) is planned (see the roadmap) but not active yet.
+This **vision pass is on by default** and works with any multimodal model — all
+cloud presets (Gemini, OpenAI, Claude) can do it. On the local profile you need
+a vision model; if there is none (or a figure has no image), the system falls
+back automatically to the safe "caption + chapter only" path. You can turn the
+vision pass off with `VISION_ENABLED=false` in `.env` (saves cost and time).
+
+> ⚠️ With a cloud profile, the **image** is sent to the provider too. For
+> confidential or licensed figures, use a local profile or `VISION_ENABLED=false`
+> (see [LEGAL.md](LEGAL.md)).
 
 A short paper takes 1–3 minutes; a book, longer. You don't wait — it happens in
 the background, and a removed file is cleaned out of the index automatically.

@@ -43,12 +43,13 @@ retries automatically — let it run; nothing is lost. Failed chunks are
 recorded in `vault/.asb/failed_chunks.jsonl`.
 
 **Are figures/images analyzed?**
-Currently only a figure's **caption** is indexed, not the image content itself —
-no vision model is active yet. So a figure is findable via its caption and
-chapter (e.g. "the figure with the flowchart in chapter 4"), but not by what is
-drawn in it. An invented image description is deliberately avoided so the index
-is not poisoned. A vision pass that looks at and describes the images is on the
-roadmap.
+Yes. The **vision pass** is on by default: on ingest each figure image is sent
+to the multimodal text AI, which briefly and honestly describes what it shows;
+that description is embedded too, so you can find figures by their **content**
+(not just the caption). With a non-multimodal local model — or when an image is
+missing — the system falls back automatically to "caption + chapter only". Turn
+it off with `VISION_ENABLED=false` in `.env`. Note: on cloud profiles the image
+is sent to the provider too (see [LEGAL.md](LEGAL.md)).
 
 ## Performance
 

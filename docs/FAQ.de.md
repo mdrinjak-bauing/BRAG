@@ -47,13 +47,14 @@ versucht es automatisch erneut — einfach laufen lassen; nichts geht verloren.
 Fehlgeschlagene Abschnitte werden in `vault/.asb/failed_chunks.jsonl` vermerkt.
 
 **Werden Abbildungen/Bilder ausgewertet?**
-Aktuell wird nur die **Bildunterschrift** einer Abbildung indexiert, nicht der
-Bildinhalt selbst — es ist noch kein Vision-Modell aktiv. Eine Abbildung ist
-also über ihre Caption und ihr Kapitel auffindbar (z. B. „die Abbildung mit dem
-Ablaufdiagramm in Kapitel 4"), aber nicht anhand dessen, was im Bild gezeichnet
-ist. Eine erfundene Bildbeschreibung wird bewusst vermieden, um den Index nicht
-zu vergiften. Ein Vision-Pass, der die Bilder ansieht und beschreibt, ist auf
-der Roadmap.
+Ja. Standardmäßig ist der **Vision-Pass** aktiv: Jedes Abbildungsbild wird beim
+Einlesen an die multimodale Text-KI geschickt, die kurz und ehrlich beschreibt,
+was zu sehen ist; diese Beschreibung wird mit eingebettet, sodass du Abbildungen
+über ihren **Inhalt** findest (nicht nur über die Bildunterschrift). Mit einem
+nicht-multimodalen lokalen Modell — oder wenn ein Bild fehlt — fällt das System
+automatisch auf „nur Bildunterschrift + Kapitel" zurück. Abschalten mit
+`VISION_ENABLED=false` in der `.env`. Hinweis: Bei Cloud-Profilen wird dabei auch
+das Bild an den Anbieter übermittelt (siehe [LEGAL.de.md](LEGAL.de.md)).
 
 ## Leistung
 

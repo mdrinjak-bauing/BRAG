@@ -21,6 +21,8 @@ API_VERSION = "2023-06-01"
 
 
 class AnthropicLLM(LLMBackend):
+    vision_capable = True  # the default claude-haiku-4-5 is multimodal
+
     def __init__(self):
         if not config.ANTHROPIC_API_KEY:
             raise EnvironmentError(
@@ -28,12 +30,28 @@ class AnthropicLLM(LLMBackend):
                 "(get a key at https://console.anthropic.com/)."
             )
 
-    def chat(self, prompt: str, max_tokens: int = 1024) -> str | None:
+    def chat(
+        self, prompt: str, max_tokens: int = 1024, images: list[str] | None = None
+    ) -> str | None:
+        if images:
+            content: list = [{"type": "text", "text": prompt}]
+            for img in images:
+                content.append({
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/png",
+                        "data": img,
+                    },
+                })
+        else:
+            content = prompt
+
         def call():
             payload = json.dumps({
                 "model": config.LLM_MODEL,
                 "max_tokens": max_tokens,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": [{"role": "user", "content": content}],
             }).encode()
             req = urllib.request.Request(
                 API_URL, data=payload,
