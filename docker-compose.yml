@@ -25,7 +25,7 @@ services:
     environment:
       - QDRANT_URL=http://qdrant:6333
     volumes:
-      - ${VAULT_PATH:-./vault}:/vault
+      - ${VAULT_PATH:-./wissensspeicher}:/vault
       - models_cache:/models
       # Project dir + Claude Desktop config: needed by the browser setup
       # wizard (writes .env and the MCP entry). CLAUDE_CONFIG_DIR is set

@@ -2,13 +2,13 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](OBSIDIAN.de.md)**
 
-Your vault is a folder of plain Markdown files — Obsidian is the perfect way
-to read and write it.
+Your knowledge store is a folder of plain Markdown files — Obsidian is the
+perfect way to read and write it.
 
-## Part 1: Open the vault in Obsidian
+## Part 1: Open the knowledge store in Obsidian
 
 1. Install [Obsidian](https://obsidian.md) (free).
-2. "Open folder as vault" → choose the `vault/` folder inside your
+2. "Open folder as vault" → choose the `wissensspeicher/` folder inside your
    ASB directory.
 3. Done. Literature notes appear in `notes/`, your saved passages in
    `passages/`, your own thinking goes into `wiki/`.
@@ -23,7 +23,7 @@ read and edit your **notes and wiki pages**, add the community plugin
    **Local REST API**.
 2. Install and enable **MCP Tools** (by Jack Steam). In its settings, click
    **"Install Server"** — this downloads a small helper program into your
-   vault.
+   knowledge store.
 3. In the **Local REST API** settings, copy the **API key**.
 4. Add a second entry to your Claude Desktop config file
    (macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`,
@@ -31,7 +31,7 @@ read and edit your **notes and wiki pages**, add the community plugin
 
 ```json
 "obsidian-mcp-tools": {
-  "command": "<full path to your vault>/.obsidian/plugins/mcp-tools/bin/mcp-server",
+  "command": "<full path to your knowledge store>/.obsidian/plugins/mcp-tools/bin/mcp-server",
   "env": { "OBSIDIAN_API_KEY": "<the key you copied>" }
 }
 ```

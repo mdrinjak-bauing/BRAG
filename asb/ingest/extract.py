@@ -18,7 +18,7 @@ class Chunk:
     text: str
     chunk_type: str          # "text" | "table" | "figure"
     source_file: str         # file stem, NFC-normalized
-    rel_path: str            # path relative to the vault (for PDF links)
+    rel_path: str            # path relative to the knowledge store (for PDF links)
     page_start: int
     page_end: int
     chapter: str

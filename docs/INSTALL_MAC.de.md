@@ -62,7 +62,7 @@ beantwortest du in einfacher Sprache:
 - **Anbieter & Schlüssel:** Gemini wählen und den kopierten Schlüssel einfügen.
   Der Assistent prüft ihn **live** und zeigt einen grünen Haken, wenn er gültig
   ist.
-- **Sprache deiner Dokumente** und optional ein eigener Wissensordner (eigener Pfad).
+- **Sprache deiner Dokumente** und optional ein eigener Wissensspeicher (eigener Pfad).
 
 Am Ende schreibt der Assistent die ganze Konfiguration selbst — inklusive des
 Eintrags in Claude Desktop. **Du editierst keine einzige Datei.** Das
@@ -75,7 +75,7 @@ Terminal-Fenster baut nun im Hintergrund die Docker-Container und lädt einmalig
 
 ## 5. Erstes Dokument
 
-**Was du tust:** Lege eine PDF-Datei in den Ordner `vault/sources/` (innerhalb
+**Was du tust:** Lege eine PDF-Datei in den Ordner `wissensspeicher/sources/` (innerhalb
 des Projektordners).
 
 **Was du siehst:** Nichts Sichtbares — die Verarbeitung läuft im Hintergrund.
@@ -104,7 +104,7 @@ Stelle Claude jetzt eine Frage:
 
 ## Hinweise
 
-- **iCloud:** Du darfst den Projektordner (und den Wissensordner) in einem
+- **iCloud:** Du darfst den Projektordner (und den Wissensspeicher) in einem
   iCloud-synchronisierten Ort liegen lassen — die Datenbank selbst liegt in
   Docker, sicher außerhalb jedes Sync-Ordners.
 - **Stoppen/Starten:** Docker Desktop startet die App nach dem Hochfahren

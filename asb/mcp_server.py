@@ -50,7 +50,7 @@ def search(query: str, top_k: int = 15, doc_type: str = "",
     Try multiple phrasings (synonyms, English/native-language variants).
     Use chunk_type='table' for numbers/statistics, 'figure' for diagrams.
     meta_filter restricts hits by the user's own metadata fields (defined
-    in _meta.txt files in the vault), format 'key=value' with commas for
+    in _meta.txt files in the knowledge store), format 'key=value' with commas for
     several, e.g. meta_filter='project=School Center' or
     'course=Construction Management, semester=WS25'. If the user names a
     project/course/client context, ALWAYS set this filter — otherwise hits
@@ -99,7 +99,7 @@ def list_sources(doc_type: str = "") -> str:
     finally:
         client.close()
     if not counts:
-        return "The index is empty — drop documents into vault/sources/."
+        return "The index is empty — drop documents into wissensspeicher/sources/."
     by_type: dict[str, list] = {}
     for (dtype, src), n in sorted(counts.items()):
         if doc_type and dtype != doc_type:
@@ -173,7 +173,7 @@ def _passage_file(topic: str):
 def save_passage(topic: str, text: str, source: str, page: str = "",
                  note: str = "") -> str:
     """Save a quotable passage under a topic (e.g. a chapter or theme).
-    Builds your evidence base in vault/passages/<topic>.md."""
+    Builds your evidence base in wissensspeicher/passages/<topic>.md."""
     path, slug = _passage_file(topic)
     is_new = not path.exists()
     block = [

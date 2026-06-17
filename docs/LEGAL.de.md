@@ -71,7 +71,7 @@ der bedenkenlose Standardweg.
 **professionalisieren** — etwa durch: ausschließlich lokale Modelle
 (LM Studio/Ollama oder ein selbst gehostetes Inferenz-Backend), zentral
 verwaltete Konfiguration und Schlüssel, Zugriffs- und Netzwerkbeschränkungen,
-Backup- und Löschkonzepte für Wissensordner und Index sowie eine dokumentierte Bewertung
+Backup- und Löschkonzepte für Wissensspeicher und Index sowie eine dokumentierte Bewertung
 (z. B. eine Datenschutz-Folgenabschätzung, sofern erforderlich). Die offene
 Architektur (Docker, einfache Module, MCP) ist genau dafür ausgelegt.
 

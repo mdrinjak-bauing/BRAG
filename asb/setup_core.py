@@ -31,7 +31,7 @@ def read_existing_env() -> dict:
 
 
 def write_env(profile: str, api_key: str, language: str,
-              vault_path: str = "./vault", llm_model: str = "") -> None:
+              vault_path: str = "./wissensspeicher", llm_model: str = "") -> None:
     existing = read_existing_env()
     answer_lang = "German" if language == "german" else "English"
     lines = [
@@ -40,7 +40,7 @@ def write_env(profile: str, api_key: str, language: str,
         f"PROFILE={profile}",
         f"VAULT_LANGUAGE={language}",
         f"ANSWER_LANGUAGE={answer_lang}",
-        f"VAULT_PATH={vault_path or './vault'}",
+        f"VAULT_PATH={vault_path or './wissensspeicher'}",
     ]
     # Write the API key under the active provider's env var (cloud profiles only).
     key_env = PROFILES.get(profile, {}).get("key_env")
@@ -55,8 +55,8 @@ def write_env(profile: str, api_key: str, language: str,
 
 
 def create_vault() -> bool:
-    """Copy the vault template to ./vault. Returns False if it already existed."""
-    vault = WORKSPACE / "vault"
+    """Copy the template to ./wissensspeicher. Returns False if it already existed."""
+    vault = WORKSPACE / "wissensspeicher"
     if vault.exists():
         return False
     shutil.copytree(VAULT_TEMPLATE, vault)
@@ -64,7 +64,7 @@ def create_vault() -> bool:
 
 
 def seed_vault_if_empty(vault: Path) -> None:
-    """Seed a custom (possibly empty) vault folder with the template files
+    """Seed a custom (possibly empty) knowledge-store folder with the template files
     without overwriting anything that exists. Called at app startup."""
     if not VAULT_TEMPLATE.exists():
         return

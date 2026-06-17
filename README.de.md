@@ -32,12 +32,12 @@ Fachliteratur behalten müssen. **Ohne Programmierkenntnisse nutzbar.**
   Entwerfen *„Bau den Absatz aus diesen Passagen, Belege beibehalten."*
 - 🎓 **Lehre vorbereiten** — *„Entwirf drei Klausurfragen aus Kapitel 4, mit
   Seitenangaben."*
-- 🧠 **Denken festhalten** — Ergebnisse landen als Notiz in deinem Wissensordner; ein
+- 🧠 **Denken festhalten** — Ergebnisse landen als Notiz in deinem Wissensspeicher; ein
   neuer Chat Tage später macht genau dort weiter, wo der letzte aufhörte.
 - 🗂️ **Nach Projekt/Kurs filtern** — *„Such **nur im Projekt Schulzentrum**:
   Welche Position deckt die Erdarbeiten ab?"*
 
-Der Kerngedanke: **Chats vergessen — dein Wissensordner nicht.** Wissen sammelt sich in
+Der Kerngedanke: **Chats vergessen — dein Wissensspeicher nicht.** Wissen sammelt sich in
 deinen Dateien an, nicht in einem flüchtigen Chatverlauf.
 
 ## Einrichten — realistisch etwa 1 Stunde
@@ -58,13 +58,13 @@ mit [LM Studio](https://lmstudio.ai) oder [Ollama](https://ollama.com).
    Arbeitsverzeichnis oder einen übergeordneten Ordner (gern auch in OneDrive) —
    und **entpacke sie dort**. Dieser Projektordner bleibt dauerhaft liegen (er
    enthält die Steuerung, deine Konfiguration und standardmäßig deinen
-   Wissensordner) — verschieben ist ok, löschen nicht.
+   Wissensspeicher) — verschieben ist ok, löschen nicht.
 2. **Doppelklick** auf `setup.command` (Mac) bzw. `setup.bat` (Windows). Der
    Assistent öffnet sich **im Browser** und fragt in einfacher Sprache: wo die
    KI rechnen soll, deinen Schlüssel (mit Live-Prüfung), die Dokumentsprache.
    Er schreibt die ganze Konfiguration selbst — **du editierst nie eine Datei.**
 3. **Claude Desktop komplett beenden** (Cmd+Q / Tray → Beenden) und neu öffnen.
-4. **Ein PDF in `vault/sources/` legen** — binnen Sekunden automatisch indexiert.
+4. **Ein PDF in `wissensspeicher/sources/` legen** — binnen Sekunden automatisch indexiert.
 5. Claude fragen: *„Welche Dokumente sind in meiner Wissensbasis?"*
 
 Der erste Start lädt einmalig ~3 GB Analyse-Modelle. Ausführlich, mit „was du
@@ -78,7 +78,7 @@ Trennung ist der Kern dieses Designs:
 
 |  | 📚 **Deine Bibliothek** | 📓 **Dein Notizbuch** |
 |---|---|---|
-| Ordner | `vault/sources/` | `vault/wiki/`, `vault/notes/`, `vault/passages/` |
+| Ordner | `wissensspeicher/sources/` | `wissensspeicher/wiki/`, `wissensspeicher/notes/`, `wissensspeicher/passages/` |
 | Enthält | externe Quellen: Paper, Bücher, Berichte | **dein eigenes Denken**: Konzepte, Entwürfe, Lesenotizen |
 | Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | bewusst **nein** |
 | Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die optionale Obsidian-Anbindung |
@@ -120,7 +120,7 @@ kein Chatverlauf je sein kann: **dein** wachsendes, durchsuchbares Wissen.
 
 ## Wie es funktioniert
 
-![Architektur: Wissensordner, Docker-Container, Claude Desktop und die zwei MCP-Anschlüsse](docs/assets/architecture.svg)
+![Architektur: Wissensspeicher, Docker-Container, Claude Desktop und die zwei MCP-Anschlüsse](docs/assets/architecture.svg)
 
 Alles läuft in zwei Docker-Containern auf deinem Rechner. Im Cloud-Profil
 verarbeitet ein KI-Anbieter nur die Dokumenttexte; in den Lokal-Profilen
@@ -131,7 +131,7 @@ in **[So funktioniert's](docs/HOW_IT_WORKS.de.md)** — hier das Wichtigste.
 installieren (und mit Versionskonflikten zu kämpfen), startet Docker eine fertig
 geschnürte Box, die auf jedem Rechner identisch ist. Du installierst einmal
 Docker Desktop; den Rest startet das Projekt. Die ~3 GB Modelle liegen in Dockers
-verwaltetem Speicher — **nicht** in deinem Projektordner; dein `vault/` enthält
+verwaltetem Speicher — **nicht** in deinem Projektordner; dein `wissensspeicher/` enthält
 nur deine eigenen Dateien.
 
 ![Pipeline: Einlesen und Abfrage](docs/assets/pipeline.svg)
@@ -218,15 +218,15 @@ voreingestellt; für einen typischen Korpus bleiben die Kosten im **Cent-Bereich
 Embeddings laufen überall auf der CPU. Details, Modell-Empfehlungen und das
 Cloud-Embedding-Opt-in: [docs/PROFILES.de.md](docs/PROFILES.de.md).
 
-## Dein Wissensordner
+## Dein Wissensspeicher
 
-Dein Wissensordner ist **ein Ordner auf deinem Rechner** — standardmäßig
-`vault/` im Projektordner. Beim
+Dein Wissensspeicher ist **ein Ordner auf deinem Rechner** — standardmäßig
+`wissensspeicher/` im Projektordner. Beim
 Setup kannst du jeden anderen Ordner angeben (z. B. eine bestehende
 Literatursammlung).
 
 ```
-vault/
+wissensspeicher/
 ├── CLAUDE.md      ← bringt Claude DEINE Forschung bei — ausfüllen!
 ├── AGENTS.md      ← Zusatzregeln für autonome Agenten-Aufgaben
 ├── sources/       ← 📚 Dokumente hier ablegen (PDF, DOCX); Unterordner = Dokumenttypen
@@ -265,7 +265,7 @@ Tage später im neuen Chat genau dort weitermachen.
 daraus entwerfen lassen — Belege bleiben erhalten.
 
 **Claude mitwachsen lassen:** Korrigierst du Claude zweimal dieselbe Sache,
-gehört die Korrektur in **`vault/CLAUDE.md`**, nicht in den nächsten Chat. Eine
+gehört die Korrektur in **`wissensspeicher/CLAUDE.md`**, nicht in den nächsten Chat. Eine
 gepflegte Instruktionsdatei macht aus einem generischen Assistenten *deinen* —
 Beispiele: [docs/CUSTOMIZE_CLAUDE.de.md](docs/CUSTOMIZE_CLAUDE.de.md).
 
@@ -289,7 +289,7 @@ Mögliche Ausbaurichtungen (offene Architektur, noch nicht fertig eingebaut):
   Claude auch dort nachschlagen oder Einträge vorbereiten kann.
 - **Automatisierungen** — automatische Datei-Benennung, regelmäßige
   Zusammenfassungen neuer Quellen, watcher-getriggerte Reports, geplante
-  Aufgaben über Agenten-Sitzungen (Regeln dafür in `vault/AGENTS.md`).
+  Aufgaben über Agenten-Sitzungen (Regeln dafür in `wissensspeicher/AGENTS.md`).
 
 Ein Coding-Agent kann genau solche Erweiterungen Schritt für Schritt umsetzen —
 ein neues MCP-Werkzeug hier, ein zusätzlicher Pipeline-Schritt dort. Wenn du in

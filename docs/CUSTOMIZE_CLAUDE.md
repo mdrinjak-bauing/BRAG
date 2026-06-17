@@ -3,7 +3,7 @@
 **🇬🇧 English | 🇩🇪 [Deutsch](CUSTOMIZE_CLAUDE.de.md)**
 
 The single highest-impact thing you can do after installation is to fill in
-**`vault/CLAUDE.md`**. It is read automatically by Claude (in Claude Desktop
+**`wissensspeicher/CLAUDE.md`**. It is read automatically by Claude (in Claude Desktop
 Projects and Claude Code) and turns a generic assistant into one that knows
 your field, your conventions, and your corpus.
 
@@ -12,7 +12,7 @@ your field, your conventions, and your corpus.
 | Section | Why it matters |
 |---|---|
 | Who I am / my research | Claude tailors depth and terminology to your field |
-| Vault layout | Claude knows what is evidence (`sources/`) vs. your own thinking (`wiki/`) |
+| Knowledge-store layout | Claude knows what is evidence (`sources/`) vs. your own thinking (`wiki/`) |
 | How to search | The instruction "always search before answering, try multiple phrasings" is what makes answers grounded instead of made up |
 | Citation style | Claude cites the way your discipline expects, with page numbers |
 | Conventions | Language, note naming, anything you'd otherwise repeat every session |
@@ -22,7 +22,7 @@ that correction belongs in CLAUDE.md.
 
 ## What goes into AGENTS.md
 
-`vault/AGENTS.md` holds **extra rules for autonomous work** — when Claude
+`wissensspeicher/AGENTS.md` holds **extra rules for autonomous work** — when Claude
 operates on its own (long tasks, scheduled jobs, agent sessions) rather than
 in a conversation with you. Typical content: "never delete files in
 sources/", "propose changes instead of bulk-editing", "summarize what you

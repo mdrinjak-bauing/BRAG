@@ -1,4 +1,4 @@
-"""File watcher: auto-ingest documents dropped into vault/sources/.
+"""File watcher: auto-ingest documents dropped into wissensspeicher/sources/.
 
 Uses a PollingObserver — file system events do not propagate across the
 Docker bind-mount boundary, polling does (and it behaves identically on

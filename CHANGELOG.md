@@ -49,7 +49,7 @@ All notable changes to this project are documented here. The format follows
   descriptions and document classification.
 - Hybrid search (dense + sparse/BM25) with reciprocal-rank fusion and
   cross-encoder reranking, page-precise citations, and clickable PDF links.
-- Vault structure (library vs. notebook) and the search MCP server for
+- Knowledge store (library vs. notebook) and the search MCP server for
   Claude Desktop.
 
 [0.2.0]: https://github.com/mdrinjak-bauing/academic-rag-and-second-brain

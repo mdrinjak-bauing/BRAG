@@ -14,7 +14,7 @@ folder, Claude Desktop as the user interface.
 │ Browser ◀────────┼── localhost:8765 ─┤  ├─ http bridge (PDF links)    │
 │  (PDF at page N) │                   │  └─ search (hybrid + rerank)   │
 │                  │                   │            │                    │
-│ vault/  ◀────────┼─── bind mount ───▶│            ▼                    │
+│ wissensspeicher/  ◀────────┼─── bind mount ───▶│            ▼                    │
 │  sources/ notes/ │                   │ asb-qdrant (vector DB,          │
 │  passages/ wiki/ │                   │  named volume — no sync risk)   │
 │                  │                   └─────────────────────────────────┘

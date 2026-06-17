@@ -61,7 +61,7 @@ beantwortest du in einfacher Sprache:
 - **Anbieter & Schlüssel:** Gemini wählen und den kopierten Schlüssel einfügen.
   Der Assistent prüft ihn **live** und zeigt einen grünen Haken, wenn er gültig
   ist.
-- **Sprache deiner Dokumente** und optional ein eigener Wissensordner (eigener Pfad).
+- **Sprache deiner Dokumente** und optional ein eigener Wissensspeicher (eigener Pfad).
 
 Am Ende schreibt der Assistent die gesamte Konfiguration selbst — inklusive des
 Eintrags in Claude Desktop. **Du editierst keine einzige Datei.** Das Fenster
@@ -75,7 +75,7 @@ baut nun im Hintergrund die Docker-Container und lädt einmalig ~3 GB Modelle
 
 ## 5. Erstes Dokument
 
-**Was du tust:** Lege eine PDF-Datei in den Ordner `vault\sources\` (innerhalb
+**Was du tust:** Lege eine PDF-Datei in den Ordner `wissensspeicher\sources\` (innerhalb
 des Projektordners).
 
 **Was du siehst:** Nichts Sichtbares — die Verarbeitung läuft im Hintergrund.

@@ -66,7 +66,7 @@ def main():
     setup_core.write_env(profile, api_key, language)
     print("  configuration saved")
     created = setup_core.create_vault()
-    print("  vault/ created" if created else "  vault/ already exists — kept")
+    print("  wissensspeicher/ created" if created else "  wissensspeicher/ already exists — kept")
     claude_ok, claude_msg = setup_core.write_claude_config()
     print(f"  {claude_msg}")
     if not claude_ok:
@@ -77,7 +77,7 @@ def main():
 
     print("\n=== Setup complete ===")
     print("1. Quit Claude Desktop completely and reopen it.")
-    print("2. Drop a PDF into vault/sources/.")
+    print("2. Drop a PDF into wissensspeicher/sources/.")
     print("3. Ask Claude: 'What documents are in my knowledge base?'")
     if profile in ("hybrid", "local"):
         app = "LM Studio" if profile == "hybrid" else "Ollama"
