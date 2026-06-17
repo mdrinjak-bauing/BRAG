@@ -16,6 +16,17 @@ All notable changes to this project are documented here. The format follows
   RRF fusion → cross-encoder reranking → top-K), plus new sections on **Docker**
   (what it is, why, and where the ~3 GB of models live), **cost/model choice**,
   and the **local embedding model vs. hardware** distinction.
+- **German translations** of every doc that previously existed only in English
+  (install guides, profiles, FAQ, Obsidian, customizing Claude, architecture),
+  each with a language switcher.
+- **Legal notices** (`docs/LEGAL.md` / `LEGAL.de.md`): disclaimer, data-privacy
+  guidance (incl. the free-Gemini caveat that submissions may be used to improve
+  Google's products and reviewed by humans), and copyright/TDM notes — linked
+  from both READMEs with a privacy caution near the profile table.
+- Step-by-step install walkthroughs with "what to open / what you see" cues and
+  a "how do I know it's running?" check; a "where does this get installed?"
+  section and a plain-words tour of the subsystems (watcher, ingest, search,
+  HTTP bridge, MCP server) in *How it works*.
 
 ### Changed
 - The **meaning index (arctic embeddings) now runs locally in every profile**.

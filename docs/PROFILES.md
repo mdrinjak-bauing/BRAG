@@ -1,5 +1,7 @@
 # Backend Profiles — which one is for you?
 
+**🇬🇧 English | 🇩🇪 [Deutsch](PROFILES.de.md)**
+
 The profile decides **which AI writes the text work** — the 1–2 sentence
 context for each chunk during indexing, figure descriptions, and document
 classification. You choose it once during setup and can switch later.

@@ -256,6 +256,12 @@ Bei einem Cloud-Profil wird nur der **Text** jedes Chunks zur Kontext-Erzeugung
 an den Anbieter geschickt — nie deine ganzen Dateien und nie die Embeddings.
 Bei den beiden lokalen Profilen verlässt nichts den Rechner.
 
+> ⚠️ **Datenschutz-Hinweis:** Beim **kostenlosen Gemini-Tarif** (Standard) kann
+> Google die übermittelten Texte zur Produktverbesserung nutzen und von Menschen
+> prüfen lassen. Für vertrauliche, personenbezogene oder lizenzierte Inhalte
+> daher ein **lokales Profil** oder einen kostenpflichtigen Tarif wählen.
+> Einzelheiten und der vollständige Rechtshinweis: **[docs/LEGAL.de.md](docs/LEGAL.de.md)**.
+
 Entscheidungshilfe und Modell-Empfehlungen: [docs/PROFILES.md](docs/PROFILES.md).
 **Hinweis:** Der Wechsel des KI-Anbieters erfordert KEINE Neu-Indexierung. Nur
 das Opt-in zu *Cloud-Embeddings* (eine fortgeschrittene `.env`-Option für
@@ -371,13 +377,11 @@ Assistenten *deinen* Assistenten — Anleitung mit Beispielen:
 ## Dokumentation
 
 - **[So funktioniert's — in einfachen Worten](docs/HOW_IT_WORKS.de.md)** (kein Technik-Wissen nötig)
-- [Installation macOS](docs/INSTALL_MAC.md) · [Installation Windows](docs/INSTALL_WINDOWS.md)
-- [Backend-Profile](docs/PROFILES.md) · [Obsidian + Notizbuch-MCP anbinden](docs/OBSIDIAN.md)
-- [Claude auf deine Forschung einstellen](docs/CUSTOMIZE_CLAUDE.md)
-- [FAQ & Fehlersuche](docs/FAQ.md) · [Architektur](docs/ARCHITECTURE.md)
-
-*(Die Detail-Dokumentation ist derzeit auf Englisch; deutsche Fassungen
-folgen.)*
+- [Installation macOS](docs/INSTALL_MAC.de.md) · [Installation Windows](docs/INSTALL_WINDOWS.de.md)
+- [Backend-Profile](docs/PROFILES.de.md) · [Obsidian + Notizbuch-MCP anbinden](docs/OBSIDIAN.de.md)
+- [Claude auf deine Forschung einstellen](docs/CUSTOMIZE_CLAUDE.de.md)
+- [FAQ & Fehlersuche](docs/FAQ.de.md) · [Architektur](docs/ARCHITECTURE.de.md)
+- ⚖️ [Rechtliche Hinweise (Datenschutz, Urheberrecht)](docs/LEGAL.de.md)
 
 ## Versionen
 

@@ -1,5 +1,7 @@
 # FAQ & Troubleshooting
 
+**🇬🇧 English | 🇩🇪 [Deutsch](FAQ.de.md)**
+
 ## Setup
 
 **"Docker is not installed" although I installed it.**
@@ -39,6 +41,24 @@ Profiles B/C are slower than A.
 The free Gemini tier has per-minute/per-day limits. The system waits and
 retries automatically — let it run; nothing is lost. Failed chunks are
 recorded in `vault/.asb/failed_chunks.jsonl`.
+
+## Performance
+
+**Is running in Docker slower than natively on the machine?**
+For everyday use, no — dropping a PDF and asking questions is a matter of
+seconds either way. It only shows during a one-time **bulk ingest of a large
+corpus**, and that depends on the OS:
+
+- **Linux:** containers share the host kernel → effectively native.
+- **Windows:** runs in a lightweight Linux VM (WSL2); CPU near-native.
+- **macOS (Apple Silicon):** runs in a Linux VM; CPU near-native, **but no
+  access to the Metal GPU inside the container**. A native install could
+  accelerate embeddings and the reranker via GPU (MPS) — in Docker they run on
+  CPU.
+
+The trade-off is deliberate: Docker costs a little bulk-ingest speed in return
+for reproducibility and double-click setup. For "weak hardware + very large
+corpus" there is the `.env` **cloud embeddings** option (see [PROFILES.md](PROFILES.md)).
 
 ## Searching
 

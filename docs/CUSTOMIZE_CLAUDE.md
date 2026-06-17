@@ -1,5 +1,7 @@
 # Customize Claude for your research
 
+**🇬🇧 English | 🇩🇪 [Deutsch](CUSTOMIZE_CLAUDE.de.md)**
+
 The single highest-impact thing you can do after installation is to fill in
 **`vault/CLAUDE.md`**. It is read automatically by Claude (in Claude Desktop
 Projects and Claude Code) and turns a generic assistant into one that knows

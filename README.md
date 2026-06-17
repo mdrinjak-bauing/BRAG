@@ -244,6 +244,11 @@ With a cloud profile, only the **text** of each chunk is sent to the provider
 to generate context — never your whole files, and never the embeddings. On the
 two local profiles nothing leaves the machine at all.
 
+> ⚠️ **Privacy note:** On the **free Gemini tier** (the default), Google may use
+> the submitted text to improve its products, and it may be reviewed by humans.
+> For confidential, personal or licensed content, choose a **local profile** or
+> a paid tier. Details and the full legal notice: **[docs/LEGAL.md](docs/LEGAL.md)**.
+
 Decision guide and model recommendations: [docs/PROFILES.md](docs/PROFILES.md).
 **Note:** switching the AI provider needs no re-indexing. Only opting into
 *cloud embeddings* (an advanced `.env` option for fast bulk ingest on weak
@@ -355,6 +360,7 @@ guide with examples: [docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md).
 - [Backend profiles](docs/PROFILES.md) · [Connect Obsidian + notebook MCP](docs/OBSIDIAN.md)
 - [Customize Claude for your research](docs/CUSTOMIZE_CLAUDE.md)
 - [FAQ & troubleshooting](docs/FAQ.md) · [Architecture](docs/ARCHITECTURE.md)
+- ⚖️ [Legal notices (privacy, copyright)](docs/LEGAL.md)
 
 ## Versions
 

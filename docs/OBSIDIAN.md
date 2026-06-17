@@ -1,5 +1,7 @@
 # Connect Obsidian
 
+**🇬🇧 English | 🇩🇪 [Deutsch](OBSIDIAN.de.md)**
+
 Your vault is a folder of plain Markdown files — Obsidian is the perfect way
 to read and write it.
 

@@ -1,5 +1,7 @@
 # Architecture
 
+**🇬🇧 English | 🇩🇪 [Deutsch](ARCHITECTURE.de.md)**
+
 For the curious and for contributors. Two containers, one bind-mounted
 folder, Claude Desktop as the user interface.
 

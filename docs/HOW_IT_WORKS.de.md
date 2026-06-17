@@ -16,18 +16,67 @@ schon enthält — auf jedem Rechner identisch. Du installierst einmal Docker; d
 Rest startet es. Deshalb ist die Einrichtung „doppelklicken und drei Fragen
 beantworten" statt einer Seite voller Befehle.
 
-**Der App-Container** — der Arbeiter in dieser Box. Er überwacht deinen Ordner,
-liest Dokumente und beantwortet Suchen.
+In dieser Box laufen zwei „Geräte" nebeneinander:
 
-**Qdrant** — eine *Suchdatenbank für Bedeutung*. Eine normale Datenbank findet
-exakte Wörter; Qdrant findet Text, der etwas Ähnliches *meint*, auch mit anderen
-Wörtern. Genau deshalb kannst du nach „Regeln für Mehrkosten" fragen und eine
-Stelle bekommen, die „Nachtragsmanagement" sagt. Läuft als zweite kleine Box
-neben der App.
+**1. Der App-Container** (`asb-app`) — der eigentliche Arbeiter. Du startest
+ihn nie von Hand; in ihm stecken mehrere kleine Teilsysteme:
 
-**Claude Desktop** — deine Oberfläche. Du öffnest weder die App noch die
-Datenbank; du sprichst einfach mit Claude, und Claude nutzt beides im
-Hintergrund über eine Verbindung namens MCP.
+- **Der Watcher** — die Wache. Er schaut alle ~10 Sekunden in deinen
+  `sources/`-Ordner: Ist etwas Neues dazugekommen? Wurde etwas umbenannt oder
+  gelöscht? Je nachdem stößt er das Einlesen an oder räumt den Index auf. Du
+  musst also nie etwas „importieren" — Datei hineinlegen genügt, der Watcher
+  bemerkt es von selbst.
+- **Die Einlese-Pipeline** — verarbeitet ein neu entdecktes Dokument: lesen,
+  zerschneiden, mit Kontext anreichern, einbetten, ablegen (Details unten).
+- **Die Suche** — beantwortet jede Frage von Claude (zwei Suchen + Reranker,
+  siehe unten).
+- **Die HTTP-Brücke** — ein winziger Webserver auf `localhost:8765`. Er sorgt
+  dafür, dass die Links in den Antworten dein PDF im Browser genau auf der
+  zitierten Seite öffnen.
+- **Der MCP-Server** — die Sprechverbindung zu Claude Desktop. Immer wenn
+  Claude sucht, läuft kurz ein Prozess in diesem Container an, holt die
+  Ergebnisse und gibt sie zurück.
+
+**2. Qdrant** (`asb-qdrant`) — eine *Suchdatenbank für Bedeutung*. Eine normale
+Datenbank findet exakte Wörter; Qdrant findet Text, der etwas Ähnliches
+*meint*, auch mit anderen Wörtern. Genau deshalb kannst du nach „Regeln für
+Mehrkosten" fragen und eine Stelle bekommen, die „Nachtragsmanagement" sagt.
+Läuft als zweite kleine Box neben der App.
+
+**Claude Desktop** — deine Oberfläche, läuft ganz normal auf dem Rechner (nicht
+in Docker). Du öffnest weder die App noch die Datenbank; du sprichst einfach mit
+Claude, und Claude nutzt beides im Hintergrund über eine Verbindung namens MCP.
+
+---
+
+## Wo wird das auf meinem Rechner installiert?
+
+Es gibt **zwei** Orte — und es hilft sehr, sie auseinanderzuhalten:
+
+**1. Der Projektordner — der, den du selbst angelegt hast.** Als du die
+ZIP-Datei von GitHub entpackt hast, ist ein Ordner entstanden — genau dort, wo
+du entpackt hast (z. B. `~/academic-rag-and-second-brain` auf dem Mac oder
+`C:\Users\<du>\academic-rag-and-second-brain` unter Windows). Darin liegen: die
+Setup-Dateien, die `docker-compose.yml`, deine Einstellungsdatei `.env` und
+standardmäßig der `vault/`-Ordner mit deinen Dokumenten. Diesen Ordner kannst du
+sehen, sichern, verschieben — er gehört dir.
+
+**2. Dockers eigener Speicher — den du nie direkt anfasst.** Beim ersten Start
+lädt Docker den Programmcode und die KI-Modelle (zusammen ~3 GB) herunter und
+legt sie in seinem eigenen, verwalteten Bereich ab — *nicht* in deinem
+Projektordner. Dort lebt auch die Qdrant-Datenbank (als „benanntes Volume").
+Das ist Absicht: So landet die Datenbank nie versehentlich in iCloud/OneDrive
+(wo sie beschädigt würde), und die 3 GB Modelle müllen deinen Projektordner
+nicht zu. Deinstallierst du Docker, verschwindet dieser Bereich wieder — dein
+Projektordner und dein Vault bleiben unberührt.
+
+Kurz gesagt: **Deine Dateien liegen im Projektordner (sichtbar, deins). Das
+laufende System und der Suchindex liegen in Docker (unsichtbar, automatisch
+verwaltet).**
+
+Willst du nachsehen, ob alles läuft, öffne im Projektordner ein Terminal und gib
+`docker ps` ein — es sollten die beiden Boxen `asb-app` und `asb-qdrant`
+auftauchen.
 
 ---
 
