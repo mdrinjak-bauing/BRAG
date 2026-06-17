@@ -253,8 +253,12 @@ wissensspeicher/
 └── wiki/          ← 📓 dein eigenes Denken — wird nie indexiert
 ```
 
-Umbenennen/Löschen in `sources/` wird automatisch nachgezogen. Unterordner-Namen
-werden zum filterbaren Dokumenttyp (`sources/Paper/`, `sources/Berichte/` …).
+Umbenennen oder Löschen in `sources/` wird automatisch nachgezogen: Benennst du
+eine **bereits indexierte** Datei um, werden nur die Metadaten (Autor, Jahr, Typ,
+PDF-Pfad) im Index aktualisiert — **ohne neu einzulesen** (kein erneutes
+Embedding, keine API-Kosten); löschst du sie, verschwindet sie aus der Datenbank.
+Unterordner-Namen werden zum filterbaren Dokumenttyp (`sources/Paper/`,
+`sources/Berichte/` …).
 
 **Eigene Metadaten** (Projekt, Kurs, Auftraggeber …) gibst du über eine
 `_meta.txt` in einem Ordner unter `sources/` an — eine Zeile pro `schlüssel: wert`:

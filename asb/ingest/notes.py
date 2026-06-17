@@ -56,6 +56,35 @@ def write_note(chunks: list[Chunk]) -> None:
     note_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def rename_note(old_source_file: str, meta: dict) -> None:
+    """Move a source's literature note to its new name and refresh the
+    filename-derived fields (source/author/year/doc_type/title/file path),
+    preserving the user's "My notes" section and the structure list. Used by
+    the lightweight rename path — no chunks needed."""
+    import re
+
+    old = config.NOTES_DIR / f"{config.normalize_source_key(old_source_file)}.md"
+    if not old.exists():
+        return
+    text = old.read_text(encoding="utf-8")
+    new_key = meta["source_file"]
+    repl = [
+        (r"(?m)^source: .*$", f"source: {new_key}"),
+        (r"(?m)^author: .*$", f"author: {meta['author']}"),
+        (r"(?m)^year: .*$", f"year: '{meta['year']}'"),
+        (r"(?m)^doc_type: .*$", f"doc_type: {meta['doc_type']}"),
+        (r"(?m)^# .*$", f"# {new_key}"),
+        (r"(?m)^\*\*File:\*\* .*$", f"**File:** `{meta['rel_path']}`  "),
+    ]
+    for pattern, replacement in repl:
+        # function replacement avoids backslash interpretation in paths/values
+        text = re.sub(pattern, lambda _m, r=replacement: r, text, count=1)
+    new = config.NOTES_DIR / f"{new_key}.md"
+    new.write_text(text, encoding="utf-8")
+    if new.resolve() != old.resolve():
+        old.unlink(missing_ok=True)
+
+
 def delete_note(source_file: str) -> None:
     note = config.NOTES_DIR / f"{config.normalize_source_key(source_file)}.md"
     if note.exists():

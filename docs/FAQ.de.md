@@ -56,6 +56,14 @@ automatisch auf „nur Bildunterschrift + Kapitel" zurück. Abschalten mit
 `VISION_ENABLED=false` in der `.env`. Hinweis: Bei Cloud-Profilen wird dabei auch
 das Bild an den Anbieter übermittelt (siehe [LEGAL.de.md](LEGAL.de.md)).
 
+**Ich benenne eine schon eingelesene Datei um — stimmen die Metadaten dann noch?**
+Ja. Der Watcher erkennt die Umbenennung und aktualisiert Autor, Jahr, Typ und den
+PDF-Pfad **direkt im Index** — **ohne die Datei neu zu verarbeiten** (kein
+erneutes Embedding, keine API-Kosten); die Literaturnotiz wird mitgezogen. Das
+gilt für eine echte Umbenennung (gleiche Datei, neuer Name). Meldet das System es
+stattdessen als Löschen + Neuanlegen, läuft ein normaler Re-Ingest — gleiches
+Ergebnis, nur langsamer.
+
 ## Leistung
 
 **Ist die Nutzung in Docker langsamer als nativ auf dem Rechner?**

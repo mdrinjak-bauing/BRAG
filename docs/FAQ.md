@@ -51,6 +51,13 @@ missing — the system falls back automatically to "caption + chapter only". Tur
 it off with `VISION_ENABLED=false` in `.env`. Note: on cloud profiles the image
 is sent to the provider too (see [LEGAL.md](LEGAL.md)).
 
+**I rename a file that's already indexed — is the metadata still correct?**
+Yes. The watcher detects the rename and updates author, year, type and the PDF
+path **directly in the index** — **without reprocessing the file** (no
+re-embedding, no API cost); the literature note moves along too. This applies to
+a true rename (same file, new name). If your system reports it as delete +
+create instead, a normal re-ingest runs — same result, just slower.
+
 ## Performance
 
 **Is running in Docker slower than natively on the machine?**
