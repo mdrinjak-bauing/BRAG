@@ -4,19 +4,34 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
-## [0.3.0] — unreleased
+## [0.3.0] — 2026-06
 
 ### Added
 - **One-click status check** (`status.command` / `status.bat`) and an
   `asb.health` module: verifies Docker, the `asb-app`/`asb-qdrant` containers,
   Qdrant, the corpus index, the folder watcher, the AI text backend, and the
   Claude Desktop connection, with a ✓/✗ per item.
+- **Lightweight rename:** renaming an already-indexed file updates its metadata
+  (author, year, type, PDF path) and literature note **in place** — no
+  re-embedding — instead of a full re-ingest. Falls back to a full ingest if the
+  file wasn't indexed yet.
+- New doc **"Which Claude surface? Chat, Cowork or Code"** (DE+EN), reconciled
+  with Anthropic's official descriptions, explaining why Claude Desktop chat is
+  ASB's home and how Cowork/Code differ (incl. token/cost notes).
+
+### Changed
+- The default knowledge folder is renamed **`vault/` → `wissensspeicher/`**
+  across docs, the setup wizard and code defaults (the `VAULT_PATH`/`VAULT_DIR`
+  env names and the in-container `/vault` mount stay as stable identifiers).
+- README reworked: a clear "two folders" distinction (project folder = program,
+  knowledge store = your content), the index rule, and an Obsidian "same-folder
+  mirror" note.
 
 ### Security
 - HTTP bridge now enforces a **localhost Host-header allowlist** (and an Origin
   check on POSTs), defeating DNS-rebinding attacks against the setup API that
   writes the API key and the Claude Desktop config.
-- Vault files other than PDFs are served as downloads with
+- Knowledge-store files other than PDFs are served as downloads with
   `X-Content-Type-Options: nosniff` instead of active `text/html` — closes a
   stored-XSS-to-config-write path on the bridge's own origin.
 - Claude Desktop config writes are now **atomic** (temp file + replace), always

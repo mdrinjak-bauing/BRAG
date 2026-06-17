@@ -1,6 +1,6 @@
 # ASB — Academic RAG & Second Brain
 
-**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.2.0** ([Änderungen](#versionen))
+**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.3.0** ([Änderungen](#versionen))
 
 > **Sprich mit deiner eigenen Fachliteratur.** PDFs in einen Ordner werfen —
 > Paper, Bücher, Berichte, Projektkram — und Claude in normaler Sprache fragen.
@@ -368,8 +368,15 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 
 ## Versionen
 
-Aktuelle Version: **0.2.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
+Aktuelle Version: **0.3.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.3.0** — Der Standard-Ordner heißt jetzt **`wissensspeicher/`** (statt
+  `vault/`). **Umbenennen** einer bereits indexierten Datei aktualisiert die
+  Metadaten **ohne Neu-Einlesen**. **Ein-Klick-Statuscheck**
+  (`status.command`/`status.bat`). **Sicherheits-Härtung** der Setup-Bridge
+  (Host-/Origin-Prüfung gegen DNS-Rebinding, kein aktives HTML aus dem Ordner,
+  atomares Schreiben der Claude-Config). Neue Doku „Welche Claude-Oberfläche?
+  Chat, Cowork oder Code" und eine klarere Ordner-Erklärung.
 - **0.2.0** — Neben Google Gemini jetzt auch **OpenAI/ChatGPT** und
   **Anthropic/Claude** als Cloud-Anbieter. Zweisprachiger Einrichtungs-Assistent.
   Der Bedeutungs-Index (arctic) läuft in **jedem** Profil lokal (Anbieterwechsel
@@ -381,7 +388,7 @@ Aktuelle Version: **0.2.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHA
 
 ## Status
 
-Frühe Version (0.2.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
+Frühe Version (0.3.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
 übrigen Profile funktionieren, sind aber weniger erprobt. Roadmap: automatische
 Dateibenennung, Korpus-Überblicksmodi (Coverage/Cluster), optionale
 Wissensgraph-Ebene — und die oben skizzierten Anbindungen.

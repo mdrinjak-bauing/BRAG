@@ -73,10 +73,11 @@ def patch_source_metadata(client, source_file: str, payload: dict) -> int:
     doc_type, rel_path, custom fields) for all chunks of a source IN PLACE —
     no re-embedding. Used when a file is renamed/moved but its content is
     unchanged. Returns the number of points updated."""
-    from qdrant_client.models import FieldCondition, Filter, MatchValue
+    from qdrant_client.models import FieldCondition, Filter, MatchAny
 
-    key = config.normalize_source_key(source_file)
-    flt = Filter(must=[FieldCondition(key="source_file", match=MatchValue(value=key))])
+    flt = Filter(must=[FieldCondition(
+        key="source_file", match=MatchAny(any=config.source_key_variants(source_file)),
+    )])
     count = client.count(config.COLLECTION_NAME, count_filter=flt, exact=True).count
     if count:
         client.set_payload(

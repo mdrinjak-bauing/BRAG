@@ -1,6 +1,6 @@
 # ASB — Academic RAG & Second Brain
 
-**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.2.0** ([changes](#versions))
+**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.0** ([changes](#versions))
 
 > **Talk to your own research literature.** Drop your PDFs into a folder —
 > papers, books, reports, project files — and ask Claude in plain language. The
@@ -348,8 +348,15 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 ## Versions
 
-Current version: **0.2.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.3.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.3.0** — The default knowledge folder is now **`wissensspeicher/`** (was
+  `vault/`). **Renaming** an already-indexed file updates its metadata **without
+  re-ingesting**. **One-click status check** (`status.command`/`status.bat`).
+  **Security hardening** of the setup bridge (Host/Origin checks against
+  DNS-rebinding, no active HTML served from the folder, atomic Claude-config
+  writes). New doc "Which Claude surface? Chat, Cowork or Code" and a clearer
+  folder explanation.
 - **0.2.0** — Added **OpenAI/ChatGPT** and **Anthropic/Claude** alongside Google
   Gemini. Bilingual setup wizard. The meaning index (arctic) runs locally in
   **every** profile (switch provider without re-indexing). Reworked guide (query
@@ -360,7 +367,7 @@ Current version: **0.2.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
 ## Status
 
-Early release (0.2.0). The **Gemini profile** is the tested happy path; the
+Early release (0.3.0). The **Gemini profile** is the tested happy path; the
 other profiles work but are less battle-tested. Roadmap: automatic file naming,
 corpus overview modes (coverage/clusters), optional knowledge-graph layer — and
 the integrations sketched above.

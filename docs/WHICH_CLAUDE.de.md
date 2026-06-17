@@ -27,7 +27,7 @@ gebaut:
   `inspect_chunks`, … erscheinen dann **direkt im Chat**.
 - Die **PDF-Deep-Links** in jeder Antwort öffnen im Browser an der zitierten Seite
   — ein Desktop-/Chat-Ablauf.
-- Über **Projekte** in Claude Desktop lädst du deine `vault/CLAUDE.md`-Anweisungen,
+- Über **Projekte** in Claude Desktop lädst du deine `wissensspeicher/CLAUDE.md`-Anweisungen,
   sodass jeder Chat mit deinem Fach und deiner Zitierweise startet.
 - Du bleibst **in der Schleife**: fragen, die belegten Stellen lesen, nachschärfen.
   Genau dieser Recherche-Rhythmus ist ASBs Idee — und er ist am
