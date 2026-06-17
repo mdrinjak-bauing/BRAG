@@ -1,18 +1,19 @@
-# Academic RAG and Second Brain
+# ASB — Academic RAG & Second Brain
 
 **🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.2.0** ([Änderungen](#versionen))
 
-> **Sprich mit deiner eigenen Fachliteratur.** Leg deine PDFs in einen Ordner —
-> Paper, Bücher, Berichte, Projektunterlagen — und frag Claude in normaler
-> Sprache. Die Antwort steht **belegt in deinen eigenen Quellen**: seitengenau,
-> mit Zitat und einem Klick aufs Original-PDF. Alles läuft auf deinem Rechner.
+> **Sprich mit deiner eigenen Fachliteratur.** PDFs in einen Ordner werfen —
+> Paper, Bücher, Berichte, Projektkram — und Claude in normaler Sprache fragen.
+> Die Antwort steht **belegt in deinen eigenen Quellen**: seitengenau, mit Zitat
+> und einem Klick aufs Original-PDF. Läuft komplett auf deinem Rechner.
 
-Ein „zweites Gehirn" für die Forschung ist keine neue Idee, und ich bin nicht
-der Erste, der so etwas baut. Aber das hier ist ein **solides, ehrliches Setup**,
-das den Alltag spürbar erleichtert — und das ich teile, weil ich selbst dabei
-lerne und weil andere etwas damit anfangen können. Kein Hype, kein Lock-in:
-einfache Dateien, die dir gehören, eine starke Suche darüber, und Claude als
-Gesprächspartner, der nie ohne Beleg antwortet.
+Kurz **ASB** — *Academic Second Brain* (das RAG steckt im Motor). Ein „zweites
+Gehirn" für die Forschung ist nichts Neues, und ich bin nicht der Erste, der
+sowas baut. Aber ich finde, das hier ist ein **richtig solides Setup**, das im
+Alltag echt was bringt — und ich teile es, weil ich selbst dabei lerne und weil
+andere was davon haben. Kein Hype, kein Lock-in: einfache Dateien, die dir
+gehören, eine starke Suche drüber, und Claude als Gegenüber, das nie ohne Beleg
+antwortet.
 
 **Für wen?** Forschende, Lehrende, Promovierende — und genauso Praktiker, die im
 Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und
@@ -165,11 +166,14 @@ bei aktivem Vision-Pass (Standard) zusätzlich die **Bilder deiner Abbildungen**
 Nie übermittelt werden ganze Dateien und die Embeddings. Bei lokalen Profilen
 verlässt nichts den Rechner.
 
-> ⚠️ **Datenschutz:** Beim **kostenlosen Gemini-Tarif** (Standard) darf Google
-> die übermittelten Texte/Bilder auswerten und von Menschen prüfen lassen. Für
-> vertrauliche, personenbezogene oder lizenzierte Inhalte ein **lokales Profil**
-> oder einen kostenpflichtigen Tarif wählen (Bildversand: `VISION_ENABLED=false`).
-> Mehr unten unter [Rechtliches & Datenschutz](#rechtliches--datenschutz).
+> ⚠️ **Datenschutz, kurz und ehrlich:** Beim **kostenlosen Gemini-Tarif**
+> (Standard) darf Google die übermittelten Texte/Bilder auswerten. Faustregel:
+> Was du Claude bisher nicht anvertraut hättest, lädst du auch hier nicht hoch.
+> Für Vertrauliches oder Personenbezogenes nimmst du einfach ein **lokales
+> Profil** (dann verlässt nichts den Rechner) oder schaltest den Bildversand mit
+> `VISION_ENABLED=false` ab. Und wer's elegant will, baut sich eine
+> Anonymisierung als eigenes Tool davor (siehe [Ausbau](#ausbau--automatisierung-mit-claude-code--co)).
+> Mehr unter [Rechtliches & Datenschutz](#rechtliches--datenschutz).
 
 **Kosten:** Jedes Profil ist auf sein günstigstes brauchbares Modell
 voreingestellt; für einen typischen Korpus bleiben die Kosten im **Cent-Bereich**.
@@ -260,16 +264,20 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 - **Ohne Gewähr.** Open Source unter [MIT](LICENSE), „wie besehen", ohne
   Garantie für Datenschutz oder Rechtskonformität. Nutzung auf eigene
   Verantwortung.
-- **Datenschutz.** Lokale Profile: nichts verlässt den Rechner. Cloud-Profile:
-  Textauszüge (und bei Vision die Abbildungsbilder) gehen an den Anbieter; der
-  **kostenlose Gemini-Tarif** darf diese Daten auswerten. Für vertrauliche,
-  personenbezogene oder lizenzierte Inhalte → lokales Profil oder bezahlter
-  Tarif. Enthalten Dokumente personenbezogene Daten, bist im Cloud-Fall in der
-  Regel **du** der DSGVO-Verantwortliche.
-- **Urheberrecht.** Du bist allein verantwortlich, nur Material einzulesen, an
-  dem du die nötigen Rechte hast. Eigene wissenschaftliche Analyse rechtmäßig
-  zugänglicher Werke kann unter die Text-und-Data-Mining-Schranken fallen
-  (§ 60d / § 44b UrhG), Lizenzbedingungen können das aber einschränken.
+- **Datenschutz — die ehrliche Faustregel.** Lokale Profile: nichts verlässt
+  den Rechner. Cloud-Profile: Textauszüge (und bei Vision die Abbildungsbilder)
+  gehen an den Anbieter, und der **kostenlose Gemini-Tarif** darf sie auswerten.
+  Heißt: Was du Claude bisher nicht gezeigt hättest, gehört auch hier nicht in
+  die Cloud — Personenbezogenes oder Vertrauliches läuft übers **lokale Profil**
+  (und wer mag, baut sich eine Anonymisierung davor). Enthalten Dokumente
+  personenbezogene Daten, bist im Cloud-Fall in der Regel **du** der
+  DSGVO-Verantwortliche.
+- **Urheberrecht.** Klar, technisch kannst du alles in den Ordner legen — aber
+  für die Rechte an deinen Quellen bist du verantwortlich. Eigene
+  wissenschaftliche Analyse rechtmäßig zugänglicher Werke kann unter die
+  Text-und-Data-Mining-Schranken fallen (§ 60d / § 44b UrhG); Lizenzbedingungen
+  können das einschränken. Für lizenzierte oder vertrauliche Werke ist die
+  Antwort simpel: lokales Profil, dann bleibt alles auf deinem Rechner.
 
 *Kein Rechtsrat (Stand Juni 2026). Im Zweifel fachkundigen Rat einholen.*
 
