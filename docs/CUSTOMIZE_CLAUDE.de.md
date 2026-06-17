@@ -13,7 +13,7 @@ kennt.
 | Abschnitt | Warum es zählt |
 |---|---|
 | Wer ich bin / meine Forschung | Claude passt Tiefe und Terminologie an dein Fach an |
-| Vault-Aufbau | Claude weiß, was Beleg ist (`sources/`) und was dein eigenes Denken (`wiki/`) |
+| Ordner-Aufbau | Claude weiß, was Beleg ist (`sources/`) und was dein eigenes Denken (`wiki/`) |
 | Wie gesucht wird | Die Anweisung „immer vor dem Antworten suchen, mehrere Formulierungen probieren" sorgt dafür, dass Antworten belegt sind statt erfunden |
 | Zitierstil | Claude zitiert so, wie es deine Disziplin erwartet, mit Seitenzahlen |
 | Konventionen | Sprache, Notiz-Benennung, alles, was du sonst jede Sitzung wiederholen müsstest |

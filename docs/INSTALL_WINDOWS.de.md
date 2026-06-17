@@ -61,7 +61,7 @@ beantwortest du in einfacher Sprache:
 - **Anbieter & Schlüssel:** Gemini wählen und den kopierten Schlüssel einfügen.
   Der Assistent prüft ihn **live** und zeigt einen grünen Haken, wenn er gültig
   ist.
-- **Sprache deiner Dokumente** und optional ein eigener Vault-Ordner.
+- **Sprache deiner Dokumente** und optional ein eigener Wissensordner (eigener Pfad).
 
 Am Ende schreibt der Assistent die gesamte Konfiguration selbst — inklusive des
 Eintrags in Claude Desktop. **Du editierst keine einzige Datei.** Das Fenster

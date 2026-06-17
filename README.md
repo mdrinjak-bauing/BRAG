@@ -40,7 +40,10 @@ and trade literature in everyday project work. **No programming required.**
 The core idea: **chats forget — your vault doesn't.** Knowledge accumulates in
 your files, not in a throwaway chat log.
 
-## Up and running in 5 minutes
+## Setup — realistically about an hour
+
+There's little active work; the time is almost all **downloads** (Docker
+Desktop, Claude Desktop, and the ~3 GB of analysis models on first run).
 
 **You need** (all free): [Docker Desktop](https://www.docker.com/products/docker-desktop/),
 [Claude Desktop](https://claude.com/download) and an API key — easiest is
@@ -78,6 +81,32 @@ notes were indexed, you'd one day "find" your own summary of a paper and cite it
 as evidence — without noticing you're quoting yourself. The library answers
 *"what do my sources say?"*; the notebook holds *what you make of it*. Claude
 works with both, but never confuses one for the other.
+
+### Your notebook — and why plain Markdown files
+
+The notebook (`wiki/`) is the part that turns search into a *second brain*: this
+is **your** thinking — concept pages, lines of argument, open questions,
+decisions. Not what the sources say, but what *you* make of it.
+
+**Why plain Markdown (`.md`) files?** Markdown is just text with a few
+characters for headings, lists and links. Sounds unremarkable — but it's the
+decisive advantage:
+
+- **It's yours and it lasts.** You can open a `.md` file in 20 years, in any
+  editor, with no special program and no subscription. No proprietary format, no
+  vendor that can shut down — no lock-in.
+- **It runs everywhere.** The same file is read and written by Obsidian, Claude,
+  your text editor, your backup, Git. Move, copy, back it up like any other file.
+- **It links up.** With `[[wikilinks]]` you connect concepts into a network —
+  your knowledge becomes walkable instead of buried in documents.
+
+**The uncomfortable part:** a second brain doesn't build itself — you have to
+**make documenting a habit.** The sources accumulate automatically; your
+insights don't. Rule of thumb: after a good conversation with Claude or an
+important passage, **jot down what stuck** — three rough sentences beat the
+perfect note that never gets written. Claude can help you write (via the
+Obsidian connection). Over time this becomes what no chat log ever can: **your**
+growing, searchable knowledge.
 
 ## How it works
 
@@ -263,6 +292,11 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
   confidential material runs on a **local profile** (build an anonymizer in
   front if you like). If your documents contain personal data, in the cloud case
   you are generally the GDPR controller.
+- **Professional use.** In a company or public body — especially with personal
+  data — clear it up front with the responsible bodies (data protection officer,
+  IT security, works council where applicable). From a data-security standpoint
+  **local profiles are clearly preferable**; IT departments can harden ASB for
+  organizational use.
 - **Copyright.** Sure, technically you can put anything in the folder — but you
   are responsible for the rights to your sources. Your own scientific analysis
   of lawfully accessible works may fall under the text-and-data-mining

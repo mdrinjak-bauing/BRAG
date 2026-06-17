@@ -107,10 +107,19 @@ Die neue Version herunterladen, den Ordnerinhalt ersetzen (deine `.env` und
 
 **Wie sichere ich meine Daten?**
 Deine Dokumente und Notizen liegen in `vault/` — sichere diesen Ordner wie jeden
-anderen. Der Suchindex lässt sich jederzeit aus dem Vault neu aufbauen (nichts
+anderen. Der Suchindex lässt sich jederzeit aus deinem Wissensordner neu aufbauen (nichts
 löschen; nach einer Wiederherstellung gleicht das System nach einem Neustart neu
 ab).
 
 **Wie entferne ich ein Dokument?**
 Die Datei aus `sources/` löschen — ihre Indexeinträge und die automatische Notiz
 werden automatisch bereinigt.
+
+**Kann ich den Projektordner oder die ZIP-Datei löschen?**
+Die **ZIP-Datei** kannst du nach dem Entpacken löschen. Den **Projektordner**
+(die entpackte ZIP) aber **behalten** — er enthält deine Konfiguration (`.env`),
+die Steuerung (`docker-compose.yml`) und standardmäßig deinen Wissensordner
+(`vault/`) mit allen Dokumenten. Löschen würde deine Wissensbasis entfernen und
+das Starten/Stoppen unmöglich machen. Verschieben ist in Ordnung. Die ~3 GB
+Modelle liegen ohnehin in Dockers Speicher, nicht im Ordner — Löschen gibt
+diesen Platz also nicht frei.
