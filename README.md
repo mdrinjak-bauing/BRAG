@@ -400,8 +400,20 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 ## Versions
 
-Current version: **0.3.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.3.1** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.3.1** — Reliability, security and documentation hardening after a full
+  pre-publication audit. **Fixes:** same-named files in different folders no
+  longer overwrite each other's index (data-loss fix); page citations are
+  correct across multi-page sections; partially-ingested documents are retried
+  instead of silently missing pages; plus watcher-concurrency, large-`top_k`,
+  embedding-dimension and `inspect_chunks` fixes. **Security:** setup moved to a
+  separate one-shot service so the always-on app no longer mounts your project
+  or Claude Desktop config; Qdrant telemetry off; `.env` injection guard;
+  `SECURITY.md`. **Added:** end-to-end + unit tests in CI, `NOTICE.md`,
+  code-of-conduct and issue/PR templates, optional model-revision pinning, and a
+  clear note on how your API key is handled. See [CHANGELOG](CHANGELOG.md) for
+  the migration note.
 - **0.3.0** — Renamed the project to **BRAG** (*Building Retrieval-Augmented
   Generation*) end to end — package, Docker image and containers included (no
   indexed data is lost; **existing installs re-run the setup once**, see
@@ -421,7 +433,7 @@ Current version: **0.3.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
 ## Status
 
-Early release (0.3.0). The **Gemini profile** is the tested happy path; the
+Early release (0.3.1). The **Gemini profile** is the tested happy path; the
 other profiles work but are less battle-tested. Roadmap: automatic file naming,
 corpus overview modes (coverage/clusters), optional knowledge-graph layer — and
 the integrations sketched above.

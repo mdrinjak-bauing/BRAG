@@ -423,8 +423,21 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 
 ## Versionen
 
-Aktuelle Version: **0.3.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
+Aktuelle Version: **0.3.1** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.3.1** — Härtung von Zuverlässigkeit, Sicherheit und Dokumentation nach
+  einem vollständigen Pre-Publication-Audit. **Fixes:** gleichnamige Dateien in
+  verschiedenen Ordnern überschreiben sich nicht mehr gegenseitig im Index
+  (Datenverlust-Fix); Seitenbelege stimmen auch über mehrseitige Abschnitte;
+  teilweise eingelesene Dokumente werden erneut versucht statt still Seiten zu
+  verlieren; dazu Fixes für Watcher-Nebenläufigkeit, großes `top_k`,
+  Embedding-Dimension und `inspect_chunks`. **Sicherheit:** Setup als eigener
+  Einmal-Dienst — die Dauer-App mountet weder dein Projekt noch die
+  Claude-Desktop-Konfig; Qdrant-Telemetrie aus; `.env`-Injection-Schutz;
+  `SECURITY.md`. **Neu:** End-to-End- und Unit-Tests in der CI, `NOTICE.md`,
+  Code of Conduct und Issue-/PR-Vorlagen, optionales Modell-Revision-Pinning und
+  ein klarer Hinweis zum Umgang mit deinem API-Schlüssel. Migrationshinweis im
+  [CHANGELOG](CHANGELOG.md).
 - **0.3.0** — Projekt durchgängig umbenannt in **BRAG** (*Building
   Retrieval-Augmented Generation*) — inklusive Paket, Docker-Image und Containern
   (keine indexierten Daten gehen verloren; **bestehende Installationen führen das
@@ -447,7 +460,7 @@ Aktuelle Version: **0.3.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHA
 
 ## Status
 
-Frühe Version (0.3.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
+Frühe Version (0.3.1). Das **Gemini-Profil** ist der getestete Hauptweg; die
 übrigen Profile funktionieren, sind aber weniger erprobt. Roadmap: automatische
 Dateibenennung, Korpus-Überblicksmodi (Coverage/Cluster), optionale
 Wissensgraph-Ebene — und die oben skizzierten Anbindungen.
