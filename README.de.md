@@ -3,22 +3,23 @@
 **🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.3.0** ([Änderungen](#versionen))
 
 > **Sprich mit deiner eigenen Fachliteratur.** PDFs in einen Ordner werfen —
-> Paper, Bücher, Berichte, Projektkram — und Claude in normaler Sprache fragen.
-> Die Antwort steht **belegt in deinen eigenen Quellen**: seitengenau, mit Zitat
-> und einem Klick aufs Original-PDF. Läuft komplett auf deinem Rechner.
+> Paper, Bücher, Berichte, Projektunterlagen — und Claude in normaler Sprache
+> fragen. Die Antwort steht **belegt in deinen eigenen Quellen**: seitengenau,
+> mit Zitat und einem Klick aufs Original-PDF. Alles läuft lokal auf deinem
+> Rechner.
 
-Kurz **BRAG** — *Building Retrieval-Augmented Generation*. Der Name spielt auf
-mein Fach (Bauingenieurwesen) an und darauf, was das Tool tut: Es **baut** dein
-Wissen auf, und eine RAG-Maschine ruft es bei Bedarf ab. Ein „zweites
-Gehirn" für die Forschung ist nichts Neues, und ich bin nicht der Erste, der
-sowas baut. Aber ich finde, das hier ist ein **richtig solides Setup**, das im
-Alltag echt was bringt — und ich teile es, weil ich selbst dabei lerne und weil
-andere was davon haben. Kein Hype, kein Lock-in: einfache Dateien, die dir
-gehören, eine starke Suche drüber, und Claude als Gegenüber, das nie ohne Beleg
-antwortet.
+Der Name **BRAG** steht für *Building Retrieval-Augmented Generation* — ein
+Wortspiel mit meinem Fach (Bauingenieurwesen) und mit dem, was das Werkzeug tut:
+Es **baut** dein Wissen auf und ruft es per RAG-Suche bei Bedarf wieder ab.
 
-**Für wen?** Forschende, Lehrende, Promovierende — und genauso Praktiker, die im
-Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und
+Ein „zweites Gehirn" für die Forschung ist nichts grundlegend Neues — aber
+dieses hier ist ein **richtig solides Setup**, das im Alltag wirklich trägt. Ich
+teile es, weil ich selbst täglich damit arbeite und andere etwas davon haben:
+kein Hype, kein Lock-in, sondern einfache Dateien, die dir gehören, eine starke
+Suche darüber und Claude als Gegenüber, das **nie ohne Beleg** antwortet.
+
+**Für wen?** Forschende, Lehrende und Promovierende — und genauso Praktiker, die
+im Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und
 Fachliteratur behalten müssen. **Ohne Programmierkenntnisse nutzbar.**
 
 ---
