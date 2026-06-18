@@ -21,6 +21,21 @@ PREVIEW_CHARS = 1000  # tables are never truncated, text gets a preview
 
 
 def _format_hit(i: int, hit: dict) -> str:
+    if hit.get("chunk_type") == "passage":
+        topic = hit.get("topic", "") or hit.get("source_file", "").replace("passage:", "")
+        frm = hit.get("from_source", "")
+        frm_page = hit.get("from_page", "")
+        origin = ""
+        if frm:
+            origin = f" · originally from {frm}"
+            if frm_page and frm_page not in ("", "None"):
+                origin += f", p. {frm_page}"
+        header = f"### [{i}] 💡 Your saved passage — {topic}"
+        meta = f"source: your notebook (passages/){origin}"
+        score = hit.get("rerank_score")
+        if score is not None:
+            meta += f" | rerank: {score:.3f}"
+        return f"{header}\n{meta}\n\n{hit.get('text', '')}\n"
     src = hit.get("source_file", "?")
     author, year = hit.get("author", ""), hit.get("year", "")
     page = hit.get("page_start", "")
@@ -173,7 +188,13 @@ def _passage_file(topic: str):
 def save_passage(topic: str, text: str, source: str, page: str = "",
                  note: str = "") -> str:
     """Save a quotable passage under a topic (e.g. a chapter or theme).
-    Builds your evidence base in wissensspeicher/passages/<topic>.md."""
+
+    Builds your evidence base in wissensspeicher/passages/<topic>.md AND indexes
+    the passage for semantic search, so a later chat (even with a different
+    provider) finds it again via `search` — it appears as a clearly marked
+    "saved passage", distinct from primary sources. Use this to persist the
+    findings, decisions and definitions of a working session so the knowledge
+    lives in the folder, not in one chat's history."""
     path, slug = _passage_file(topic)
     is_new = not path.exists()
     block = [
@@ -188,7 +209,10 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
     header = f"# Passages: {topic}\n\n" if is_new else ""
     with open(path, "a", encoding="utf-8") as f:
         f.write(header + "\n".join(block) + "\n")
-    return f"Saved to `passages/{slug}.md`."
+    from brag.ingest.pipeline import index_passage
+    indexed = index_passage(topic, text, source, page, note)
+    suffix = " and indexed for search" if indexed else " (saved to file; search index unavailable)"
+    return f"Saved to `passages/{slug}.md`{suffix}."
 
 
 @mcp.tool()

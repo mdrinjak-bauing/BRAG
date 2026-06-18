@@ -2,6 +2,7 @@
 http_bridge) and the terminal fallback (setup_wizard)."""
 
 import json
+import os
 import shutil
 from pathlib import Path
 
@@ -51,7 +52,16 @@ def write_env(profile: str, api_key: str, language: str,
     # Preserve the host's Claude config dir (set by setup.command / setup.bat)
     if existing.get("CLAUDE_CONFIG_DIR"):
         lines.append(f"CLAUDE_CONFIG_DIR={existing['CLAUDE_CONFIG_DIR']}")
-    (WORKSPACE / ".env").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # Atomic write (temp + replace) so a crash mid-write can't truncate the
+    # config, and 0600 because this file holds the API key.
+    env_path = WORKSPACE / ".env"
+    tmp = WORKSPACE / ".env.tmp"
+    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    os.replace(tmp, env_path)
+    try:
+        os.chmod(env_path, 0o600)
+    except OSError:
+        pass
 
 
 def create_vault() -> bool:

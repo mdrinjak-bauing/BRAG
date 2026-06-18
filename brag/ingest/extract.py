@@ -276,7 +276,7 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
 
         if isinstance(item, SectionHeaderItem):
             flush()
-            buf_page_start = page
+            buf_page_start = buf_page_end = page
             if level <= 1:
                 chapter, section = item.text.strip(), ""
             else:
@@ -296,7 +296,7 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
                     text=f"{header}**Table (p. {page}){label}:**\n\n{part}",
                     chunk_type="table", page_start=page, page_end=page, **meta(),
                 ))
-            buf_page_start = page
+            buf_page_start = buf_page_end = page
 
         elif isinstance(item, PictureItem):
             flush()
@@ -313,7 +313,7 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
                 chunk_type="figure", page_start=page, page_end=page,
                 image_b64=image_b64, **meta(),
             ))
-            buf_page_start = page
+            buf_page_start = buf_page_end = page
 
         elif isinstance(item, TextItem):
             txt = (item.text or "").strip()

@@ -14,6 +14,41 @@ Führe es stattdessen aus einem Terminal aus: Terminal/Eingabeaufforderung im
 Projektordner öffnen und `./setup.command` (Mac) bzw. `setup.bat` (Windows)
 ausführen.
 
+**Die Setup-Seite im Browser öffnet nicht, oder Port 8765 ist schon belegt.**
+Vielleicht nutzt ein anderes Programm auf deinem Rechner bereits Port 8765. Öffne
+die `.env`-Datei im Projektordner und trage einen freien Port ein, zum Beispiel:
+
+```
+BRIDGE_HOST_PORT=8780
+BRIDGE_PUBLIC_URL=http://localhost:8780
+```
+
+Dann das Setup erneut starten. Der Launcher (`setup.command` / `setup.bat`) liest
+`BRIDGE_HOST_PORT` aus der `.env` und öffnet die richtige URL. **Beide** Variablen
+müssen gesetzt sein: `BRIDGE_HOST_PORT` verschiebt den Port, und
+`BRIDGE_PUBLIC_URL` muss dazu passen — sonst funktionieren die PDF-Deep-Links in
+den Antworten (die zur richtigen Seite springen) nicht mehr.
+
+**Der Build ist fehlgeschlagen oder hängt fest.**
+Der erste Lauf lädt umfangreiche Abhängigkeiten und ~3 GB Modelle herunter. Bei
+einer wackeligen Verbindung — oder wenn Docker zu wenig Speicherplatz hat — kann
+dieser Download abbrechen oder stehen bleiben. Öffne Docker Desktop und prüfe,
+dass dort „running" steht und du Internet hast, dann mache einfach erneut einen
+Doppelklick auf das Setup. Es setzt aus dem Cache fort und fängt nicht von vorn
+an.
+
+**macOS: Ein Doppelklick auf `setup.command` bewirkt nichts (kein Fenster).**
+Das ist etwas anderes als die Gatekeeper-Warnung „nicht verifizierter Entwickler"
+(dafür: Rechtsklick → Öffnen). Wenn *gar kein* Fenster erscheint, hat die Datei
+womöglich ihr Ausführbar-Bit verloren. Öffne das Terminal im Projektordner und
+gib ein:
+
+```
+chmod +x setup.command status.command
+```
+
+Dann erneut einen Doppelklick auf `setup.command` machen.
+
 **Claude Desktop zeigt die Werkzeuge nicht an.**
 1. Claude Desktop **komplett** beenden (Cmd+Q / Tray-Symbol → Beenden) und neu
    öffnen — ein Schließen des Fensters genügt nicht.

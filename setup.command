@@ -43,7 +43,9 @@ docker compose up -d || { echo "Start failed — see message above."; read -r -p
 echo
 echo "Opening the setup assistant in your browser..."
 sleep 3
-open "http://localhost:8765/setup"
+# Honour a custom BRIDGE_HOST_PORT from .env (set it there if 8765 is taken).
+PORT="$(grep -E '^BRIDGE_HOST_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2 | tr -d '[:space:]')"
+open "http://localhost:${PORT:-8765}/setup"
 
 echo
 echo "Finish the setup in your browser — this window waits for you."

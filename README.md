@@ -80,16 +80,25 @@ the heart of the design:
 
 |  | 📚 **Your library** | 📓 **Your notebook** |
 |---|---|---|
-| Folder | `wissensspeicher/sources/` | `wissensspeicher/wiki/`, `wissensspeicher/notes/`, `wissensspeicher/passages/` |
+| Folder | `wissensspeicher/sources/` | `wissensspeicher/wiki/`, `wissensspeicher/notes/` |
 | Contains | external sources: papers, books, reports | **your own thinking**: concepts, drafts, reading notes |
 | Searchable by Claude? | yes — hybrid search with page-precise citations | deliberately **no** |
 | Claude can read/write it? | read-only (via search) | yes — via the optional Obsidian connection |
 
-**Why is the notebook excluded from the index?** The echo effect: if your own
-notes were indexed, you'd one day "find" your own summary of a paper and cite it
-as evidence — without noticing you're quoting yourself. The library answers
-*"what do my sources say?"*; the notebook holds *what you make of it*. Claude
-works with both, but never confuses one for the other.
+**Plus a third, in-between layer — saved passages.** When you tell Claude
+*"save this passage,"* it writes the quote (with its source and page) into
+`wissensspeicher/passages/` **and indexes it** — so any later chat, even with a
+different AI provider, finds it again via `search`, clearly marked as *your
+saved passage*. This is curated evidence you chose to keep (a real quote from a
+real source), not the AI's own output — which is exactly why it is searchable
+while the rest of the notebook is not.
+
+**Why is the rest of the notebook excluded from the index?** The echo effect:
+if your own concept notes and auto-summaries were indexed, you'd one day "find"
+your own summary of a paper and cite it as evidence — without noticing you're
+quoting yourself. The library answers *"what do my sources say?"*; the notebook
+holds *what you make of it*. Claude works with both, but never confuses one for
+the other.
 
 ### Your notebook — and why plain Markdown files
 

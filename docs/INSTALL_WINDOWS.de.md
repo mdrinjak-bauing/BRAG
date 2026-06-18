@@ -2,8 +2,11 @@
 
 **🇬🇧 [English](INSTALL_WINDOWS.md) | 🇩🇪 Deutsch**
 
-Zeitbedarf: ~20 Minuten (das meiste sind Downloads). Du brauchst nur deine Maus
-und einmal kurz die Eingabeaufforderung — keine Programmierkenntnisse.
+Zeitbedarf: etwa **15–20 Minuten aktive Arbeit** — du brauchst nur deine Maus und
+einmal kurz die Eingabeaufforderung, keine Programmierkenntnisse. Hinzu kommen der
+erste Build und die einmaligen Modell-Downloads, die größtenteils
+**unbeaufsichtigt** im Hintergrund laufen; beim ersten Einrichten solltest du je
+nach Internetverbindung mit insgesamt rund **30–60 Minuten** rechnen.
 
 ## 1. Docker Desktop installieren
 
@@ -47,9 +50,10 @@ richten wir in Schritt 4 automatisch ein.
 
 **Was du tust:**
 1. Auf der GitHub-Seite den grünen Knopf **`Code`** → **`Download ZIP`** klicken.
-   Rechtsklick auf die ZIP → **„Alle extrahieren"** (z. B. nach
-   `C:\Users\<du>\academic-rag-and-second-brain`). Wichtig: erst **entpacken** —
-   nicht aus der ZIP heraus starten.
+   Rechtsklick auf die ZIP → **„Alle extrahieren"** (z. B. in deinen
+   Benutzerordner). Der entpackte Ordner heißt `Academic-RAG-and-Second-Brain-main`
+   (der genaue Name kann leicht abweichen). Wichtig: erst **entpacken** — nicht
+   aus der ZIP heraus starten.
 2. Öffne den entpackten Ordner und mache einen Doppelklick auf **`setup.bat`**.
    - Warnt **Windows SmartScreen** („Der Computer wurde geschützt"): klicke auf
      **„Weitere Informationen"** → **„Trotzdem ausführen"**.
@@ -79,8 +83,12 @@ baut nun im Hintergrund die Docker-Container und lädt einmalig ~3 GB Modelle
 des Projektordners).
 
 **Was du siehst:** Nichts Sichtbares — die Verarbeitung läuft im Hintergrund.
-Nach ~30 Sekunden ist ein kurzes Dokument indexiert. Zum Zusehen eine
-Eingabeaufforderung im Projektordner öffnen und eingeben:
+Beachte: Das **allererste** Dokument lädt zusätzlich die Docling-Layout-Modelle
+herunter, daher kann gerade dieses ein paar Minuten dauern (spätere Dokumente
+sind deutlich schneller). Prüfe die Pipeline am besten zuerst mit einer kleinen
+**1–2-seitigen PDF**; danach rechne mit etwa **1–3 Minuten** für ein normales
+50-seitiges Paper. Zum Zusehen eine Eingabeaufforderung im Projektordner öffnen
+und eingeben:
 
 ```
 docker compose logs -f app

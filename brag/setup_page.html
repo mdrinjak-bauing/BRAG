@@ -381,7 +381,7 @@ async function checkLocal(profile){
     msg.textContent=(d.ok?"✓ ":"")+d.message; msg.className=d.ok?"ok":"warn";
     if(d.models && d.models.length){
       const sel=document.getElementById("modelsel-"+profile);
-      sel.innerHTML=d.models.map(m=>`<option>${m}</option>`).join("");
+      sel.replaceChildren(...d.models.map(m=>new Option(m,m)));
       document.getElementById("modelpick-"+profile).style.display="block";
     }
     document.getElementById("cont-"+profile).disabled = !d.ok;
