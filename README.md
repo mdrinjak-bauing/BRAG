@@ -4,29 +4,25 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.1** ([changes](#versions))
 
-> **Your own AI assistant — one that knows your knowledge.** Put your documents
-> — PDFs, Word, PowerPoint, your notes — in a folder. Claude or ChatGPT **pulls
-> the right passages itself**
-> (page-precise citations, one click to the original) and **writes what you
-> discuss back as a note** into the same folder. Your knowledge lives with
-> *you* — not in the chat history: every new chat, even on a different provider,
-> picks up right where you left off. Local, provider-independent, yours.
+> **An AI assistant that actually knows your sources.** Drop your documents — PDFs, Word, PowerPoint, your own notes — into a folder. BRAG makes sense of them **on your own machine** and hands the AI the right passages for every question — page-cited, one click from the original. Whether that AI runs locally or in the cloud is your call; at most your question and the matching passages are sent — never the whole corpus.
 
-The name **BRAG** stands for *Building Retrieval-Augmented Generation* — a play
-on my field (civil engineering) and on what it does: it **builds up** your
-knowledge and retrieves it on demand. Under the hood, a **hybrid search**
-(meaning + keyword, with reranking) makes sure the AI finds the *relevant*
-passages — not just any. How that works in detail is further down.
+## What it does
 
-A "second brain" isn't a new idea. What I tried to do here is make a version
-that holds up day to day — no hype, no lock-in, just plain files that you own. I
-use it myself every day and I think it adapts well to other kinds of work, but
-that's really for you to judge: I'd genuinely welcome feedback, criticism, and
-anyone who wants to try it out.
+You keep a folder of files. BRAG turns it into a searchable knowledge store and hands the AI the right passages on demand — so every answer comes **page-cited**, with a link straight to the source. Quotes you want to keep are saved back into that same folder, which means your knowledge accumulates **in files you own**, not in a chat log that forgets. Start a new conversation tomorrow — even with a different model — and you pick up where you left off.
 
-**Who is it for?** Researchers, lecturers and PhD students — and just as much
-practitioners who need to stay on top of standards, reports, bills of quantities
-and trade literature in everyday project work. **No programming required.**
+Three things set it apart:
+
+- **Local and yours.** The search index and document analysis run on your own machine. Answering can be **fully local** too: BRAG is a standard MCP service, so you can connect it to a local model (Ollama, LM Studio) — then nothing leaves your computer. If you take the convenient cloud route, only your question and the matching passages go to the model, never the whole corpus.
+- **Cited, not guessed.** A hybrid search (meaning *and* keyword, with reranking) finds the passages that are genuinely relevant, and the answer points you to the page so you can verify it yourself.
+- **No programming required.** A double-click installer and a browser setup wizard do the wiring for the standard route (Claude Desktop); you choose your provider and BRAG handles the rest.
+
+> *The name is a play on my field — civil engineering, where you* ***build*** *things — and on what the tool does: it builds up your knowledge and retrieves it when you need it.*
+
+*Note on scope (v0.3.1): asking runs through Claude Desktop by default. Because BRAG is a standard MCP service, the same search tools can just as well be connected to a local chat client backed by Ollama/LM Studio — for a fully local path that you set up yourself (Claude Code can build the bridge); see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic; capturing your own conclusions as free-form notes is an optional Obsidian add-on (see [docs](docs/OBSIDIAN.md)).*
+
+## Who is it for?
+
+Researchers, lecturers and PhD students — and just as much practitioners who need to stay on top of standards, reports, bills of quantities and trade literature in everyday project work. **No programming required.**
 
 ---
 
@@ -43,50 +39,23 @@ and trade literature in everyday project work. **No programming required.**
   *"draft the paragraph from these passages, keep the citations."*
 - 🎓 **Prep teaching** — *"Draft three exam questions from chapter 4, with page
   references."*
-- 🧠 **Capture thinking** — results land as a note in your knowledge store; a fresh chat
-  days later picks up exactly where the last one stopped.
+- 🧠 **Capture thinking** — quotes land in your knowledge store automatically,
+  your own conclusions optionally via Obsidian; a fresh chat days later picks up
+  exactly where the last one stopped.
 - 🗂️ **Filter by project/course** — *"Search **only in the School Center
   project**: which position covers the earthworks?"*
+- 🔬 **Develop an idea** — *"What do my sources say about maturity models? Where
+  do they disagree?"* — write the result as a concept note and, days later in a
+  fresh chat, continue exactly there.
 
 The core idea: **chats forget — your knowledge store doesn't.** Knowledge accumulates in
 your files, not in a throwaway chat log.
 
-## Setup — realistically about an hour
-
-There's little active work; the time is almost all **downloads** (Docker
-Desktop, Claude Desktop, and the ~3 GB of analysis models on first run). It runs
-on a **normal computer** — with a cloud profile (the default) about **8 GB of
-RAM** is plenty and any modern CPU will do; you only need a strong machine if you
-also run the *text* AI locally (see the profile table below).
-
-**You need** (all free): [Docker Desktop](https://www.docker.com/products/docker-desktop/),
-[Claude Desktop](https://claude.com/download) and an API key — easiest is
-[Gemini](https://aistudio.google.com/apikey) (free tier); or
-[OpenAI](https://platform.openai.com/api-keys) / [Anthropic](https://console.anthropic.com/).
-Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai) or
-[Ollama](https://ollama.com).
-
-1. **Download:** green "Code" button → "Download ZIP" → unpack.
-2. **Double-click** `setup.command` (Mac) or `setup.bat` (Windows). The
-   assistant opens **in your browser** and asks, in plain language: where the AI
-   should run, your key (with a live check), your document language. It writes
-   the whole configuration itself — **you never edit a file.**
-3. **Quit Claude Desktop completely** (Cmd+Q / tray → Quit) and reopen it.
-4. **Drop a PDF into `wissensspeicher/sources/`** — indexed automatically within seconds.
-5. Ask Claude: *"What documents are in my knowledge base?"*
-
-**Everything working?** Double-click `status.command` (Mac) / `status.bat`
-(Windows) for a one-click check of Docker, Qdrant, the watcher, the corpus and
-the AI connection — ✓/✗ per item.
-
-**Something off?** Start with the [FAQ & troubleshooting](docs/FAQ.md) — it
-covers the common cases. If it looks like a real bug, please [open a GitHub
-issue](../../issues) with your OS, the profile you use, what you did and what
-happened, plus the status output above (details in
-[CONTRIBUTING](CONTRIBUTING.md)).
-
-First run downloads ~3 GB of analysis models once. Detailed, with "what you
-see": [Install macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md).
+A "second brain" isn't a new idea. What I tried to do here is make a version
+that holds up day to day — no hype, no lock-in, just plain files that you own. I
+use it myself every day and I think it adapts well to other kinds of work, but
+that's really for you to judge: I'd genuinely welcome feedback, criticism, and
+anyone who wants to try it out.
 
 ## The idea: a library and a notebook
 
@@ -100,13 +69,13 @@ the heart of the design:
 | Searchable by Claude? | yes — hybrid search with page-precise citations | deliberately **no** |
 | Claude can read/write it? | read-only (via search) | yes — via the optional Obsidian connection |
 
-**Plus a third, in-between layer — saved passages.** When you tell Claude
-*"save this passage,"* it writes the quote (with its source and page) into
-`wissensspeicher/passages/` **and indexes it** — so any later chat, even with a
-different AI provider, finds it again via `search`, clearly marked as *your
-saved passage*. This is curated evidence you chose to keep (a real quote from a
-real source), not the AI's own output — which is exactly why it is searchable
-while the rest of the notebook is not.
+**Plus a third, in-between layer — saved passages.** When you tell Claude (in
+Claude Desktop) *"save this passage,"* it writes the quote (with its source and
+page) into `wissensspeicher/passages/` **and indexes it** — so any later chat,
+even with a different AI provider, finds it again via `search`, clearly marked as
+*your saved passage*. This is curated evidence you chose to keep (a real quote
+from a real source), not the AI's own output — which is exactly why it is
+searchable while the rest of the notebook is not.
 
 **Why is the rest of the notebook excluded from the index?** The echo effect:
 if your own concept notes and auto-summaries were indexed, you'd one day "find"
@@ -184,7 +153,7 @@ gets two "fingerprints": one for **meaning** (semantic search) and one for
 More depth (with numbers) in [How it works](docs/HOW_IT_WORKS.md) and
 [Architecture](docs/ARCHITECTURE.md); every parameter in [`.env.example`](.env.example).
 
-## The two Claude connections (MCP)
+### The two Claude connections (MCP)
 
 Claude Desktop talks to your second brain through two MCP servers:
 
@@ -221,6 +190,41 @@ re-indexing.**
 | **Hybrid** | LM Studio (on your Mac) | your local model | Apple Silicon, 32 GB+ | no |
 | **Local** | Ollama (on your machine) | llama3.1 | decent CPU, 16 GB+ | no |
 
+**Which hardware unlocks which tier?** Cloud profiles run on any machine; a local
+text AI and a fully cranked-up reranker need more:
+
+| Tier | Hardware | Unlocks | Trade-off |
+|---|---|---|---|
+| **Light** | ~8 GB RAM, any computer | Cloud LLM, local index, reranker eco/off | API key needed, document text goes to the provider |
+| **Medium** | ~16 GB RAM | + smooth reranker, optionally a first local LLM (Ollama) | local LLM slower/weaker |
+| **Private-local** | M-Mac 32 GB, LM Studio | local LLM (qwen-14b), reranker full, vision local | nothing leaves the machine; more setup |
+| **Full version** | M-Mac 64 GB+, LM Studio | large local LLM (gemma-27b) + vision + reranker full | highest quality, highest load |
+
+### Tuning search quality: the reranker
+
+After the hybrid search, a second step can re-sort the hits by true fit — a
+**cross-encoder** (`bge-reranker-v2-m3`, locally on your CPU) that reads your
+question together with each passage. It is the most compute-heavy part of a
+search, so `RERANK_PROFILE` (in the setup wizard or `.env`) lets you choose how
+hard it works. "Loaded" = how many candidates are pulled from search (60 each
+from meaning and keyword search); "re-sorted" = how many of those the
+cross-encoder actually scores:
+
+| Setting | loaded | re-sorted | Speed / quality | for |
+|---|---|---|---|---|
+| `off` | 120 (60+60) | 0 — pure RRF fusion | fastest, more noise | very weak machines, small corpus |
+| `eco` *(default)* | 120 (60+60) | 40 | gentle, good quality | normal laptops (~8–16 GB) |
+| `balanced` | 120 (60+60) | 60 | a bit slower, sharper | mid-range |
+| `full` | 120 (60+60) | 120 | slowest, best ordering | strong machines (M-chip, 32 GB+) |
+
+**What "off" means in practice:** hits then come straight from the RRF fusion of
+meaning and keyword search — both branches stay populated, so nothing "breaks,"
+but the *most relevant* passage sits at the very top less often. Since an LLM
+tends to cite the top hits, the reranker pays off most for pointed factual
+questions and for **mixed DE/EN corpora** (where it shores up hit quality more
+noticeably). Individual values can be fine-tuned via `RERANK_ENABLED` /
+`RERANK_PREFETCH` / `RERANK_FUSION_LIMIT`.
+
 With a cloud profile the **text excerpt** of each chunk goes to the provider —
 plus, with the vision pass on (the default), the **images of your figures**.
 Whole files and the embeddings are never sent. With local profiles nothing
@@ -239,6 +243,43 @@ corpus the cost stays in the **cents range**. **Hardware:** you only need
 strong hardware for a *local* text AI — embeddings run on CPU everywhere.
 Details, model recommendations and the cloud-embedding opt-in:
 [docs/PROFILES.md](docs/PROFILES.md).
+
+## Setup — realistically about an hour
+
+There's little active work; the time is almost all **downloads** (Docker
+Desktop, Claude Desktop, and the ~3 GB of analysis models on first run). It runs
+on a **normal computer** — with a cloud profile (the default) about **8 GB of
+RAM** is plenty and any modern CPU will do; you only need a strong machine if you
+also run the *text* AI locally (see the profile table above).
+
+**You need** (all free): [Docker Desktop](https://www.docker.com/products/docker-desktop/),
+[Claude Desktop](https://claude.com/download) and an API key — easiest is
+[Gemini](https://aistudio.google.com/apikey) (free tier); or
+[OpenAI](https://platform.openai.com/api-keys) / [Anthropic](https://console.anthropic.com/).
+Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai) or
+[Ollama](https://ollama.com).
+
+1. **Download:** green "Code" button → "Download ZIP" → unpack.
+2. **Double-click** `setup.command` (Mac) or `setup.bat` (Windows). The
+   assistant opens **in your browser** and asks, in plain language: where the AI
+   should run, your key (with a live check), your document language. It writes
+   the whole configuration itself — **you never edit a file.**
+3. **Quit Claude Desktop completely** (Cmd+Q / tray → Quit) and reopen it.
+4. **Drop a PDF into `wissensspeicher/sources/`** — indexed automatically within seconds.
+5. Ask Claude: *"What documents are in my knowledge base?"*
+
+**Everything working?** Double-click `status.command` (Mac) / `status.bat`
+(Windows) for a one-click check of Docker, Qdrant, the watcher, the corpus and
+the AI connection — ✓/✗ per item.
+
+**Something off?** Start with the [FAQ & troubleshooting](docs/FAQ.md) — it
+covers the common cases. If it looks like a real bug, please [open a GitHub
+issue](../../issues) with your OS, the profile you use, what you did and what
+happened, plus the status output above (details in
+[CONTRIBUTING](CONTRIBUTING.md)).
+
+First run downloads ~3 GB of analysis models once. Detailed, with "what you
+see": [Install macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md).
 
 ## Your knowledge store
 
@@ -277,30 +318,25 @@ removes it from the database. Subfolder names become the filterable document
 type (`sources/papers/`, `sources/reports/` …).
 
 **Your own metadata** (project, course, client …) goes into a `_meta.txt` in any
-folder under `sources/` — one `key: value` per line:
+folder under `sources/` — one `key: value` per line; that way hits from other
+projects don't bleed into your results. If a document's printed page numbers
+don't match the PDF's physical pages, a `page_offset` in the same file makes
+citations show the *printed* page. Both fields in detail (with examples):
+[docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
 
 ```
 # sources/projects/School_Center/_meta.txt
 project: School Center
 client: City of Hamm
-```
-
-Every document in that folder carries these fields; Claude filters by them in a
-conversation, so hits from other projects don't bleed into your results.
-
-**Book page vs. PDF page.** If a document's printed page numbers don't match the
-PDF's physical pages (a book with front matter, a journal offprint), add a
-`page_offset` — then citations show the *printed* page while the link still
-opens the right PDF page. The rule is `page_offset = physical PDF page − printed
-page` (look at any page: if PDF page 28 shows printed "14", the offset is 14):
-
-```
-# sources/books/Mueller_2021/_meta.txt
 page_offset: 14
 ```
 
-Set it before indexing the document, or re-drop the file afterwards so it is
-re-indexed with the offset.
+**Day to day** you just drop new literature into `sources/` (indexed in minutes)
+and ask Claude what it adds to your existing material or whether it contradicts
+it — answer with page-linked citations. And whenever you correct Claude twice
+about the same thing, that correction belongs in **`wissensspeicher/CLAUDE.md`**,
+not in the next chat — a well-kept instruction file turns a generic assistant
+into *yours* (examples: [docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md)).
 
 ### Obsidian: a nicer view of the same folder
 
@@ -311,24 +347,6 @@ onto the exact same folder.** It works directly on the files — **delete a file
 in Obsidian and it's gone from the normal folder (and the index) too.** Nothing
 is imported or copied; it's the same structure, just nicer to work with.
 Step by step: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
-
-## Day to day: how your knowledge grows
-
-**New literature arrives:** drop it into `sources/` → indexed in minutes →
-*"What does this add to what I have on rework costs? Does it contradict Müller
-2021?"* — answer with page-linked citations.
-
-**Developing an idea:** *"What do my sources say about maturity models? Where do
-they disagree?"* → write the result as a concept note in `wiki/` → days later,
-in a fresh chat, continue exactly there.
-
-**While writing:** collect quotable passages per topic, then have the paragraph
-drafted from them — citations preserved.
-
-**Let Claude grow with you:** whenever you correct Claude twice about the same
-thing, that correction belongs in **`wissensspeicher/CLAUDE.md`**, not in the next chat. A
-well-kept instruction file turns a generic assistant into *yours* — examples:
-[docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md).
 
 ## Extension & automation (with Claude Code & co.)
 
@@ -341,6 +359,7 @@ that.
 
 Possible directions (open architecture, not yet built in):
 
+- **A fully local answer path** — because BRAG is a standard MCP service, you can point its search tools at a local chat client backed by **Ollama or LM Studio** instead of Claude Desktop. Then the whole chain — index, document analysis and answer — runs on your own machine, ideal for confidential material. **Claude Code** can scaffold the MCP bridge for this in a few steps.
 - **Connect more data sources** — email and calendar, cloud storage, reference
   managers (e.g. Zotero), websites/feeds: as extra sources or as their own MCP
   tools Claude uses in the same conversation.
@@ -368,13 +387,10 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
   computer (owner-readable only) and is used solely to authenticate your own
   requests to the provider you chose — never sent to the makers of this app or
   any third party. Local profiles need no key at all.
-- **Privacy — the honest rule of thumb.** Local profiles: nothing leaves the
-  machine. Cloud profiles: text excerpts (and figure images with vision) go to
-  the provider, and the **free Gemini tier** may use them. So: what you wouldn't
-  have shown Claude doesn't belong in the cloud here either — personal or
-  confidential material runs on a **local profile** (build an anonymizer in
-  front if you like). If your documents contain personal data, in the cloud case
-  you are generally the GDPR controller.
+- **Privacy.** The honest rule of thumb is in the [privacy box above, with the
+  profiles](#choose-your-profile): local profiles release nothing, cloud profiles
+  submit text excerpts (and figure images with vision). If your documents contain
+  personal data, in the cloud case you are generally the GDPR controller.
 - **Professional use.** In a company or public body — especially with personal
   data — clear it up front with the responsible bodies (data protection officer,
   IT security, works council where applicable). From a data-security standpoint
