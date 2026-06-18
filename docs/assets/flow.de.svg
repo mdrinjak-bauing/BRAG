@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 440" width="1280" height="440" font-family="-apple-system,&#39;Segoe UI&#39;,system-ui,sans-serif" role="img" aria-label="BRAG: PDF reinlegen, indexieren, fragen, zitierte Antwort">
+  
+  <rect x="8" y="8" width="1264" height="424" rx="20" fill="#fffdf9" stroke="#e6e0d4" stroke-width="1.5"></rect>
+  <text x="34" y="42" font-size="13" font-weight="700" letter-spacing="1.8" fill="#8a8377">AUF DEINEM RECHNER</text>
+  <circle cx="232" cy="38" r="3.5" fill="#b5c9af"></circle>
+  <text x="246" y="42" font-size="14" font-style="italic" fill="#8a8377" font-family="Georgia, &#39;Times New Roman&#39;, serif">der Weg von der PDF zur zitierten Antwort</text>
+  <text x="1246" y="42" font-size="12" fill="#b0a999" text-anchor="end" font-family="ui-monospace, Menlo, monospace">live · Schleife</text>
+  <line x1="175" y1="92" x2="1105" y2="92" stroke="#e0d8c8" stroke-width="2" stroke-dasharray="7 7"></line>
+  <g class="tokwrap"><g class="tok"><circle cx="175" cy="92" r="15" fill="#c0653f" opacity="0.16"></circle><circle cx="175" cy="92" r="9" fill="#c0653f"></circle></g></g>
+
+  <g class="c1">
+    <rect x="35" y="120" width="280" height="230" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="63" cy="148" r="13" fill="#eef3ea" stroke="#b5c9af"></circle>
+    <text x="63" y="153" font-size="13" font-weight="700" fill="#2e5d2e" text-anchor="middle">1</text>
+    <text x="86" y="153" font-size="15" font-weight="700" fill="#243447">Reinlegen</text>
+    <text x="55" y="182" font-size="11.5" fill="#8a8377" font-family="ui-monospace, Menlo, monospace">sources/</text>
+    <rect x="55" y="194" width="240" height="28" rx="7" fill="#faf8f3" stroke="#ece6da"></rect>
+    <text x="68" y="212" font-size="12" fill="#4a5568">📄  Mueller_2021.pdf</text>
+    <rect x="55" y="228" width="240" height="28" rx="7" fill="#faf8f3" stroke="#ece6da"></rect>
+    <text x="68" y="246" font-size="12" fill="#4a5568">📄  Norm_GEG.pdf</text>
+    <rect x="55" y="262" width="240" height="28" rx="7" fill="#eef3ea" stroke="#b5c9af"></rect>
+    <text x="68" y="280" font-size="12" font-weight="600" fill="#2e5d2e">📄  Studie_neu.pdf</text>
+    <g class="newtag"><rect x="246" y="267" width="40" height="18" rx="9" fill="#2e5d2e"></rect><text x="266" y="280" font-size="10" font-weight="600" fill="#ffffff" text-anchor="middle">neu</text></g>
+    <text x="55" y="316" font-size="10.5" font-style="italic" fill="#8a8377" font-family="Georgia, serif">Der Watcher bemerkt sie in Sekunden —</text>
+    <text x="55" y="332" font-size="10.5" font-style="italic" fill="#8a8377" font-family="Georgia, serif">du „importierst“ nichts.</text>
+    <rect class="ring1" x="34" y="119" width="282" height="232" rx="17" fill="none" stroke="#c0653f" stroke-width="2"></rect>
+  </g>
+  <path d="M325 235 l16 0 m-6 -5 l6 5 l-6 5" stroke="#cfc8b8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+
+  <g class="c2">
+    <rect x="345" y="120" width="280" height="230" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="373" cy="148" r="13" fill="#eaf0f7" stroke="#b9cde4"></circle>
+    <text x="373" y="153" font-size="13" font-weight="700" fill="#2c4a6e" text-anchor="middle">2</text>
+    <text x="396" y="153" font-size="15" font-weight="700" fill="#243447">Indexieren</text>
+    <text x="365" y="182" font-size="11.5" fill="#8a8377" font-family="ui-monospace, Menlo, monospace">Docker · app + Qdrant</text>
+    <rect x="365" y="192" width="112" height="24" rx="12" fill="#eaf0f7" stroke="#b9cde4"></rect>
+    <text x="421" y="208" font-size="11" fill="#2c4a6e" text-anchor="middle">● Bedeutung</text>
+    <rect x="483" y="192" width="108" height="24" rx="12" fill="#eaf0f7" stroke="#b9cde4"></rect>
+    <text x="537" y="208" font-size="11" fill="#2c4a6e" text-anchor="middle">▪ Stichwort</text>
+    <g fill="#2c4a6e">
+      <circle class="dot" cx="378" cy="248" r="4.5" style="animation-delay:0s"></circle><circle class="dot" cx="414" cy="248" r="4.5" fill="#5a7ba6" style="animation-delay:.4s"></circle><circle class="dot" cx="450" cy="248" r="4.5" style="animation-delay:.8s"></circle><circle class="dot" cx="486" cy="248" r="4.5" fill="#8fa9cc" style="animation-delay:1.2s"></circle><circle class="dot" cx="522" cy="248" r="4.5" style="animation-delay:.2s"></circle><circle class="dot" cx="558" cy="248" r="4.5" fill="#5a7ba6" style="animation-delay:1s"></circle>
+      <circle class="dot" cx="378" cy="276" r="4.5" fill="#5a7ba6" style="animation-delay:.9s"></circle><circle class="dot" cx="414" cy="276" r="4.5" style="animation-delay:.5s"></circle><circle class="dot" cx="450" cy="276" r="4.5" fill="#8fa9cc" style="animation-delay:1.4s"></circle><circle class="dot" cx="486" cy="276" r="4.5" style="animation-delay:.1s"></circle><circle class="dot" cx="522" cy="276" r="4.5" fill="#5a7ba6" style="animation-delay:1.1s"></circle><circle class="dot" cx="558" cy="276" r="4.5" style="animation-delay:.6s"></circle>
+      <circle class="dot" cx="378" cy="304" r="4.5" fill="#8fa9cc" style="animation-delay:1.3s"></circle><circle class="dot" cx="414" cy="304" r="4.5" style="animation-delay:.3s"></circle><circle class="dot" cx="450" cy="304" r="4.5" fill="#5a7ba6" style="animation-delay:.7s"></circle><circle class="dot" cx="486" cy="304" r="4.5" style="animation-delay:1.5s"></circle><circle class="dot" cx="522" cy="304" r="4.5" fill="#8fa9cc" style="animation-delay:.45s"></circle><circle class="dot" cx="558" cy="304" r="4.5" style="animation-delay:.95s"></circle>
+    </g>
+    <text x="365" y="332" font-size="10.5" font-style="italic" fill="#8a8377" font-family="Georgia, serif">Zwei „Fingerabdrücke“ je Häppchen.</text>
+    <rect class="ring2" x="344" y="119" width="282" height="232" rx="17" fill="none" stroke="#c0653f" stroke-width="2"></rect>
+  </g>
+  <path d="M635 235 l16 0 m-6 -5 l6 5 l-6 5" stroke="#cfc8b8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+
+  <g class="c3">
+    <rect x="655" y="120" width="280" height="230" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="683" cy="148" r="13" fill="#fdf3e7" stroke="#e2c79f"></circle>
+    <text x="683" y="153" font-size="13" font-weight="700" fill="#8a5a23" text-anchor="middle">3</text>
+    <text x="706" y="153" font-size="15" font-weight="700" fill="#243447">Fragen</text>
+    <text x="675" y="182" font-size="11.5" fill="#8a8377" font-family="ui-monospace, Menlo, monospace">Claude Desktop</text>
+    <rect x="675" y="192" width="240" height="118" rx="11" fill="#faf8f3" stroke="#ece6da"></rect>
+    <text x="691" y="214" font-size="10" fill="#b0a999">Du fragst</text>
+    <text x="691" y="240" font-size="13" fill="#243447">Was sagt mein Korpus zum</text>
+    <text x="691" y="262" font-size="13" font-weight="600" fill="#243447">Nachtragsmanagement?</text>
+    <rect class="caret" x="848" y="250" width="2.5" height="15" fill="#c0653f"></rect>
+    <rect x="691" y="280" width="180" height="20" rx="10" fill="#ffffff" stroke="#e6e0d4"></rect>
+    <text x="700" y="294" font-size="9.5" fill="#8a8377">nur Projekt „Schulzentrum“</text>
+    <rect class="ring3" x="654" y="119" width="282" height="232" rx="17" fill="none" stroke="#c0653f" stroke-width="2"></rect>
+  </g>
+  <path d="M945 235 l16 0 m-6 -5 l6 5 l-6 5" stroke="#cfc8b8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+
+  <g class="c4">
+    <rect x="965" y="120" width="280" height="230" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="993" cy="148" r="13" fill="#f3d9cb" stroke="#d99e80"></circle>
+    <text x="993" y="153" font-size="13" font-weight="700" fill="#a8512f" text-anchor="middle">4</text>
+    <text x="1016" y="153" font-size="15" font-weight="700" fill="#243447">Zitierte Antwort</text>
+    <rect x="985" y="172" width="240" height="138" rx="11" fill="#faf8f3" stroke="#ece6da"></rect>
+    <text x="1001" y="198" font-size="12.5" fill="#243447">Nachträge entstehen bei</text>
+    <text x="1001" y="218" font-size="12.5" fill="#243447">geänderten Leistungen; die</text>
+    <text x="1001" y="238" font-size="12.5" fill="#243447">Prüfpflicht liegt beim AG.</text>
+    <rect x="1001" y="258" width="190" height="30" rx="8" fill="#ffffff" stroke="#d99e80"></rect>
+    <text x="1015" y="277" font-size="11.5" font-weight="600" fill="#a8512f">⚓ Müller 2021 · S. 14  ↗</text>
+    <text x="985" y="332" font-size="10.5" font-style="italic" fill="#8a8377" font-family="Georgia, serif">Ein Klick öffnet die PDF auf der Seite.</text>
+    <rect class="ring4" x="964" y="119" width="282" height="232" rx="17" fill="none" stroke="#c0653f" stroke-width="2"></rect>
+  </g>
+
+  <text class="lbl1" x="175" y="392" font-size="12.5" font-weight="600" fill="#c0653f" text-anchor="middle">1 · Reinlegen</text>
+  <text class="lbl2" x="485" y="392" font-size="12.5" font-weight="600" fill="#8a8377" text-anchor="middle">2 · Indexieren</text>
+  <text class="lbl3" x="795" y="392" font-size="12.5" font-weight="600" fill="#8a8377" text-anchor="middle">3 · Fragen</text>
+  <text class="lbl4" x="1105" y="392" font-size="12.5" font-weight="600" fill="#8a8377" text-anchor="middle">4 · Zitierte Antwort</text>
+  <line x1="34" y1="410" x2="1246" y2="410" stroke="#eee8db" stroke-width="1"></line>
+  <text x="34" y="426" font-size="11.5" fill="#b0a999">BRAG — Building Retrieval-Augmented Generation · alles lokal, mit Beleg</text>
+  <text x="1246" y="426" font-size="11.5" fill="#b0a999" text-anchor="end" font-family="Georgia, serif" font-style="italic">Chats vergessen — dein Wissensspeicher nicht.</text>
+</svg>

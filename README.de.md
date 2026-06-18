@@ -1,3 +1,5 @@
+![BRAG — sprich mit deinen eigenen Quellen, jede Antwort mit Beleg](docs/assets/header.de.svg)
+
 # BRAG — Building Retrieval-Augmented Generation
 
 **🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.3.0** ([Änderungen](#versionen))
@@ -26,6 +28,8 @@ im Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse u
 Fachliteratur behalten müssen. **Ohne Programmierkenntnisse nutzbar.**
 
 ---
+
+![Der Weg vom PDF zur belegten Antwort: Dokument in sources legen, es wird indexiert, du fragst Claude, du bekommst eine seitengenau belegte Antwort](docs/assets/flow.de.svg)
 
 ## Was du damit machst
 

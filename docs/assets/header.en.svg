@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 300" width="1280" height="300" font-family="-apple-system,&#39;Segoe UI&#39;,system-ui,sans-serif" role="img" aria-label="BRAG — talk to your own sources">
+  <defs>
+    <radialGradient id="blob" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c0653f" stop-opacity="0.20"></stop>
+      <stop offset="70%" stop-color="#c0653f" stop-opacity="0"></stop>
+    </radialGradient>
+  </defs>
+  
+
+  <rect x="8" y="8" width="1264" height="284" rx="20" fill="#fffdf9" stroke="#e6e0d4" stroke-width="1.5"></rect>
+  <circle class="blob" cx="1170" cy="80" r="150" fill="url(#blob)"></circle>
+
+  
+  <circle class="livedot" cx="70" cy="86" r="5" fill="#2e5d2e"></circle>
+  <text x="84" y="91" font-size="13" font-weight="700" letter-spacing="2.2" fill="#c0653f">LOCAL · CITED · YOURS</text>
+  <text x="61" y="178" font-family="Georgia, &#39;Times New Roman&#39;, serif" font-size="86" font-weight="600" letter-spacing="1" fill="#243447">BRAG</text>
+  <text x="67" y="208" font-size="16" fill="#8a8377">Building Retrieval-Augmented Generation</text>
+  <text x="64" y="248" font-family="Georgia, serif" font-style="italic" font-size="23" fill="#c0653f">Talk to your own sources.</text>
+  <text x="65" y="278" font-size="12.5" fill="#8a8377">🔒 local &amp; private   ·   ⚓ every answer cited   ·   ⚖️ open source (MIT)</text>
+
+  
+  <text x="1216" y="96" font-size="12.5" font-style="italic" fill="#8a8377" text-anchor="end" font-family="Georgia, serif">ask in plain language</text>
+  <rect x="884" y="108" width="332" height="150" rx="14" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+  <text x="904" y="134" font-size="11" fill="#8a8377" font-family="ui-monospace, Menlo, monospace">💬 Claude Desktop</text>
+  <text x="904" y="158" font-size="10.5" fill="#b0a999">You ask</text>
+  <text x="904" y="178" font-size="13.5" font-weight="600" fill="#243447">What does my corpus say?</text>
+  <rect class="caret" x="1116" y="167" width="2.5" height="15" fill="#c0653f"></rect>
+  <text x="904" y="204" font-size="12.5" fill="#4a5568">Change orders arise from altered works.</text>
+  <g class="citchip"><rect x="904" y="216" width="188" height="28" rx="8" fill="#fdf3e7" stroke="#d99e80"></rect>
+  <text x="918" y="234" font-size="11.5" font-weight="600" fill="#a8512f">⚓ Müller 2021 · p. 14</text></g>
+</svg>
