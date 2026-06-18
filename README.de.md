@@ -4,9 +4,9 @@
 
 **🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.3.0** ([Änderungen](#versionen))
 
-> **Dein eigener KI-Assistent — einer, der dein Wissen kennt.** Leg deine PDFs
-> und Notizen in einen Ordner. Claude oder ChatGPT **holt sich daraus selbst die
-> richtigen Stellen** (seitengenau belegt, ein Klick aufs Original) und
+> **Dein eigener KI-Assistent — einer, der dein Wissen kennt.** Leg deine
+> Dokumente — PDFs, Word, PowerPoint, deine Notizen — in einen Ordner. Claude
+> oder ChatGPT **holt sich daraus selbst die richtigen Stellen** (seitengenau belegt, ein Klick aufs Original) und
 > **schreibt Besprochenes als Notiz zurück** in denselben Ordner. Dein Wissen
 > liegt damit bei *dir* — nicht im Chatverlauf: jeder neue Chat, sogar bei einem
 > anderen Anbieter, knüpft nahtlos an. Lokal, anbieterunabhängig, deins.
@@ -18,10 +18,11 @@ eine **hybride Suche** (Bedeutung + Stichwort, mit Reranking) dafür, dass die K
 wirklich die *relevanten* Stellen findet — nicht nur irgendwelche. Wie das im
 Detail funktioniert, steht weiter unten.
 
-Ein „zweites Gehirn" für die Forschung ist nichts grundlegend Neues — aber
-dieses hier ist ein **richtig solides Setup**, das im Alltag wirklich trägt:
-kein Hype, kein Lock-in, einfache Dateien, die dir gehören. Ich teile es, weil
-ich selbst täglich damit arbeite und andere etwas davon haben.
+Ein „zweites Gehirn" ist keine neue Idee. Ich habe versucht, eine Variante zu
+bauen, die im Alltag wirklich trägt — kein Hype, kein Lock-in, einfach Dateien,
+die dir gehören. Ich arbeite selbst täglich damit und finde, es lässt sich gut
+auf andere Arbeitskontexte übertragen — aber das musst du beurteilen: Über
+Feedback, Kritik und alle, die es ausprobieren möchten, freue ich mich wirklich.
 
 **Für wen?** Forschende, Lehrende und Promovierende — und genauso Praktiker, die
 im Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und
@@ -54,7 +55,10 @@ deinen Dateien an, nicht in einem flüchtigen Chatverlauf.
 
 Aktiv zu tun ist wenig; die Zeit geht fast komplett für **Downloads** drauf
 (Docker Desktop, Claude Desktop und einmalig ~3 GB Analyse-Modelle beim ersten
-Start).
+Start). Es läuft auf einem **normalen Rechner** — mit einem Cloud-Profil (dem
+Standard) reichen rund **8 GB RAM** und jede moderne CPU; starke Hardware
+brauchst du nur, wenn du auch die *Text*-KI lokal betreibst (siehe Profiltabelle
+weiter unten).
 
 **Du brauchst** (alles kostenlos): [Docker Desktop](https://www.docker.com/products/docker-desktop/),
 [Claude Desktop](https://claude.com/download) und einen API-Schlüssel —
@@ -80,6 +84,12 @@ mit [LM Studio](https://lmstudio.ai) oder [Ollama](https://ollama.com).
 **Läuft alles?** Doppelklick auf `status.command` (Mac) bzw. `status.bat`
 (Windows) prüft mit einem Klick Docker, Qdrant, den Watcher, den Korpus und den
 KI-Anschluss — ✓/✗ pro Punkt.
+
+**Etwas klemmt?** Schau zuerst in die [FAQ & Fehlerbehebung](docs/FAQ.de.md) —
+sie deckt die häufigen Fälle ab. Sieht es nach einem echten Bug aus, [öffne bitte
+ein GitHub-Issue](../../issues): mit Betriebssystem, genutztem Profil, was du
+getan hast und was passiert ist, plus der Status-Ausgabe von oben (Details in
+[CONTRIBUTING](CONTRIBUTING.md)).
 
 Der erste Start lädt einmalig ~3 GB Analyse-Modelle. Ausführlich, mit „was du
 siehst": [Installation macOS](docs/INSTALL_MAC.de.md) ·

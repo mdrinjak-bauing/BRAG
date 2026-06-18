@@ -58,6 +58,12 @@ Dann erneut einen Doppelklick auf `setup.command` machen.
 
 ## Indexierung
 
+**Welche Dateitypen kann ich ablegen?**
+PDF, Word (`.docx`), PowerPoint (`.pptx`), Markdown (`.md`) und HTML — einfach in
+`wissensspeicher/sources/` legen. Seitengenaue Deep-Links gibt es bei PDFs; die
+anderen Formate werden indexiert und durchsucht, aber ohne Seiten-Link zitiert.
+**Excel (`.xlsx`) wird noch nicht unterstützt.**
+
 **Ich habe ein PDF abgelegt und es passiert nichts.**
 - ~30 Sekunden warten (der Ordner wird alle 10 Sekunden geprüft, Dateien müssen
   erst fertig kopiert sein).

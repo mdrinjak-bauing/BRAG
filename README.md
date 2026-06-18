@@ -4,8 +4,9 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.0** ([changes](#versions))
 
-> **Your own AI assistant — one that knows your knowledge.** Put your PDFs and
-> notes in a folder. Claude or ChatGPT **pulls the right passages itself**
+> **Your own AI assistant — one that knows your knowledge.** Put your documents
+> — PDFs, Word, PowerPoint, your notes — in a folder. Claude or ChatGPT **pulls
+> the right passages itself**
 > (page-precise citations, one click to the original) and **writes what you
 > discuss back as a note** into the same folder. Your knowledge lives with
 > *you* — not in the chat history: every new chat, even on a different provider,
@@ -17,10 +18,11 @@ knowledge and retrieves it on demand. Under the hood, a **hybrid search**
 (meaning + keyword, with reranking) makes sure the AI finds the *relevant*
 passages — not just any. How that works in detail is further down.
 
-A "second brain" for research isn't fundamentally new — but this one is a
-**genuinely solid setup** that truly holds up day to day: no hype, no lock-in,
-plain files that you own. I'm sharing it because I use it myself every day and
-others can get something out of it.
+A "second brain" isn't a new idea. What I tried to do here is make a version
+that holds up day to day — no hype, no lock-in, just plain files that you own. I
+use it myself every day and I think it adapts well to other kinds of work, but
+that's really for you to judge: I'd genuinely welcome feedback, criticism, and
+anyone who wants to try it out.
 
 **Who is it for?** Researchers, lecturers and PhD students — and just as much
 practitioners who need to stay on top of standards, reports, bills of quantities
@@ -52,7 +54,10 @@ your files, not in a throwaway chat log.
 ## Setup — realistically about an hour
 
 There's little active work; the time is almost all **downloads** (Docker
-Desktop, Claude Desktop, and the ~3 GB of analysis models on first run).
+Desktop, Claude Desktop, and the ~3 GB of analysis models on first run). It runs
+on a **normal computer** — with a cloud profile (the default) about **8 GB of
+RAM** is plenty and any modern CPU will do; you only need a strong machine if you
+also run the *text* AI locally (see the profile table below).
 
 **You need** (all free): [Docker Desktop](https://www.docker.com/products/docker-desktop/),
 [Claude Desktop](https://claude.com/download) and an API key — easiest is
@@ -73,6 +78,12 @@ Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai) or
 **Everything working?** Double-click `status.command` (Mac) / `status.bat`
 (Windows) for a one-click check of Docker, Qdrant, the watcher, the corpus and
 the AI connection — ✓/✗ per item.
+
+**Something off?** Start with the [FAQ & troubleshooting](docs/FAQ.md) — it
+covers the common cases. If it looks like a real bug, please [open a GitHub
+issue](../../issues) with your OS, the profile you use, what you did and what
+happened, plus the status output above (details in
+[CONTRIBUTING](CONTRIBUTING.md)).
 
 First run downloads ~3 GB of analysis models once. Detailed, with "what you
 see": [Install macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md).
