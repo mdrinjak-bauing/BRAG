@@ -134,6 +134,44 @@ def doc_type_from_path(path: Path) -> str:
     return "document"
 
 
+def derive_file_metadata(path: Path) -> dict:
+    """How a file's name + folder + _meta.txt map to metadata — the single
+    source of truth, used both at ingest and when a file is renamed/moved.
+    The three descriptive fields (author, year, doc_type) may be overridden by
+    _meta.txt; everything else becomes a custom, filterable field."""
+    stem = config.normalize_source_key(path.stem)
+    author, year = parse_filename(stem)
+    doc_type = doc_type_from_path(path)
+    custom_meta = load_folder_meta(path)
+    author = custom_meta.pop("author", author)
+    year = custom_meta.pop("year", year)
+    doc_type = custom_meta.pop("doc_type", doc_type)
+    try:
+        rel_path = str(path.relative_to(config.VAULT))
+    except ValueError:
+        rel_path = path.name
+    return {
+        "source_file": stem, "author": author, "year": year,
+        "doc_type": doc_type, "rel_path": rel_path, "custom_meta": custom_meta,
+    }
+
+
+def metadata_payload(path: Path) -> dict:
+    """Just the filename-derived payload fields, ready for a Qdrant set_payload —
+    no content fields, so an indexed source can be re-keyed after a rename/move
+    WITHOUT re-embedding."""
+    m = derive_file_metadata(path)
+    payload = {
+        "source_file": m["source_file"], "rel_path": m["rel_path"],
+        "author": m["author"], "year": m["year"],
+        "year_num": int(m["year"]) if m["year"].isdigit() else 0,
+        "doc_type": m["doc_type"],
+    }
+    payload.update({k: v for k, v in m["custom_meta"].items()
+                    if k not in RESERVED_KEYS and k not in OVERRIDABLE_KEYS})
+    return payload
+
+
 def detect_language(sample: str) -> str:
     sample = sample[:4000].lower()
     de = sum(sample.count(t) for t in ("der ", "die ", "und ", "ist ", "mit ", "für "))
@@ -172,20 +210,10 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
         PictureItem, SectionHeaderItem, TableItem, TextItem,
     )
 
-    stem = config.normalize_source_key(path.stem)
-    author, year = parse_filename(stem)
-    doc_type = doc_type_from_path(path)
-    # User metadata from _meta.txt files (folder-inherited). The three
-    # descriptive fields may be overridden; everything else becomes a
-    # custom, filterable payload field.
-    custom_meta = load_folder_meta(path)
-    author = custom_meta.pop("author", author)
-    year = custom_meta.pop("year", year)
-    doc_type = custom_meta.pop("doc_type", doc_type)
-    try:
-        rel_path = str(path.relative_to(config.VAULT))
-    except ValueError:
-        rel_path = path.name
+    _m = derive_file_metadata(path)
+    stem, rel_path = _m["source_file"], _m["rel_path"]
+    author, year, doc_type = _m["author"], _m["year"], _m["doc_type"]
+    custom_meta = _m["custom_meta"]
 
     # Pin table mode explicitly so a future Docling default change cannot
     # silently degrade table quality.

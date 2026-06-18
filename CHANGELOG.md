@@ -4,19 +4,35 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
-## [0.3.0] — unreleased
+## [0.3.0] — 2026-06
+
+### Changed
+- **Renamed the project to BRAG** (*Building Retrieval-Augmented Generation*).
+  This is a branding change only — the internal package, container names, MCP
+  server key and environment variables are unchanged, so existing installations
+  keep working without reconfiguration.
+- Knowledge-store default folder renamed `vault/` → `wissensspeicher/`. The
+  `VAULT_PATH` / `VAULT_DIR` environment variables and the internal `/vault`
+  mount point are kept for backwards compatibility.
 
 ### Added
 - **One-click status check** (`status.command` / `status.bat`) and an
   `asb.health` module: verifies Docker, the `asb-app`/`asb-qdrant` containers,
   Qdrant, the corpus index, the folder watcher, the AI text backend, and the
   Claude Desktop connection, with a ✓/✗ per item.
+- **Lightweight rename of indexed files**: renaming or moving a file that is
+  already in the index now patches the filename-derived metadata
+  (`source_file`, author, year, doc_type, rel_path, custom `_meta` fields) on
+  the existing chunks and moves the literature note, instead of re-embedding the
+  whole document. Re-ingest only happens when the file was not indexed yet.
+- New doc **"Which Claude surface?"** (`docs/WHICH_CLAUDE.md` / `.de.md`):
+  when to use Chat vs. Cowork vs. Code, and why Chat is BRAG's home.
 
 ### Security
 - HTTP bridge now enforces a **localhost Host-header allowlist** (and an Origin
   check on POSTs), defeating DNS-rebinding attacks against the setup API that
   writes the API key and the Claude Desktop config.
-- Vault files other than PDFs are served as downloads with
+- Knowledge-store files other than PDFs are served as downloads with
   `X-Content-Type-Options: nosniff` instead of active `text/html` — closes a
   stored-XSS-to-config-write path on the bridge's own origin.
 - Claude Desktop config writes are now **atomic** (temp file + replace), always

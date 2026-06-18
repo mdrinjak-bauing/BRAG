@@ -136,3 +136,28 @@ def remove_source(source_file: str) -> int:
         client.close()
     delete_note(source_file)
     return n
+
+
+def rename_source(old_source_file: str, new_path: Path) -> int:
+    """Lightweight rename of an already-indexed source: the content is the same,
+    only the name/location changed, so patch the filename-derived metadata on
+    the existing chunks (no re-embedding) and move the literature note.
+
+    Returns the number of chunks updated, or 0 if the source was not indexed —
+    in which case the caller should fall back to a full ingest.
+    """
+    from asb.ingest.extract import derive_file_metadata, metadata_payload
+    from asb.ingest.notes import rename_note
+
+    payload = metadata_payload(new_path)
+    client = storage.get_client()
+    try:
+        n = storage.patch_source_metadata(client, old_source_file, payload)
+    finally:
+        client.close()
+    if n:
+        try:
+            rename_note(old_source_file, derive_file_metadata(new_path))
+        except Exception as e:  # noqa: BLE001 — the note is non-critical
+            print(f"  note rename failed (non-fatal): {e}")
+    return n

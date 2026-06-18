@@ -182,7 +182,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
             # PDFs render inline so the browser can jump to #page=N.
             self._send(200, target.read_bytes(), "application/pdf")
         else:
-            # Never serve vault content (.html/.md/…) as active, same-origin
+            # Never serve knowledge-store content (.html/.md/…) as active, same-origin
             # HTML — hand it back as a download (stored-XSS hardening).
             self._send(200, target.read_bytes(), "application/octet-stream",
                        extra={"Content-Disposition": "attachment"})

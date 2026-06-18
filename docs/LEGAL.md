@@ -52,7 +52,7 @@ provides no DPA and guarantees no GDPR compliance.
 
 ## Professional or organizational use
 
-If you use ASB professionally — especially with **personal** or
+If you use BRAG professionally — especially with **personal** or
 business-critical data — clear it **before** deployment with the responsible
 bodies: your data protection officer, IT security, where applicable the works
 council, and the legal department. This is not red tape; it protects you and
@@ -63,7 +63,7 @@ From a data-security standpoint, **local profiles are clearly preferable** here
 third-country transfer and no data processing with external providers. For
 confidential or personal material this is the safe default.
 
-**IT departments** can **harden ASB for organizational use** — e.g. local
+**IT departments** can **harden BRAG for organizational use** — e.g. local
 models only (LM Studio/Ollama or a self-hosted inference backend), centrally
 managed configuration and keys, access and network restrictions, backup and
 deletion policies for the knowledge store and index, and a documented assessment (such as

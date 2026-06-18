@@ -45,14 +45,14 @@ def check_corpus() -> bool:
             names = {c.name for c in client.get_collections().collections}
             if config.COLLECTION_NAME not in names:
                 return _fail("Corpus index",
-                             "not created yet — drop a PDF into vault/sources/")
+                             "not created yet — drop a PDF into wissensspeicher/sources/")
             info = client.get_collection(config.COLLECTION_NAME)
             n = info.points_count or 0
             sources = storage.list_corpus_sources(client)
         finally:
             client.close()
         if n == 0:
-            return _fail("Corpus index", "empty — drop a PDF into vault/sources/")
+            return _fail("Corpus index", "empty — drop a PDF into wissensspeicher/sources/")
         return _ok("Corpus index", f"{len(sources)} sources, {n} chunks")
     except Exception as e:  # noqa: BLE001
         return _fail("Corpus index", str(e)[:60])
@@ -100,7 +100,7 @@ def check_llm() -> bool:
 
 
 def main() -> int:
-    print(f"\nASB health — profile: {config.PROFILE_NAME}, "
+    print(f"\nBRAG health — profile: {config.PROFILE_NAME}, "
           f"collection: {config.COLLECTION_NAME}\n")
     results = [
         check_qdrant(),
