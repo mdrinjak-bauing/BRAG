@@ -71,7 +71,7 @@ class DocumentHandler(FileSystemEventHandler):
         if not _is_relevant(path):
             return
         try:
-            n = remove_source(path.stem)
+            n = remove_source(config.source_key_from_path(path))
             print(f"document removed: {path.name} — {n} chunks cleaned up")
         except Exception as e:  # noqa: BLE001
             print(f"cleanup error for {path.name}: {e}")
@@ -89,7 +89,7 @@ class DocumentHandler(FileSystemEventHandler):
                 return
             _processing.add(str(dest))
             try:
-                n = rename_source(src.stem, dest)
+                n = rename_source(config.source_key_from_path(src), dest)
                 if n:
                     print(f"document renamed: {dest.name} — metadata updated on "
                           f"{n} chunks (no re-ingest)")
@@ -106,7 +106,7 @@ class DocumentHandler(FileSystemEventHandler):
         # Moved OUT of sources/ (e.g. into _inbox or trash): drop old chunks.
         if src_ok:
             try:
-                remove_source(src.stem)
+                remove_source(config.source_key_from_path(src))
             except Exception as e:  # noqa: BLE001
                 print(f"cleanup error for {src.name}: {e}")
         # Moved INTO sources/ from elsewhere: index it fresh.
@@ -141,10 +141,16 @@ def reconcile_on_startup():
         print("reconciliation skipped — Qdrant not reachable")
         return
 
+    # Re-drive documents that are absent from the corpus AND documents whose
+    # last ingest was only partial (some chunks failed transiently) — the latter
+    # are in the corpus but still need missing pages retried.
+    from brag.ingest.pipeline import sources_needing_retry
+    retry = sources_needing_retry()
     backlog = [
         p for p in sorted(config.SOURCES_DIR.rglob("*"))
         if p.is_file() and _is_relevant(p)
-        and config.normalize_source_key(p.stem) not in corpus
+        and (config.source_key_from_path(p) not in corpus
+             or config.source_key_from_path(p) in retry)
     ]
     if not backlog:
         print("reconciliation: index is complete")

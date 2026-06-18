@@ -24,6 +24,12 @@ from brag.ingest.notes import write_note
 
 UPSERT_BATCH = 100
 
+# A document that ingested only partially (some chunks failed to embed, e.g. a
+# transient cloud rate-limit burst) is re-driven on watcher startup so the
+# missing pages are retried — but only this many times, so a chunk that fails
+# permanently doesn't re-ingest the whole document on every single startup.
+PARTIAL_RETRY_LIMIT = 3
+
 
 def _log_failed_chunk(chunk, reason: str) -> None:
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -37,15 +43,46 @@ def _log_failed_chunk(chunk, reason: str) -> None:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
-def _append_ingest_log(source_file: str, path: Path, n_chunks: int) -> None:
+def _append_ingest_log(source_file: str, path: Path, n_chunks: int,
+                       partial: bool = False, attempts: int = 1) -> None:
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     entry = {
         "source_file": source_file, "file": str(path.name),
         "chunks": n_chunks, "ingested_at": datetime.now().isoformat(),
         "collection": config.COLLECTION_NAME,
+        "partial": partial, "attempts": attempts,
     }
     with open(config.INGEST_LOG, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def _ingest_log_states() -> dict[str, dict]:
+    """Latest ingest-log entry per source_file (the log is append-only, so the
+    last line for a source wins). Used to find partially-ingested documents."""
+    states: dict[str, dict] = {}
+    try:
+        with open(config.INGEST_LOG, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    e = json.loads(line)
+                except ValueError:
+                    continue
+                sf = e.get("source_file")
+                if sf:
+                    states[sf] = e
+    except FileNotFoundError:
+        pass
+    return states
+
+
+def sources_needing_retry() -> set[str]:
+    """Sources whose most recent ingest was partial and still under the retry
+    limit — the watcher re-drives these so chunks that failed transiently get
+    another chance, instead of leaving pages missing from the index forever."""
+    return {
+        sf for sf, e in _ingest_log_states().items()
+        if e.get("partial") and e.get("attempts", 1) < PARTIAL_RETRY_LIMIT
+    }
 
 
 def ingest(path: Path) -> bool:
@@ -124,13 +161,24 @@ def ingest(path: Path) -> bool:
     finally:
         client.close()
 
+    # Record whether this ingest was complete or partial so a partially-indexed
+    # document is re-driven on the next watcher start (bounded by attempts)
+    # rather than silently keeping missing pages forever.
+    partial = skipped > 0
+    prev = _ingest_log_states().get(chunks[0].source_file)
+    attempts = (prev.get("attempts", 1) + 1) if (partial and prev and prev.get("partial")) else 1
     try:
         write_note(chunks)
-        _append_ingest_log(chunks[0].source_file, path, len(chunks))
+        _append_ingest_log(chunks[0].source_file, path, len(chunks),
+                           partial=partial, attempts=attempts)
     except Exception as e:  # noqa: BLE001 — post-stages never fail the ingest
         print(f"  note/log writing failed (non-fatal): {e}")
 
-    print(f"  done: {len(chunks)} chunks indexed\n")
+    if partial:
+        print(f"  done: {len(chunks)} chunks indexed "
+              f"({skipped} skipped — will retry, attempt {attempts}/{PARTIAL_RETRY_LIMIT})\n")
+    else:
+        print(f"  done: {len(chunks)} chunks indexed\n")
     return True
 
 
