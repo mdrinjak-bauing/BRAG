@@ -3,21 +3,22 @@
 **🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.0** ([changes](#versions))
 
 > **Talk to your own research literature.** Drop your PDFs into a folder —
-> papers, books, reports, project files — and ask Claude in plain language. The
-> answer is **grounded in your own sources**: page-precise, with the citation
-> and one click to the original PDF. It all runs on your machine.
+> papers, books, reports, project documents — and ask Claude in plain language.
+> The answer is **grounded in your own sources**: page-precise, with the
+> citation and one click to the original PDF. Everything runs locally on your
+> machine.
 
-Short: **BRAG** — *Building Retrieval-Augmented Generation*. The name nods to my
-field (civil engineering) and to what the tool does: it **builds up** your
-knowledge, and a RAG engine retrieves it on demand. A "second
-brain" for research isn't a new idea, and I'm not the first to build one. But I
-think this is a **genuinely solid setup** that actually helps day to day — and
-I'm sharing it because I learn from it myself and because others can get
-something out of it. No hype, no lock-in: plain files that you own, a strong
-search over them, and Claude as a counterpart that never answers without
-evidence.
+The name **BRAG** stands for *Building Retrieval-Augmented Generation* — a play
+on my field (civil engineering) and on what the tool does: it **builds up** your
+knowledge and retrieves it on demand through RAG search.
 
-**Who is it for?** Researchers, lecturers, PhD students — and just as much
+A "second brain" for research isn't fundamentally new — but this one is a
+**genuinely solid setup** that truly holds up day to day. I'm sharing it because
+I use it myself every day and others can get something out of it: no hype, no
+lock-in, just plain files that you own, a strong search over them, and Claude as
+a counterpart that **never answers without evidence**.
+
+**Who is it for?** Researchers, lecturers and PhD students — and just as much
 practitioners who need to stay on top of standards, reports, bills of quantities
 and trade literature in everyday project work. **No programming required.**
 
