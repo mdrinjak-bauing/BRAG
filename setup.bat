@@ -41,9 +41,14 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo Starting...
+echo Starting the setup assistant...
 if exist .setup_complete del .setup_complete
-docker compose up -d
+REM If a previous session left the app running, stop it so the setup service can
+REM use the bridge port (no-op on a fresh install).
+docker compose stop app >nul 2>nul
+REM Only the one-shot setup service runs now - it serves the wizard and is the
+REM only container that mounts the project dir + Claude Desktop config.
+docker compose --profile setup up -d setup
 if errorlevel 1 (
   echo Start failed - see message above.
   pause
@@ -67,7 +72,10 @@ if not exist .setup_complete (
 )
 
 echo Applying your settings...
-docker compose up -d --force-recreate app >nul 2>nul
+REM Tear down the setup service (frees the port and drops its mounts), then
+REM start the persistent app - which never mounts the project or Claude config.
+docker compose --profile setup rm -sf setup >nul 2>nul
+docker compose up -d >nul 2>nul
 
 echo.
 echo All done! Quit Claude Desktop completely and reopen it.

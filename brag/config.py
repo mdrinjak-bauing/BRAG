@@ -130,6 +130,12 @@ DEFAULT_TOP_K = int(_env("DEFAULT_TOP_K", 15))
 MAX_CHUNKS_PER_SOURCE = int(_env("MAX_CHUNKS_PER_SOURCE", 3))
 
 # ── HTTP bridge ─────────────────────────────────────────────────
+# The browser setup wizard (and its config-writing API) is served ONLY when the
+# bridge runs in the one-shot `setup` compose service, which is the only service
+# that mounts the project dir and the Claude Desktop config. The persistent app
+# runs with SETUP_MODE off, so its bridge serves only PDF deep-links + health —
+# it cannot write .env or the Claude config even though it shares the code.
+SETUP_MODE = _env("SETUP_MODE", "") == "1"
 BRIDGE_PORT = int(_env("BRIDGE_PORT", 8765))
 # Public URL prefix as seen from the host browser (links in search results)
 BRIDGE_PUBLIC_URL = _env("BRIDGE_PUBLIC_URL", f"http://localhost:{BRIDGE_PORT}")

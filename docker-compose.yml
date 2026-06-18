@@ -35,27 +35,49 @@ services:
       - ALL
     environment:
       - QDRANT_URL=http://qdrant:6333
+    volumes:
+      # The persistent app holds ONLY the knowledge store and the model cache —
+      # NOT the project dir or the Claude Desktop config. Those are mounted
+      # solely on the one-shot `setup` service below, so the long-running
+      # ingest/bridge process cannot read .env or rewrite the host's Claude
+      # Desktop config (defence in depth against a parser/RCE in this container).
+      - ${VAULT_PATH:-./wissensspeicher}:/vault
+      - models_cache:/models
+    ports:
+      # localhost only — the bridge serves your documents (PDF deep-links); it
+      # must not be reachable from the local network. If 8765 is taken on your
+      # machine, set BRIDGE_HOST_PORT and BRIDGE_PUBLIC_URL in .env.
+      - "127.0.0.1:${BRIDGE_HOST_PORT:-8765}:8765"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # reach LM Studio/Ollama on the host (Linux)
+
+  # One-shot configuration service: serves the browser setup wizard and is the
+  # ONLY service that mounts the project dir + the Claude Desktop config (so it
+  # can write .env and the MCP entry). It is NOT started by a plain
+  # `docker compose up` (guarded by the "setup" profile) — setup.command /
+  # setup.bat start it, wait for the .setup_complete marker, then tear it down
+  # and bring up the persistent `app`.
+  setup:
+    image: brag:latest
+    profiles: ["setup"]
+    container_name: brag-setup
+    env_file:
+      - path: .env
+        required: false
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      - SETUP_MODE=1
       # "1" only when the launcher exported CLAUDE_CONFIG_DIR; lets the wizard
       # tell a real Claude config mount from the throwaway sentinel.
       - CLAUDE_CONFIG_MOUNTED=${CLAUDE_CONFIG_DIR:+1}
+    command: ["python", "-m", "brag.setup_server"]
     volumes:
-      - ${VAULT_PATH:-./wissensspeicher}:/vault
-      - models_cache:/models
-      # Project dir + Claude Desktop config: needed by the browser setup
-      # wizard (writes .env and the MCP entry). CLAUDE_CONFIG_DIR is set
-      # by setup.command / setup.bat.
-      # SECURITY NOTE: this gives the app container read-write access to the
-      # whole project (including .env with any API key) and the host's Claude
-      # Desktop config. Acceptable because the bridge listens on loopback only
-      # with Host/Origin checks, but a hardening follow-up is to move setup into
-      # a one-shot service so the long-running watcher needn't hold these mounts.
       - ./:/workspace
       - ${CLAUDE_CONFIG_DIR:-./.claude-config-unset}:/claude-config
     ports:
-      # localhost only — the bridge serves your documents and the setup
-      # page; it must not be reachable from the local network.
-      # If 8765 is taken on your machine, set BRIDGE_HOST_PORT and
-      # BRIDGE_PUBLIC_URL in .env.
       - "127.0.0.1:${BRIDGE_HOST_PORT:-8765}:8765"
     extra_hosts:
       - "host.docker.internal:host-gateway"   # reach LM Studio/Ollama on the host (Linux)
