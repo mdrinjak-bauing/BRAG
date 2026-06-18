@@ -52,7 +52,10 @@ jobs:
 
       - name: Ingest + search (local only, no API key)
         run: |
+          # The persistent app no longer mounts the project dir, so mount the
+          # repo into this one-off run just to reach the test script.
           docker compose run --rm \
+            -v "$(pwd)":/workspace \
             -e CR_ENABLED=false \
             -e VISION_ENABLED=false \
             -e PYTHONPATH=/app \

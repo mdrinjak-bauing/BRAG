@@ -3,7 +3,9 @@
 Serves:
 - /file/<store-relative-path>   knowledge-store documents for the browser, so search
                                 results can deep-link to a PDF page (#page=N)
-- /setup + /api/...             the browser-based setup wizard
+- /setup + /api/...             the browser-based setup wizard — ONLY when
+                                SETUP_MODE=1 (the one-shot `setup` compose
+                                service); the persistent app keeps it disabled
 - /healthz                      liveness probe
 """
 
@@ -50,6 +52,16 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if parsed.path == "/healthz":
             self._send(200, b"ok", "text/plain")
         elif parsed.path in ("/", "/setup"):
+            # The wizard is served only by the one-shot setup service (the only
+            # one with the project + Claude-config mounts). On the persistent
+            # app, point the user at the launcher instead of a wizard that
+            # could not write anything anyway.
+            if not config.SETUP_MODE:
+                self._send(200,
+                           b"Setup is not running here. Double-click setup.command "
+                           b"(macOS) or setup.bat (Windows) to (re-)configure BRAG.",
+                           "text/plain")
+                return
             self._send(200, SETUP_PAGE.read_bytes(), "text/html; charset=utf-8",
                        extra={"Content-Security-Policy": SETUP_CSP})
         elif parsed.path.startswith("/file/"):
@@ -62,6 +74,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
     def do_POST(self):  # noqa: N802
         if not self._host_ok() or not self._origin_ok():
             self._send_json(403, {"ok": False, "message": "forbidden"})
+            return
+        # The config-writing setup API exists only in the one-shot setup service.
+        if not config.SETUP_MODE:
+            self._send_json(404, {"ok": False, "message": "setup not active"})
             return
         parsed = urllib.parse.urlparse(self.path)
         try:

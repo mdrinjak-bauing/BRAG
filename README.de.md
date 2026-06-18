@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.3.0** ([Änderungen](#versionen))
+**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.3.1** ([Änderungen](#versionen))
 
 > **Dein eigener KI-Assistent — einer, der dein Wissen kennt.** Leg deine
 > Dokumente — PDFs, Word, PowerPoint, deine Notizen — in einen Ordner. Claude

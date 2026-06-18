@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.0** ([changes](#versions))
+**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.1** ([changes](#versions))
 
 > **Your own AI assistant — one that knows your knowledge.** Put your documents
 > — PDFs, Word, PowerPoint, your notes — in a folder. Claude or ChatGPT **pulls
