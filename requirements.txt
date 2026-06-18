@@ -3,7 +3,7 @@ docling==2.103.0
 qdrant-client==1.18.0
 google-genai==2.8.0
 fastembed==0.8.0
-sentence-transformers==5.4.1
+sentence-transformers==5.6.0
 mcp==1.28.0
 python-dotenv==1.2.2
 watchdog==6.0.0
