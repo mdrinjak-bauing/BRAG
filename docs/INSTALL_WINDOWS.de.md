@@ -2,6 +2,12 @@
 
 **🇬🇧 [English](INSTALL_WINDOWS.md) | 🇩🇪 Deutsch**
 
+> **Zum ersten Mal in der Eingabeaufforderung?** Diese Anleitung lässt dich ein
+> paar Befehle von Hand ausführen. Lass dir Zeit und lies jeden Schritt — und
+> wenn etwas unklar ist, kann dich ein KI-Assistent wie
+> [Claude Code](https://claude.com/claude-code) hindurchführen und dir erklären,
+> was jeder Befehl tut.
+
 Zeitbedarf: etwa **15–20 Minuten aktive Arbeit** — du brauchst nur deine Maus und
 einmal kurz die Eingabeaufforderung, keine Programmierkenntnisse. Hinzu kommen der
 erste Build und die einmaligen Modell-Downloads, die größtenteils

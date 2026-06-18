@@ -278,6 +278,13 @@ issue](../../issues) with your OS, the profile you use, what you did and what
 happened, plus the status output above (details in
 [CONTRIBUTING](CONTRIBUTING.md)).
 
+> **New to the terminal?** A few steps — here and in the install guides — ask
+> you to type a command into the Terminal (macOS) or Command Prompt (Windows),
+> or to run a small script. If that's new for you, take it slow and read each
+> step carefully — and you don't have to do it alone: an AI assistant like
+> [Claude Code](https://claude.com/claude-code) can walk you through running the
+> commands step by step and explain what each one does.
+
 First run downloads ~3 GB of analysis models once. Detailed, with "what you
 see": [Install macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md).
 
