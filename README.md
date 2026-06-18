@@ -314,8 +314,9 @@ wissensspeicher/
 Renaming or deleting in `sources/` is handled automatically: renaming an
 **already-indexed** file just updates its metadata (author, year, type, PDF
 path) in place — **no re-ingest** (no re-embedding, no API cost); deleting it
-removes it from the database. Subfolder names become the filterable document
-type (`sources/papers/`, `sources/reports/` …).
+removes it from the database. The **first** subfolder name becomes the
+filterable document type (`sources/papers/`, `sources/reports/` …); you can nest
+deeper for your own tags (below).
 
 **Your own metadata** (project, course, client …) goes into a `_meta.txt` in any
 folder under `sources/` — one `key: value` per line; that way hits from other
@@ -330,6 +331,21 @@ project: School Center
 client: City of Hamm
 page_offset: 14
 ```
+
+You can **nest folders as deep as you like**, and `_meta.txt` files **stack from
+`sources/` down to the document's own folder — deeper folders win**. So set
+broad tags high up and refine them further down:
+
+```
+sources/projects/_meta.txt                     →  client: City of Hamm
+sources/projects/School_Center/_meta.txt       →  project: School Center
+sources/projects/School_Center/2024/_meta.txt  →  phase: execution
+```
+
+A document in `…/School_Center/2024/` then carries `client`, `project` **and**
+`phase` — all filterable in search (*"search only in project School Center"*).
+The one rule: only the **first** subfolder under `sources/` sets the document
+**type**; everything deeper is purely for your `_meta.txt` tags.
 
 **Day to day** you just drop new literature into `sources/` (indexed in minutes)
 and ask Claude what it adds to your existing material or whether it contradicts
