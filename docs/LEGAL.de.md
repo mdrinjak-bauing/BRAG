@@ -34,6 +34,14 @@ Was deinen Rechner verlässt, hängt vom gewählten **Profil** ab:
   Dokumente deinen Rechner und unterliegen den Bedingungen des Anbieters. Den
   Bildversand kannst du mit `VISION_ENABLED=false` abschalten.
 
+**Dein API-Schlüssel.** Dein API-Schlüssel wird nur in einer lokalen
+`.env`-Datei auf deinem Rechner gespeichert (nur für dich lesbar) und dient
+ausschließlich dazu, deine eigenen Anfragen beim gewählten Anbieter zu
+authentifizieren. Er wird nie an die Macher dieser App oder an Dritte gesendet;
+die Live-Prüfung beim Setup sendet lediglich eine kleine Testanfrage an diesen
+Anbieter, um die Gültigkeit zu bestätigen. Lokale Profile (Ollama / LM Studio)
+brauchen gar keinen Schlüssel.
+
 **Wichtig — kostenloser Gemini-Tarif (Standard):** Beim *kostenlosen* Tarif von
 Google AI Studio kann Google die übermittelten Eingaben und Ausgaben zur
 **Verbesserung seiner Produkte verwenden**, und sie können **von Menschen

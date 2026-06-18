@@ -33,6 +33,14 @@ Docker Desktop and confirm it says "running" and that you have internet, then
 simply double-click setup again. It resumes from the cache, so it doesn't start
 over.
 
+**What happens to my API key?**
+Your API key is stored only in a local `.env` file on your computer
+(owner-readable only) and is used solely to authenticate your own requests to the
+provider you chose (Gemini / OpenAI / Anthropic). It is never sent to the makers
+of this app or any third party; the live check during setup just sends one small
+test request to that provider to confirm the key works. Local profiles (Ollama /
+LM Studio) need no key at all.
+
 **macOS: double-clicking `setup.command` does nothing (no window opens).**
 This is different from the Gatekeeper "unidentified developer" warning (for that,
 right-click → Open). If *no* window appears at all, the file may have lost its

@@ -28,10 +28,22 @@ folder, Claude Desktop as the user interface.
    sections, tables, figure captions, page numbers. Table mode is pinned to
    ACCURATE so library updates cannot silently degrade quality. With the vision
    pass on, figure images are rendered (`generate_picture_images`) and described
-   in the contextualize step.
-2. **Chunk** (`chunking.py`) — paragraph-level sliding window (2000 chars,
-   200 overlap); long tables split by rows with the header replicated per
-   part; a hard splitter handles OCR text without paragraph boundaries.
+   in the contextualize step. The output is **not flat text** but an *ordered
+   stream of typed items* — heading, body paragraph, table, figure — each
+   tagged with the page it sits on.
+   - **Between extract and chunk** (`extract.py` walks that stream): consecutive
+     body paragraphs are collected per section (carrying their page numbers).
+     At every structural boundary — a new heading, a table or a figure — or at
+     the document's end, the collected text is handed to the chunker. **Tables
+     and figures do not go through the text window**: each becomes its own chunk
+     right here (with its page; a figure also carries its vision description).
+2. **Chunk** (`chunking.py`) — the per-section text from step 1 goes through a
+   paragraph-level sliding window (2000 chars, 200 overlap); each text chunk
+   keeps the **real page range** of the paragraphs it actually contains
+   (`page_start..page_end`), so a passage on page 18 is cited as page 18, not as
+   the section's first page. Long tables split by rows with the header
+   replicated per part; a hard splitter handles OCR text without paragraph
+   boundaries.
 3. **Contextualize** (`contextualize.py`) — each chunk gets 1–2 sentences of
    LLM context (table of contents + current chapter as grounding), processed in
    batches (5 chunks per LLM call by default). Figures go through the **vision

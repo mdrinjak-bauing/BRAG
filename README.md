@@ -364,6 +364,10 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 - **Verify AI output.** AI-generated answers and citations can be incorrect or
   fabricated; always verify them against the linked original page before relying
   on or citing them.
+- **Your API key stays local.** It's stored only in a local `.env` file on your
+  computer (owner-readable only) and is used solely to authenticate your own
+  requests to the provider you chose — never sent to the makers of this app or
+  any third party. Local profiles need no key at all.
 - **Privacy — the honest rule of thumb.** Local profiles: nothing leaves the
   machine. Cloud profiles: text excerpts (and figure images with vision) go to
   the provider, and the **free Gemini tier** may use them. So: what you wouldn't

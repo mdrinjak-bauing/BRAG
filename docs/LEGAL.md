@@ -32,6 +32,13 @@ What leaves your machine depends on the chosen **profile**:
   So content from your documents leaves your machine and is subject to the
   provider's terms. You can disable the image upload with `VISION_ENABLED=false`.
 
+**Your API key.** Your API key is stored only in a local `.env` file on your
+computer (owner-readable only) and is used solely to authenticate your own
+requests to the provider you chose. It is never sent to the makers of this app
+or any third party; the live check during setup just sends one small test
+request to that provider to confirm the key works. Local profiles (Ollama / LM
+Studio) need no key at all.
+
 **Important — free Gemini tier (the default):** On the *free* tier of Google AI
 Studio, Google may **use** the submitted inputs and outputs to **improve its
 products**, and they may be **reviewed by humans**. The free tier is therefore
