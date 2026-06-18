@@ -59,8 +59,8 @@ Feedback, Kritik und alle, die es ausprobieren möchten, freue ich mich wirklich
 
 ## Die Idee: eine Bibliothek und ein Notizbuch
 
-Ein „Second Brain" für die Forschung hat zwei Hälften — und ihre strikte
-Trennung ist der Kern dieses Designs:
+Ein „Second Brain" für dein Projekt — ob Forschung, Lehre oder die tägliche
+Praxis — hat zwei Hälften, und ihre strikte Trennung ist der Kern dieses Designs:
 
 |  | 📚 **Deine Bibliothek** | 📓 **Dein Notizbuch** |
 |---|---|---|
@@ -317,7 +317,7 @@ So ist der Wissensspeicher aufgebaut:
 
 ```
 wissensspeicher/
-├── CLAUDE.md      ← bringt Claude DEINE Forschung bei — ausfüllen!
+├── CLAUDE.md      ← bringt Claude dein Fachgebiet bei (hier trägst du es ein)
 ├── AGENTS.md      ← Zusatzregeln für autonome Agenten-Aufgaben
 ├── sources/       ← 📚 Dokumente hier ablegen (PDF, DOCX); Unterordner = Dokumenttypen
 │   └── _inbox/    ← Staging-Bereich, wird vom Indexer ignoriert

@@ -59,8 +59,8 @@ anyone who wants to try it out.
 
 ## The idea: a library and a notebook
 
-A research "second brain" has two halves — and keeping them strictly apart is
-the heart of the design:
+A "second brain" for your work — research, teaching or day-to-day practice
+alike — has two halves, and keeping them strictly apart is the heart of the design:
 
 |  | 📚 **Your library** | 📓 **Your notebook** |
 |---|---|---|
@@ -302,7 +302,7 @@ This is how the knowledge store is laid out:
 
 ```
 wissensspeicher/
-├── CLAUDE.md      ← teaches Claude about YOUR research — fill it in!
+├── CLAUDE.md      ← teaches Claude about YOUR field (you fill it in)
 ├── AGENTS.md      ← extra rules for autonomous agent tasks
 ├── sources/       ← 📚 drop documents here (PDF, DOCX); subfolders = document types
 │   └── _inbox/    ← staging area, ignored by the indexer
