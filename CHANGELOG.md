@@ -95,6 +95,12 @@ All notable changes to this project are documented here. The format follows
   (port 8765 already in use); the cross-encoder reranker takes an explicit batch
   size for predictable latency on weak CPUs; and the knowledge-store template no
   longer ships files titled "Vault".
+- **Citations can show the printed (book) page, not the physical PDF page.** Set
+  `page_offset` in a `_meta.txt` (printed page = physical page − offset): the
+  citation then shows the printed page while the deep-link still jumps to the
+  correct physical PDF page. Documented the `#page=` viewer behaviour — Chrome,
+  Edge and Firefox honour it; Safari opens page 1, so **Skim** (macOS) /
+  **SumatraPDF** (Windows) are recommended as page-jumping viewers.
 
 ## [0.2.0] — 2026-06
 

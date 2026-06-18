@@ -116,10 +116,21 @@ corpus" there is the `.env` **cloud embeddings** option (see [PROFILES.md](PROFI
   stored and usually reveals the problem (e.g. a table extracted badly).
 - Check the document is indexed: *"List my sources."*
 
-**The PDF link doesn't open at the right page.**
-The link opens in your browser, which jumps to the page via `#page=N`. Some
-browsers/PDF settings ignore the page anchor — Chrome and Edge handle it
-best. The page number is also stated in the search hit itself.
+**The PDF link opens on page 1, not the cited page.**
+The link uses the standard PDF `#page=N` parameter. The **built-in PDF viewers
+of Chrome, Edge and Firefox honor it**, but **Safari's does not** — it opens
+page 1. Either open the links in Chrome/Edge/Firefox, or install a free
+dedicated viewer that jumps to the page and set it as your PDF handler:
+**Skim** (macOS) or **SumatraPDF** (Windows). The cited page number is always in
+the hit text too, so you can navigate by hand if needed.
+
+**The chat cites the PDF page, not the printed (book) page.**
+By default the citation is the physical PDF page. For documents whose printed
+numbering differs (a book with front matter, a journal offprint), set a
+`page_offset` in a `_meta.txt` — then citations show the printed page while the
+link still opens the correct PDF page. The rule is `page_offset = physical page
+− printed page`; see the `_meta.txt` section in the README. Re-index the
+document after setting it.
 
 **Search quality is worse in my language.**
 Set `VAULT_LANGUAGE` in `.env` to your language (affects keyword stemming)

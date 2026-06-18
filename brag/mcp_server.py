@@ -38,10 +38,22 @@ def _format_hit(i: int, hit: dict) -> str:
         return f"{header}\n{meta}\n\n{hit.get('text', '')}\n"
     src = hit.get("source_file", "?")
     author, year = hit.get("author", ""), hit.get("year", "")
-    page = hit.get("page_start", "")
-    link = pdf_link(hit.get("rel_path", ""), hit.get("page_start"))
+    phys_page = hit.get("page_start", "")  # physical PDF page — used for the link
+    # If a document's printed page numbers differ from the PDF's physical page
+    # count (a book with front matter, a journal offprint), the user sets
+    # `page_offset` in a _meta.txt: printed page = physical page − offset. The
+    # CITATION then shows the printed/book page, while the LINK still jumps to
+    # the physical PDF page so the viewer lands on the right one.
+    try:
+        offset = int(hit.get("page_offset", 0) or 0)
+    except (TypeError, ValueError):
+        offset = 0
+    book_page = phys_page
+    if isinstance(phys_page, int) and offset and phys_page - offset >= 1:
+        book_page = phys_page - offset  # printed page; guard against a bad offset
+    link = pdf_link(hit.get("rel_path", ""), phys_page)
     cite = f"{author} ({year})" if author and author != "Unknown" else src
-    header = f"### [{i}] [{cite} — p. {page}](<{link}>)"
+    header = f"### [{i}] [{cite} — p. {book_page}](<{link}>)"
     meta = (
         f"source: `{src}` | type: {hit.get('doc_type', '')}/{hit.get('chunk_type', '')}"
         f" | chapter: {hit.get('chapter', '') or '—'}"

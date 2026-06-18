@@ -128,10 +128,20 @@ den Fall „schwache Hardware + sehr großer Korpus" gibt es die `.env`-Option
   extrahierte Tabelle).
 - Prüfe, ob das Dokument indexiert ist: *„Liste meine Quellen."*
 
-**Der PDF-Link öffnet nicht die richtige Seite.**
-Der Link öffnet im Browser, der über `#page=N` zur Seite springt. Manche
-Browser/PDF-Einstellungen ignorieren den Seitenanker — Chrome und Edge kommen am
-besten damit zurecht. Die Seitenzahl steht außerdem im Suchtreffer selbst.
+**Der PDF-Link öffnet Seite 1 statt der zitierten Seite.**
+Der Link nutzt den Standard-Parameter `#page=N`. Die **eingebauten PDF-Viewer von
+Chrome, Edge und Firefox** befolgen ihn, **Safari nicht** — dort öffnet Seite 1.
+Öffne die Links in Chrome/Edge/Firefox, oder installiere einen kostenlosen Viewer,
+der zur Seite springt, und setze ihn als PDF-Standard: **Skim** (macOS) oder
+**SumatraPDF** (Windows). Die zitierte Seitenzahl steht außerdem im Suchtreffer.
+
+**Im Chat wird die PDF-Seite zitiert, nicht die gedruckte (Buch-)Seite.**
+Standardmäßig ist der Beleg die physische PDF-Seite. Bei Dokumenten mit
+abweichender Zählung (Buch mit Vorspann, Zeitschriften-Sonderdruck) setz einen
+`page_offset` in einer `_meta.txt` — dann zeigt der Beleg die gedruckte Seite,
+während der Link weiter die richtige PDF-Seite öffnet. Regel: `page_offset =
+physische Seite − gedruckte Seite` (siehe `_meta.txt`-Abschnitt im README).
+Danach das Dokument neu indexieren.
 
 **Die Suchqualität ist in meiner Sprache schlechter.**
 Setze `VAULT_LANGUAGE` in der `.env` auf deine Sprache (betrifft die
