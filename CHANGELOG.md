@@ -4,6 +4,74 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] — 2026-06
+
+A reliability, security and documentation hardening release following a full
+pre-publication audit (correctness, security, licensing/privacy and
+release-readiness). Most changes need no re-indexing — see **Migration** for the
+one exception.
+
+### Fixed
+- **Silent data loss with same-named files (critical).** A document's identity
+  was its bare filename, so two files with the same name in different folders
+  (e.g. `projectA/Bericht.pdf` and `projectB/Bericht.pdf`) collided — ingesting
+  one deleted the other's chunks, and deleting one wiped both. Identity is now
+  **path-qualified**.
+- **Page citations across multi-page sections.** Every chunk of a section that
+  spanned pages inherited the section's *first* page, so a passage physically on
+  page 18 was cited (and deep-linked) to page 10. Each chunk now carries the
+  **real page range** of the text it contains.
+- **Partial ingests no longer lose pages silently.** A document whose chunks
+  partly failed to embed (e.g. a transient cloud rate-limit) was logged as
+  complete and never retried; it is now re-driven on the next start, with a
+  bounded number of attempts.
+- **`inspect_chunks(page=N)`** now returns chunks whose page range *covers* N,
+  not only chunks that start on N.
+- **Watcher concurrency** — the in-progress set is lock-guarded so the polling
+  observer cannot start a duplicate ingest of the same file.
+- **Large `top_k` searches** are no longer silently capped by the rerank/fusion
+  presets.
+- **Clear error on an embedding-dimension mismatch** (model dim vs
+  `EMBEDDING_DIM`) instead of an opaque crash on every upsert.
+
+### Security
+- **Setup is now a separate one-shot service.** The persistent app container no
+  longer mounts the project directory or the Claude Desktop config — only the
+  short-lived `setup` service does. A compromised ingest/parse path can no
+  longer read `.env` or rewrite the host's Claude Desktop configuration.
+- **Qdrant telemetry disabled** by default (`QDRANT__TELEMETRY_DISABLED`).
+- **`.env` injection guard** — wizard-supplied values are sanitised so a newline
+  cannot inject extra `.env` entries.
+- Added **`SECURITY.md`** (private reporting + the prompt-injection threat model).
+
+### Added
+- A real **end-to-end CI test** (build → ingest a PDF → search → page citation)
+  and a light **unit-test suite**, both run in CI.
+- **`NOTICE.md`** (third-party model and dependency licenses).
+- **`CODE_OF_CONDUCT.md`**, GitHub issue forms and a pull-request template.
+- Optional **model-revision pinning** (`EMBEDDING_REVISION` / `RERANKER_REVISION`)
+  for reproducible, supply-chain-safe model downloads.
+- Documented `BRIDGE_HOST_PORT` / `BRIDGE_PUBLIC_URL` in `.env.example`.
+
+### Changed
+- A clear **API-key handling** note (stored only locally in `.env`, only ever
+  sent to your chosen provider, never to the project or third parties) now
+  appears in the setup wizard and across the docs.
+- The ingest-pipeline docs now explain the **extract→chunk** handoff.
+- A **hallucination / citation-accuracy disclaimer** was added to the README and
+  the legal notice.
+- `PROFILE` now defaults to `gemini` (previously the equivalent `cloud` alias).
+- Routine dependency updates (sentence-transformers, GitHub Actions).
+
+### Migration
+Pull and **re-run setup once** (`setup.command` / `setup.bat`) so the new
+one-shot setup service writes your configuration. **Top-level documents are
+unaffected.** If you keep documents in **subfolders** of `sources/`, their
+identity keys change to include the folder path: they are re-indexed
+automatically on next start, but the old entries linger — for a clean index,
+rebuild it (re-ingest your corpus, or remove the Qdrant volume and let it
+re-index).
+
 ## [0.3.0] — 2026-06
 
 ### Changed
