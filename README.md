@@ -51,6 +51,31 @@ Researchers, lecturers and PhD students — and just as much practitioners who n
 The core idea: **chats forget — your knowledge store doesn't.** Knowledge accumulates in
 your files, not in a throwaway chat log.
 
+### Examples from construction practice
+
+Once your standards, reports and project files are indexed, questions like these
+get a page-cited answer (one click opens the PDF on the right page):
+
+- **Standards & codes** — *"What minimum concrete cover does Eurocode 2 require
+  for exposure class XC4?"* · *"Which fire-resistance requirements apply to the
+  escape routes here?"*
+- **Bills of quantities & tendering** — *"Find the earthworks item in the School
+  Center bill of quantities"* · *"Compare the rebar quantities in these two
+  tenders."*
+- **Claims & variations** — *"Which change orders relate to altered subsoil
+  conditions?"* · *"What does the VOB/B say about a notice of delay and its
+  deadlines?"*
+- **Reports & expert opinions** — *"What does the soil report say about the
+  groundwater level and the recommended foundation?"* · *"Summarise the defects
+  recorded in the acceptance protocols."*
+- **Cost data** — *"Find tables with cost benchmarks for the shell construction"*
+  · *"What rework cost figures show up across my reports?"*
+- **Teaching & exams** — *"Draft three exam questions on reinforced-concrete
+  design from chapter 4, with page references."*
+
+Scope any of these to a single project or course with a `_meta.txt` tag — e.g.
+*"search only in project School Center."*
+
 A "second brain" isn't a new idea. What I tried to do here is make a version
 that holds up day to day — no hype, no lock-in, just plain files that you own. I
 use it myself every day and I think it adapts well to other kinds of work, but

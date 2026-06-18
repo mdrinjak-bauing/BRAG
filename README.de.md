@@ -51,6 +51,32 @@ Forschende, Lehrende und Promovierende — und genauso Praktiker, die im Projekt
 Der Kerngedanke: **Chats vergessen — dein Wissensspeicher nicht.** Wissen sammelt sich in
 deinen Dateien an, nicht in einem flüchtigen Chatverlauf.
 
+### Beispiele aus der Baupraxis
+
+Sind deine Normen, Berichte und Projektunterlagen erst indexiert, bekommst du auf
+Fragen wie diese eine seitengenau belegte Antwort (ein Klick öffnet das PDF an
+der richtigen Stelle):
+
+- **Normen & Regelwerke** — *„Welche Mindestbetondeckung fordert der Eurocode 2
+  für die Expositionsklasse XC4?"* · *„Welche Anforderungen an die Flucht- und
+  Rettungswege gelten hier?"*
+- **Leistungsverzeichnis & Ausschreibung** — *„Finde die Position Erdarbeiten im
+  LV Schulzentrum"* · *„Vergleiche die Bewehrungsmengen in diesen zwei
+  Angeboten."*
+- **Nachträge & Claims** — *„Welche Nachträge betreffen geänderte
+  Baugrundverhältnisse?"* · *„Was sagt die VOB/B zur Behinderungsanzeige und zu
+  den Fristen?"*
+- **Gutachten & Prüfberichte** — *„Was sagt das Baugrundgutachten zum
+  Grundwasserstand und zur empfohlenen Gründung?"* · *„Fasse die in den
+  Abnahmeprotokollen festgehaltenen Mängel zusammen."*
+- **Kostenkennzahlen** — *„Finde Tabellen mit Kostenkennwerten für den Rohbau"* ·
+  *„Welche Kosten für Nacharbeit tauchen in meinen Berichten auf?"*
+- **Lehre & Klausuren** — *„Entwirf drei Klausurfragen zum Stahlbetonbau aus
+  Kapitel 4, mit Seitenangaben."*
+
+Jede dieser Fragen lässt sich per `_meta.txt`-Tag auf ein Projekt oder einen Kurs
+eingrenzen — z. B. *„such nur im Projekt Schulzentrum."*
+
 Ein „zweites Gehirn" ist keine neue Idee. Ich habe versucht, eine Variante zu
 bauen, die im Alltag wirklich trägt — kein Hype, kein Lock-in, einfach Dateien,
 die dir gehören. Ich arbeite selbst täglich damit und finde, es lässt sich gut
