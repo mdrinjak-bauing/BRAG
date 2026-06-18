@@ -84,13 +84,24 @@ def main() -> int:
         else:
             print(f"  ✓ H2: multipage marker cited from page {ps} (not collapsed to 1)")
 
+    # --- H3: inspect_chunks page filter covers chunks that SPAN the page -----
+    # The 2-page sample merges into one chunk (page_start=1, page_end=2); the
+    # old page_start==page filter missed it on page 2, the range filter finds it.
+    from brag.mcp_server import inspect_chunks
+    out = inspect_chunks("e2e_sample", page=2)
+    if "BRAGZ9QXMARKER" not in out:
+        failures.append("H3: inspect_chunks(page=2) missed the chunk spanning pages 1-2")
+    else:
+        print("  ✓ H3: inspect_chunks page filter covers spanning chunks")
+
     if failures:
         print("\nFAIL:")
         for f in failures:
             print(f"  - {f}")
         return 1
 
-    print("\nPASS: basic citation, B1 no-collision, and H2 multi-page citation all verified")
+    print("\nPASS: basic citation, B1 no-collision, H2 multi-page citation and "
+          "H3 page-range inspect all verified")
     return 0
 
 

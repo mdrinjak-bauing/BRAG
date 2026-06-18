@@ -8,6 +8,7 @@ macOS and Windows hosts). Includes:
 - startup reconciliation (documents added while the watcher was down)
 """
 
+import threading
 import time
 from pathlib import Path
 
@@ -17,7 +18,29 @@ from watchdog.observers.polling import PollingObserver
 from brag import config, storage
 from brag.ingest.pipeline import ingest, remove_source, rename_source
 
+# Paths currently being ingested, so a second event for the same file (the
+# PollingObserver can dispatch on multiple threads, and a rename fires both a
+# move and a create on some hosts) doesn't start a duplicate ingest. Guarded by
+# a lock: the check-and-add must be atomic or two threads can both pass the
+# "not in set" test.
 _processing: set[str] = set()
+_processing_lock = threading.Lock()
+
+
+def _claim(path: Path) -> bool:
+    """Atomically mark a path as being processed. Returns False if another
+    thread already claimed it (caller should then do nothing)."""
+    key = str(path)
+    with _processing_lock:
+        if key in _processing:
+            return False
+        _processing.add(key)
+        return True
+
+
+def _release(path: Path) -> None:
+    with _processing_lock:
+        _processing.discard(str(path))
 
 
 def _is_relevant(path: Path) -> bool:
@@ -52,9 +75,8 @@ class DocumentHandler(FileSystemEventHandler):
         if event.is_directory:
             return
         path = Path(event.src_path)
-        if not _is_relevant(path) or str(path) in _processing:
+        if not _is_relevant(path) or not _claim(path):
             return
-        _processing.add(str(path))
         try:
             print(f"new document detected: {path.name}")
             if _wait_for_stable_file(path):
@@ -62,7 +84,7 @@ class DocumentHandler(FileSystemEventHandler):
         except Exception as e:  # noqa: BLE001 — watcher must survive anything
             print(f"ingest error for {path.name}: {e}")
         finally:
-            _processing.discard(str(path))
+            _release(path)
 
     def on_deleted(self, event):
         if event.is_directory:
@@ -85,9 +107,8 @@ class DocumentHandler(FileSystemEventHandler):
         # Rename/move WITHIN sources/: same content, only the name changed —
         # patch the filename-derived metadata in place instead of re-embedding.
         if src_ok and dest_ok:
-            if str(dest) in _processing:
+            if not _claim(dest):
                 return
-            _processing.add(str(dest))
             try:
                 n = rename_source(config.source_key_from_path(src), dest)
                 if n:
@@ -100,7 +121,7 @@ class DocumentHandler(FileSystemEventHandler):
             except Exception as e:  # noqa: BLE001 — watcher must survive anything
                 print(f"rename handling error for {dest.name}: {e}")
             finally:
-                _processing.discard(str(dest))
+                _release(dest)
             return
 
         # Moved OUT of sources/ (e.g. into _inbox or trash): drop old chunks.
@@ -110,8 +131,7 @@ class DocumentHandler(FileSystemEventHandler):
             except Exception as e:  # noqa: BLE001
                 print(f"cleanup error for {src.name}: {e}")
         # Moved INTO sources/ from elsewhere: index it fresh.
-        if dest_ok and str(dest) not in _processing:
-            _processing.add(str(dest))
+        if dest_ok and _claim(dest):
             try:
                 print(f"document moved in: {dest.name} — indexing")
                 if _wait_for_stable_file(dest):
@@ -119,7 +139,7 @@ class DocumentHandler(FileSystemEventHandler):
             except Exception as e:  # noqa: BLE001
                 print(f"ingest error for {dest.name}: {e}")
             finally:
-                _processing.discard(str(dest))
+                _release(dest)
 
 
 def reconcile_on_startup():

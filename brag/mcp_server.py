@@ -144,14 +144,18 @@ def list_sources(doc_type: str = "") -> str:
 def inspect_chunks(source_file: str, page: int = 0, limit: int = 10) -> str:
     """Show what is actually stored in the index for a source (debugging:
     'why doesn't the search find X?'). Optionally filter by page number."""
-    from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
+    from qdrant_client.models import FieldCondition, Filter, MatchAny, Range
 
     must = [FieldCondition(
         key="source_file",
         match=MatchAny(any=config.source_key_variants(source_file)),
     )]
     if page:
-        must.append(FieldCondition(key="page_start", match=MatchValue(value=page)))
+        # A chunk can span pages (page_start..page_end), so match every chunk
+        # whose range COVERS the requested page — not only those that start on
+        # it, which would miss a chunk beginning on an earlier page.
+        must.append(FieldCondition(key="page_start", range=Range(lte=page)))
+        must.append(FieldCondition(key="page_end", range=Range(gte=page)))
     client = storage.get_client()
     try:
         points, _ = client.scroll(

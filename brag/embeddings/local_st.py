@@ -18,6 +18,17 @@ class SentenceTransformerEmbedder(EmbeddingBackend):
         from sentence_transformers import SentenceTransformer
         self._model = SentenceTransformer(config.EMBEDDING_MODEL)
         self.dim = self._model.get_sentence_embedding_dimension()
+        # The Qdrant collection is created with config.EMBEDDING_DIM; if the
+        # model's real dimension differs (e.g. EMBEDDING_MODEL overridden but
+        # EMBEDDING_DIM left at the profile default), every upsert would crash
+        # with an opaque dimension error. Fail early and clearly instead.
+        if self.dim != config.EMBEDDING_DIM:
+            raise ValueError(
+                f"Embedding model '{config.EMBEDDING_MODEL}' produces "
+                f"{self.dim}-dim vectors, but EMBEDDING_DIM is "
+                f"{config.EMBEDDING_DIM}. Set EMBEDDING_DIM={self.dim} in .env "
+                f"(and re-ingest, since the collection name encodes the dim)."
+            )
 
     def embed_document(self, text: str) -> list[float]:
         return self._model.encode(text[:MAX_INPUT_CHARS]).tolist()
