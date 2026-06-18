@@ -1,3 +1,5 @@
+![BRAG — talk to your own sources, with every answer cited](docs/assets/header.en.svg)
+
 # BRAG — Building Retrieval-Augmented Generation
 
 **🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.0** ([changes](#versions))
@@ -25,6 +27,8 @@ practitioners who need to stay on top of standards, reports, bills of quantities
 and trade literature in everyday project work. **No programming required.**
 
 ---
+
+![From PDF to cited answer: drop a document into sources, it is indexed, you ask Claude, you get a page-cited answer](docs/assets/flow.en.svg)
 
 ## What you do with it
 
