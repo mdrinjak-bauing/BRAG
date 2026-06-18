@@ -291,6 +291,14 @@ ein GitHub-Issue](../../issues): mit Betriebssystem, genutztem Profil, was du
 getan hast und was passiert ist, plus der Status-Ausgabe von oben (Details in
 [CONTRIBUTING](CONTRIBUTING.md)).
 
+> **Neu im Terminal?** Ein paar Schritte — hier und in den
+> Installationsanleitungen — verlangen, dass du einen Befehl ins Terminal
+> (macOS) bzw. die Eingabeaufforderung (Windows) tippst oder ein kleines Skript
+> ausführst. Falls das neu für dich ist: lass dir Zeit und lies jeden Schritt in
+> Ruhe — und du musst das nicht allein machen: ein KI-Assistent wie
+> [Claude Code](https://claude.com/claude-code) führt dich Schritt für Schritt
+> durch die Befehle und erklärt dir, was jeder davon tut.
+
 Der erste Start lädt einmalig ~3 GB Analyse-Modelle. Ausführlich, mit „was du
 siehst": [Installation macOS](docs/INSTALL_MAC.de.md) ·
 [Windows](docs/INSTALL_WINDOWS.de.md).

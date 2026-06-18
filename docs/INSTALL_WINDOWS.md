@@ -2,6 +2,11 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](INSTALL_WINDOWS.de.md)**
 
+> **First time using the Command Prompt?** This guide has you run a couple of
+> commands by hand. Take your time and read each step — and if anything is
+> unclear, an AI assistant like [Claude Code](https://claude.com/claude-code) can
+> walk you through it and explain what each command does.
+
 Time needed: about **15–20 minutes of active work** — you only need your mouse
 and the Command Prompt once, no programming required. On top of that, the first
 build and the one-time model downloads run mostly **unattended** in the
