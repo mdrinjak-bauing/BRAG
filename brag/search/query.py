@@ -21,7 +21,8 @@ def _get_reranker():
     global _reranker
     if _reranker is None:
         from sentence_transformers import CrossEncoder
-        _reranker = CrossEncoder(config.RERANKER_MODEL)
+        kwargs = {"revision": config.RERANKER_REVISION} if config.RERANKER_REVISION else {}
+        _reranker = CrossEncoder(config.RERANKER_MODEL, **kwargs)
     return _reranker
 
 

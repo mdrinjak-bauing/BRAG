@@ -25,6 +25,18 @@ jobs:
           pip install pip-audit
           pip-audit -r requirements.txt
 
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Unit tests (light — no heavy runtime deps)
+        run: |
+          pip install pytest
+          python -m pytest tests/test_unit.py -q
+
   docker-build:
     runs-on: ubuntu-latest
     steps:
