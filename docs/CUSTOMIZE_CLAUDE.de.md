@@ -1,21 +1,28 @@
-# Claude auf deine Forschung einstellen
+# Claude auf deine Arbeit einstellen
 
 **🇬🇧 [English](CUSTOMIZE_CLAUDE.md) | 🇩🇪 Deutsch**
 
 Das Wirkungsvollste, was du nach der Installation tun kannst, ist, die Datei
-**`wissensspeicher/CLAUDE.md`** auszufüllen. Sie wird von Claude automatisch gelesen (in
-Claude-Desktop-Projekten und in Claude Code) und macht aus einem generischen
-Assistenten einen, der dein Fachgebiet, deine Konventionen und deinen Korpus
-kennt.
+**`wissensspeicher/CLAUDE.md`** auszufüllen. Sie wird von Claude automatisch
+gelesen (in Claude-Desktop-Projekten und in Claude Code) und macht aus einem
+generischen Assistenten einen, der dein Fachgebiet, deine Konventionen und
+deinen Korpus kennt — **egal ob du forschst oder in der Praxis arbeitest.**
+
+> **Forschung oder Praxis?** BRAG funktioniert für beides. Eine Wissenschaftlerin
+> will saubere Zitate und Disziplin-Konventionen; ein Bauleiter will den
+> Überblick über Verträge, Normen und Leistungsverzeichnisse eines konkreten
+> Projekts. Beide profitieren von **belegten** Antworten — es unterscheiden sich
+> nur die Konventionen. Schreib in die CLAUDE.md einfach *deinen* Fall.
 
 ## Was in die CLAUDE.md gehört
 
 | Abschnitt | Warum es zählt |
 |---|---|
-| Wer ich bin / meine Forschung | Claude passt Tiefe und Terminologie an dein Fach an |
+| Wer ich bin / woran ich arbeite | Claude passt Tiefe und Terminologie an dein Fach **oder dein Projekt** an |
 | Ordner-Aufbau | Claude weiß, was Beleg ist (`sources/`) und was dein eigenes Denken (`wiki/`) |
-| Wie gesucht wird | Die Anweisung „immer vor dem Antworten suchen, mehrere Formulierungen probieren" sorgt dafür, dass Antworten belegt sind statt erfunden |
-| Zitierstil | Claude zitiert so, wie es deine Disziplin erwartet, mit Seitenzahlen |
+| Wie gesucht wird | „Immer vor dem Antworten suchen, mehrere Formulierungen probieren" sorgt dafür, dass Antworten belegt sind statt erfunden |
+| Beleg-/Zitierstil | Claude verweist so, wie es dein Umfeld erwartet — Disziplin-Zitat *oder* **Norm + Abschnitt**, **Vertrag + Paragraf**, **Dokument + Datum** |
+| Projekt-/Mandatskontext (Praxis) | Mischt dein Korpus mehrere Projekte/Kunden? Sag Claude, immer per `meta_filter` auf das aktuelle Projekt einzugrenzen, damit keine fremden Vorgänge hineinrutschen |
 | Konventionen | Sprache, Notiz-Benennung, alles, was du sonst jede Sitzung wiederholen müsstest |
 
 **Faustregel:** Wenn du Claude zweimal dieselbe Sache korrigierst, gehört die
@@ -23,13 +30,15 @@ Korrektur in die CLAUDE.md.
 
 ## Was in die AGENTS.md gehört
 
-`wissensspeicher/AGENTS.md` enthält **Zusatzregeln für autonomes Arbeiten** — wenn Claude
-eigenständig agiert (lange Aufgaben, geplante Jobs, Agenten-Sitzungen) statt im
-Gespräch mit dir. Typischer Inhalt: „nie Dateien in sources/ löschen",
+`wissensspeicher/AGENTS.md` enthält **Zusatzregeln für autonomes Arbeiten** — wenn
+Claude eigenständig agiert (lange Aufgaben, geplante Jobs, Agenten-Sitzungen)
+statt im Gespräch mit dir. Typischer Inhalt: „nie Dateien in sources/ löschen",
 „Änderungen vorschlagen statt massenhaft zu editieren", „zusammenfassen, was
 geändert wurde". Kurz halten; alles aus der CLAUDE.md wird übernommen.
 
-## Drei Beispiel-Einstiege
+## Beispiel-Einstiege
+
+### Aus der Forschung
 
 **Geschichtsprofessorin:**
 > Ich bin Professorin für Geschichte der Frühen Neuzeit. Mein Korpus enthält
@@ -50,8 +59,36 @@ geändert wurde". Kurz halten; alles aus der CLAUDE.md wird übernommen.
 > nützlich, biete an, ihn als Passage unter dem Thema dieses Kapitels zu
 > speichern.
 
+### Aus der Praxis
+
+**Tragwerksplaner (Statikbüro):**
+> Ich bemesse Tragwerke nach Eurocode. Mein Korpus enthält Normen (DIN EN
+> 1990–1999 mit nationalen Anhängen), bauaufsichtliche Zulassungen (abZ/aBG)
+> und Herstellerunterlagen. Wenn ich nach einem Wert oder Beiwert frage, prüfe
+> immer `chunk_type="table"`-Treffer und nenne **Norm + Abschnitt/Gleichung**,
+> aus dem der Wert stammt. Erfinde nie einen Beiwert — steht er nicht im
+> Treffer, sag das ausdrücklich.
+
+**Bauleiter / Projektsteuerung:**
+> Ich betreue mehrere Bauvorhaben gleichzeitig. Mein Korpus mischt Verträge,
+> Leistungsverzeichnisse, VOB/B-Auszüge, Protokolle und Schriftverkehr — pro
+> Projekt in einem eigenen Unterordner mit `_meta.txt` (`project: …`). Wenn ich
+> ein Projekt nenne, grenze **immer** per `meta_filter` darauf ein, damit keine
+> fremden Vorgänge hineinrutschen. Verweise mit **Dokument + Datum + Abschnitt**
+> und antworte nüchtern und knapp.
+
+**Nachtrags- / Claim-Management:**
+> Ich prüfe Nachträge. Suche in Verträgen, Leistungsverzeichnissen und
+> Schriftverkehr nach der vertraglichen Grundlage. Zitiere wörtlich mit
+> **Dokument, Datum und Paragraf/Position**. Wenn ein Treffer eine
+> Anspruchsgrundlage stützt, biete an, ihn als Passage unter dem Nachtragsthema
+> zu speichern. Schließe nie aus „nicht in den Top-Treffern" auf „nicht im
+> Vertrag" — sag, dass du es nicht belegen konntest.
+
 ## In Claude Desktop nutzen
 
-Lege in Claude Desktop ein **Projekt** für deine Forschung an und füge den
-Inhalt deiner CLAUDE.md in die Projektanweisungen ein — dann startet jeder Chat
-in diesem Projekt mit geladenem Kontext.
+Lege in Claude Desktop ein **Projekt** an — für dein Forschungsthema *oder* für
+ein konkretes Bauvorhaben/Mandat — und füge den Inhalt deiner CLAUDE.md in die
+Projektanweisungen ein; dann startet jeder Chat in diesem Projekt mit geladenem
+Kontext. Betreust du mehrere Vorhaben, lohnt sich je ein eigenes Projekt mit
+projektspezifischen Regeln (und der passende `meta_filter` in der CLAUDE.md).

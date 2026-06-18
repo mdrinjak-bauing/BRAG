@@ -355,7 +355,7 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 - **[How it works — in plain words](docs/HOW_IT_WORKS.md)** (no tech background needed)
 - [Install on macOS](docs/INSTALL_MAC.md) · [Install on Windows](docs/INSTALL_WINDOWS.md)
 - [Backend profiles](docs/PROFILES.md) · [Connect Obsidian + notebook MCP](docs/OBSIDIAN.md)
-- [Customize Claude for your research](docs/CUSTOMIZE_CLAUDE.md)
+- [Customize Claude for your work](docs/CUSTOMIZE_CLAUDE.md)
 - [Which Claude surface? Chat, Cowork or Code](docs/WHICH_CLAUDE.md)
 - [FAQ & troubleshooting](docs/FAQ.md) · [Architecture](docs/ARCHITECTURE.md)
 - ⚖️ [Legal notices (privacy, copyright)](docs/LEGAL.md)

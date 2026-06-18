@@ -376,7 +376,7 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 - **[So funktioniert's — in einfachen Worten](docs/HOW_IT_WORKS.de.md)** (kein Technik-Wissen nötig)
 - [Installation macOS](docs/INSTALL_MAC.de.md) · [Installation Windows](docs/INSTALL_WINDOWS.de.md)
 - [Backend-Profile](docs/PROFILES.de.md) · [Obsidian + Notizbuch-MCP anbinden](docs/OBSIDIAN.de.md)
-- [Claude auf deine Forschung einstellen](docs/CUSTOMIZE_CLAUDE.de.md)
+- [Claude auf deine Arbeit einstellen](docs/CUSTOMIZE_CLAUDE.de.md)
 - [Welche Claude-Oberfläche? Chat, Cowork oder Code](docs/WHICH_CLAUDE.de.md)
 - [FAQ & Fehlersuche](docs/FAQ.de.md) · [Architektur](docs/ARCHITECTURE.de.md)
 - ⚖️ [Rechtliche Hinweise (Datenschutz, Urheberrecht)](docs/LEGAL.de.md)
