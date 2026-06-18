@@ -384,6 +384,11 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 - **KI-Ausgaben prüfen.** KI-generierte Antworten und Zitate können falsch oder
   erfunden sein; prüfe sie stets anhand der verlinkten Originalseite, bevor du
   dich darauf verlässt oder sie zitierst.
+- **Dein API-Schlüssel bleibt lokal.** Er wird nur in einer lokalen
+  `.env`-Datei auf deinem Rechner gespeichert (nur für dich lesbar) und dient
+  ausschließlich dazu, deine eigenen Anfragen beim gewählten Anbieter zu
+  authentifizieren — nie an die Macher dieser App oder an Dritte gesendet.
+  Lokale Profile brauchen gar keinen Schlüssel.
 - **Datenschutz — die ehrliche Faustregel.** Lokale Profile: nichts verlässt
   den Rechner. Cloud-Profile: Textauszüge (und bei Vision die Abbildungsbilder)
   gehen an den Anbieter, und der **kostenlose Gemini-Tarif** darf sie auswerten.

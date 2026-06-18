@@ -64,7 +64,12 @@ beantwortest du in einfacher Sprache:
 - **Wo soll die KI rechnen?** (Cloud oder lokal) — für den Start „Cloud".
 - **Anbieter & Schlüssel:** Gemini wählen und den kopierten Schlüssel einfügen.
   Der Assistent prüft ihn **live** und zeigt einen grünen Haken, wenn er gültig
-  ist.
+  ist. Dein API-Schlüssel wird nur in einer lokalen `.env`-Datei auf deinem
+  Rechner gespeichert (nur für dich lesbar) und dient ausschließlich dazu, deine
+  eigenen Anfragen beim gewählten Anbieter zu authentifizieren — er wird nie an
+  die Macher dieser App oder an Dritte gesendet; die Live-Prüfung sendet
+  lediglich eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu
+  bestätigen. Lokale Profile (Ollama / LM Studio) brauchen gar keinen Schlüssel.
 - **Sprache deiner Dokumente** und optional ein eigener Wissensspeicher (eigener Pfad).
 
 Am Ende schreibt der Assistent die ganze Konfiguration selbst — inklusive des

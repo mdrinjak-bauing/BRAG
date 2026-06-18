@@ -37,6 +37,15 @@ dass dort „running" steht und du Internet hast, dann mache einfach erneut eine
 Doppelklick auf das Setup. Es setzt aus dem Cache fort und fängt nicht von vorn
 an.
 
+**Was passiert mit meinem API-Schlüssel?**
+Dein API-Schlüssel wird nur in einer lokalen `.env`-Datei auf deinem Rechner
+gespeichert (nur für dich lesbar) und dient ausschließlich dazu, deine eigenen
+Anfragen beim gewählten Anbieter (Gemini / OpenAI / Anthropic) zu
+authentifizieren. Er wird nie an die Macher dieser App oder an Dritte gesendet;
+die Live-Prüfung beim Setup sendet lediglich eine kleine Testanfrage an diesen
+Anbieter, um die Gültigkeit zu bestätigen. Lokale Profile (Ollama / LM Studio)
+brauchen gar keinen Schlüssel.
+
 **macOS: Ein Doppelklick auf `setup.command` bewirkt nichts (kein Fenster).**
 Das ist etwas anderes als die Gatekeeper-Warnung „nicht verifizierter Entwickler"
 (dafür: Rechtsklick → Öffnen). Wenn *gar kein* Fenster erscheint, hat die Datei

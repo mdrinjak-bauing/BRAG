@@ -62,7 +62,12 @@ browser opens automatically** with the setup assistant. There you answer, in
 plain language:
 - **Where should the AI run?** (cloud or local) — pick "Cloud" to start.
 - **Provider & key:** choose Gemini and paste the copied key. The assistant
-  checks it **live** and shows a green check when it's valid.
+  checks it **live** and shows a green check when it's valid. Your key is stored
+  only in a local `.env` file on your computer (owner-readable only) and is used
+  solely to authenticate your own requests to the provider you chose — it is
+  never sent to the makers of this app or any third party; the live check just
+  sends one small test request to that provider to confirm the key works. Local
+  profiles (Ollama / LM Studio) need no key at all.
 - **Your document language** and, optionally, a custom knowledge store folder.
 
 At the end the assistant writes the whole configuration itself — including the
