@@ -87,7 +87,7 @@ auftauchen.
 | Deine Dokumente & Notizen | der Ordner `wissensspeicher/` auf deinem Rechner | einfache PDF-/Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
 | Der Suchindex (Qdrant) | in Docker, in einem verwalteten Speicherbereich | jederzeit aus deinem Wissensspeicher neu aufbaubar; nie in iCloud/OneDrive legen |
 | Programmcode & KI-Modelle | im Docker-Image | einmal beim ersten Build geladen (~3 GB); fasst du nie an |
-| Einstellungen & API-Schlüssel | die Datei `.env` im Projektordner | vom Setup-Assistenten geschrieben; nie teilen |
+| Einstellungen & API-Schlüssel | die Datei `.env` im Projektordner | vom Setup-Assistenten geschrieben; der Schlüssel bleibt hier (nur für dich lesbar), dient nur der Authentifizierung deiner eigenen Anfragen beim gewählten Anbieter und wird nie an die Macher der App oder an Dritte gesendet |
 
 Der wichtige Punkt: **deine Bibliothek (`sources/`) und dein Notizbuch (`wiki/`,
 `notes/`) sind ganz normale Dateien, die dir gehören.** Die Datenbank ist nur

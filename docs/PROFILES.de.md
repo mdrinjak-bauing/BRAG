@@ -46,6 +46,12 @@ Bilder deiner Abbildungen — nie die ganzen Dateien, nie die Embeddings.
 | **OpenAI** | OpenAI / ChatGPT | `gpt-4o-mini` | <https://platform.openai.com/api-keys> |
 | **Claude** | Anthropic Claude | `claude-haiku-4-5` | <https://console.anthropic.com/> |
 
+Dein Schlüssel bleibt auf deinem Rechner: Er wird nur in der lokalen
+`.env`-Datei gespeichert (nur für dich lesbar) und dient ausschließlich dazu,
+deine eigenen Anfragen beim gewählten Anbieter zu authentifizieren — nie an die
+Macher dieser App oder an Dritte gesendet. Die lokalen Profile weiter unten
+brauchen gar keinen Schlüssel.
+
 Der kostenlose Gemini-Tarif deckt einen gleichmäßigen persönlichen Gebrauch ab;
 umfangreiches Masseneinlesen kann an Tageslimits stoßen (das System wartet und
 versucht es automatisch erneut). OpenAI und Anthropic rechnen pro Token ab — die

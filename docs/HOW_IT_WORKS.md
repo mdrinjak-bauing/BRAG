@@ -81,7 +81,7 @@ To check everything is running, open a terminal in the project folder and type
 | Your documents & notes | the `wissensspeicher/` folder on your computer | plain PDF and Markdown files — yours, back them up like any folder |
 | The search index (Qdrant) | inside Docker, in a managed storage area | rebuildable anytime from your knowledge store; never put it in iCloud/OneDrive |
 | The program code & AI models | inside the Docker image | downloaded once at first build (~3 GB); you never touch it |
-| Your settings & API key | the `.env` file in the project folder | written by the setup assistant; never shared |
+| Your settings & API key | the `.env` file in the project folder | written by the setup assistant; the key stays here (owner-readable), is used only to authenticate your own requests to your chosen provider, and is never sent to the app's makers or any third party |
 
 The important point: **your library (`sources/`) and your notebook (`wiki/`,
 `notes/`) are normal files you own.** The database is just a derived index — if

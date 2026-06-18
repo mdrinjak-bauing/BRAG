@@ -42,6 +42,11 @@ figures too — never the whole files, never the embeddings.
 | **OpenAI** | OpenAI / ChatGPT | `gpt-4o-mini` | <https://platform.openai.com/api-keys> |
 | **Claude** | Anthropic Claude | `claude-haiku-4-5` | <https://console.anthropic.com/> |
 
+Your key stays on your machine: it is stored only in the local `.env` file
+(owner-readable) and used solely to authenticate your own requests to the
+provider you chose — never sent to the makers of this app or any third party.
+The local profiles below need no key at all.
+
 Gemini's free tier covers steady personal use; heavy bulk indexing may hit
 daily limits (the system backs off and retries automatically). OpenAI and
 Anthropic are paid per token — the cheapest models above keep this to a few
