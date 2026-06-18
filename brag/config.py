@@ -93,11 +93,31 @@ CHAPTER_CONTEXT_CHARS = int(_env("CHAPTER_CONTEXT_CHARS", 10000))
 VISION_ENABLED = _env("VISION_ENABLED", "true").lower() == "true"
 VISION_IMAGE_SCALE = float(_env("VISION_IMAGE_SCALE", 2.0))
 
-# ── Retrieval ───────────────────────────────────────────────────
+# ── Retrieval / reranking ───────────────────────────────────────
 RERANKER_MODEL = _env("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
-RERANK_ENABLED = _env("RERANK_ENABLED", "true").lower() == "true"
-RERANK_PREFETCH = int(_env("RERANK_PREFETCH", 150))
-RERANK_FUSION_LIMIT = int(_env("RERANK_FUSION_LIMIT", 80))
+
+# The LOCAL cross-encoder reranker is the main CPU cost of a search — its load
+# scales with the number of candidate passages it scores. RERANK_PROFILE is a
+# single dial that trades search speed against ranking quality. Presets
+# (prefetch is PER vector; "rerank" = passages the cross-encoder scores):
+#   off       reranking disabled — fastest; results come straight from RRF fusion
+#   eco       load 120 (60+60), rerank 40   ← default, gentle on consumer PCs
+#   balanced  load 120 (60+60), rerank 60
+#   full      load 120 (60+60), rerank 120  ← strong machines, best quality
+# Any single value can still be pinned via RERANK_ENABLED / RERANK_PREFETCH /
+# RERANK_FUSION_LIMIT, which override the preset.
+RERANK_PROFILE = _env("RERANK_PROFILE", "eco").lower()
+_RERANK_PRESETS = {
+    "off":      {"enabled": False, "prefetch": 60, "fusion": 40},
+    "eco":      {"enabled": True,  "prefetch": 60, "fusion": 40},
+    "balanced": {"enabled": True,  "prefetch": 60, "fusion": 60},
+    "full":     {"enabled": True,  "prefetch": 60, "fusion": 120},
+}
+_rerank = _RERANK_PRESETS.get(RERANK_PROFILE, _RERANK_PRESETS["eco"])
+
+RERANK_ENABLED = _env("RERANK_ENABLED", str(_rerank["enabled"]).lower()).lower() == "true"
+RERANK_PREFETCH = int(_env("RERANK_PREFETCH", _rerank["prefetch"]))
+RERANK_FUSION_LIMIT = int(_env("RERANK_FUSION_LIMIT", _rerank["fusion"]))
 # Cross-encoder batch size — bounds peak memory and keeps reranking responsive
 # on weak CPUs (the reranker scores up to RERANK_FUSION_LIMIT pairs per search).
 RERANK_BATCH_SIZE = int(_env("RERANK_BATCH_SIZE", 16))

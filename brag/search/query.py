@@ -1,11 +1,13 @@
 """Hybrid search: dense + BM25 prefetch → RRF fusion → cross-encoder
 reranking → source diversity.
 
-Parameter defaults (prefetch 150, fusion limit 80, no rerank score floor)
-were validated against a retrieval gold standard in the originating system.
-Notably: cross-encoder sigmoid scores are NOT absolutely calibrated — any
-hard score floor cuts legitimate top hits on factual queries, so scores are
-reported transparently instead of filtered.
+Candidate breadth and how many passages the (local, CPU-bound) cross-encoder
+scores are set by RERANK_PROFILE (config.py): the default "eco" preset loads
+120 candidates (60 + 60) and reranks the top 40 — gentle on consumer CPUs;
+"balanced"/"full" rerank more, "off" skips reranking entirely. The "no hard
+score floor" design stands regardless: cross-encoder sigmoid scores are NOT
+absolutely calibrated — any floor cuts legitimate top hits on factual queries,
+so scores are reported transparently instead of filtered.
 """
 
 from brag import config

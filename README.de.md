@@ -167,11 +167,14 @@ Jeder Abschnitt bekommt zwei „Fingerabdrücke": einen für die **Bedeutung**
 
 1. **Zwei Suchen gleichzeitig** — Bedeutungssuche (findet Sinnverwandtes, auch
    mit anderen Worten) **und** Stichwortsuche (BM25; findet exakte Begriffe wie
-   Abkürzungen, Paragraphen, Aktenzeichen). Je ~150 Kandidaten.
-2. **Zusammenführen (RRF)** — beide Listen verschmelzen; ~80 bleiben übrig.
+   Abkürzungen, Paragraphen, Aktenzeichen). Je ~60 Kandidaten.
+2. **Zusammenführen (RRF)** — beide Listen verschmelzen; ~40 bleiben übrig.
 3. **Reranker** — ein Cross-Encoder liest deine Frage gemeinsam mit jeder Stelle
    und sortiert nach echter Passung. Der Unterschied zwischen „enthält die
-   Suchworte" und „beantwortet die Frage".
+   Suchworte" und „beantwortet die Frage". Er läuft **lokal auf deiner CPU** —
+   der teuerste Teil einer Suche — daher ist sein Aufwand einstellbar:
+   `RERANK_PROFILE=off/eco/balanced/full` (Standard `eco`; auf schwachen PCs
+   `off`/`eco`, auf starken `full`).
 4. **Kürzen** — die besten Treffer bleiben (Standard 15, max. 3 je Quelle).
 5. **Antworten** — Claude formuliert aus genau diesen Stellen, jede Aussage mit
    Quelle und Seite belegt.

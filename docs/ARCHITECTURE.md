@@ -50,9 +50,11 @@ folder, Claude Desktop as the user interface.
 
 ## Query pipeline
 
-dense + sparse prefetch (150 each) → reciprocal rank fusion → top 80 →
+dense + sparse prefetch (60 each) → reciprocal rank fusion → top 40 →
 cross-encoder reranking (`BAAI/bge-reranker-v2-m3`) → source-diversity cap
-(max 3 chunks/source) → top k (15 by default). Rerank scores are reported, never used as a
+(max 3 chunks/source) → top k (15 by default). These breadths follow the
+`RERANK_PROFILE` dial (default `eco` = load 120, rerank 40; also
+`off`/`balanced`/`full`). Rerank scores are reported, never used as a
 hard filter — cross-encoder scores are not absolutely calibrated, and any
 floor cuts legitimate top hits on factual queries.
 

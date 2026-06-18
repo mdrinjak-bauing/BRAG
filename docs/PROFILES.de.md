@@ -21,7 +21,10 @@ Der Cross-Encoder-Reranker läuft in jedem Profil ohnehin schon lokal auf der
 CPU — die Embeddings ebenfalls lokal zu rechnen, ist also konsequent. Der
 Kompromiss: Der erste Einlesevorgang lädt das arctic-Modell herunter (~2,3 GB
 in den Modell-Cache), und das Masseneinlesen auf einer schwachen CPU ist
-langsamer als eine Cloud-Embedding-API es wäre.
+langsamer als eine Cloud-Embedding-API es wäre. Der Reranker ist zudem der
+größte CPU-Posten *jeder Suche* — auf schwachen Rechnern per `RERANK_PROFILE`
+(`off`/`eco`/`balanced`/`full`, Standard `eco`) drosseln oder abschalten; siehe
+`.env.example`.
 
 ## Schnelle Entscheidungshilfe
 

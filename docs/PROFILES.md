@@ -17,7 +17,10 @@ classification. You choose it once during setup and can switch later.
 The cross-encoder re-ranker already runs locally on CPU for every profile, so
 doing the embeddings locally too is consistent. The trade-off: the first
 ingest downloads the arctic model (~2.3 GB into the model cache) and bulk
-ingest on a weak CPU is slower than a cloud embedding API would be.
+ingest on a weak CPU is slower than a cloud embedding API would be. The
+re-ranker is also the main CPU cost of each *search* — on a weak machine, lower
+it (or turn it off) with `RERANK_PROFILE` (`off`/`eco`/`balanced`/`full`,
+default `eco`); see `.env.example`.
 
 ## Quick decision guide
 

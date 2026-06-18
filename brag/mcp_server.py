@@ -59,7 +59,7 @@ def _format_hit(i: int, hit: dict) -> str:
 def search(query: str, top_k: int = 15, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
            source_file: str = "", meta_filter: str = "",
-           reranking: bool = True) -> str:
+           reranking: bool | None = None) -> str:
     """Hybrid search (semantic + keyword) over the document corpus.
 
     Try multiple phrasings (synonyms, English/native-language variants).
