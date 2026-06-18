@@ -150,6 +150,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 language=str(body.get("language", "english")),
                 vault_path=str(body.get("vault_path", "")).strip() or "./wissensspeicher",
                 llm_model=str(body.get("llm_model", "")).strip(),
+                rerank_profile=str(body.get("rerank_profile", "eco")).strip() or "eco",
+                vision_enabled=bool(body.get("vision_enabled", True)),
             )
             steps.append({"ok": True, "message": "Configuration saved"})
         except OSError as e:
@@ -172,10 +174,23 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
         setup_core.mark_setup_complete()
         steps.append({"ok": True, "message": "Restarting with your settings…"})
-        self._send_json(200, {
+        response = {
             "ok": True, "steps": steps,
             "claude_manual_snippet": not claude_ok,
-        })
+        }
+        if not claude_ok:
+            # Hand the exact JSON entry back so the user can paste it directly,
+            # instead of being sent to the FAQ.
+            response["claude_snippet"] = json.dumps(
+                {"mcpServers": {"academic-rag-and-second-brain": setup_core.MCP_ENTRY}},
+                indent=2,
+            )
+            response["claude_config_path"] = (
+                "claude_desktop_config.json — on macOS at "
+                "~/Library/Application Support/Claude/claude_desktop_config.json, "
+                "on Windows at %APPDATA%\\Claude\\claude_desktop_config.json"
+            )
+        self._send_json(200, response)
 
     # ── helpers ─────────────────────────────────────────────────
     def _host_ok(self) -> bool:
