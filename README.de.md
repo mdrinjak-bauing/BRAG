@@ -30,23 +30,29 @@ Forschende, Lehrende und Promovierende — und genauso Praktiker, die im Projekt
 
 ## Was du damit machst
 
-- 🔎 **Finden statt blättern** — *„Was sagt mein Korpus zum Nachtragsmanagement?"*
-  Antwort mit Seitenbeleg, ein Klick öffnet das PDF an genau der Stelle.
-- 📊 **Zahlen & Tabellen ziehen** — *„Finde Tabellen mit Kostenkennzahlen zu
-  Nacharbeit"* — auch Abbildungen werden inhaltlich beschrieben und sind so
-  auffindbar.
-- ✍️ **Schreiben mit Belegen** — beim Lesen zitierfähige Passagen sammeln, beim
-  Entwerfen *„Bau den Absatz aus diesen Passagen, Belege beibehalten."*
-- 🎓 **Lehre vorbereiten** — *„Entwirf drei Klausurfragen aus Kapitel 4, mit
-  Seitenangaben."*
-- 🧠 **Denken festhalten** — Zitate landen automatisch in deinem Wissensspeicher,
-  eigene Schlussfolgerungen optional über Obsidian; ein neuer Chat Tage später
-  macht genau dort weiter, wo der letzte aufhörte.
-- 🗂️ **Nach Projekt/Kurs filtern** — *„Such **nur im Projekt Schulzentrum**:
-  Welche Position deckt die Erdarbeiten ab?"*
-- 🔬 **Eine Idee entwickeln** — *„Was sagen meine Quellen zu Reifegradmodellen?
-  Wo widersprechen sie sich?"* — das Ergebnis als Konzeptnotiz festhalten und
-  Tage später im neuen Chat genau dort weitermachen.
+- 🔎 **Finden statt blättern** — *„Was sagt die VOB/B zur Behinderungsanzeige?"*
+  oder *„Was steht in meinen Unterlagen zum Nachtragsmanagement?"* Antwort mit
+  Seitenbeleg, ein Klick öffnet das PDF an genau der Stelle.
+- 📑 **Verträge, Normen & LV durchsuchen** — *„Welche Frist nennt der Bauvertrag
+  für die Mängelrüge?"*, *„Welche LV-Position deckt die Erdarbeiten ab?"* — die
+  richtige Klausel oder Position seitengenau statt stundenlang blättern.
+- 🗂️ **Bautagebuch & Schriftverkehr auswerten** — *„Wann wurde die Behinderung
+  an der Attika erstmals dokumentiert?"* — quer über Tagesberichte, Protokolle
+  und Baustellen-Mails, jede Aussage belegt.
+- 📊 **Zahlen & Tabellen ziehen** — *„Zeig mir die Mengen und Kostenkennzahlen
+  aus der Kalkulation"* — auch Tabellen und Abbildungen werden inhaltlich erfasst
+  und sind so auffindbar.
+- ✍️ **Schreiben mit Belegen** — Entwurf einer Behinderungsanzeige, einer
+  Aktennotiz oder eines Nachtrags: *„Bau den Text aus diesen Passagen, Belege
+  beibehalten."* Zitierfähige Stellen sammelst du schon beim Lesen.
+- 🏗️ **Nach Projekt/Baustelle filtern** — *„Such **nur im Projekt Schulzentrum**:
+  Welche Position deckt die Erdarbeiten ab?"* — jedes Vorhaben sauber getrennt.
+- 🧠 **Entscheidungen & Wissen festhalten** — Zitate landen automatisch in deinem
+  Wissensspeicher, eigene Schlussfolgerungen optional über Obsidian; ein neuer
+  Chat Tage später macht genau dort weiter, wo der letzte aufhörte.
+- 🎓 **… und natürlich Forschung & Lehre** — *„Entwirf drei Prüfungsfragen aus
+  Kapitel 4, mit Seitenangaben"* oder *„Wo widersprechen sich meine Quellen zu
+  Reifegradmodellen?"*
 
 Der Kerngedanke: **Chats vergessen — dein Wissensspeicher nicht.** Wissen sammelt sich in
 deinen Dateien an, nicht in einem flüchtigen Chatverlauf.

@@ -30,23 +30,28 @@ Researchers, lecturers and PhD students — and just as much practitioners who n
 
 ## What you do with it
 
-- 🔎 **Find instead of leaf through** — *"What does my corpus say about
-  change-order management?"* Answer with a page citation, one click opens the
-  PDF right there.
-- 📊 **Pull numbers & tables** — *"Find tables with cost figures on rework"* —
-  figures are described by content too, so they're findable.
-- ✍️ **Write with citations** — collect quotable passages while reading, then
-  *"draft the paragraph from these passages, keep the citations."*
-- 🎓 **Prep teaching** — *"Draft three exam questions from chapter 4, with page
-  references."*
-- 🧠 **Capture thinking** — quotes land in your knowledge store automatically,
-  your own conclusions optionally via Obsidian; a fresh chat days later picks up
-  exactly where the last one stopped.
-- 🗂️ **Filter by project/course** — *"Search **only in the School Center
-  project**: which position covers the earthworks?"*
-- 🔬 **Develop an idea** — *"What do my sources say about maturity models? Where
-  do they disagree?"* — write the result as a concept note and, days later in a
-  fresh chat, continue exactly there.
+- 🔎 **Find instead of leaf through** — *"What does the contract say about delay
+  notices?"* or *"What's in my files on change-order management?"* Answer with a
+  page citation; one click opens the PDF right there.
+- 📑 **Search contracts, standards & bills of quantities** — *"What deadline does
+  the contract set for a defect notice?"*, *"Which BoQ item covers the
+  earthworks?"* — the right clause or line, page-precise, instead of hours of
+  leafing.
+- 🗂️ **Mine site diaries & correspondence** — *"When was the obstruction at the
+  parapet first recorded?"* — across daily reports, minutes and site emails, every
+  statement cited.
+- 📊 **Pull numbers & tables** — *"Show the quantities and cost figures from the
+  estimate"* — tables and figures are captured by content too, so they're findable.
+- ✍️ **Write with citations** — draft a delay notice, a file note or a variation
+  claim: *"build the text from these passages, keep the citations."* You collect
+  quotable passages as you read.
+- 🏗️ **Filter by project/site** — *"Search **only in the School Center project**:
+  which item covers the earthworks?"* — every job kept cleanly apart.
+- 🧠 **Capture decisions & knowledge** — quotes land in your knowledge store
+  automatically, your own conclusions optionally via Obsidian; a fresh chat days
+  later picks up exactly where the last one stopped.
+- 🎓 **… and research & teaching too** — *"Draft three exam questions from chapter
+  4, with page numbers"* or *"Where do my sources disagree on maturity models?"*
 
 The core idea: **chats forget — your knowledge store doesn't.** Knowledge accumulates in
 your files, not in a throwaway chat log.
