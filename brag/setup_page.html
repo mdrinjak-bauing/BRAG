@@ -63,6 +63,10 @@
     <h2 data-i="intro_h"></h2>
     <p data-i="intro_p"></p>
     <p class="hint" data-i="intro_hint"></p>
+    <button class="big primary" onclick="quickstart()">
+      <span data-i="quick_start"></span><small data-i="quick_start_s"></small>
+    </button>
+    <p class="hint" data-i="quick_hint"></p>
     <div class="row"><span class="spacer"></span>
       <button class="primary" onclick="show('s1')" data-i="start"></button></div>
   </div>
@@ -102,6 +106,7 @@
     <button class="big primary" onclick="setProvider('gemini')">
       <span data-i="prov_gemini"></span><small data-i="prov_gemini_s"></small>
     </button>
+    <div class="callout" data-i="prov_gemini_warn"></div>
     <button class="big" onclick="setProvider('openai')">
       <span data-i="prov_openai"></span><small data-i="prov_openai_s"></small>
     </button>
@@ -204,6 +209,36 @@
     </details>
     <div class="row">
       <button onclick="back3()" data-i="back"></button><span class="spacer"></span>
+      <button class="primary" onclick="show('sperf')" data-i="continue"></button>
+    </div>
+  </div>
+
+  <!-- STEP sperf: reranker + vision (performance & privacy) -->
+  <div class="card step" id="sperf">
+    <span class="pill" data-i="badge_perf"></span>
+    <h2 data-i="perf_h"></h2>
+    <p class="hint" data-i="perf_intro"></p>
+    <h3 data-i="rerank_h"></h3>
+    <label class="check" style="display:block; margin:8px 0;">
+      <input type="radio" name="rerank" value="off">
+      <span data-i="rerank_off"></span>
+    </label>
+    <label class="check" style="display:block; margin:8px 0;">
+      <input type="radio" name="rerank" value="eco" checked>
+      <span data-i="rerank_eco"></span>
+    </label>
+    <label class="check" style="display:block; margin:8px 0;">
+      <input type="radio" name="rerank" value="full">
+      <span data-i="rerank_full"></span>
+    </label>
+    <h3 data-i="vision_h" style="margin-top:18px;"></h3>
+    <label class="check" style="display:block; margin:8px 0;">
+      <input type="checkbox" id="vision" checked>
+      <span data-i="vision_label"></span>
+    </label>
+    <p class="hint" data-i="vision_hint"></p>
+    <div class="row">
+      <button onclick="show('s3')" data-i="back"></button><span class="spacer"></span>
       <button class="primary" onclick="apply()" data-i="finish"></button>
     </div>
   </div>
@@ -237,6 +272,8 @@ const STR = {
     badge_intro:"Setup · 3–10 minutes", intro_h:"Your personal research knowledge base",
     intro_p:"Drop PDFs into a folder — then ask questions about your literature in Claude, with page-precise citations and one click to the original document.",
     intro_hint:"This assistant asks a few plain questions and configures everything, including Claude Desktop. Nothing is sent anywhere except what you explicitly choose.",
+    quick_start:"Quick start (recommended)", quick_start_s:"→ Gemini cloud with the economical search — fewest questions",
+    quick_hint:"Not sure? Quick start picks Gemini (cloud) with the economical search — you can change everything later by running setup again, without re-indexing.",
     start:"Start", back:"← Back", continue:"Continue", skip:"skip check, continue anyway",
     badge_step1:"Step 1 — where the AI runs",
     privacy_h:"Do your documents contain confidential data that must not leave your computer?",
@@ -253,6 +290,7 @@ const STR = {
     prov_openai:"OpenAI (ChatGPT)", prov_openai_s:"→ gpt-4o-mini, the cheapest capable model",
     prov_anthropic:"Anthropic (Claude)", prov_anthropic_s:"→ Claude Haiku, the cheapest Claude model",
     prov_anthropic_note:"Good to know: with every provider the “meaning index” is built locally on your computer (no GPU needed, just a bit slower on the very first run). The provider is used only for the AI text work — writing context, describing figures. That means you can switch provider later without re-indexing, but the text of your documents is sent to the provider for that text work.",
+    prov_gemini_warn:"Free tier: Google may use submitted inputs to improve its products and humans may review them — not for confidential or personal content. For sensitive data, pick the local option in the previous step.",
     key_h:"Your API key", key_step1:"Open", key_step2:"Create an API key", key_step3:"Copy it and paste it here:",
     key_privacy:"What happens to your key: it is saved only in a local file (.env) on your computer — never sent to the makers of this app or any third party. It is used solely to authenticate your own requests to the provider you picked. Checking it sends one small test request to that provider to confirm it is valid.",
     key_check:"Check key & continue",
@@ -269,6 +307,16 @@ const STR = {
     doclang_p:"This tunes the keyword search and the language of generated notes. Mixed corpora: pick the majority language.",
     advanced:"Advanced options", adv_folder:"Knowledge folder — by default wissensspeicher/ next to this program. To use another folder, enter its full path:",
     finish:"Finish setup", applying:"Setting things up…",
+    badge_perf:"Step 4 — performance & privacy",
+    perf_h:"Search quality and figure descriptions",
+    perf_intro:"Two last choices that tune how hard your computer works and what leaves it. The recommended defaults are already set — you can simply finish.",
+    rerank_h:"How thoroughly should results be re-sorted?",
+    rerank_off:"Off — fastest search, more noise. Hits without re-sorting. For very weak computers.",
+    rerank_eco:"Economical — recommended. Re-sorts the 40 most important passages. A good middle ground, gentle on normal notebooks.",
+    rerank_full:"Full — best result quality. Re-sorts up to 120 passages, noticeably slower on weak hardware.",
+    vision_h:"Describe figures and diagrams?",
+    vision_label:"Describe figures so they become searchable",
+    vision_hint:"With a cloud profile, figures are sent to the provider for description. Turning this off saves tokens and load, and sends no images.",
     done_badge:"✓ Setup complete", done_h:"How your second brain works",
     lib_h:"📚 Your library", lib_p:"Drop documents here — they are indexed automatically and cited with page numbers. You only collect; you never edit these.",
     note_h:"📓 Your notebook", note_p:"Your own thinking. Deliberately not in the search index — so you never cite your own notes as “evidence” by accident.",
@@ -283,6 +331,8 @@ const STR = {
     badge_intro:"Einrichtung · 3–10 Minuten", intro_h:"Deine persönliche Forschungs-Wissensbasis",
     intro_p:"PDFs in einen Ordner legen — dann in Claude Fragen zu deiner Literatur stellen, mit seitengenauen Belegen und einem Klick zum Original.",
     intro_hint:"Dieser Assistent stellt ein paar einfache Fragen und richtet alles ein, auch Claude Desktop. Es wird nichts versendet außer dem, was du ausdrücklich wählst.",
+    quick_start:"Schnellstart mit Empfehlung", quick_start_s:"→ Gemini-Cloud mit sparsamer Suche — die wenigsten Fragen",
+    quick_hint:"Unsicher? Schnellstart nimmt Gemini (Cloud) mit sparsamer Suche — du kannst später alles per erneutem Setup ändern, ohne neu zu indexieren.",
     start:"Start", back:"← Zurück", continue:"Weiter", skip:"Prüfung überspringen, trotzdem weiter",
     badge_step1:"Schritt 1 — wo die KI läuft",
     privacy_h:"Enthalten deine Dokumente vertrauliche Daten, die deinen Rechner nicht verlassen dürfen?",
@@ -299,6 +349,7 @@ const STR = {
     prov_openai:"OpenAI (ChatGPT)", prov_openai_s:"→ gpt-4o-mini, das günstigste leistungsfähige Modell",
     prov_anthropic:"Anthropic (Claude)", prov_anthropic_s:"→ Claude Haiku, das günstigste Claude-Modell",
     prov_anthropic_note:"Gut zu wissen: Bei jedem Anbieter wird der „Bedeutungs-Index“ lokal auf deinem Rechner erzeugt (keine GPU nötig, nur beim allerersten Lauf etwas langsamer). Der Anbieter wird nur für die KI-Textarbeit genutzt — Kontext schreiben, Abbildungen beschreiben. Deshalb kannst du den Anbieter später ohne Neu-Indexierung wechseln; der Text deiner Dokumente wird für diese Textarbeit aber an den Anbieter gesendet.",
+    prov_gemini_warn:"Gratis-Tarif: Google darf die übermittelten Eingaben zur Produktverbesserung nutzen, und Menschen können sie prüfen — nicht für vertrauliche oder personenbezogene Inhalte. Für sensible Daten im vorigen Schritt die lokale Option wählen.",
     key_h:"Dein API-Schlüssel", key_step1:"Öffne", key_step2:"Erstelle einen API-Schlüssel", key_step3:"Kopiere ihn und füge ihn hier ein:",
     key_privacy:"Was mit deinem Schlüssel passiert: Er wird nur in einer lokalen Datei (.env) auf deinem Rechner gespeichert — nie an die Macher dieser App oder an Dritte gesendet. Er dient ausschließlich dazu, deine eigenen Anfragen beim gewählten Anbieter zu authentifizieren. Die Prüfung sendet eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu bestätigen.",
     key_check:"Schlüssel prüfen & weiter",
@@ -315,6 +366,16 @@ const STR = {
     doclang_p:"Das stellt die Stichwortsuche und die Sprache der erzeugten Notizen ein. Bei gemischten Beständen die Mehrheitssprache wählen.",
     advanced:"Erweiterte Optionen", adv_folder:"Wissensspeicher — standardmäßig wissensspeicher/ neben diesem Programm. Für einen anderen Ordner dessen vollständigen Pfad eingeben:",
     finish:"Einrichtung abschließen", applying:"Wird eingerichtet…",
+    badge_perf:"Schritt 4 — Leistung & Datenschutz",
+    perf_h:"Trefferqualität und Abbildungs-Beschreibungen",
+    perf_intro:"Zwei letzte Entscheidungen, die bestimmen, wie stark dein Rechner arbeitet und was ihn verlässt. Die empfohlenen Voreinstellungen sind bereits gesetzt — du kannst einfach abschließen.",
+    rerank_h:"Wie gründlich sollen Treffer nachsortiert werden?",
+    rerank_off:"Aus — schnellste Suche, mehr Rauschen. Treffer ohne Nachsortierung. Für sehr schwache Rechner.",
+    rerank_eco:"Sparsam — empfohlen. Sortiert die wichtigsten 40 Stellen nach. Guter Mittelweg, schonend für normale Notebooks.",
+    rerank_full:"Voll — beste Trefferqualität. Sortiert bis zu 120 Stellen nach, spürbar langsamer auf schwacher Hardware.",
+    vision_h:"Abbildungen und Diagramme beschreiben?",
+    vision_label:"Abbildungen beschreiben, damit sie durchsuchbar werden",
+    vision_hint:"Bei einem Cloud-Profil werden Abbildungen zur Beschreibung an den Anbieter gesendet. Ausschalten spart Tokens und Last und sendet keine Bilder.",
     done_badge:"✓ Einrichtung fertig", done_h:"So funktioniert dein zweites Gehirn",
     lib_h:"📚 Deine Bibliothek", lib_p:"Dokumente hier ablegen — sie werden automatisch indexiert und mit Seitenzahlen zitiert. Du sammelst nur, du bearbeitest sie nie.",
     note_h:"📓 Dein Notizbuch", note_p:"Dein eigenes Denken. Bewusst NICHT im Suchindex — damit du nie versehentlich deine eigenen Notizen als „Beleg“ zitierst.",
@@ -331,7 +392,7 @@ const KEYLINKS = {
   openai:"https://platform.openai.com/api-keys",
   anthropic:"https://console.anthropic.com/",
 };
-const state = { profile:"gemini", provider:"gemini", apikey:"", localModel:"" };
+const state = { profile:"gemini", provider:"gemini", apikey:"", localModel:"", rerank:"eco", vision:true };
 let lang = (navigator.language||"en").toLowerCase().startsWith("de") ? "de" : "en";
 
 function t(k){ return (STR[lang] && STR[lang][k]) || STR.en[k] || ""; }
@@ -351,6 +412,15 @@ function setProvider(p){
   state.provider = p; state.profile = p;
   const link = document.getElementById("keylink");
   link.href = KEYLINKS[p]; link.textContent = KEYLINKS[p];
+  show("s2key");
+}
+function quickstart(){
+  // Express path: Gemini cloud, economical reranking, figure descriptions on.
+  // Skips the language and performance steps (defaults are applied in apply()).
+  state.profile = "gemini"; state.provider = "gemini";
+  state.rerank = "eco"; state.vision = true;
+  const link = document.getElementById("keylink");
+  link.href = KEYLINKS.gemini; link.textContent = KEYLINKS.gemini;
   show("s2key");
 }
 function back3(){
@@ -399,6 +469,13 @@ async function apply(){
   const log=document.getElementById("applylog");
   const add=(txt,cls)=>{const p=document.createElement("p");p.className="check "+(cls||"");p.textContent=txt;log.appendChild(p);};
   const cloud = ["gemini","openai","anthropic"].includes(state.profile);
+  // Reranker + vision: read the sperf controls if they were touched, otherwise
+  // fall back to the express-path defaults on state (eco / true). The optional
+  // chaining keeps this robust even when the express path skipped sperf entirely.
+  const rerankEl = document.querySelector('input[name="rerank"]:checked');
+  const rerank_profile = (rerankEl && rerankEl.value) || state.rerank || "eco";
+  const visionEl = document.getElementById("vision");
+  const vision_enabled = visionEl ? visionEl.checked : (state.vision !== false);
   try{
     const r = await fetch("/api/setup",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
@@ -407,10 +484,26 @@ async function apply(){
         language: document.getElementById("language").value,
         vault_path: document.getElementById("vaultpath").value.trim(),
         llm_model: cloud ? "" : state.localModel,
+        rerank_profile,
+        vision_enabled,
       })});
     const d = await r.json();
     (d.steps||[]).forEach(s=>add((s.ok?"✓ ":"⚠ ")+s.message, s.ok?"ok":"warn"));
-    if(d.claude_manual_snippet){
+    if(d.claude_snippet){
+      const note = document.getElementById("claudenote");
+      note.textContent = (lang==="de"
+        ? "Claude Desktop konnte nicht automatisch konfiguriert werden. Füge diesen Eintrag in deine claude_desktop_config.json ein:"
+        : "Claude Desktop could not be configured automatically. Add this entry to your claude_desktop_config.json:");
+      if(d.claude_config_path){
+        const path=document.createElement("p"); path.className="hint"; path.textContent=d.claude_config_path;
+        note.appendChild(path);
+      }
+      const pre=document.createElement("pre"); pre.className="cmd";
+      const code=document.createElement("code"); code.textContent=d.claude_snippet; pre.appendChild(code);
+      const btn=document.createElement("button"); btn.textContent="copy";
+      btn.onclick=()=>{ navigator.clipboard.writeText(d.claude_snippet); btn.textContent="copied ✓"; setTimeout(()=>btn.textContent="copy",1500); };
+      pre.appendChild(btn); note.appendChild(pre);
+    } else if(d.claude_manual_snippet){
       document.getElementById("claudenote").textContent =
         "Note: Claude Desktop could not be configured automatically — see the FAQ for the manual one-line entry.";
     }

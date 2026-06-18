@@ -38,7 +38,8 @@ def read_existing_env() -> dict:
 
 
 def write_env(profile: str, api_key: str, language: str,
-              vault_path: str = "./wissensspeicher", llm_model: str = "") -> None:
+              vault_path: str = "./wissensspeicher", llm_model: str = "",
+              rerank_profile: str = "eco", vision_enabled: bool = True) -> None:
     existing = read_existing_env()
     # Sanitize every value that gets interpolated into a KEY=value line so a
     # newline in (untrusted) wizard input cannot inject extra .env entries.
@@ -47,6 +48,7 @@ def write_env(profile: str, api_key: str, language: str,
     vault_path = _env_safe(vault_path)
     api_key = _env_safe(api_key)
     llm_model = _env_safe(llm_model)
+    rerank_profile = _env_safe(rerank_profile) or "eco"
     answer_lang = "German" if language == "german" else "English"
     lines = [
         "# BRAG — Building Retrieval-Augmented Generation — written by the setup wizard.",
@@ -55,6 +57,11 @@ def write_env(profile: str, api_key: str, language: str,
         f"VAULT_LANGUAGE={language}",
         f"ANSWER_LANGUAGE={answer_lang}",
         f"VAULT_PATH={vault_path or './wissensspeicher'}",
+        # Search-quality vs. CPU cost (off/eco/balanced/full) and whether figures
+        # are sent to a cloud provider for description. Written explicitly so a
+        # later re-run always reflects the wizard's choice, even at the default.
+        f"RERANK_PROFILE={rerank_profile}",
+        f"VISION_ENABLED={'true' if vision_enabled else 'false'}",
     ]
     # Write the API key under the active provider's env var (cloud profiles only).
     key_env = PROFILES.get(profile, {}).get("key_env")

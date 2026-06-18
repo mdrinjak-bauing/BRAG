@@ -6,13 +6,14 @@ Stages: extract (Docling) → contextualize (LLM) → dense + sparse embedding
 Failure principles (hard-won lessons from the originating system):
 - a chunk whose embedding fails is SKIPPED and logged, never stored as a
   zero vector (zero vectors are undefined in cosine space = silent data loss)
-- old chunks of the same source are deleted before upsert, so re-ingests
-  with shifted chunk boundaries leave no orphans
+- on re-ingest the new points are upserted first (deterministic ids overwrite
+  identical chunks); stale chunks of the same source are then deleted, so a
+  crash mid-write can only leave harmless orphans, never a half-deleted document
 - post-stage failures (note writing, logging) never fail the ingest
 """
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 from brag import config, storage
@@ -41,6 +42,40 @@ def _log_failed_chunk(chunk, reason: str) -> None:
     }
     with open(config.FAILED_CHUNKS_LOG, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def _mark_not_indexed(path: Path) -> None:
+    """Make a non-indexable document VISIBLE to the user. A scanned PDF without
+    a text layer yields zero chunks and would otherwise vanish silently from the
+    corpus — the user keeps believing it is searchable. We append one line per
+    affected file to NICHT-INDEXIERT.md in the wissensspeicher root (next to
+    sources/notes, where the user will actually see it). Idempotent: a file
+    already listed is not added again. Fully best-effort — never crashes the
+    ingest (the on-screen log line is printed regardless by the caller)."""
+    try:
+        marker = config.VAULT / "NICHT-INDEXIERT.md"
+        name = config.normalize_source_key(path.name)
+        existing = ""
+        if marker.exists():
+            existing = marker.read_text(encoding="utf-8")
+            if name in existing:
+                return
+        header = (
+            "# Nicht indexierte Dokumente\n\n"
+            "Diese Dateien konnten nicht in den Wissensspeicher aufgenommen "
+            "werden und sind daher **nicht durchsuchbar**.\n\n"
+        )
+        config.VAULT.mkdir(parents=True, exist_ok=True)
+        with open(marker, "a", encoding="utf-8") as f:
+            if not existing:
+                f.write(header)
+            f.write(
+                f"- `{name}` — {date.today().isoformat()} — vermutlich "
+                "gescanntes PDF ohne Textebene, nicht durchsuchbar; "
+                "ggf. OCR anwenden und erneut ablegen\n"
+            )
+    except Exception as e:  # noqa: BLE001 — marking must never fail the ingest
+        print(f"  could not write NICHT-INDEXIERT.md marker (non-fatal): {e}")
 
 
 def _append_ingest_log(source_file: str, path: Path, n_chunks: int,
@@ -100,6 +135,9 @@ def ingest(path: Path) -> bool:
     print(f"  {len(chunks)} chunks: {n_text} text | {n_table} tables | {n_fig} figures")
     if not chunks:
         print("  no chunks extracted — scanned PDF without text layer?")
+        # Make this visible to the user — an empty extraction would otherwise
+        # leave the document silently absent from the searchable corpus.
+        _mark_not_indexed(path)
         return False
     # Plausibility check against layout misclassification (body text
     # mistaken for headers shows up as 0 text chunks but many figures/tables)
@@ -145,9 +183,11 @@ def ingest(path: Path) -> bool:
     client = storage.get_client()
     try:
         storage.ensure_collection(client)
-        removed = storage.delete_chunks_by_source(client, chunks[0].source_file)
-        if removed:
-            print(f"  removed {removed} old chunks of this source (idempotent re-ingest)")
+        # Upsert the NEW points FIRST. Deterministic ids (c.qdrant_id()) mean
+        # identical chunks overwrite idempotently. Only after every point is
+        # server-side confirmed (wait=True) do we delete the now-stale old
+        # chunks of this source — so a crash between the two steps leaves at
+        # worst harmless orphans, never a half-deleted document.
         points = [
             PointStruct(
                 id=c.qdrant_id(),
@@ -157,7 +197,17 @@ def ingest(path: Path) -> bool:
             for c, dv, sv in zip(chunks, dense, sparse)
         ]
         for start in range(0, len(points), UPSERT_BATCH):
-            client.upsert(config.COLLECTION_NAME, points[start : start + UPSERT_BATCH])
+            client.upsert(
+                config.COLLECTION_NAME,
+                points[start : start + UPSERT_BATCH],
+                wait=True,
+            )
+        new_ids = {p.id for p in points}
+        removed = storage.delete_chunks_by_source(
+            client, chunks[0].source_file, exclude_ids=new_ids
+        )
+        if removed:
+            print(f"  removed {removed} stale chunks of this source (idempotent re-ingest)")
     finally:
         client.close()
 
