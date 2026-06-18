@@ -1,12 +1,18 @@
 """In-container end-to-end smoke test for the `e2e` CI workflow.
 
-Ingests the sample PDF dropped into the mounted ``sources/`` folder and runs a
-search for a unique marker token, asserting that the document is (1) indexed,
-(2) found by search, and (3) cited on the correct printed page. This exercises
-the full *local* path — Docling extraction, chunking, the local arctic
-embedding, hybrid search, the cross-encoder reranker and the page citation —
-without any cloud LLM: contextual retrieval and the vision pass are disabled via
-``CR_ENABLED=false`` / ``VISION_ENABLED=false``, so no API key is needed.
+Ingests the sample corpus (see make_sample_pdf.py) and asserts, against a live
+Qdrant and the full LOCAL path (Docling → arctic embedding → hybrid search →
+reranker → page citation), that:
+
+  * basic: a document is indexed, found, and cited on the page the marker is on;
+  * B1:    two same-named files in different folders are BOTH retained and
+           retrievable (path-qualified source identity — no silent cross-folder
+           deletion);
+  * H2:    a marker on page 3 of a long single section is cited from its real
+           page, not collapsed to the section's first page.
+
+No cloud LLM is needed: contextual retrieval and the vision pass are disabled
+via env (CR_ENABLED=false / VISION_ENABLED=false), so no API key is used.
 
 Run (from the repo root, inside the app container)::
 
@@ -21,61 +27,70 @@ from brag import config, storage
 from brag.search.query import search as run_search
 from brag.watcher import reconcile_on_startup
 
-MARKER = "BRAGZ9QXMARKER"   # unique token placed on page 2 of the sample
-EXPECTED_PAGE = 2
+
+def _find(marker: str, top_k: int = 10):
+    """Return (hits, first hit whose text contains the marker or None)."""
+    hits = run_search(marker, top_k=top_k)
+    return hits, next((h for h in hits if marker in (h.get("text") or "")), None)
 
 
 def main() -> int:
-    sample = config.SOURCES_DIR / "e2e_sample.pdf"
-    print(f"sample: {sample} (exists={sample.exists()})", flush=True)
-    if not sample.exists():
-        print("FAIL: sample PDF not found in the mounted sources/ folder")
-        return 1
+    failures: list[str] = []
 
-    # 1) Ingest. reconcile_on_startup() ensures the collection exists, retries
-    #    while Qdrant is still booting, and indexes everything in sources/.
-    print("[1/3] ingesting (reconcile_on_startup) ...", flush=True)
+    print("[1/4] ingesting the sample corpus (reconcile_on_startup) ...", flush=True)
     reconcile_on_startup()
 
-    # 2) Confirm the document actually landed in the index.
-    print("[2/3] verifying the document is indexed ...", flush=True)
+    print("[2/4] reading the corpus ...", flush=True)
     client = storage.get_client()
     try:
         corpus = storage.list_corpus_sources(client)
     finally:
         client.close()
     print(f"  corpus: {sorted(corpus)}", flush=True)
-    if config.normalize_source_key(sample.stem) not in corpus:
-        print("FAIL: the sample was not indexed (see ingest output above)")
+
+    # --- basic: ingest + search + citation covers the marker's page ----------
+    print("[3/4] basic citation ...", flush=True)
+    _, m = _find("BRAGZ9QXMARKER")
+    if m is None:
+        failures.append("basic: marker BRAGZ9QXMARKER not found in any hit")
+    else:
+        ps, pe = m.get("page_start"), m.get("page_end", m.get("page_start"))
+        if not (isinstance(ps, int) and isinstance(pe, int) and ps <= 2 <= pe):
+            failures.append(f"basic: marker cited pages {ps}-{pe}, expected to cover page 2")
+        else:
+            print(f"  ✓ basic: found and cited on pages {ps}-{pe}")
+
+    # --- B1: same filename in two folders must not collide -------------------
+    print("[4/4] regression checks (B1 collision, H2 multi-page) ...", flush=True)
+    for key, marker in [("projectA/collide", "COLLIDEMARKERA"),
+                        ("projectB/collide", "COLLIDEMARKERB")]:
+        if config.normalize_source_key(key) not in corpus:
+            failures.append(f"B1: '{key}' missing from corpus — same-named file was overwritten")
+        _, mm = _find(marker)
+        if mm is None:
+            failures.append(f"B1: marker {marker} not found — its chunks were cross-deleted")
+        else:
+            print(f"  ✓ B1: {marker} retained in '{mm.get('source_file')}'")
+
+    # --- H2: page-3 marker in a long section is not cited as page 1 ----------
+    _, mp = _find("MULTIPAGEMARKER")
+    if mp is None:
+        failures.append("H2: multipage marker MULTIPAGEMARKER not found")
+    else:
+        ps = mp.get("page_start")
+        if not (isinstance(ps, int) and ps >= 2):
+            failures.append(f"H2: multipage marker cited page_start={ps}, "
+                            f"expected >= 2 (section collapsed to its first page?)")
+        else:
+            print(f"  ✓ H2: multipage marker cited from page {ps} (not collapsed to 1)")
+
+    if failures:
+        print("\nFAIL:")
+        for f in failures:
+            print(f"  - {f}")
         return 1
 
-    # 3) Search for the marker and check the citation page.
-    print("[3/3] searching for the marker token ...", flush=True)
-    hits = run_search(MARKER, top_k=10)
-    print(f"  {len(hits)} hit(s)", flush=True)
-    match = next((h for h in hits if MARKER in (h.get("text") or "")), None)
-    if match is None:
-        for h in hits:
-            preview = (h.get("text") or "")[:80]
-            print(f"   - {h.get('source_file')} p{h.get('page_start')}: {preview!r}")
-        print("FAIL: the marker token was not found in any search hit")
-        return 1
-
-    page = match.get("page_start")
-    page_end = match.get("page_end", page)
-    print(f"  matched {match.get('source_file')} on pages {page}-{page_end}", flush=True)
-    # The marker sits on page 2, but a tiny 2-page document merges into a single
-    # chunk that starts on page 1 and ends on page 2 — so the citing chunk spans
-    # pages. Assert the cited page RANGE covers page 2: this proves the citation
-    # reflects the marker's true location without coupling the test to Docling's
-    # chunk-boundary heuristics (whether page 2 becomes its own chunk).
-    if not (isinstance(page, int) and isinstance(page_end, int)
-            and page <= EXPECTED_PAGE <= page_end):
-        print(f"FAIL: cited pages {page}-{page_end} do not cover page {EXPECTED_PAGE}")
-        return 1
-
-    print(f"PASS: ingested, retrieved and cited on pages {page}-{page_end} "
-          f"(covers page {EXPECTED_PAGE})")
+    print("\nPASS: basic citation, B1 no-collision, and H2 multi-page citation all verified")
     return 0
 
 

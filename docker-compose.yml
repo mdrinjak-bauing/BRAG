@@ -3,6 +3,12 @@ services:
     image: qdrant/qdrant:v1.17.1
     container_name: brag-qdrant
     restart: unless-stopped
+    environment:
+      # Qdrant sends anonymized usage telemetry by default. Disable it so that
+      # in the local profiles "nothing leaves your machine" is literally true
+      # (no document content is ever in this telemetry, but the beacon itself
+      # is unexpected for a local-first tool).
+      - QDRANT__TELEMETRY_DISABLED=true
     volumes:
       # Named volume: immune to cloud-sync corruption (iCloud/OneDrive),
       # Spotlight/Time Machine races, and wrong-path mounts.
@@ -38,6 +44,11 @@ services:
       # Project dir + Claude Desktop config: needed by the browser setup
       # wizard (writes .env and the MCP entry). CLAUDE_CONFIG_DIR is set
       # by setup.command / setup.bat.
+      # SECURITY NOTE: this gives the app container read-write access to the
+      # whole project (including .env with any API key) and the host's Claude
+      # Desktop config. Acceptable because the bridge listens on loopback only
+      # with Host/Origin checks, but a hardening follow-up is to move setup into
+      # a one-shot service so the long-running watcher needn't hold these mounts.
       - ./:/workspace
       - ${CLAUDE_CONFIG_DIR:-./.claude-config-unset}:/claude-config
     ports:

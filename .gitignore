@@ -11,6 +11,7 @@ vault/
 __pycache__/
 *.pyc
 .venv/
+.ruff_cache/
 
 # Model caches
 /models/

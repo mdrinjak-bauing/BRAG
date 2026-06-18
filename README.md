@@ -361,6 +361,9 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 - **No warranty.** Open source under [MIT](LICENSE), "as is", with no guarantee
   of data protection or legal compliance. Use at your own responsibility.
+- **Verify AI output.** AI-generated answers and citations can be incorrect or
+  fabricated; always verify them against the linked original page before relying
+  on or citing them.
 - **Privacy — the honest rule of thumb.** Local profiles: nothing leaves the
   machine. Cloud profiles: text excerpts (and figure images with vision) go to
   the provider, and the **free Gemini tier** may use them. So: what you wouldn't
@@ -421,4 +424,5 @@ the integrations sketched above.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). Third-party models and dependencies (each under its own
+license) are listed in [NOTICE.md](NOTICE.md).

@@ -2,9 +2,19 @@
 Obsidian-compatible, written to wissensspeicher/notes/."""
 
 from datetime import date
+from pathlib import Path
 
 from brag import config
 from brag.ingest.extract import Chunk
+
+
+def _note_file(source_file: str) -> Path:
+    """Filesystem-safe, FLAT note filename for a (possibly path-qualified)
+    source key — path separators become '__' so notes for same-named files in
+    different folders never nest or collide (matching the path-qualified
+    source_file identity)."""
+    safe = config.normalize_source_key(source_file).replace("/", "__")
+    return config.NOTES_DIR / f"{safe}.md"
 
 
 def write_note(chunks: list[Chunk]) -> None:
@@ -45,7 +55,7 @@ def write_note(chunks: list[Chunk]) -> None:
     lines.append("")
     lines.append("_Add your own thoughts here — this section is never overwritten._")
 
-    note_path = config.NOTES_DIR / f"{c0.source_file}.md"
+    note_path = _note_file(c0.source_file)
     if note_path.exists():
         # Preserve everything the user wrote below the "My notes" marker
         old = note_path.read_text(encoding="utf-8")
@@ -63,7 +73,7 @@ def rename_note(old_source_file: str, meta: dict) -> None:
     the lightweight rename path — no chunks needed."""
     import re
 
-    old = config.NOTES_DIR / f"{config.normalize_source_key(old_source_file)}.md"
+    old = _note_file(old_source_file)
     if not old.exists():
         return
     text = old.read_text(encoding="utf-8")
@@ -79,13 +89,13 @@ def rename_note(old_source_file: str, meta: dict) -> None:
     for pattern, replacement in repl:
         # function replacement avoids backslash interpretation in paths/values
         text = re.sub(pattern, lambda _m, r=replacement: r, text, count=1)
-    new = config.NOTES_DIR / f"{new_key}.md"
+    new = _note_file(new_key)
     new.write_text(text, encoding="utf-8")
     if new.resolve() != old.resolve():
         old.unlink(missing_ok=True)
 
 
 def delete_note(source_file: str) -> None:
-    note = config.NOTES_DIR / f"{config.normalize_source_key(source_file)}.md"
+    note = _note_file(source_file)
     if note.exists():
         note.unlink()

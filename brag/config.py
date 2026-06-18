@@ -142,6 +142,25 @@ def normalize_source_key(value) -> str:
     return unicodedata.normalize("NFC", str(value)).strip()
 
 
+def source_key_from_path(path) -> str:
+    """Path-qualified, NFC-normalized identity for a source document: its path
+    relative to sources/ with the file suffix dropped and POSIX separators.
+
+    This — not the bare filename stem — is the unique key for a document. Two
+    same-named files in different folders (e.g. projectA/Bericht.pdf and
+    projectB/Bericht.pdf) would otherwise collide on the stem, so ingesting one
+    would delete-then-overwrite the other's chunks and deleting one would wipe
+    both (silent data loss). Files directly in sources/ keep their plain stem,
+    so the common (un-foldered) case is unchanged.
+    """
+    p = Path(path)
+    try:
+        rel = p.resolve().relative_to(SOURCES_DIR.resolve())
+    except ValueError:
+        rel = Path(p.name)
+    return normalize_source_key(rel.with_suffix("").as_posix())
+
+
 def source_key_variants(value) -> list[str]:
     """NFC, NFD and raw forms of a source key, for filters that must match
     payloads written under different Unicode normalizations (snapshot restore,

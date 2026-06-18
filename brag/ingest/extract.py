@@ -10,14 +10,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from brag import config
-from brag.ingest.chunking import split_long_table, split_text
+from brag.ingest.chunking import split_long_table, split_text_paged
 
 
 @dataclass
 class Chunk:
     text: str
     chunk_type: str          # "text" | "table" | "figure"
-    source_file: str         # file stem, NFC-normalized
+    source_file: str         # path-qualified key (rel path under sources/, no suffix)
     rel_path: str            # path relative to the knowledge store (for PDF links)
     page_start: int
     page_end: int
@@ -140,6 +140,7 @@ def derive_file_metadata(path: Path) -> dict:
     The three descriptive fields (author, year, doc_type) may be overridden by
     _meta.txt; everything else becomes a custom, filterable field."""
     stem = config.normalize_source_key(path.stem)
+    source_file = config.source_key_from_path(path)
     author, year = parse_filename(stem)
     doc_type = doc_type_from_path(path)
     custom_meta = load_folder_meta(path)
@@ -151,7 +152,7 @@ def derive_file_metadata(path: Path) -> dict:
     except ValueError:
         rel_path = path.name
     return {
-        "source_file": stem, "author": author, "year": year,
+        "source_file": source_file, "author": author, "year": year,
         "doc_type": doc_type, "rel_path": rel_path, "custom_meta": custom_meta,
     }
 
@@ -211,7 +212,7 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
     )
 
     _m = derive_file_metadata(path)
-    stem, rel_path = _m["source_file"], _m["rel_path"]
+    source_file, rel_path = _m["source_file"], _m["rel_path"]
     author, year, doc_type = _m["author"], _m["year"], _m["doc_type"]
     custom_meta = _m["custom_meta"]
 
@@ -239,12 +240,11 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
 
     chunks: list[Chunk] = []
     chapter, section = "", ""
-    buffer: list[str] = []
-    buf_page_start, buf_page_end = 1, 1
+    buffer: list[tuple[str, int]] = []   # (paragraph text, source page)
 
     def meta(**kw) -> dict:
         base = dict(
-            source_file=stem, rel_path=rel_path, chapter=chapter,
+            source_file=source_file, rel_path=rel_path, chapter=chapter,
             section=section, doc_type=doc_type, author=author,
             year=year, language=language, custom_meta=custom_meta,
         )
@@ -252,31 +252,31 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
         return base
 
     def flush():
-        nonlocal buffer, buf_page_start
+        nonlocal buffer
         if not buffer:
             return
-        full = "\n\n".join(buffer).strip()
+        paras = buffer
         buffer = []
-        if len(full) < config.MIN_CHUNK_CHARS:
+        if sum(len(t) for t, _ in paras) < config.MIN_CHUNK_CHARS:
             return
         prefix = f"[Chapter: {chapter}]" if chapter else ""
         if section:
             prefix += f" [Section: {section}]"
         if prefix:
             prefix += "\n"
-        for sub in split_text(full, config.MAX_CHUNK_CHARS, config.OVERLAP_CHARS):
+        for sub, page_start, page_end in split_text_paged(
+            paras, config.MAX_CHUNK_CHARS, config.OVERLAP_CHARS
+        ):
             chunks.append(Chunk(
                 text=prefix + sub, chunk_type="text",
-                page_start=buf_page_start, page_end=buf_page_end, **meta(),
+                page_start=page_start, page_end=page_end, **meta(),
             ))
-        buf_page_start = buf_page_end
 
     for item, level in doc.iterate_items():
         page = item.prov[0].page_no if getattr(item, "prov", None) else 1
 
         if isinstance(item, SectionHeaderItem):
             flush()
-            buf_page_start = buf_page_end = page
             if level <= 1:
                 chapter, section = item.text.strip(), ""
             else:
@@ -296,7 +296,6 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
                     text=f"{header}**Table (p. {page}){label}:**\n\n{part}",
                     chunk_type="table", page_start=page, page_end=page, **meta(),
                 ))
-            buf_page_start = buf_page_end = page
 
         elif isinstance(item, PictureItem):
             flush()
@@ -313,13 +312,11 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
                 chunk_type="figure", page_start=page, page_end=page,
                 image_b64=image_b64, **meta(),
             ))
-            buf_page_start = buf_page_end = page
 
         elif isinstance(item, TextItem):
             txt = (item.text or "").strip()
             if txt:
-                buffer.append(txt)
-                buf_page_end = page
+                buffer.append((txt, page))
 
     flush()
     return chunks, full_markdown[: config.CONTEXT_DOC_CHARS]

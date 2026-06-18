@@ -15,6 +15,10 @@ Fehlerfreiheit, Datenschutz oder Rechtskonformität. Die Nutzung erfolgt auf
 eigenes Risiko und in eigener Verantwortung. Die Autoren und Mitwirkenden haften
 nicht für Schäden, Datenverluste oder rechtliche Folgen aus der Nutzung.
 
+KI-generierte Antworten und Zitate können falsch oder erfunden sein; prüfe sie
+stets anhand der verlinkten Originalseite, bevor du dich darauf verlässt oder
+sie zitierst.
+
 ## Datenschutz / Vertraulichkeit
 
 Was deinen Rechner verlässt, hängt vom gewählten **Profil** ab:

@@ -15,6 +15,9 @@ protection or legal compliance. You use it at your own risk and on your own
 responsibility. The authors and contributors are not liable for any damages,
 data loss or legal consequences arising from its use.
 
+AI-generated answers and citations can be incorrect or fabricated; always
+verify them against the linked original page before relying on or citing them.
+
 ## Data protection / confidentiality
 
 What leaves your machine depends on the chosen **profile**:
