@@ -148,15 +148,20 @@ the background, and a removed file is cleaned out of the index automatically.
 You ask Claude something. Behind the scenes:
 
 1. **Two searches at once.** Your question is run through *both* the
-   meaning-search and the keyword-search. Each returns its best ~150 candidates.
+   meaning-search and the keyword-search. Each returns its best ~60 candidates.
 
 2. **Merge.** The two candidate lists are fused into one (a step called RRF) —
-   passages that both methods liked rise to the top. About 80 survive.
+   passages that both methods liked rise to the top. About 40 survive (the
+   default — tunable, see below).
 
 3. **Re-rank — the precision step.** A second, more careful AI (the
-   "re-ranker") reads your actual question *together with* each of those 80
+   "re-ranker") reads your actual question *together with* each of those ~40
    passages and re-orders them by how well they truly answer it. This is the
    difference between "contains the words" and "actually answers the question".
+   The re-ranker runs **locally on your CPU** and is the main cost of a search,
+   so how many passages it scores — or whether it runs at all — is a setting
+   (`RERANK_PROFILE`: `off` / `eco` / `balanced` / `full`); pick `eco` (default)
+   or `off` on a weak machine, `full` on a strong one.
 
 4. **Trim and diversify.** The top results are kept (by default 15, at most 3
    from any single source so one book can't crowd out the rest). This "how many

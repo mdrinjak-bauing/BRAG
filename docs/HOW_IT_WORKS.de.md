@@ -159,16 +159,20 @@ entfernt.
 Du fragst Claude etwas. Hinter den Kulissen:
 
 1. **Zwei Suchen gleichzeitig.** Deine Frage läuft durch *beide* Suchen —
-   Bedeutung und Stichwort. Jede liefert ihre besten ~150 Kandidaten.
+   Bedeutung und Stichwort. Jede liefert ihre besten ~60 Kandidaten.
 
 2. **Zusammenführen.** Die zwei Kandidatenlisten werden zu einer verschmolzen
    (ein Schritt namens RRF) — Passagen, die beide Verfahren mochten, steigen
-   nach oben. Etwa 80 bleiben übrig.
+   nach oben. Etwa 40 bleiben übrig (Standard — einstellbar, siehe unten).
 
 3. **Neu sortieren — der Präzisionsschritt.** Eine zweite, gründlichere KI (der
-   „Reranker") liest deine echte Frage *zusammen mit* jeder dieser 80 Passagen
+   „Reranker") liest deine echte Frage *zusammen mit* jeder dieser ~40 Passagen
    und ordnet sie danach, wie gut sie wirklich antworten. Das ist der
    Unterschied zwischen „enthält die Wörter" und „beantwortet die Frage".
+   Der Reranker läuft **lokal auf deiner CPU** und ist der teuerste Teil einer
+   Suche — wie viele Passagen er bewertet (oder ob überhaupt) ist daher eine
+   Einstellung (`RERANK_PROFILE`: `off` / `eco` / `balanced` / `full`): auf
+   schwachen Rechnern `eco` (Standard) oder `off`, auf starken `full`.
 
 4. **Kürzen und durchmischen.** Die besten Treffer bleiben (standardmäßig 15,
    höchstens 3 aus einer einzelnen Quelle, damit ein Buch nicht alles

@@ -155,11 +155,13 @@ gets two "fingerprints": one for **meaning** (semantic search) and one for
 
 1. **Two searches at once** — meaning search (finds related things, even in
    different words) **and** keyword search (BM25; finds exact terms like
-   abbreviations, section numbers, file references). ~150 candidates each.
-2. **Merge (RRF)** — both lists fuse; ~80 remain.
+   abbreviations, section numbers, file references). ~60 candidates each.
+2. **Merge (RRF)** — both lists fuse; ~40 remain.
 3. **Reranker** — a cross-encoder reads your question together with each passage
    and sorts by true fit. The difference between "contains the search terms" and
-   "answers the question".
+   "answers the question". It runs **locally on your CPU** — the main cost of a
+   search — so its effort is a setting: `RERANK_PROFILE=off/eco/balanced/full`
+   (default `eco`; pick `off`/`eco` on a weak PC, `full` on a strong one).
 4. **Trim** — the best hits remain (15 by default, max 3 per source).
 5. **Answer** — Claude writes from exactly these passages, every statement cited
    with source and page.

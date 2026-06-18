@@ -53,9 +53,11 @@ Claude Desktop als Benutzeroberfläche.
 
 ## Abfrage-Pipeline
 
-Dichter + dünner Vorababruf (je 150) → Reciprocal Rank Fusion → Top 80 →
+Dichter + dünner Vorababruf (je 60) → Reciprocal Rank Fusion → Top 40 →
 Cross-Encoder-Reranking (`BAAI/bge-reranker-v2-m3`) → Quellen-Diversitätsgrenze
-(max. 3 Abschnitte/Quelle) → Top k (Standard 15). Rerank-Werte werden
+(max. 3 Abschnitte/Quelle) → Top k (Standard 15). Diese Breiten steuert der
+`RERANK_PROFILE`-Regler (Standard `eco` = 120 laden, 40 reranken; daneben
+`off`/`balanced`/`full`). Rerank-Werte werden
 ausgewiesen, aber nie als harter Filter genutzt — Cross-Encoder-Werte sind nicht
 absolut kalibriert, und jede Untergrenze schneidet bei Faktenfragen legitime
 Spitzentreffer ab.

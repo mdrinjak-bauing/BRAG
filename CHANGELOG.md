@@ -21,6 +21,14 @@ All notable changes to this project are documented here. The format follows
 - Knowledge-store default folder renamed `vault/` → `wissensspeicher/`. The
   `VAULT_PATH` / `VAULT_DIR` environment variables and the internal `/vault`
   mount point are kept for backwards compatibility.
+- **Search-speed dial (`RERANK_PROFILE`).** The local cross-encoder reranker is
+  the main CPU cost of a search, so it is now a single setting: `off` /
+  **`eco`** (new default — load 120 candidates, rerank 40) / `balanced` (rerank
+  60) / `full` (rerank 120). The previous heavier behaviour (prefetch 150,
+  rerank 80) is roughly the `full` preset; the lighter default keeps searches
+  responsive on consumer PCs. Individual values can still be pinned via
+  `RERANK_ENABLED` / `RERANK_PREFETCH` / `RERANK_FUSION_LIMIT`. The `search` MCP
+  tool now follows the configured default instead of forcing reranking on.
 
 ### Added
 - **One-click status check** (`status.command` / `status.bat`) and an
