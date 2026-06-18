@@ -17,7 +17,7 @@ fi
 echo "  [ OK ]  Docker is running"
 
 # 2. Containers up?
-for c in asb-qdrant asb-app; do
+for c in brag-qdrant brag-app; do
   if docker ps --format '{{.Names}}' | grep -qx "$c"; then
     echo "  [ OK ]  Container $c is up"
   else
@@ -27,8 +27,8 @@ done
 echo
 
 # 3. Deep checks inside the app container (Qdrant, corpus, watcher, AI backend)
-if docker ps --format '{{.Names}}' | grep -qx 'asb-app'; then
-  docker exec asb-app python -m asb.health
+if docker ps --format '{{.Names}}' | grep -qx 'brag-app'; then
+  docker exec brag-app python -m brag.health
   echo
 fi
 

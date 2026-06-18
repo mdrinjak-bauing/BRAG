@@ -17,9 +17,9 @@ Design notes ported from the originating production system:
 
 import re
 
-from asb import config
-from asb.ingest.extract import Chunk
-from asb.llm_backends import get_llm
+from brag import config
+from brag.ingest.extract import Chunk
+from brag.llm_backends import get_llm
 
 CONTEXT_TAG = re.compile(r'<context id="(\d+)">(.*?)</context>', re.DOTALL)
 

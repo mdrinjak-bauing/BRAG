@@ -9,8 +9,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from asb import config
-from asb.ingest.chunking import split_long_table, split_text
+from brag import config
+from brag.ingest.chunking import split_long_table, split_text
 
 
 @dataclass

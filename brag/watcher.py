@@ -14,8 +14,8 @@ from pathlib import Path
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver
 
-from asb import config, storage
-from asb.ingest.pipeline import ingest, remove_source, rename_source
+from brag import config, storage
+from brag.ingest.pipeline import ingest, remove_source, rename_source
 
 _processing: set[str] = set()
 

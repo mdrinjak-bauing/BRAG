@@ -5,8 +5,8 @@ container on Apple Silicon there is no GPU access, so this runs on CPU —
 fine for steady ingest, slower for bulk re-ingest.
 """
 
-from asb import config
-from asb.embeddings.base import EmbeddingBackend
+from brag import config
+from brag.embeddings.base import EmbeddingBackend
 
 # Keep total embedding input bounded; consistent for ingest AND batch paths
 # (lesson from the originating system: asymmetric truncation loses context).

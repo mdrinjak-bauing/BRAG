@@ -1,12 +1,12 @@
 """Terminal fallback for the setup (the primary path is the browser wizard
 at http://localhost:8765/setup). Run via:
   docker compose run --rm -v "$PWD":/workspace \
-    -v "<claude config dir>":/claude-config app python -m asb.setup_wizard
+    -v "<claude config dir>":/claude-config app python -m brag.setup_wizard
 """
 
 import sys
 
-from asb import setup_core
+from brag import setup_core
 
 PROFILE_INFO = """
 Choose your backend profile:

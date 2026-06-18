@@ -12,9 +12,9 @@ so it also handles figure descriptions in the vision pass.
 import json
 import urllib.request
 
-from asb import config
-from asb.llm_backends.base import LLMBackend
-from asb.llm_backends.retry import call_with_retry
+from brag import config
+from brag.llm_backends.base import LLMBackend
+from brag.llm_backends.retry import call_with_retry
 
 API_URL = "https://api.anthropic.com/v1/messages"
 API_VERSION = "2023-06-01"

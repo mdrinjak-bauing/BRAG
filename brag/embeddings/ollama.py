@@ -3,8 +3,8 @@
 import json
 import urllib.request
 
-from asb import config
-from asb.embeddings.base import EmbeddingBackend
+from brag import config
+from brag.embeddings.base import EmbeddingBackend
 
 
 class OllamaEmbedder(EmbeddingBackend):

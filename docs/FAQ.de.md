@@ -17,7 +17,7 @@ ausführen.
 **Claude Desktop zeigt die Werkzeuge nicht an.**
 1. Claude Desktop **komplett** beenden (Cmd+Q / Tray-Symbol → Beenden) und neu
    öffnen — ein Schließen des Fensters genügt nicht.
-2. Prüfen, ob der Container läuft: `docker ps` sollte `asb-app` auflisten.
+2. Prüfen, ob der Container läuft: `docker ps` sollte `brag-app` auflisten.
 3. Prüfen, ob die Konfigurationsdatei (Pfad siehe [OBSIDIAN.de.md](OBSIDIAN.de.md))
    den Eintrag `academic-rag-and-second-brain` enthält.
 
@@ -44,7 +44,7 @@ Cloud-Profile.
 **„Rate limit"-Meldungen während der Indexierung (Cloud-Profil).**
 Der kostenlose Gemini-Tarif hat Limits pro Minute/Tag. Das System wartet und
 versucht es automatisch erneut — einfach laufen lassen; nichts geht verloren.
-Fehlgeschlagene Abschnitte werden in `wissensspeicher/.asb/failed_chunks.jsonl` vermerkt.
+Fehlgeschlagene Abschnitte werden in `wissensspeicher/.brag/failed_chunks.jsonl` vermerkt.
 
 **Werden Abbildungen/Bilder ausgewertet?**
 Ja. Standardmäßig ist der **Vision-Pass** aktiv: Jedes Abbildungsbild wird beim
@@ -107,8 +107,8 @@ Dokumente neu indexieren.
 
 **Wie prüfe ich mit einem Klick, ob alles läuft?**
 Doppelklick auf **`status.command`** (Mac) bzw. **`status.bat`** (Windows) im
-Projektordner. Der Check meldet ✓/✗ für: Docker läuft, die Container `asb-app`
-und `asb-qdrant` sind oben, Qdrant erreichbar, der Korpus ist indexiert (mit
+Projektordner. Der Check meldet ✓/✗ für: Docker läuft, die Container `brag-app`
+und `brag-qdrant` sind oben, Qdrant erreichbar, der Korpus ist indexiert (mit
 Anzahl Quellen/Chunks), der Watcher läuft, das KI-Textmodell ist erreichbar, und
 Claude Desktop ist angebunden. Bei einem ✗ steht direkt dabei, was zu tun ist.
 

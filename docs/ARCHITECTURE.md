@@ -8,14 +8,14 @@ folder, Claude Desktop as the user interface.
 ```
  HOST                                   DOCKER
 ┌──────────────────┐                   ┌─────────────────────────────────┐
-│ Claude Desktop   │── docker exec ───▶│ asb-app                         │
+│ Claude Desktop   │── docker exec ───▶│ brag-app                         │
 │  (MCP, stdio)    │   (mcp_server)    │  ├─ watcher (polling)           │
 │                  │                   │  ├─ ingest pipeline             │
 │ Browser ◀────────┼── localhost:8765 ─┤  ├─ http bridge (PDF links)    │
 │  (PDF at page N) │                   │  └─ search (hybrid + rerank)   │
 │                  │                   │            │                    │
 │ wissensspeicher/  ◀────────┼─── bind mount ───▶│            ▼                    │
-│  sources/ notes/ │                   │ asb-qdrant (vector DB,          │
+│  sources/ notes/ │                   │ brag-qdrant (vector DB,          │
 │  passages/ wiki/ │                   │  named volume — no sync risk)   │
 │                  │                   └─────────────────────────────────┘
 │ LM Studio/Ollama ◀── host.docker.internal (hybrid/local profiles only)
@@ -24,7 +24,7 @@ folder, Claude Desktop as the user interface.
 
 ## Ingest pipeline (per document)
 
-1. **Extract** (`asb/ingest/extract.py`) — Docling parses layout: chapters,
+1. **Extract** (`brag/ingest/extract.py`) — Docling parses layout: chapters,
    sections, tables, figure captions, page numbers. Table mode is pinned to
    ACCURATE so library updates cannot silently degrade quality. With the vision
    pass on, figure images are rendered (`generate_picture_images`) and described

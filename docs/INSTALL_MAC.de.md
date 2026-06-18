@@ -99,8 +99,8 @@ Stelle Claude jetzt eine Frage:
   Docker, Qdrant, den Watcher, den Korpus und den KI-Anschluss und zeigt für
   jeden Punkt ✓/✗.
 - **Wal-Symbol** in der Menüleiste steht ruhig → Docker läuft.
-- Im Terminal im Projektordner zeigt `docker ps` die zwei Container **`asb-app`**
-  und **`asb-qdrant`**.
+- Im Terminal im Projektordner zeigt `docker ps` die zwei Container **`brag-app`**
+  und **`brag-qdrant`**.
 - In Claude Desktop erscheinen die Werkzeuge (z. B. `search`, `list_sources`) —
   sichtbar über das Werkzeug-/Steckersymbol im Eingabefeld. Fehlen sie, hast du
   Claude vermutlich nur geschlossen statt mit **Cmd+Q** beendet.

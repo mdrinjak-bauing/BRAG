@@ -18,7 +18,7 @@ if errorlevel 1 (
 echo   [ OK ]  Docker is running
 
 REM 2. Containers up?
-for %%C in (asb-qdrant asb-app) do (
+for %%C in (brag-qdrant brag-app) do (
   docker ps --format "{{.Names}}" | findstr /x "%%C" >nul && (
     echo   [ OK ]  Container %%C is up
   ) || (
@@ -28,8 +28,8 @@ for %%C in (asb-qdrant asb-app) do (
 echo.
 
 REM 3. Deep checks inside the app container
-docker ps --format "{{.Names}}" | findstr /x "asb-app" >nul && (
-  docker exec asb-app python -m asb.health
+docker ps --format "{{.Names}}" | findstr /x "brag-app" >nul && (
+  docker exec brag-app python -m brag.health
   echo.
 )
 

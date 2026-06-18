@@ -22,7 +22,7 @@ BRAG is wired into **Claude Desktop's chat**, and that is the surface it was bui
 for:
 
 - The setup wizard registers BRAG as a **local MCP server** (it writes a
-  `docker exec … asb.mcp_server` entry into `claude_desktop_config.json`). The
+  `docker exec … brag.mcp_server` entry into `claude_desktop_config.json`). The
   `search`, `list_sources`, `inspect_chunks`, … tools then appear **directly in
   chat**.
 - The **PDF deep-links** in every answer open in your browser at the cited page —
