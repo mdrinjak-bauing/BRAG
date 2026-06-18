@@ -24,7 +24,7 @@ def _env(name: str, default):
 
 
 # ── Profile ─────────────────────────────────────────────────────
-PROFILE_NAME = _env("PROFILE", "cloud")
+PROFILE_NAME = _env("PROFILE", "gemini")
 _profile = PROFILES.get(PROFILE_NAME, PROFILES["cloud"])
 
 # ── Paths (container view; host paths are mapped in docker-compose) ─
@@ -52,6 +52,9 @@ SPARSE_VECTOR = "sparse"
 # ── Backends (profile defaults, individually overridable) ──────
 EMBEDDING_BACKEND = _env("EMBEDDING_BACKEND", _profile["embedding_backend"])
 EMBEDDING_MODEL = _env("EMBEDDING_MODEL", _profile["embedding_model"])
+# Optional Hugging Face revision (commit SHA / tag) to PIN the model weights for
+# reproducible, supply-chain-safe downloads. Empty = latest (current behaviour).
+EMBEDDING_REVISION = _env("EMBEDDING_REVISION", "")
 EMBEDDING_DIM = int(_env("EMBEDDING_DIM", _profile["embedding_dim"]))
 LLM_BACKEND = _env("LLM_BACKEND", _profile["llm_backend"])
 LLM_MODEL = _env("LLM_MODEL", _profile["llm_model"])
@@ -95,6 +98,8 @@ VISION_IMAGE_SCALE = float(_env("VISION_IMAGE_SCALE", 2.0))
 
 # ── Retrieval / reranking ───────────────────────────────────────
 RERANKER_MODEL = _env("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
+# Optional HF revision to pin the reranker weights (see EMBEDDING_REVISION).
+RERANKER_REVISION = _env("RERANKER_REVISION", "")
 
 # The LOCAL cross-encoder reranker is the main CPU cost of a search — its load
 # scales with the number of candidate passages it scores. RERANK_PROFILE is a

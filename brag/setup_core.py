@@ -19,6 +19,12 @@ MCP_ENTRY = {
 }
 
 
+def _env_safe(value: str) -> str:
+    """Strip newlines/carriage returns so a wizard-supplied value (e.g. a custom
+    vault path) cannot inject extra lines into the generated .env file."""
+    return "".join(ch for ch in str(value) if ch not in "\r\n").strip()
+
+
 def read_existing_env() -> dict:
     env_path = WORKSPACE / ".env"
     values = {}
@@ -34,6 +40,13 @@ def read_existing_env() -> dict:
 def write_env(profile: str, api_key: str, language: str,
               vault_path: str = "./wissensspeicher", llm_model: str = "") -> None:
     existing = read_existing_env()
+    # Sanitize every value that gets interpolated into a KEY=value line so a
+    # newline in (untrusted) wizard input cannot inject extra .env entries.
+    profile = _env_safe(profile)
+    language = _env_safe(language)
+    vault_path = _env_safe(vault_path)
+    api_key = _env_safe(api_key)
+    llm_model = _env_safe(llm_model)
     answer_lang = "German" if language == "german" else "English"
     lines = [
         "# BRAG — Building Retrieval-Augmented Generation — written by the setup wizard.",

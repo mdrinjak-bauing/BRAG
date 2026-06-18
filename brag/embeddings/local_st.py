@@ -16,7 +16,8 @@ MAX_INPUT_CHARS = 20000
 class SentenceTransformerEmbedder(EmbeddingBackend):
     def __init__(self):
         from sentence_transformers import SentenceTransformer
-        self._model = SentenceTransformer(config.EMBEDDING_MODEL)
+        kwargs = {"revision": config.EMBEDDING_REVISION} if config.EMBEDDING_REVISION else {}
+        self._model = SentenceTransformer(config.EMBEDDING_MODEL, **kwargs)
         self.dim = self._model.get_sentence_embedding_dimension()
         # The Qdrant collection is created with config.EMBEDDING_DIM; if the
         # model's real dimension differs (e.g. EMBEDDING_MODEL overridden but
