@@ -158,5 +158,5 @@ All notable changes to this project are documented here. The format follows
 - Knowledge store (library vs. notebook) and the search MCP server for
   Claude Desktop.
 
-[0.2.0]: https://github.com/mdrinjak-bauing/academic-rag-and-second-brain
-[0.1.0]: https://github.com/mdrinjak-bauing/academic-rag-and-second-brain
+[0.2.0]: https://github.com/mdrinjak-bauing/Academic-RAG-and-Second-Brain
+[0.1.0]: https://github.com/mdrinjak-bauing/Academic-RAG-and-Second-Brain

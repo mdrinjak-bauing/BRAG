@@ -371,6 +371,9 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 - **Ohne Gewähr.** Open Source unter [MIT](LICENSE), „wie besehen", ohne
   Garantie für Datenschutz oder Rechtskonformität. Nutzung auf eigene
   Verantwortung.
+- **KI-Ausgaben prüfen.** KI-generierte Antworten und Zitate können falsch oder
+  erfunden sein; prüfe sie stets anhand der verlinkten Originalseite, bevor du
+  dich darauf verlässt oder sie zitierst.
 - **Datenschutz — die ehrliche Faustregel.** Lokale Profile: nichts verlässt
   den Rechner. Cloud-Profile: Textauszüge (und bei Vision die Abbildungsbilder)
   gehen an den Anbieter, und der **kostenlose Gemini-Tarif** darf sie auswerten.
@@ -436,4 +439,5 @@ Wissensgraph-Ebene — und die oben skizzierten Anbindungen.
 
 ## Lizenz
 
-[MIT](LICENSE)
+[MIT](LICENSE). Modelle und Abhängigkeiten von Drittanbietern (jeweils unter
+eigener Lizenz) sind in [NOTICE.md](NOTICE.md) aufgeführt.
