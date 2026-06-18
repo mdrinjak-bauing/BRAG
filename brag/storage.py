@@ -52,13 +52,31 @@ def ensure_collection(client=None):
         client.close()
 
 
-def delete_chunks_by_source(client, source_file: str) -> int:
-    """Remove all chunks of one source. Returns the number deleted."""
-    from qdrant_client.models import FieldCondition, Filter, FilterSelector, MatchAny
+def delete_chunks_by_source(client, source_file: str,
+                            exclude_ids: set | None = None) -> int:
+    """Remove chunks of one source. Returns the number actually deleted.
 
-    flt = Filter(must=[FieldCondition(
-        key="source_file", match=MatchAny(any=config.source_key_variants(source_file)),
-    )])
+    With exclude_ids set, the points carrying those ids are spared — this is the
+    re-ingest case: the new chunks have already been upserted under deterministic
+    ids, and only the OLD, now-orphaned chunks (boundaries shifted, so their ids
+    are no longer produced) must be removed. Excluding the fresh ids means a
+    crash between upsert and delete can leave at worst harmless orphans, never a
+    half-deleted document.
+    """
+    from qdrant_client.models import (
+        FieldCondition, Filter, FilterSelector, HasIdCondition, MatchAny,
+    )
+
+    must_not = []
+    if exclude_ids:
+        must_not.append(HasIdCondition(has_id=list(exclude_ids)))
+    flt = Filter(
+        must=[FieldCondition(
+            key="source_file",
+            match=MatchAny(any=config.source_key_variants(source_file)),
+        )],
+        must_not=must_not or None,
+    )
     count = client.count(config.COLLECTION_NAME, count_filter=flt, exact=True).count
     if count:
         client.delete(
