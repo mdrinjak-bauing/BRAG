@@ -53,6 +53,12 @@ Then double-click `setup.command` again.
 
 ## Indexing
 
+**Which file types can I add?**
+PDF, Word (`.docx`), PowerPoint (`.pptx`), Markdown (`.md`) and HTML — just drop
+them into `wissensspeicher/sources/`. Page-precise deep-links work for PDFs; the
+other formats are indexed and searchable but cited without a page link.
+**Excel (`.xlsx`) is not supported yet.**
+
 **I dropped a PDF and nothing happens.**
 - Wait ~30 seconds (the folder is checked every 10 seconds, files must
   finish copying first).
