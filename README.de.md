@@ -294,6 +294,21 @@ auftraggeber: Stadt Hamm
 Jedes Dokument im Ordner trägt diese Felder; Claude filtert im Gespräch danach.
 So mischen sich keine Treffer aus anderen Projekten in deine Ergebnisse.
 
+**Buchseite vs. PDF-Seite.** Stimmen die gedruckten Seitenzahlen eines Dokuments
+nicht mit den physischen PDF-Seiten überein (ein Buch mit Vorspann, ein
+Zeitschriften-Sonderdruck), setz einen `page_offset` — dann zeigt der Beleg die
+*gedruckte* Seite, während der Link weiterhin die richtige PDF-Seite öffnet. Die
+Regel: `page_offset = physische PDF-Seite − gedruckte Seite` (schau auf eine
+beliebige Seite: zeigt PDF-Seite 28 die gedruckte „14", ist der Versatz 14):
+
+```
+# sources/Buecher/Mueller_2021/_meta.txt
+page_offset: 14
+```
+
+Vor dem Indexieren setzen — oder die Datei danach erneut ablegen, damit sie mit
+dem Versatz neu indexiert wird.
+
 ### Obsidian: ein schönerer Blick auf denselben Ordner
 
 Du kannst den Wissensspeicher mit [Obsidian](https://obsidian.md) (kostenlos)

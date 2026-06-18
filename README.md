@@ -277,6 +277,20 @@ client: City of Hamm
 Every document in that folder carries these fields; Claude filters by them in a
 conversation, so hits from other projects don't bleed into your results.
 
+**Book page vs. PDF page.** If a document's printed page numbers don't match the
+PDF's physical pages (a book with front matter, a journal offprint), add a
+`page_offset` — then citations show the *printed* page while the link still
+opens the right PDF page. The rule is `page_offset = physical PDF page − printed
+page` (look at any page: if PDF page 28 shows printed "14", the offset is 14):
+
+```
+# sources/books/Mueller_2021/_meta.txt
+page_offset: 14
+```
+
+Set it before indexing the document, or re-drop the file afterwards so it is
+re-indexed with the offset.
+
 ### Obsidian: a nicer view of the same folder
 
 You can open the knowledge store with [Obsidian](https://obsidian.md) (free) —
