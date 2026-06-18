@@ -90,6 +90,14 @@ def ingest(path: Path) -> bool:
     skipped = len(chunks) - len(paired)
     if skipped:
         print(f"  {skipped} chunks skipped (see failed_chunks.jsonl)")
+        # Heavy partial failure (typically a sustained rate limit or outage on
+        # cloud embeddings) must NOT be frozen as a partial index. Abort before
+        # upserting so nothing lands in the corpus and the document is retried
+        # on the next watcher start — instead of silently missing pages forever.
+        if skipped >= max(3, len(chunks) // 5):
+            print("  too many embedding failures — aborting so this document is "
+                  "retried later (no partial index)")
+            return False
 
     chunks = [c for c, _ in paired]
     dense = [v for _, v in paired]
@@ -161,3 +169,53 @@ def rename_source(old_source_file: str, new_path: Path) -> int:
         except Exception as e:  # noqa: BLE001 — the note is non-critical
             print(f"  note rename failed (non-fatal): {e}")
     return n
+
+
+def index_passage(topic: str, text: str, source: str, page: str = "",
+                  note: str = "") -> bool:
+    """Embed a passage the user saved during a chat so it becomes findable by
+    the semantic search in any later chat — tagged chunk_type='passage' so it
+    stays clearly distinguishable from primary sources. Best-effort: never
+    raises, because the file on disk is already saved and a failed index must
+    not turn the save_passage tool call into an error."""
+    import re
+
+    from qdrant_client.models import PointStruct
+
+    from brag.embeddings import get_embedder
+    from brag.embeddings.sparse import embed_sparse_documents
+    from brag.ingest.extract import Chunk
+
+    try:
+        slug = re.sub(r"[^\w\-]+", "_", topic.strip()).strip("_") or "general"
+        body = text.strip()
+        if note.strip():
+            body += f"\n\nNote: {note.strip()}"
+        ref = source + (f", p. {page}" if str(page).strip() else "")
+        page_no = int(page) if str(page).strip().isdigit() else 0
+        chunk = Chunk(
+            text=f"[Saved passage — {topic}] (from {ref})\n\n{body}",
+            chunk_type="passage", source_file=f"passage:{slug}", rel_path="",
+            page_start=page_no, page_end=page_no, chapter="", section="",
+            doc_type="passage", author=source or "saved passage", year="",
+            language="en",
+            custom_meta={"topic": topic, "from_source": source,
+                         "from_page": str(page).strip()},
+        )
+        embedder = get_embedder()
+        dense = embedder.embed_document(chunk.embedding_text())
+        sparse = embed_sparse_documents([chunk.embedding_text()])[0]
+        client = storage.get_client()
+        try:
+            storage.ensure_collection(client)
+            client.upsert(config.COLLECTION_NAME, [PointStruct(
+                id=chunk.qdrant_id(),
+                vector={config.DENSE_VECTOR: dense, config.SPARSE_VECTOR: sparse},
+                payload=chunk.payload(),
+            )])
+        finally:
+            client.close()
+        return True
+    except Exception as e:  # noqa: BLE001 — indexing is best-effort
+        print(f"  passage indexing failed (non-fatal): {str(e)[:80]}")
+        return False

@@ -2,21 +2,23 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.0** ([changes](#versions))
 
-> **Talk to your own research literature.** Drop your PDFs into a folder —
-> papers, books, reports, project documents — and ask Claude in plain language.
-> The answer is **grounded in your own sources**: page-precise, with the
-> citation and one click to the original PDF. Everything runs locally on your
-> machine.
+> **Your own AI assistant — one that knows your knowledge.** Put your PDFs and
+> notes in a folder. Claude or ChatGPT **pulls the right passages itself**
+> (page-precise citations, one click to the original) and **writes what you
+> discuss back as a note** into the same folder. Your knowledge lives with
+> *you* — not in the chat history: every new chat, even on a different provider,
+> picks up right where you left off. Local, provider-independent, yours.
 
 The name **BRAG** stands for *Building Retrieval-Augmented Generation* — a play
-on my field (civil engineering) and on what the tool does: it **builds up** your
-knowledge and retrieves it on demand through RAG search.
+on my field (civil engineering) and on what it does: it **builds up** your
+knowledge and retrieves it on demand. Under the hood, a **hybrid search**
+(meaning + keyword, with reranking) makes sure the AI finds the *relevant*
+passages — not just any. How that works in detail is further down.
 
 A "second brain" for research isn't fundamentally new — but this one is a
-**genuinely solid setup** that truly holds up day to day. I'm sharing it because
-I use it myself every day and others can get something out of it: no hype, no
-lock-in, just plain files that you own, a strong search over them, and Claude as
-a counterpart that **never answers without evidence**.
+**genuinely solid setup** that truly holds up day to day: no hype, no lock-in,
+plain files that you own. I'm sharing it because I use it myself every day and
+others can get something out of it.
 
 **Who is it for?** Researchers, lecturers and PhD students — and just as much
 practitioners who need to stay on top of standards, reports, bills of quantities
@@ -78,16 +80,25 @@ the heart of the design:
 
 |  | 📚 **Your library** | 📓 **Your notebook** |
 |---|---|---|
-| Folder | `wissensspeicher/sources/` | `wissensspeicher/wiki/`, `wissensspeicher/notes/`, `wissensspeicher/passages/` |
+| Folder | `wissensspeicher/sources/` | `wissensspeicher/wiki/`, `wissensspeicher/notes/` |
 | Contains | external sources: papers, books, reports | **your own thinking**: concepts, drafts, reading notes |
 | Searchable by Claude? | yes — hybrid search with page-precise citations | deliberately **no** |
 | Claude can read/write it? | read-only (via search) | yes — via the optional Obsidian connection |
 
-**Why is the notebook excluded from the index?** The echo effect: if your own
-notes were indexed, you'd one day "find" your own summary of a paper and cite it
-as evidence — without noticing you're quoting yourself. The library answers
-*"what do my sources say?"*; the notebook holds *what you make of it*. Claude
-works with both, but never confuses one for the other.
+**Plus a third, in-between layer — saved passages.** When you tell Claude
+*"save this passage,"* it writes the quote (with its source and page) into
+`wissensspeicher/passages/` **and indexes it** — so any later chat, even with a
+different AI provider, finds it again via `search`, clearly marked as *your
+saved passage*. This is curated evidence you chose to keep (a real quote from a
+real source), not the AI's own output — which is exactly why it is searchable
+while the rest of the notebook is not.
+
+**Why is the rest of the notebook excluded from the index?** The echo effect:
+if your own concept notes and auto-summaries were indexed, you'd one day "find"
+your own summary of a paper and cite it as evidence — without noticing you're
+quoting yourself. The library answers *"what do my sources say?"*; the notebook
+holds *what you make of it*. Claude works with both, but never confuses one for
+the other.
 
 ### Your notebook — and why plain Markdown files
 

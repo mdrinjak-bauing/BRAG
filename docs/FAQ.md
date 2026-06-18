@@ -12,6 +12,38 @@ setup again. On Windows, a restart after installation can be required.
 Run it from a terminal instead: open Terminal/Command Prompt in the project
 folder and run `./setup.command` (Mac) or `setup.bat` (Windows).
 
+**The browser setup page doesn't open, or port 8765 is already in use.**
+Another program on your computer may already use port 8765. Open the `.env` file
+in the project folder and set a free port, for example:
+
+```
+BRIDGE_HOST_PORT=8780
+BRIDGE_PUBLIC_URL=http://localhost:8780
+```
+
+Then run setup again. The launcher (`setup.command` / `setup.bat`) reads
+`BRIDGE_HOST_PORT` from `.env` and opens the right URL. **Both** variables must
+be set: `BRIDGE_HOST_PORT` moves the port, and `BRIDGE_PUBLIC_URL` must match it
+— otherwise the PDF deep-links in answers (which jump to a page) break.
+
+**The build failed or got stuck.**
+The first run downloads heavy dependencies and ~3 GB of models. On a flaky
+network — or when Docker is low on disk — that download can fail or stall. Open
+Docker Desktop and confirm it says "running" and that you have internet, then
+simply double-click setup again. It resumes from the cache, so it doesn't start
+over.
+
+**macOS: double-clicking `setup.command` does nothing (no window opens).**
+This is different from the Gatekeeper "unidentified developer" warning (for that,
+right-click → Open). If *no* window appears at all, the file may have lost its
+executable bit. Open Terminal in the project folder and run:
+
+```
+chmod +x setup.command status.command
+```
+
+Then double-click `setup.command` again.
+
 **Claude Desktop doesn't show the tools.**
 1. Quit Claude Desktop **completely** (Cmd+Q / tray icon → Quit) and reopen —
    a window close is not enough.

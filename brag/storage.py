@@ -73,15 +73,39 @@ def patch_source_metadata(client, source_file: str, payload: dict) -> int:
     doc_type, rel_path, custom fields) for all chunks of a source IN PLACE —
     no re-embedding. Used when a file is renamed/moved but its content is
     unchanged. Returns the number of points updated."""
-    from qdrant_client.models import FieldCondition, Filter, MatchValue
+    from qdrant_client.models import FieldCondition, Filter, MatchAny
 
-    key = config.normalize_source_key(source_file)
-    flt = Filter(must=[FieldCondition(key="source_file", match=MatchValue(value=key))])
+    # NFC/NFD/raw triple-probe (consistent with delete/search/inspect): a
+    # single-NFC MatchValue silently misses payloads written under a different
+    # normalization, so the rename would wrongly fall back to a full re-ingest.
+    flt = Filter(must=[FieldCondition(
+        key="source_file", match=MatchAny(any=config.source_key_variants(source_file)),
+    )])
     count = client.count(config.COLLECTION_NAME, count_filter=flt, exact=True).count
-    if count:
-        client.set_payload(
-            collection_name=config.COLLECTION_NAME, payload=payload, points=flt,
-        )
+    if not count:
+        return 0
+    # set_payload only MERGES — custom fields from the OLD folder's _meta.txt
+    # that the new location no longer defines would otherwise survive the move
+    # (e.g. a stale `project=A` after moving into project B, leaking across the
+    # project/course filter). Remove those stale custom keys explicitly.
+    _PRESERVE = {
+        "text", "context", "chunk_type", "page_start", "page_end",
+        "chapter", "section", "language", "chunk_id", "ingest_timestamp",
+    }
+    points, _ = client.scroll(
+        config.COLLECTION_NAME, scroll_filter=flt, limit=1,
+        with_payload=True, with_vectors=False,
+    )
+    if points:
+        existing = set((points[0].payload or {}).keys())
+        stale = [k for k in existing if k not in payload and k not in _PRESERVE]
+        if stale:
+            client.delete_payload(
+                collection_name=config.COLLECTION_NAME, keys=stale, points=flt,
+            )
+    client.set_payload(
+        collection_name=config.COLLECTION_NAME, payload=payload, points=flt,
+    )
     return count
 
 

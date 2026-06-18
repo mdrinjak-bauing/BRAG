@@ -2,8 +2,11 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](INSTALL_MAC.de.md)**
 
-Time needed: ~15 minutes (most of it is downloads). You only need your mouse and
-the Terminal once — no programming required.
+Time needed: about **15 minutes of active work** — you only need your mouse and
+the Terminal once, no programming required. On top of that, the first build and
+the one-time model downloads run mostly **unattended** in the background; on a
+first install, allow roughly **30–60 minutes total** depending on your internet
+connection.
 
 ## 1. Install Docker Desktop
 
@@ -44,8 +47,8 @@ set up automatically in step 4 — nothing to do here yet.
 **What to do:**
 1. On the GitHub page, click the green **`Code`** button → **`Download ZIP`**.
    Unpack the ZIP by double-clicking it (e.g. into your home folder — see the
-   iCloud note below). A folder named `academic-rag-and-second-brain` (or
-   similar) appears.
+   iCloud note below). A folder named `Academic-RAG-and-Second-Brain-main`
+   appears (the exact name may vary slightly).
 2. Open that folder in Finder and double-click **`setup.command`**.
    - If macOS blocks it ("unidentified developer"): **right-click** the file →
      **Open** → **Open** again in the dialog.
@@ -71,8 +74,11 @@ minutes, first time only).
 **What to do:** Put a PDF into the `wissensspeicher/sources/` folder (inside the project
 folder).
 
-**What you see:** Nothing visible — processing runs in the background. A short
-document is indexed within ~30 seconds. To watch it, open Terminal in the
+**What you see:** Nothing visible — processing runs in the background. Note that
+the **very first** document also downloads the Docling layout models, so this one
+can take a few minutes (later documents are much faster). It's best to confirm
+the pipeline works with a small **1–2 page PDF** first; after that, expect about
+**1–3 minutes** for a normal 50-page paper. To watch it, open Terminal in the
 project folder and run:
 
 ```

@@ -39,12 +39,12 @@ folder, Claude Desktop as the user interface.
    multimodal LLM for an honest description that is embedded too. Without a
    vision model or image, it falls back to the honest caption-only prompt (never
    describe unseen content).
-4. **Embed** — dense vector (profile-dependent) + BM25 sparse vector with
-   language-aware stemming. Failed embeddings are logged and skipped — never
-   stored as zero vectors.
+4. **Embed** — dense vector (local arctic-embed-l-v2.0, 1024-dim, CPU) + BM25
+   sparse vector with language-aware stemming. Failed embeddings are logged and
+   skipped — never stored as zero vectors.
 5. **Store** (`pipeline.py` / `storage.py`) — old chunks of the same source
-   are deleted first (idempotent re-ingest), then batched upsert into a
-   hybrid Qdrant collection (dense + sparse with IDF modifier).
+   are deleted first (idempotent re-ingest), then batched upsert (100 per batch)
+   into a hybrid Qdrant collection (dense + sparse with IDF modifier).
 6. **Note** (`notes.py`) — an Obsidian-compatible literature note; the user's
    "My notes" section survives regeneration.
 
@@ -52,7 +52,7 @@ folder, Claude Desktop as the user interface.
 
 dense + sparse prefetch (150 each) → reciprocal rank fusion → top 80 →
 cross-encoder reranking (`BAAI/bge-reranker-v2-m3`) → source-diversity cap
-(max 3 chunks/source) → top k. Rerank scores are reported, never used as a
+(max 3 chunks/source) → top k (15 by default). Rerank scores are reported, never used as a
 hard filter — cross-encoder scores are not absolutely calibrated, and any
 floor cuts legitimate top hits on factual queries.
 

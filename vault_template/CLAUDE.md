@@ -1,4 +1,4 @@
-# My Research Vault — Instructions for Claude
+# My knowledge store — Instructions for Claude
 
 <!-- This file teaches Claude how to work with YOUR research. Claude Desktop
 (in a Project) and Claude Code read it automatically. Fill in the
@@ -13,7 +13,7 @@ students and teach two courses." -->
 
 (your field, institution, current projects)
 
-## My vault layout
+## My knowledge-store layout
 
 - `sources/` — my document corpus (PDFs, DOCX). **Read-only — never edit or move files here.** Subfolder names become the document type (e.g. `sources/papers/`, `sources/books/`).
 - `notes/` — auto-generated literature notes, one per source. The section "My notes" is mine; everything above it is regenerated.

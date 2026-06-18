@@ -34,6 +34,15 @@ All notable changes to this project are documented here. The format follows
   whole document. Re-ingest only happens when the file was not indexed yet.
 - New doc **"Which Claude surface?"** (`docs/WHICH_CLAUDE.md` / `.de.md`):
   when to use Chat vs. Cowork vs. Code, and why Chat is BRAG's home.
+- **Saved passages are now searchable.** `save_passage` not only writes the
+  quote into `wissensspeicher/passages/` but also indexes it, so a later chat —
+  even with a different AI provider — finds it again via `search`, tagged as a
+  *saved passage* and kept distinct from primary sources. This makes the
+  "knowledge lives in the folder, not the chat history" promise literally true.
+  (The rest of the notebook — `wiki/`, `notes/` — stays out of the index by
+  design; see the README "library and notebook" section.)
+- The `sources/_inbox/` staging area now ships in the knowledge-store template,
+  matching the documented folder layout.
 
 ### Security
 - HTTP bridge now enforces a **localhost Host-header allowlist** (and an Origin
@@ -47,6 +56,13 @@ All notable changes to this project are documented here. The format follows
   config that is not valid JSON. Added `no-new-privileges` to the app container
   and a `CLAUDE_CONFIG_MOUNTED` guard so the wizard no longer reports success
   when no real Claude config dir is mounted.
+- Setup page builds the local-model dropdown from DOM nodes instead of
+  `innerHTML` and is served with a strict **Content-Security-Policy** — closes a
+  reflected-XSS vector via attacker-controlled local-model names.
+- App container now runs as a **non-root user** with **all Linux capabilities
+  dropped** (`cap_drop: ALL`). The `.env` file (which holds the API key) is
+  written atomically and set to mode `0600`, and the setup API caps the request
+  body size. Added `pip-audit` to CI and a Dependabot config (pip + Actions).
 
 ### Fixed
 - `source_file` filters (search, `inspect_chunks`, delete) now use an
@@ -59,6 +75,26 @@ All notable changes to this project are documented here. The format follows
   descriptions for the rest of a document (latches off only after two in a row).
 - Docs: corrected leftover "profile B/C" naming in `ARCHITECTURE.md` and
   `FAQ.md`; fixed a German "see also" link that pointed at the English docs.
+- **Rename in place** now uses the NFC/NFD/raw triple-probe too, so a file whose
+  chunks were stored under a different Unicode form is patched in place instead
+  of silently re-ingested; and stale custom `_meta` fields from a previous
+  folder are removed on a move, so a moved document no longer leaks into the old
+  project/course filter.
+- Page links no longer drift by one after a table or figure (text-chunk
+  `page_end` is now reset together with `page_start`).
+- Contextual retrieval matches a chunk's chapter by the **exact** heading text
+  instead of a case-insensitive substring, so short/repeated titles no longer
+  pull in the wrong section's context.
+- The setup wizard no longer wrongly requires an Ollama embedding model
+  (`nomic-embed-text`) for the local profile — embeddings are always local
+  (arctic), so only a chat model is needed.
+- A heavy batch of embedding failures (e.g. a sustained cloud rate limit) now
+  aborts the document instead of freezing a partial index, so reconciliation
+  retries it later.
+- The setup launcher opens the right URL when `BRIDGE_HOST_PORT` is customized
+  (port 8765 already in use); the cross-encoder reranker takes an explicit batch
+  size for predictable latency on weak CPUs; and the knowledge-store template no
+  longer ships files titled "Vault".
 
 ## [0.2.0] — 2026-06
 

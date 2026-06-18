@@ -24,6 +24,9 @@ services:
         required: false
     security_opt:
       - no-new-privileges:true
+    cap_drop:
+      # The app is a plain Python process — it needs no Linux capabilities.
+      - ALL
     environment:
       - QDRANT_URL=http://qdrant:6333
       # "1" only when the launcher exported CLAUDE_CONFIG_DIR; lets the wizard

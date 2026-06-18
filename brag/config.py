@@ -98,6 +98,9 @@ RERANKER_MODEL = _env("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
 RERANK_ENABLED = _env("RERANK_ENABLED", "true").lower() == "true"
 RERANK_PREFETCH = int(_env("RERANK_PREFETCH", 150))
 RERANK_FUSION_LIMIT = int(_env("RERANK_FUSION_LIMIT", 80))
+# Cross-encoder batch size — bounds peak memory and keeps reranking responsive
+# on weak CPUs (the reranker scores up to RERANK_FUSION_LIMIT pairs per search).
+RERANK_BATCH_SIZE = int(_env("RERANK_BATCH_SIZE", 16))
 DEFAULT_TOP_K = int(_env("DEFAULT_TOP_K", 15))
 MAX_CHUNKS_PER_SOURCE = int(_env("MAX_CHUNKS_PER_SOURCE", 3))
 

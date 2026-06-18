@@ -53,7 +53,10 @@ if errorlevel 1 (
 echo.
 echo Opening the setup assistant in your browser...
 timeout /t 3 /nobreak >nul
-start "" "http://localhost:8765/setup"
+REM Honour a custom BRIDGE_HOST_PORT from .env (set it there if 8765 is taken).
+set "PORT=8765"
+for /f "tokens=2 delims==" %%P in ('findstr /b "BRIDGE_HOST_PORT=" .env 2^>nul') do set "PORT=%%P"
+start "" "http://localhost:%PORT%/setup"
 
 echo.
 echo Finish the setup in your browser - this window waits for you.

@@ -17,6 +17,18 @@ from brag import config
 
 SETUP_PAGE = Path(__file__).parent / "setup_page.html"
 
+# Setup API bodies are tiny JSON — cap the read so a loopback client cannot
+# exhaust memory with a huge Content-Length.
+MAX_BODY_BYTES = 1_000_000
+
+# The setup page uses inline script/style and only talks to its own origin.
+# A strict CSP keeps it from loading or exfiltrating to anywhere else — a
+# second line of defence behind output-escaping on the page itself.
+SETUP_CSP = (
+    "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
+    "connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'"
+)
+
 # Only requests addressed to the loopback interface are served. The bridge
 # binds 0.0.0.0 (Docker port-publishing connects via the container's eth0, so
 # binding 127.0.0.1 in-container would break the host mapping), so this
@@ -38,7 +50,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if parsed.path == "/healthz":
             self._send(200, b"ok", "text/plain")
         elif parsed.path in ("/", "/setup"):
-            self._send(200, SETUP_PAGE.read_bytes(), "text/html; charset=utf-8")
+            self._send(200, SETUP_PAGE.read_bytes(), "text/html; charset=utf-8",
+                       extra={"Content-Security-Policy": SETUP_CSP})
         elif parsed.path.startswith("/file/"):
             rel = urllib.parse.unquote(parsed.path[len("/file/"):])
             self._serve_vault_file(rel)
@@ -53,6 +66,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         try:
             length = int(self.headers.get("Content-Length", 0))
+            if length > MAX_BODY_BYTES:
+                self._send_json(413, {"ok": False, "message": "request too large"})
+                return
             body = json.loads(self.rfile.read(length) or b"{}")
         except (ValueError, json.JSONDecodeError):
             self._send_json(400, {"ok": False, "message": "invalid request"})
@@ -92,15 +108,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
                                   "message": f"{app} is not reachable. {hint}"})
             return
 
+        # Embeddings are ALWAYS local (arctic, in-container) in every profile —
+        # the local/Ollama profile only needs a chat model, NOT a pulled Ollama
+        # embedding model. So we gate on the chat model alone.
         chat_models = [m for m in models if "embed" not in m.lower()]
-        if profile == "local" and not any("nomic-embed-text" in m for m in models):
-            self._send_json(200, {
-                "ok": False, "models": chat_models,
-                "message": ("Ollama is running, but the embedding model is "
-                            "missing. Run in your terminal:  "
-                            "ollama pull nomic-embed-text"),
-            })
-            return
         if not chat_models:
             self._send_json(200, {
                 "ok": False, "models": [],

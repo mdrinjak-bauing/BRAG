@@ -2,21 +2,24 @@
 
 **🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.3.0** ([Änderungen](#versionen))
 
-> **Sprich mit deiner eigenen Fachliteratur.** PDFs in einen Ordner werfen —
-> Paper, Bücher, Berichte, Projektunterlagen — und Claude in normaler Sprache
-> fragen. Die Antwort steht **belegt in deinen eigenen Quellen**: seitengenau,
-> mit Zitat und einem Klick aufs Original-PDF. Alles läuft lokal auf deinem
-> Rechner.
+> **Dein eigener KI-Assistent — einer, der dein Wissen kennt.** Leg deine PDFs
+> und Notizen in einen Ordner. Claude oder ChatGPT **holt sich daraus selbst die
+> richtigen Stellen** (seitengenau belegt, ein Klick aufs Original) und
+> **schreibt Besprochenes als Notiz zurück** in denselben Ordner. Dein Wissen
+> liegt damit bei *dir* — nicht im Chatverlauf: jeder neue Chat, sogar bei einem
+> anderen Anbieter, knüpft nahtlos an. Lokal, anbieterunabhängig, deins.
 
 Der Name **BRAG** steht für *Building Retrieval-Augmented Generation* — ein
-Wortspiel mit meinem Fach (Bauingenieurwesen) und mit dem, was das Werkzeug tut:
-Es **baut** dein Wissen auf und ruft es per RAG-Suche bei Bedarf wieder ab.
+Wortspiel mit meinem Fach (Bauingenieurwesen) und mit dem, was es tut: Es
+**baut** dein Wissen auf und ruft es bei Bedarf wieder ab. Unter der Haube sorgt
+eine **hybride Suche** (Bedeutung + Stichwort, mit Reranking) dafür, dass die KI
+wirklich die *relevanten* Stellen findet — nicht nur irgendwelche. Wie das im
+Detail funktioniert, steht weiter unten.
 
 Ein „zweites Gehirn" für die Forschung ist nichts grundlegend Neues — aber
-dieses hier ist ein **richtig solides Setup**, das im Alltag wirklich trägt. Ich
-teile es, weil ich selbst täglich damit arbeite und andere etwas davon haben:
-kein Hype, kein Lock-in, sondern einfache Dateien, die dir gehören, eine starke
-Suche darüber und Claude als Gegenüber, das **nie ohne Beleg** antwortet.
+dieses hier ist ein **richtig solides Setup**, das im Alltag wirklich trägt:
+kein Hype, kein Lock-in, einfache Dateien, die dir gehören. Ich teile es, weil
+ich selbst täglich damit arbeite und andere etwas davon haben.
 
 **Für wen?** Forschende, Lehrende und Promovierende — und genauso Praktiker, die
 im Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und
@@ -85,17 +88,26 @@ Trennung ist der Kern dieses Designs:
 
 |  | 📚 **Deine Bibliothek** | 📓 **Dein Notizbuch** |
 |---|---|---|
-| Ordner | `wissensspeicher/sources/` | `wissensspeicher/wiki/`, `wissensspeicher/notes/`, `wissensspeicher/passages/` |
+| Ordner | `wissensspeicher/sources/` | `wissensspeicher/wiki/`, `wissensspeicher/notes/` |
 | Enthält | externe Quellen: Paper, Bücher, Berichte | **dein eigenes Denken**: Konzepte, Entwürfe, Lesenotizen |
 | Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | bewusst **nein** |
 | Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die optionale Obsidian-Anbindung |
 
-**Warum ist das Notizbuch vom Suchindex ausgeschlossen?** Wegen des
-Echo-Effekts: Wären deine eigenen Notizen indexiert, würdest du eines Tages
-deine eigene Zusammenfassung eines Papers „finden" und als Beleg zitieren —
-ohne zu merken, dass du dich selbst zitierst. Die Bibliothek beantwortet *„Was
-sagen meine Quellen?"*; das Notizbuch enthält, *was du daraus machst*. Claude
-arbeitet mit beidem — verwechselt sie aber nie.
+**Dazu eine dritte Ebene dazwischen — gespeicherte Passagen.** Wenn du Claude
+sagst *„speichere diese Passage"*, schreibt es das Zitat (mit Quelle und Seite)
+nach `wissensspeicher/passages/` **und indexiert es** — sodass jeder spätere
+Chat, sogar bei einem anderen KI-Anbieter, es über `search` wiederfindet, klar
+als *deine gespeicherte Passage* markiert. Das ist kuratierte Evidenz, die du
+behalten wolltest (ein echtes Zitat aus einer echten Quelle), nicht der eigene
+Output der KI — genau deshalb ist sie durchsuchbar, der Rest des Notizbuchs
+hingegen nicht.
+
+**Warum ist der Rest des Notizbuchs vom Suchindex ausgeschlossen?** Wegen des
+Echo-Effekts: Wären deine eigenen Konzeptnotizen und Auto-Zusammenfassungen
+indexiert, würdest du eines Tages deine eigene Zusammenfassung eines Papers
+„finden" und als Beleg zitieren — ohne zu merken, dass du dich selbst zitierst.
+Die Bibliothek beantwortet *„Was sagen meine Quellen?"*; das Notizbuch enthält,
+*was du daraus machst*. Claude arbeitet mit beidem — verwechselt sie aber nie.
 
 ### Dein Notizbuch — und warum einfache Markdown-Dateien
 

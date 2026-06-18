@@ -93,7 +93,7 @@ def search(query: str, top_k: int = None, reranking: bool = None,
     if reranking and candidates:
         pairs = [(query, c.get("context", "") + "\n" + c.get("text", ""))
                  for c in candidates]
-        scores = _get_reranker().predict(pairs)
+        scores = _get_reranker().predict(pairs, batch_size=config.RERANK_BATCH_SIZE)
         for c, s in zip(candidates, scores):
             c["rerank_score"] = float(s)
         candidates.sort(key=lambda c: c["rerank_score"], reverse=True)

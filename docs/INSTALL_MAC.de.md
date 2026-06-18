@@ -2,8 +2,11 @@
 
 **🇬🇧 [English](INSTALL_MAC.md) | 🇩🇪 Deutsch**
 
-Zeitbedarf: ~15 Minuten (das meiste sind Downloads). Du brauchst nur deine Maus
-und einmal kurz das Terminal — keine Programmierkenntnisse.
+Zeitbedarf: etwa **15 Minuten aktive Arbeit** — du brauchst nur deine Maus und
+einmal kurz das Terminal, keine Programmierkenntnisse. Hinzu kommen der erste
+Build und die einmaligen Modell-Downloads, die größtenteils **unbeaufsichtigt**
+im Hintergrund laufen; beim ersten Einrichten solltest du je nach
+Internetverbindung mit insgesamt rund **30–60 Minuten** rechnen.
 
 ## 1. Docker Desktop installieren
 
@@ -49,7 +52,7 @@ nichts weiter tun.
 1. Auf der GitHub-Seite den grünen Knopf **`Code`** → **`Download ZIP`** klicken.
    Entpacke die ZIP per Doppelklick (z. B. in deinen Benutzerordner — siehe
    Hinweis zu iCloud unten). Es entsteht ein Ordner namens
-   `academic-rag-and-second-brain` (oder ähnlich).
+   `Academic-RAG-and-Second-Brain-main` (der genaue Name kann leicht abweichen).
 2. Öffne diesen Ordner im Finder und mache einen Doppelklick auf
    **`setup.command`**.
    - Blockiert macOS mit „nicht verifizierter Entwickler": **Rechtsklick** auf
@@ -79,8 +82,12 @@ Terminal-Fenster baut nun im Hintergrund die Docker-Container und lädt einmalig
 des Projektordners).
 
 **Was du siehst:** Nichts Sichtbares — die Verarbeitung läuft im Hintergrund.
-Nach ~30 Sekunden ist ein kurzes Dokument indexiert. Wenn du zusehen willst,
-öffne das Terminal im Projektordner und gib ein:
+Beachte: Das **allererste** Dokument lädt zusätzlich die Docling-Layout-Modelle
+herunter, daher kann gerade dieses ein paar Minuten dauern (spätere Dokumente
+sind deutlich schneller). Prüfe die Pipeline am besten zuerst mit einer kleinen
+**1–2-seitigen PDF**; danach rechne mit etwa **1–3 Minuten** für ein normales
+50-seitiges Paper. Wenn du zusehen willst, öffne das Terminal im Projektordner und
+gib ein:
 
 ```
 docker compose logs -f app

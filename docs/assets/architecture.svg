@@ -60,7 +60,7 @@
   <rect x="704" y="162" width="222" height="104" rx="9" fill="#fdf3e7" stroke="#e2c79f"/>
   <text x="716" y="184" font-size="12.5" font-weight="700" fill="#243447">MCP 1 · library search</text>
   <text x="716" y="203" font-size="10.5" font-family="ui-monospace,Menlo,monospace" fill="#8a5a23">search · list_sources ·</text>
-  <text x="716" y="219" font-size="10.5" font-family="ui-monospace,Menlo,monospace" fill="#8a5a23">inspect_chunks · passages</text>
+  <text x="716" y="219" font-size="10.5" font-family="ui-monospace,Menlo,monospace" fill="#8a5a23">inspect_chunks · save/list_passages</text>
   <text x="716" y="243" font-size="11" font-style="italic" fill="#8a5a23">configured automatically ✓</text>
 
   <rect x="704" y="278" width="222" height="110" rx="9" fill="#efe9f6" stroke="#c9b8e0"/>

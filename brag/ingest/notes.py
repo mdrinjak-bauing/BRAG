@@ -50,9 +50,9 @@ def write_note(chunks: list[Chunk]) -> None:
         # Preserve everything the user wrote below the "My notes" marker
         old = note_path.read_text(encoding="utf-8")
         marker = "## My notes"
-        if marker in old:
+        if marker in old and marker in lines:
             user_part = old.split(marker, 1)[1]
-            lines = lines[: lines.index("## My notes")] + [marker + user_part.rstrip()]
+            lines = lines[: lines.index(marker)] + [marker + user_part.rstrip()]
     note_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

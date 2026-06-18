@@ -32,17 +32,24 @@ def _toc(full_markdown: str) -> str:
 def _chapter_text(full_markdown: str, chapter: str) -> str:
     if not chapter:
         return ""
+    # Match the chapter heading by its EXACT text (after stripping the leading
+    # '#' markers), not a case-insensitive substring — otherwise a short or
+    # repeated title ("Methods", "1 Introduction") captures the wrong section
+    # and the chunk gets grounded in unrelated context. If no exact heading
+    # matches, the caller falls back to whole-document context.
+    target = chapter.strip().lower()
     lines = full_markdown.splitlines()
     capturing, level, result = False, None, []
     for line in lines:
         s = line.strip()
+        is_heading = s.startswith("#")
         if not capturing:
-            if s.startswith("#") and chapter.lower() in s.lower():
+            if is_heading and s.lstrip("#").strip().lower() == target:
                 capturing = True
                 level = len(s) - len(s.lstrip("#"))
                 result.append(line)
         else:
-            if s.startswith("#") and (len(s) - len(s.lstrip("#"))) <= level:
+            if is_heading and (len(s) - len(s.lstrip("#"))) <= level:
                 break
             result.append(line)
     return "\n".join(result)[: config.CHAPTER_CONTEXT_CHARS]

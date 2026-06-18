@@ -2,8 +2,11 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](INSTALL_WINDOWS.de.md)**
 
-Time needed: ~20 minutes (most of it is downloads). You only need your mouse and
-the Command Prompt once — no programming required.
+Time needed: about **15–20 minutes of active work** — you only need your mouse
+and the Command Prompt once, no programming required. On top of that, the first
+build and the one-time model downloads run mostly **unattended** in the
+background; on a first install, allow roughly **30–60 minutes total** depending
+on your internet connection.
 
 ## 1. Install Docker Desktop
 
@@ -46,9 +49,10 @@ set up automatically in step 4.
 
 **What to do:**
 1. On the GitHub page, click the green **`Code`** button → **`Download ZIP`**.
-   Right-click the ZIP → **"Extract All"** (e.g. to
-   `C:\Users\<you>\academic-rag-and-second-brain`). Important: **extract** first
-   — don't run it from inside the ZIP.
+   Right-click the ZIP → **"Extract All"** (e.g. to your home folder). The
+   extracted folder is named `Academic-RAG-and-Second-Brain-main` (the exact name
+   may vary slightly). Important: **extract** first — don't run it from inside
+   the ZIP.
 2. Open the extracted folder and double-click **`setup.bat`**.
    - If **Windows SmartScreen** warns ("Windows protected your PC"): click **"More
      info"** → **"Run anyway"**.
@@ -75,9 +79,12 @@ minutes, first time only).
 **What to do:** Put a PDF into the `wissensspeicher\sources\` folder (inside the project
 folder).
 
-**What you see:** Nothing visible — processing runs in the background. A short
-document is indexed within ~30 seconds. To watch, open a Command Prompt in the
-project folder and run:
+**What you see:** Nothing visible — processing runs in the background. Note that
+the **very first** document also downloads the Docling layout models, so this one
+can take a few minutes (later documents are much faster). It's best to confirm
+the pipeline works with a small **1–2 page PDF** first; after that, expect about
+**1–3 minutes** for a normal 50-page paper. To watch, open a Command Prompt in
+the project folder and run:
 
 ```
 docker compose logs -f app
