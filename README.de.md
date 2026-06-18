@@ -338,8 +338,8 @@ Umbenennen oder Löschen in `sources/` wird automatisch nachgezogen: Benennst du
 eine **bereits indexierte** Datei um, werden nur die Metadaten (Autor, Jahr, Typ,
 PDF-Pfad) im Index aktualisiert — **ohne neu einzulesen** (kein erneutes
 Embedding, keine API-Kosten); löschst du sie, verschwindet sie aus der Datenbank.
-Unterordner-Namen werden zum filterbaren Dokumenttyp (`sources/Paper/`,
-`sources/Berichte/` …).
+Der **erste** Unterordner-Name wird zum filterbaren Dokumenttyp (`sources/Paper/`,
+`sources/Berichte/` …); tiefer verschachteln kannst du für eigene Tags (siehe unten).
 
 **Eigene Metadaten** (Projekt, Kurs, Auftraggeber …) gibst du über eine
 `_meta.txt` in einem Ordner unter `sources/` an — eine Zeile pro `schlüssel: wert`;
@@ -354,6 +354,22 @@ projekt: Schulzentrum
 auftraggeber: Stadt Hamm
 page_offset: 14
 ```
+
+Du kannst **beliebig tief verschachteln**, und `_meta.txt`-Dateien **stapeln sich
+von `sources/` hinab bis zum Ordner des Dokuments — tiefer überschreibt**. Setz
+also grobe Tags weit oben und verfeinere sie weiter unten:
+
+```
+sources/Projekte/_meta.txt                     →  auftraggeber: Stadt Hamm
+sources/Projekte/Schulzentrum/_meta.txt        →  projekt: Schulzentrum
+sources/Projekte/Schulzentrum/2024/_meta.txt   →  phase: Ausführung
+```
+
+Ein Dokument in `…/Schulzentrum/2024/` trägt dann `auftraggeber`, `projekt`
+**und** `phase` — alles in der Suche filterbar (*„such nur im Projekt
+Schulzentrum"*). Die einzige Regel: nur der **erste** Unterordner unter
+`sources/` bestimmt den **Dokumenttyp**; alles Tiefere dient allein deinen
+`_meta.txt`-Tags.
 
 **Im Alltag** legst du neue Literatur einfach in `sources/` ab (in Minuten
 indexiert) und fragst Claude, was sie zu deinem Bestand ergänzt oder ob sie ihm
