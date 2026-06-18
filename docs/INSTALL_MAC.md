@@ -92,7 +92,7 @@ Now ask Claude:
   Qdrant, the watcher, the corpus and the AI connection, with a ✓/✗ per item.
 - The **whale icon** in the menu bar is steady → Docker is running.
 - `docker ps` (Terminal, in the project folder) lists the two containers
-  **`asb-app`** and **`asb-qdrant`**.
+  **`brag-app`** and **`brag-qdrant`**.
 - In Claude Desktop the tools (e.g. `search`, `list_sources`) appear via the
   tools/plug icon in the input box. If they're missing, you likely only closed
   Claude instead of quitting it with **Cmd+Q**.

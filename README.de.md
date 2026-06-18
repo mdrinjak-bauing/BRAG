@@ -372,10 +372,13 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 
 Aktuelle Version: **0.3.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
 
-- **0.3.0** — Projekt umbenannt in **BRAG** (*Building Retrieval-Augmented
-  Generation*). **Ein-Klick-Statuscheck** (Docker, Qdrant, Watcher, Korpus,
-  KI-Backend, Claude-Anbindung). **Umbenennen einer indexierten Datei** ist jetzt
-  ein leichtgewichtiges Metadaten-Update statt einer vollen Neu-Indexierung.
+- **0.3.0** — Projekt durchgängig umbenannt in **BRAG** (*Building
+  Retrieval-Augmented Generation*) — inklusive Paket, Docker-Image und Containern
+  (keine indexierten Daten gehen verloren; **bestehende Installationen führen das
+  Setup einmal erneut aus**, siehe [CHANGELOG](CHANGELOG.md)).
+  **Ein-Klick-Statuscheck** (Docker, Qdrant, Watcher, Korpus, KI-Backend,
+  Claude-Anbindung). **Umbenennen einer indexierten Datei** ist jetzt ein
+  leichtgewichtiges Metadaten-Update statt einer vollen Neu-Indexierung.
   Sicherheits-Härtung der Setup-Bridge (Host-Header-Allowlist, statische Dateien
   nur als Download, atomare Config-Schreibvorgänge). Wissensspeicher-Ordner
   umbenannt `vault/` → `wissensspeicher/`. Neues Dokument: welche Claude-Oberfläche

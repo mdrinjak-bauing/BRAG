@@ -22,7 +22,7 @@ BRAG ist in den **Chat von Claude Desktop** eingebunden — und genau dafür ist
 gebaut:
 
 - Der Einrichtungs-Assistent trägt BRAG als **lokalen MCP-Server** ein (er schreibt
-  einen `docker exec … asb.mcp_server`-Eintrag in die
+  einen `docker exec … brag.mcp_server`-Eintrag in die
   `claude_desktop_config.json`). Die Werkzeuge `search`, `list_sources`,
   `inspect_chunks`, … erscheinen dann **direkt im Chat**.
 - Die **PDF-Deep-Links** in jeder Antwort öffnen im Browser an der zitierten Seite

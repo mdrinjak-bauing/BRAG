@@ -10,11 +10,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY asb/ /app/asb/
+COPY brag/ /app/brag/
 COPY vault_template/ /app/vault_template/
 
 # Model caches (Docling layout models, reranker) persist via a named volume
 ENV HF_HOME=/models
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "-m", "asb.main"]
+CMD ["python", "-m", "brag.main"]

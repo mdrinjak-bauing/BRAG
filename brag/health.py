@@ -1,6 +1,6 @@
 """One-shot health check — is the RAG system actually working?
 
-Run inside the app container:  python -m asb.health
+Run inside the app container:  python -m brag.health
 
 It verifies the parts that live inside Docker (Qdrant, the corpus index, the
 app/watcher process, and the AI text backend). The host-side status.command /
@@ -11,7 +11,7 @@ container (Docker itself, the containers being up, the Claude Desktop entry).
 import sys
 import urllib.request
 
-from asb import config
+from brag import config
 
 
 def _ok(label: str, detail: str = "") -> bool:
@@ -26,7 +26,7 @@ def _fail(label: str, detail: str = "") -> bool:
 
 def check_qdrant() -> bool:
     try:
-        from asb import storage
+        from brag import storage
         client = storage.get_client()
         try:
             client.get_collections()
@@ -39,7 +39,7 @@ def check_qdrant() -> bool:
 
 def check_corpus() -> bool:
     try:
-        from asb import storage
+        from brag import storage
         client = storage.get_client()
         try:
             names = {c.name for c in client.get_collections().collections}
@@ -83,7 +83,7 @@ def check_llm() -> bool:
         if not key:
             return _fail(f"AI text model ({backend})", "no API key set — re-run setup")
         try:
-            from asb.setup_core import validate_api_key
+            from brag.setup_core import validate_api_key
             ok, msg = validate_api_key(backend, key)
         except Exception as e:  # noqa: BLE001
             return _fail(f"AI text model ({backend})", str(e)[:60])

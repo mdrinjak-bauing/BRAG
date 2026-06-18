@@ -100,7 +100,7 @@ Stelle Claude jetzt eine Frage:
   jeden Punkt ✓/✗.
 - In **Docker Desktop** steht der Status auf „running".
 - `docker ps` (in der Eingabeaufforderung im Projektordner) zeigt die zwei
-  Container **`asb-app`** und **`asb-qdrant`**.
+  Container **`brag-app`** und **`brag-qdrant`**.
 - In Claude Desktop erscheinen die Werkzeuge (z. B. `search`, `list_sources`).
   Fehlen sie, hast du Claude vermutlich nur geschlossen statt **beendet**.
 

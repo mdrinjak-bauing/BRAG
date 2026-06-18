@@ -1,6 +1,6 @@
 """MCP server for Claude Desktop (stdio transport).
 
-Claude Desktop starts this via `docker exec -i asb-app python -m asb.mcp_server`
+Claude Desktop starts this via `docker exec -i brag-app python -m brag.mcp_server`
 inside the running container — the setup wizard writes that config entry.
 
 Tools: search, list_sources, inspect_chunks, save_passage, list_passages.
@@ -11,9 +11,9 @@ from datetime import date
 
 from mcp.server.fastmcp import FastMCP
 
-from asb import config, storage
-from asb.http_bridge import pdf_link
-from asb.search.query import search as run_search
+from brag import config, storage
+from brag.http_bridge import pdf_link
+from brag.search.query import search as run_search
 
 mcp = FastMCP("academic-rag-and-second-brain")
 

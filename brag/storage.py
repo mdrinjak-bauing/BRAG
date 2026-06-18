@@ -1,6 +1,6 @@
 """Qdrant access: client factory, collection setup, deletion helpers."""
 
-from asb import config
+from brag import config
 
 
 def get_client():

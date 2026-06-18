@@ -3,8 +3,8 @@ Obsidian-compatible, written to wissensspeicher/notes/."""
 
 from datetime import date
 
-from asb import config
-from asb.ingest.extract import Chunk
+from brag import config
+from brag.ingest.extract import Chunk
 
 
 def write_note(chunks: list[Chunk]) -> None:

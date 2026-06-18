@@ -1,7 +1,7 @@
 services:
   qdrant:
     image: qdrant/qdrant:v1.17.1
-    container_name: asb-qdrant
+    container_name: brag-qdrant
     restart: unless-stopped
     volumes:
       # Named volume: immune to cloud-sync corruption (iCloud/OneDrive),
@@ -14,8 +14,8 @@ services:
 
   app:
     build: .
-    image: asb:latest
-    container_name: asb-app
+    image: brag:latest
+    container_name: brag-app
     restart: unless-stopped
     depends_on:
       - qdrant

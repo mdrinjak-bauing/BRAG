@@ -353,12 +353,14 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 Current version: **0.3.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
 - **0.3.0** — Renamed the project to **BRAG** (*Building Retrieval-Augmented
-  Generation*). **One-click status check** (Docker, Qdrant, watcher, corpus, AI
-  backend, Claude connection). **Renaming an indexed file** is now a lightweight
-  metadata update instead of a full re-ingest. Security hardening of the setup
-  bridge (Host-header allowlist, download-only static files, atomic config
-  writes). Knowledge-store folder renamed `vault/` → `wissensspeicher/`. New
-  doc: which Claude surface to use (Chat / Cowork / Code).
+  Generation*) end to end — package, Docker image and containers included (no
+  indexed data is lost; **existing installs re-run the setup once**, see
+  [CHANGELOG](CHANGELOG.md)). **One-click status check** (Docker, Qdrant,
+  watcher, corpus, AI backend, Claude connection). **Renaming an indexed file**
+  is now a lightweight metadata update instead of a full re-ingest. Security
+  hardening of the setup bridge (Host-header allowlist, download-only static
+  files, atomic config writes). Knowledge-store folder renamed `vault/` →
+  `wissensspeicher/`. New doc: which Claude surface to use (Chat / Cowork / Code).
 - **0.2.0** — Added **OpenAI/ChatGPT** and **Anthropic/Claude** alongside Google
   Gemini. Bilingual setup wizard. The meaning index (arctic) runs locally in
   **every** profile (switch provider without re-indexing). Reworked guide (query

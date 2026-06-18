@@ -15,7 +15,7 @@ folder and run `./setup.command` (Mac) or `setup.bat` (Windows).
 **Claude Desktop doesn't show the tools.**
 1. Quit Claude Desktop **completely** (Cmd+Q / tray icon → Quit) and reopen —
    a window close is not enough.
-2. Check the container is running: `docker ps` should list `asb-app`.
+2. Check the container is running: `docker ps` should list `brag-app`.
 3. Check the config file (see [OBSIDIAN.md](OBSIDIAN.md) for the path)
    contains the `academic-rag-and-second-brain` entry.
 
@@ -40,7 +40,7 @@ The hybrid/local profiles are slower than the cloud profiles.
 **"Rate limit" messages during indexing (Cloud profile).**
 The free Gemini tier has per-minute/per-day limits. The system waits and
 retries automatically — let it run; nothing is lost. Failed chunks are
-recorded in `wissensspeicher/.asb/failed_chunks.jsonl`.
+recorded in `wissensspeicher/.brag/failed_chunks.jsonl`.
 
 **Are figures/images analyzed?**
 Yes. The **vision pass** is on by default: on ingest each figure image is sent
@@ -97,8 +97,8 @@ and `ANSWER_LANGUAGE` for generated text, then re-index new documents.
 
 **How do I check with one click that everything works?**
 Double-click **`status.command`** (Mac) or **`status.bat`** (Windows) in the
-project folder. It reports ✓/✗ for: Docker running, the `asb-app` and
-`asb-qdrant` containers up, Qdrant reachable, the corpus indexed (with source/
+project folder. It reports ✓/✗ for: Docker running, the `brag-app` and
+`brag-qdrant` containers up, Qdrant reachable, the corpus indexed (with source/
 chunk counts), the watcher running, the AI text model reachable, and Claude
 Desktop wired up. Each ✗ tells you what to do.
 

@@ -5,7 +5,7 @@ import json
 import shutil
 from pathlib import Path
 
-from asb.profiles import PROFILES
+from brag.profiles import PROFILES
 
 WORKSPACE = Path("/workspace")
 CLAUDE_CONFIG_DIR = Path("/claude-config")
@@ -14,7 +14,7 @@ SETUP_MARKER = WORKSPACE / ".setup_complete"
 
 MCP_ENTRY = {
     "command": "docker",
-    "args": ["exec", "-i", "asb-app", "python", "-m", "asb.mcp_server"],
+    "args": ["exec", "-i", "brag-app", "python", "-m", "brag.mcp_server"],
 }
 
 

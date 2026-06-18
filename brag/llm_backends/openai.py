@@ -3,9 +3,9 @@
 import json
 import urllib.request
 
-from asb import config
-from asb.llm_backends.base import LLMBackend
-from asb.llm_backends.retry import call_with_retry
+from brag import config
+from brag.llm_backends.base import LLMBackend
+from brag.llm_backends.retry import call_with_retry
 
 DEFAULT_URL = "https://api.openai.com/v1"
 

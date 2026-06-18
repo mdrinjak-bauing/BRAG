@@ -1,8 +1,8 @@
 """Gemini embedding backend (Profile A)."""
 
-from asb import config
-from asb.embeddings.base import EmbeddingBackend
-from asb.llm_backends.retry import call_with_retry
+from brag import config
+from brag.embeddings.base import EmbeddingBackend
+from brag.llm_backends.retry import call_with_retry
 
 
 class GeminiEmbedder(EmbeddingBackend):

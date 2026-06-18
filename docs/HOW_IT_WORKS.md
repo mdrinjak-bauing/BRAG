@@ -17,7 +17,7 @@ every computer. You install Docker once; it runs the rest. That's why setup is
 
 Two "appliances" run side by side inside that box:
 
-**1. The app container** (`asb-app`) — the actual worker. You never start it by
+**1. The app container** (`brag-app`) — the actual worker. You never start it by
 hand; it bundles several small subsystems:
 
 - **The watcher** — the lookout. Every ~10 seconds it checks your `sources/`
@@ -34,7 +34,7 @@ hand; it bundles several small subsystems:
   searches, a short-lived process spins up in this container, fetches the
   results and hands them back.
 
-**2. Qdrant** (`asb-qdrant`) — a *search database for meaning*. A normal
+**2. Qdrant** (`brag-qdrant`) — a *search database for meaning*. A normal
 database finds exact words; Qdrant finds text that *means* something similar,
 even if it uses different words. It's what lets you ask "rules for extra
 payments" and get a passage that says "Nachtragsmanagement". It runs as a second
@@ -70,7 +70,7 @@ In short: **your files live in the project folder (visible, yours); the running
 system and the search index live in Docker (invisible, managed automatically).**
 
 To check everything is running, open a terminal in the project folder and type
-`docker ps` — you should see the two boxes `asb-app` and `asb-qdrant`.
+`docker ps` — you should see the two boxes `brag-app` and `brag-qdrant`.
 
 ---
 

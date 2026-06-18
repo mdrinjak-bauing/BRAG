@@ -9,7 +9,7 @@ embeddings with a local LLM.
 import os
 from pathlib import Path
 
-from asb.profiles import PROFILES
+from brag.profiles import PROFILES
 
 try:  # .env is loaded by docker-compose; this is a fallback for local runs
     from dotenv import load_dotenv
@@ -32,7 +32,7 @@ VAULT = Path(_env("VAULT_DIR", "/vault"))
 SOURCES_DIR = VAULT / "sources"
 NOTES_DIR = VAULT / "notes"
 PASSAGES_DIR = VAULT / "passages"
-DATA_DIR = VAULT / ".asb"            # ingest log, failed-chunk log
+DATA_DIR = VAULT / ".brag"            # ingest log, failed-chunk log
 INGEST_LOG = DATA_DIR / "ingest_log.jsonl"
 FAILED_CHUNKS_LOG = DATA_DIR / "failed_chunks.jsonl"
 
@@ -64,6 +64,9 @@ ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY", "")
 
 # Collection name is tied to the embedding backend — switching backends
 # automatically targets a different collection (no silent dimension clash).
+# NOTE: the "asb_" prefix is deliberately kept (not renamed to "brag_") so
+# that installations created before the BRAG rename keep finding their
+# existing Qdrant data. It is an internal identifier and never user-visible.
 COLLECTION_NAME = _env(
     "COLLECTION_NAME", f"asb_{EMBEDDING_BACKEND}_{EMBEDDING_DIM}"
 )

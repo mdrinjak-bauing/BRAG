@@ -15,12 +15,12 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from asb import config, storage
-from asb.embeddings import get_embedder
-from asb.embeddings.sparse import embed_sparse_documents
-from asb.ingest.contextualize import contextualize
-from asb.ingest.extract import extract
-from asb.ingest.notes import write_note
+from brag import config, storage
+from brag.embeddings import get_embedder
+from brag.embeddings.sparse import embed_sparse_documents
+from brag.ingest.contextualize import contextualize
+from brag.ingest.extract import extract
+from brag.ingest.notes import write_note
 
 UPSERT_BATCH = 100
 
@@ -128,7 +128,7 @@ def ingest(path: Path) -> bool:
 
 def remove_source(source_file: str) -> int:
     """Remove a deleted document from the index and clean up its note."""
-    from asb.ingest.notes import delete_note
+    from brag.ingest.notes import delete_note
     client = storage.get_client()
     try:
         n = storage.delete_chunks_by_source(client, source_file)
@@ -146,8 +146,8 @@ def rename_source(old_source_file: str, new_path: Path) -> int:
     Returns the number of chunks updated, or 0 if the source was not indexed —
     in which case the caller should fall back to a full ingest.
     """
-    from asb.ingest.extract import derive_file_metadata, metadata_payload
-    from asb.ingest.notes import rename_note
+    from brag.ingest.extract import derive_file_metadata, metadata_payload
+    from brag.ingest.notes import rename_note
 
     payload = metadata_payload(new_path)
     client = storage.get_client()

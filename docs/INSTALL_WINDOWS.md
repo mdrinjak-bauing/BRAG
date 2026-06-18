@@ -96,7 +96,7 @@ Now ask Claude:
   Qdrant, the watcher, the corpus and the AI connection, with a ✓/✗ per item.
 - In **Docker Desktop** the status reads "running".
 - `docker ps` (Command Prompt, in the project folder) lists the two containers
-  **`asb-app`** and **`asb-qdrant`**.
+  **`brag-app`** and **`brag-qdrant`**.
 - In Claude Desktop the tools (e.g. `search`, `list_sources`) appear. If they're
   missing, you likely only closed Claude instead of **quitting** it.
 

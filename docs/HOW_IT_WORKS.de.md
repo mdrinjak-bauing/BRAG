@@ -18,7 +18,7 @@ beantworten" statt einer Seite voller Befehle.
 
 In dieser Box laufen zwei „Geräte" nebeneinander:
 
-**1. Der App-Container** (`asb-app`) — der eigentliche Arbeiter. Du startest
+**1. Der App-Container** (`brag-app`) — der eigentliche Arbeiter. Du startest
 ihn nie von Hand; in ihm stecken mehrere kleine Teilsysteme:
 
 - **Der Watcher** — die Wache. Er schaut alle ~10 Sekunden in deinen
@@ -37,7 +37,7 @@ ihn nie von Hand; in ihm stecken mehrere kleine Teilsysteme:
   Claude sucht, läuft kurz ein Prozess in diesem Container an, holt die
   Ergebnisse und gibt sie zurück.
 
-**2. Qdrant** (`asb-qdrant`) — eine *Suchdatenbank für Bedeutung*. Eine normale
+**2. Qdrant** (`brag-qdrant`) — eine *Suchdatenbank für Bedeutung*. Eine normale
 Datenbank findet exakte Wörter; Qdrant findet Text, der etwas Ähnliches
 *meint*, auch mit anderen Wörtern. Genau deshalb kannst du nach „Regeln für
 Mehrkosten" fragen und eine Stelle bekommen, die „Nachtragsmanagement" sagt.
@@ -75,7 +75,7 @@ laufende System und der Suchindex liegen in Docker (unsichtbar, automatisch
 verwaltet).**
 
 Willst du nachsehen, ob alles läuft, öffne im Projektordner ein Terminal und gib
-`docker ps` ein — es sollten die beiden Boxen `asb-app` und `asb-qdrant`
+`docker ps` ein — es sollten die beiden Boxen `brag-app` und `brag-qdrant`
 auftauchen.
 
 ---

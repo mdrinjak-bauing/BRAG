@@ -8,14 +8,14 @@ Claude Desktop als Benutzeroberfläche.
 ```
  HOST                                   DOCKER
 ┌──────────────────┐                   ┌─────────────────────────────────┐
-│ Claude Desktop   │── docker exec ───▶│ asb-app                         │
+│ Claude Desktop   │── docker exec ───▶│ brag-app                         │
 │  (MCP, stdio)    │   (mcp_server)    │  ├─ watcher (polling)           │
 │                  │                   │  ├─ ingest pipeline             │
 │ Browser ◀────────┼── localhost:8765 ─┤  ├─ http bridge (PDF links)    │
 │  (PDF at page N) │                   │  └─ search (hybrid + rerank)   │
 │                  │                   │            │                    │
 │ wissensspeicher/  ◀────────┼─── bind mount ───▶│            ▼                    │
-│  sources/ notes/ │                   │ asb-qdrant (vector DB,          │
+│  sources/ notes/ │                   │ brag-qdrant (vector DB,          │
 │  passages/ wiki/ │                   │  named volume — no sync risk)   │
 │                  │                   └─────────────────────────────────┘
 │ LM Studio/Ollama ◀── host.docker.internal (nur Profile Hybrid/Lokal)
@@ -24,7 +24,7 @@ Claude Desktop als Benutzeroberfläche.
 
 ## Einlese-Pipeline (pro Dokument)
 
-1. **Extract** (`asb/ingest/extract.py`) — Docling analysiert das Layout:
+1. **Extract** (`brag/ingest/extract.py`) — Docling analysiert das Layout:
    Kapitel, Abschnitte, Tabellen, Abbildungsunterschriften, Seitenzahlen. Der
    Tabellenmodus ist fest auf ACCURATE gesetzt, damit Bibliotheks-Updates die
    Qualität nicht still verschlechtern können. Bei aktivem Vision-Pass werden

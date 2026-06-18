@@ -13,7 +13,7 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from asb import config
+from brag import config
 
 SETUP_PAGE = Path(__file__).parent / "setup_page.html"
 
@@ -59,7 +59,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/validate-key":
-            from asb.setup_core import validate_api_key
+            from brag.setup_core import validate_api_key
             ok, message = validate_api_key(
                 str(body.get("provider", "gemini")), str(body.get("key", "")))
             self._send_json(200, {"ok": ok, "message": message})
@@ -114,7 +114,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         })
 
     def _apply_setup(self, body: dict):
-        from asb import setup_core
+        from brag import setup_core
         steps = []
         try:
             setup_core.write_env(

@@ -7,17 +7,24 @@ All notable changes to this project are documented here. The format follows
 ## [0.3.0] — 2026-06
 
 ### Changed
-- **Renamed the project to BRAG** (*Building Retrieval-Augmented Generation*).
-  This is a branding change only — the internal package, container names, MCP
-  server key and environment variables are unchanged, so existing installations
-  keep working without reconfiguration.
+- **Renamed the project to BRAG** (*Building Retrieval-Augmented Generation*),
+  end to end: user-facing branding, the Python package (`asb` → `brag`), the
+  Docker image (`asb:latest` → `brag:latest`) and the containers
+  (`asb-app`/`asb-qdrant` → `brag-app`/`brag-qdrant`). The MCP server key, the
+  environment variable names (`VAULT_PATH`, …) and the Qdrant collection name
+  (internal `asb_…` prefix) are intentionally kept so **no indexed data is
+  lost**.
+  **Migration for existing installs:** pull, run `docker compose up -d --build`
+  (your knowledge store and index are preserved via the named volume), then
+  **re-run the setup once** (`setup.command` / `setup.bat`) so Claude Desktop
+  points at the new `docker exec brag-app …` command.
 - Knowledge-store default folder renamed `vault/` → `wissensspeicher/`. The
   `VAULT_PATH` / `VAULT_DIR` environment variables and the internal `/vault`
   mount point are kept for backwards compatibility.
 
 ### Added
 - **One-click status check** (`status.command` / `status.bat`) and an
-  `asb.health` module: verifies Docker, the `asb-app`/`asb-qdrant` containers,
+  `brag.health` module: verifies Docker, the `brag-app`/`brag-qdrant` containers,
   Qdrant, the corpus index, the folder watcher, the AI text backend, and the
   Claude Desktop connection, with a ✓/✗ per item.
 - **Lightweight rename of indexed files**: renaming or moving a file that is
