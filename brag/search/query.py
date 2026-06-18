@@ -70,18 +70,23 @@ def search(query: str, top_k: int = None, reranking: bool = None,
     sparse_q = embed_sparse_query(query)
     qfilter = _build_filter(**filters)
 
+    # A large top_k must not be silently capped by the rerank/fusion presets:
+    # fetch at least top_k candidates per vector and fuse at least top_k.
+    prefetch_limit = max(top_k, config.RERANK_PREFETCH)
+    fusion_limit = max(top_k, config.RERANK_FUSION_LIMIT)
+
     client = storage.get_client()
     try:
         result = client.query_points(
             collection_name=config.COLLECTION_NAME,
             prefetch=[
                 Prefetch(query=dense_q, using=config.DENSE_VECTOR,
-                         limit=config.RERANK_PREFETCH, filter=qfilter),
+                         limit=prefetch_limit, filter=qfilter),
                 Prefetch(query=sparse_q, using=config.SPARSE_VECTOR,
-                         limit=config.RERANK_PREFETCH, filter=qfilter),
+                         limit=prefetch_limit, filter=qfilter),
             ],
             query=FusionQuery(fusion="rrf"),
-            limit=config.RERANK_FUSION_LIMIT,
+            limit=fusion_limit,
             with_payload=True,
         )
     finally:
