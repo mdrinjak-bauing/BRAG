@@ -1,116 +1,115 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" width="1200" height="640" font-family="-apple-system,&#39;Segoe UI&#39;,system-ui,sans-serif" role="img" aria-labelledby="ttl dsc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" width="1200" height="600" font-family="-apple-system,'Segoe UI',system-ui,sans-serif" role="img" aria-labelledby="ttl dsc">
   <title id="ttl">The BRAG cycle</title>
-  <desc id="dsc">A clockwise cycle around your local machine: collect documents, process them locally, ask with citations, think with AI, and write notes back into your knowledge store with two-way traffic. Optional services dock in via a cloud.</desc>
-  
+  <desc id="dsc">Five steps in a row — collect, process locally, ask with citations, think with AI, save as a note — over one shared knowledge store of library and notebook. The notebook has two-way traffic (write and read back). A return curve closes the cycle; optional services dock in via MCP.</desc>
   <defs>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#b7ad9b"></path></marker>
-    <marker id="arT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#c0653f"></path></marker>
-    <marker id="arB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5a7ba6"></path></marker>
-    <radialGradient id="hub" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#fff"></stop><stop offset="100%" stop-color="#fbf7ee"></stop></radialGradient>
+    <marker id="ah" markerWidth="10" markerHeight="10" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#cfc8b8"></path></marker>
+    <marker id="aht" markerWidth="11" markerHeight="11" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#c0653f"></path></marker>
   </defs>
 
-  <rect x="6" y="6" width="1188" height="628" rx="22" fill="#fffdf9" stroke="#e6e0d4" stroke-width="1.5"></rect>
+  <rect x="8" y="8" width="1184" height="584" rx="20" fill="#fffdf9" stroke="#e6e0d4" stroke-width="1.5"></rect>
 
-  <text x="44" y="48" font-size="13" font-weight="700" letter-spacing="2.4" fill="#c0653f">ONE CYCLE — YOUR KNOWLEDGE GROWS</text>
-  <text x="44" y="80" font-family="Georgia,&#39;Times New Roman&#39;,serif" font-size="27" font-weight="600" fill="#243447">Your knowledge gathers in files you own — not in the chat.</text>
+  <!-- header (own band, no overlap) -->
+  <text x="36" y="40" font-size="12.5" font-weight="700" letter-spacing="2.2" fill="#c0653f">ONE CYCLE — YOUR KNOWLEDGE GROWS</text>
+  <text x="1164" y="40" font-size="12" fill="#b0a999" text-anchor="end">🔒 can run local · every answer cited</text>
+  <text x="36" y="70" font-family="Georgia,'Times New Roman',serif" font-size="22" font-weight="600" fill="#243447">Your knowledge gathers — in files you own.</text>
+  <line x1="36" y1="84" x2="1164" y2="84" stroke="#eee8db" stroke-width="1"></line>
 
-  
-  <circle cx="600" cy="358" r="222" fill="none" stroke="#ece6da" stroke-width="2" stroke-dasharray="2 7"></circle>
-  <g fill="none" stroke="#d8cfbd" stroke-width="2.4" stroke-linecap="round">
-    <path class="ringline" d="M682 154 A 222 222 0 0 1 773 213" marker-end="url(#ar)"></path>
-    <path class="ringline" d="M824 369 A 222 222 0 0 1 791 477" marker-end="url(#ar)"></path>
-    <path class="ringline" d="M655 573 A 222 222 0 0 1 545 573" marker-end="url(#ar)"></path>
-    <path class="ringline" d="M409 477 A 222 222 0 0 1 376 369" marker-end="url(#ar)"></path>
-    <path class="ringline" d="M427 213 A 222 222 0 0 1 518 154" marker-end="url(#ar)"></path>
+  <!-- chevrons between the 5 cards (in the gaps) -->
+  <g fill="none" stroke="#cfc8b8" stroke-width="2.2">
+    <path d="M240 172 l18 0" marker-end="url(#ah)"></path>
+    <path d="M472 172 l18 0" marker-end="url(#ah)"></path>
+    <path d="M704 172 l18 0" marker-end="url(#ah)"></path>
+    <path d="M936 172 l18 0" marker-end="url(#ah)"></path>
   </g>
 
-  
-  <path d="M780 300 C 752 306, 732 308, 718 314" fill="none" stroke="#9fb6d6" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arB)"></path>
-  <path d="M718 440 C 740 452, 754 460, 762 472" fill="none" stroke="#9fb6d6" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arB)"></path>
+  <!-- ===== knowledge store band (two halves) ===== -->
+  <text x="600" y="306" font-size="12" font-weight="700" letter-spacing="1.4" fill="#8a8377" text-anchor="middle">YOUR KNOWLEDGE STORE — ONE FOLDER, LOCAL</text>
+  <rect x="36" y="316" width="1128" height="84" rx="16" fill="#faf8f3" stroke="#e6e0d4" stroke-width="1.5"></rect>
+  <line x1="600" y1="328" x2="600" y2="388" stroke="#e6e0d4" stroke-width="1.5" stroke-dasharray="4 5"></line>
+  <text x="64" y="352" font-size="15" font-weight="700" fill="#2e5d2e">📚 Library</text>
+  <text x="64" y="374" font-size="12" fill="#4a5568">external sources · only read by the AI · searchable</text>
+  <text x="636" y="352" font-size="15" font-weight="700" fill="#5a4a8e">📓 Notebook</text>
+  <text x="636" y="374" font-size="12" fill="#4a5568">your own thinking · deliberately not indexed</text>
 
-  
-  
-  <path d="M450 452 H750 L770 478 H430 Z" fill="#ded7c8" stroke="#cfc8b8" stroke-width="1.5" stroke-linejoin="round"></path>
-  <path d="M560 452 a40 40 0 0 0 80 0" fill="#cfc8b8"></path>
-  
-  <rect x="452" y="296" width="296" height="160" rx="14" fill="#e8e2d5" stroke="#cfc8b8" stroke-width="2"></rect>
-  
-  <rect x="462" y="306" width="276" height="140" rx="8" fill="#fffdf9" stroke="#e3dccb" stroke-width="1"></rect>
-  <text x="600" y="328" font-size="11" font-weight="700" letter-spacing="1.6" fill="#8a8377" text-anchor="middle">KNOWLEDGE STORE · LOCAL</text>
-  <line x1="600" y1="336" x2="600" y2="438" stroke="#e3dccb" stroke-width="1.4" stroke-dasharray="3 4"></line>
-  <rect x="468" y="336" width="130" height="102" rx="7" fill="#f6f1fb" opacity="0.7"></rect>
-  <text x="531" y="368" font-size="21" text-anchor="middle">📓</text>
-  <text x="531" y="392" font-size="13" font-weight="700" fill="#59437d" text-anchor="middle">Notebook</text>
-  <text x="531" y="409" font-size="10.5" fill="#7a5ba6" text-anchor="middle">two-way traffic</text>
-  <text x="669" y="368" font-size="21" text-anchor="middle">📚</text>
-  <text x="669" y="392" font-size="13" font-weight="700" fill="#2e5d2e" text-anchor="middle">Library</text>
-  <text x="669" y="409" font-size="10.5" fill="#5a8f5a" text-anchor="middle">collect &amp; read</text>
-  
-  <g class="lock"><text x="498" y="497" font-size="13" text-anchor="middle">🔒</text></g>
-  <text x="600" y="497" font-size="11.5" fill="#8a8377" text-anchor="middle" dx="6">your machine — everything stays local</text>
+  <!-- vertical connectors in the gaps (straight) -->
+  <path d="M136 246 L136 312" stroke="#b5c9af" stroke-width="2.2" fill="none" marker-end="url(#ah)"></path>
+  <text x="144" y="284" font-size="11" fill="#8a8377">store</text>
+  <path d="M470 312 L470 246" stroke="#cfc8b8" stroke-width="2.2" fill="none" marker-end="url(#ah)"></path>
+  <text x="478" y="284" font-size="11" fill="#8a8377">read</text>
 
-  
-  <g class="cf">
-    <path d="M460 352 C 438 344, 416 340, 398 332" fill="none" stroke="#c0653f" stroke-width="3.4" stroke-linecap="round" marker-end="url(#arT)"></path>
-    <path d="M398 396 C 416 400, 438 396, 460 392" fill="none" stroke="#c0653f" stroke-width="3.4" stroke-linecap="round" marker-end="url(#arT)"></path>
-    <text x="429" y="368" font-size="11" font-weight="700" fill="#a8512f" text-anchor="middle">reads again</text>
-    <text x="429" y="383" font-size="11" font-weight="700" fill="#a8512f" text-anchor="middle">writes back</text>
-  </g>
-
-  
-  
+  <!-- ===== the 5 step cards (painted on top) ===== -->
+  <!-- 1 Collect (green) -->
   <g>
-    <rect x="520" y="90" width="160" height="60" rx="14" fill="#fff" stroke="#e6e0d4" stroke-width="1.5"></rect>
-    <circle cx="543" cy="120" r="12" fill="#eef3ea" stroke="#b5c9af"></circle><text x="543" y="125" font-size="12" font-weight="700" fill="#2e5d2e" text-anchor="middle">1</text>
-    <text x="563" y="120" font-size="15" font-weight="700" fill="#243447">📚 Collect</text>
-    <text x="600" y="170" font-size="11.5" fill="#8a8377" text-anchor="middle">PDF · Word · PPT · notes → one folder</text>
+    <rect x="36" y="96" width="200" height="150" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="62" cy="124" r="12" fill="#eef3ea" stroke="#b5c9af"></circle>
+    <text x="62" y="129" font-size="12" font-weight="700" fill="#2e5d2e" text-anchor="middle">1</text>
+    <text x="82" y="129" font-size="15" font-weight="700" fill="#243447">Collect</text>
+    <text x="54" y="156" font-size="11" fill="#8a8377" font-family="ui-monospace,Menlo,monospace">sources/</text>
+    <text x="54" y="184" font-size="12" fill="#4a5568">Drop documents into</text>
+    <text x="54" y="202" font-size="12" fill="#4a5568">a folder.</text>
+    <text x="54" y="228" font-size="11.5" fill="#8a8377">📄 PDF·Word·PPT·notes</text>
   </g>
-  
+  <!-- 2 Process locally (blue) -->
   <g>
-    <rect x="734" y="244" width="150" height="78" rx="14" fill="#fff" stroke="#b9cde4" stroke-width="1.5"></rect>
-    <circle cx="757" cy="270" r="12" fill="#eaf0f7" stroke="#b9cde4"></circle><text x="757" y="275" font-size="12" font-weight="700" fill="#2c4a6e" text-anchor="middle">2</text>
-    <text x="777" y="275" font-size="15" font-weight="700" fill="#243447">Process</text>
-    <text x="809" y="298" font-size="11.5" fill="#8a8377" text-anchor="middle">Hybrid search + reranking</text>
-    <text x="809" y="314" font-size="10.5" fill="#5a7ba6" text-anchor="middle">runs locally on your machine</text>
+    <rect x="268" y="96" width="200" height="150" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="294" cy="124" r="12" fill="#eaf0f7" stroke="#b9cde4"></circle>
+    <text x="294" y="129" font-size="12" font-weight="700" fill="#2c4a6e" text-anchor="middle">2</text>
+    <text x="314" y="129" font-size="15" font-weight="700" fill="#243447">Process locally</text>
+    <text x="286" y="156" font-size="11" fill="#8a8377" font-family="ui-monospace,Menlo,monospace">on your machine 🔒</text>
+    <text x="286" y="184" font-size="12" fill="#4a5568">made searchable:</text>
+    <text x="286" y="202" font-size="12" fill="#4a5568">hybrid index + reranking</text>
+    <text x="286" y="228" font-size="11.5" fill="#5a7ba6">● Meaning  ▪ Keyword</text>
   </g>
-  
+  <!-- 3 Ask (amber) -->
   <g>
-    <rect x="654" y="500" width="150" height="80" rx="14" fill="#fff" stroke="#e2c79f" stroke-width="1.5"></rect>
-    <circle cx="677" cy="525" r="12" fill="#fdf3e7" stroke="#e2c79f"></circle><text x="677" y="530" font-size="12" font-weight="700" fill="#8a5a23" text-anchor="middle">3</text>
-    <text x="697" y="530" font-size="15" font-weight="700" fill="#243447">Ask</text>
-    <text x="729" y="552" font-size="11.5" fill="#8a8377" text-anchor="middle">in Claude or a local AI</text>
-    <g><rect x="668" y="559" width="122" height="16" rx="8" fill="#fdf3e7" stroke="#e2c79f"></rect><text x="729" y="571" font-size="10" font-weight="600" fill="#a8512f" text-anchor="middle">⚓ answer with page citation</text></g>
+    <rect x="500" y="96" width="200" height="150" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="526" cy="124" r="12" fill="#fdf3e7" stroke="#e2c79f"></circle>
+    <text x="526" y="129" font-size="12" font-weight="700" fill="#8a5a23" text-anchor="middle">3</text>
+    <text x="546" y="129" font-size="15" font-weight="700" fill="#243447">Ask</text>
+    <text x="518" y="156" font-size="11" fill="#8a8377" font-family="ui-monospace,Menlo,monospace">Claude / local AI</text>
+    <text x="518" y="184" font-size="12" fill="#4a5568">in plain language —</text>
+    <text x="518" y="202" font-size="12" fill="#4a5568">answer cited to the page.</text>
+    <g><rect x="518" y="214" width="166" height="20" rx="8" fill="#fdf3e7" stroke="#d99e80"></rect><text x="530" y="228" font-size="10.5" font-weight="600" fill="#a8512f">⚓ Müller 2021 · p. 14 ↗</text></g>
   </g>
-  
+  <!-- 4 Think with AI (terracotta) -->
   <g>
-    <rect x="392" y="500" width="172" height="80" rx="14" fill="#fff" stroke="#e6e0d4" stroke-width="1.5"></rect>
-    <circle cx="415" cy="525" r="12" fill="#f6f1fb" stroke="#c9b8e0"></circle><text x="415" y="530" font-size="12" font-weight="700" fill="#59437d" text-anchor="middle">4</text>
-    <text x="435" y="530" font-size="14" font-weight="700" fill="#243447">Think &amp; edit</text>
-    <text x="478" y="552" font-size="11.5" fill="#8a8377" text-anchor="middle">brainstorm &amp; drafts</text>
-    <text x="478" y="570" font-size="10.5" fill="#7a5ba6" text-anchor="middle">🧑 You + ✦ AI</text>
+    <rect x="732" y="96" width="200" height="150" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="758" cy="124" r="12" fill="#f3d9cb" stroke="#d99e80"></circle>
+    <text x="758" y="129" font-size="12" font-weight="700" fill="#a8512f" text-anchor="middle">4</text>
+    <text x="778" y="129" font-size="15" font-weight="700" fill="#243447">Think with AI</text>
+    <text x="750" y="156" font-size="11" fill="#8a8377" font-family="ui-monospace,Menlo,monospace">brainstorm · draft</text>
+    <text x="750" y="184" font-size="12" fill="#4a5568">a variation, a note,</text>
+    <text x="750" y="202" font-size="12" fill="#4a5568">a concept.</text>
+    <text x="750" y="228" font-size="11.5" fill="#8a8377">🧑 You + ✦ AI</text>
   </g>
-  
+  <!-- 5 Save as a note (violet) -->
   <g>
-    <rect x="232" y="240" width="166" height="84" rx="14" fill="#fff" stroke="#c0653f" stroke-width="2"></rect>
-    <circle cx="255" cy="266" r="12" fill="#f3d9cb" stroke="#c0653f"></circle><text x="255" y="271" font-size="12" font-weight="700" fill="#a8512f" text-anchor="middle">5</text>
-    <text x="275" y="271" font-size="14.5" font-weight="700" fill="#243447">📓 Notebook</text>
-    <text x="315" y="294" font-size="11.5" fill="#a8512f" font-weight="600" text-anchor="middle">in AND out</text>
-    <text x="315" y="312" font-size="10.5" fill="#8a8377" text-anchor="middle">write back &amp; read again</text>
+    <rect x="964" y="96" width="200" height="150" rx="16" fill="#ffffff" stroke="#c0653f" stroke-width="2"></rect>
+    <circle cx="990" cy="124" r="12" fill="#efeaf7" stroke="#c9bce4"></circle>
+    <text x="990" y="129" font-size="12" font-weight="700" fill="#5a4a8e" text-anchor="middle">5</text>
+    <text x="1010" y="129" font-size="15" font-weight="700" fill="#243447">Save as a note</text>
+    <text x="982" y="156" font-size="11" fill="#8a8377" font-family="ui-monospace,Menlo,monospace">wiki/ · passages/</text>
+    <text x="982" y="184" font-size="12" fill="#4a5568">result back into the</text>
+    <text x="982" y="202" font-size="12" fill="#4a5568">knowledge store — in</text>
+    <text x="982" y="220" font-size="12" font-weight="600" fill="#5a4a8e">files you own.</text>
   </g>
 
-  
-  <path d="M1010 238 C 968 256, 928 270, 890 282" fill="none" stroke="#c7cedb" stroke-width="1.6" stroke-dasharray="5 5"></path>
-  <g class="cloud">
-    <g transform="translate(988,110) scale(1.42)">
-      <path d="M105 90 H35 C15 90 5 78 5 62 C5 48 16 38 30 38 C32 22 46 10 63 10 C78 10 91 20 95 34 C110 35 122 46 122 60 C122 78 112 90 105 90 Z" fill="#f3f5f9" stroke="#c7cedb" stroke-width="1.3"></path>
-    </g>
-    <text x="1078" y="150" font-size="10.5" font-weight="700" letter-spacing="1.2" fill="#9aa0ad" text-anchor="middle">OPTIONAL · VIA MCP</text>
-    <text x="1078" y="180" font-size="13" fill="#5f6b7e" text-anchor="middle">📅  Calendar</text>
-    <text x="1078" y="206" font-size="13" fill="#5f6b7e" text-anchor="middle">✉️  Mail</text>
-    <text x="1078" y="232" font-size="13" fill="#5f6b7e" text-anchor="middle">✅  Tasks</text>
-  </g>
+  <!-- the two-way traffic: bold arrow between step 5 and the notebook -->
+  <path d="M1064 246 L1064 312" stroke="#c0653f" stroke-width="3.2" fill="none" marker-start="url(#aht)" marker-end="url(#aht)"></path>
+  <text x="1076" y="284" font-size="11.5" font-weight="700" fill="#c0653f">⇅ in AND out</text>
 
-  <line x1="44" y1="604" x2="1156" y2="604" stroke="#eee8db" stroke-width="1"></line>
-  <text x="44" y="624" font-size="12" fill="#b0a999">BRAG — Building Retrieval-Augmented Generation</text>
-  <text x="1156" y="624" font-size="12" fill="#b0a999" font-family="Georgia,serif" font-style="italic" text-anchor="end">Chats forget — your knowledge store doesn’t.</text>
+  <!-- return loop: closes the cycle (well below the store, clear of text) -->
+  <path d="M1064 402 C 1064 470, 860 476, 600 476 C 340 476, 136 470, 136 408" stroke="#c0653f" stroke-width="2.4" fill="none" marker-end="url(#aht)" opacity="0.9"></path>
+  <text x="600" y="464" font-size="14" font-style="italic" font-weight="600" fill="#c0653f" text-anchor="middle" font-family="Georgia,serif">your knowledge grows — every new chat picks up right here</text>
+
+  <!-- optional integrations -->
+  <line x1="832" y1="246" x2="832" y2="504" stroke="#dcd5c6" stroke-width="1.6" stroke-dasharray="5 5"></line>
+  <rect x="398" y="504" width="404" height="40" rx="20" fill="#ffffff" stroke="#cfc8b8" stroke-width="1.5" stroke-dasharray="6 5"></rect>
+  <text x="420" y="529" font-size="12.5" fill="#4a5568">optional · if you like:&#160;&#160;📅 Calendar&#160;&#160;✉️ Mail&#160;&#160;✅ Tasks</text>
+  <text x="788" y="529" font-size="10.5" fill="#b0a999" text-anchor="end" font-family="ui-monospace,Menlo,monospace">via MCP</text>
+
+  <!-- footer -->
+  <line x1="36" y1="562" x2="1164" y2="562" stroke="#eee8db" stroke-width="1"></line>
+  <text x="36" y="580" font-size="11.5" fill="#b0a999">BRAG — Building Retrieval-Augmented Generation · can run fully local, every answer cited</text>
+  <text x="1164" y="580" font-size="11.5" fill="#b0a999" text-anchor="end" font-family="Georgia,serif" font-style="italic">Chats forget — your knowledge store doesn't.</text>
 </svg>
