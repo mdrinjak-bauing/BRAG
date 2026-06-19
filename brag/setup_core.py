@@ -49,7 +49,14 @@ def write_env(profile: str, api_key: str, language: str,
     api_key = _env_safe(api_key)
     llm_model = _env_safe(llm_model)
     rerank_profile = _env_safe(rerank_profile) or "eco"
-    answer_lang = "German" if language == "german" else "English"
+    # Map the document language to the answer/notes language. Falls back to
+    # English for anything outside the wizard's offered set, so a non-German,
+    # non-English corpus no longer silently gets English context embedded.
+    answer_lang = {
+        "english": "English", "german": "German", "french": "French",
+        "spanish": "Spanish", "italian": "Italian", "dutch": "Dutch",
+        "portuguese": "Portuguese",
+    }.get(language, "English")
     lines = [
         "# BRAG — Building Retrieval-Augmented Generation — written by the setup wizard.",
         "# Re-run setup to change these safely. Full reference: .env.example",
@@ -69,9 +76,13 @@ def write_env(profile: str, api_key: str, language: str,
         lines.append(f"{key_env}={api_key}")
     if llm_model:
         lines.append(f"LLM_MODEL={llm_model}")
-    # Preserve the host's Claude config dir (set by setup.command / setup.bat)
-    if existing.get("CLAUDE_CONFIG_DIR"):
-        lines.append(f"CLAUDE_CONFIG_DIR={existing['CLAUDE_CONFIG_DIR']}")
+    # Preserve known keys the wizard itself does not manage but the user may
+    # have set by hand — a re-run (e.g. to switch provider) must not silently
+    # drop them: the Claude config dir (set by setup.command / setup.bat) and a
+    # custom bridge port / public URL (used when 8765 is already taken).
+    for preserved in ("CLAUDE_CONFIG_DIR", "BRIDGE_HOST_PORT", "BRIDGE_PUBLIC_URL"):
+        if existing.get(preserved):
+            lines.append(f"{preserved}={existing[preserved]}")
     # Atomic write (temp + replace) so a crash mid-write can't truncate the
     # config, and 0600 because this file holds the API key.
     env_path = WORKSPACE / ".env"
@@ -162,9 +173,12 @@ def validate_api_key(provider: str, api_key: str) -> tuple[bool, str]:
         return False, "That doesn't look like a complete API key."
 
     if provider == "gemini":
-        url = ("https://generativelanguage.googleapis.com/v1beta/models"
-               f"?pageSize=1&key={api_key}")
-        req = urllib.request.Request(url)
+        # Pass the key in the header (x-goog-api-key), not the URL query, so it
+        # cannot leak into proxy/server logs — consistent with OpenAI/Anthropic.
+        req = urllib.request.Request(
+            "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1",
+            headers={"x-goog-api-key": api_key},
+        )
         rejected_hint = ("The key was rejected by Google. Copy it again from "
                          "https://aistudio.google.com/apikey")
     elif provider == "openai":

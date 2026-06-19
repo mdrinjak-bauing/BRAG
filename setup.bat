@@ -65,11 +65,21 @@ start "" "http://localhost:%PORT%/setup"
 
 echo.
 echo Finish the setup in your browser - this window waits for you.
+echo (If you closed or cancelled the assistant: close this window and double-click setup.bat again.)
+set /a waited=0
 :waitloop
-if not exist .setup_complete (
-  timeout /t 2 /nobreak >nul
-  goto waitloop
+if exist .setup_complete goto setupdone
+timeout /t 2 /nobreak >nul
+set /a waited+=2
+if %waited% geq 2700 (
+  echo.
+  echo Timed out after 45 minutes. If you didn't finish the assistant, close this
+  echo window and run setup.bat again.
+  docker compose --profile setup rm -sf setup >nul 2>nul
+  exit /b 1
 )
+goto waitloop
+:setupdone
 
 echo Applying your settings...
 REM Tear down the setup service (frees the port and drops its mounts), then

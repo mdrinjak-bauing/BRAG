@@ -415,8 +415,10 @@ function setProvider(p){
   show("s2key");
 }
 function quickstart(){
-  // Express path: Gemini cloud, economical reranking, figure descriptions on.
-  // Skips the language and performance steps (defaults are applied in apply()).
+  // Express path: pre-pick Gemini cloud + economical reranking + figures on, then
+  // jump straight to the API-key step. The language and performance steps are still
+  // shown afterwards (s2key → s3 → sperf → apply); only the profile/provider choice
+  // is skipped. Defaults (eco / vision on) hold even if the user clicks through.
   state.profile = "gemini"; state.provider = "gemini";
   state.rerank = "eco"; state.vision = true;
   const link = document.getElementById("keylink");
