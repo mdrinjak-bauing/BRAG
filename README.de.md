@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/overview.de.svg" alt="Der BRAG-Kreislauf — sammeln, lokal verwerten, fragen mit Beleg, mit KI denken und Notizen zurück in den Wissensspeicher schreiben" width="100%">
+</p>
+
 ![BRAG — sprich mit deinen eigenen Quellen, jede Antwort mit Beleg](docs/assets/header.de.svg)
 
 # BRAG — Building Retrieval-Augmented Generation
@@ -30,52 +34,32 @@ Forschende, Lehrende und Promovierende — und genauso Praktiker, die im Projekt
 
 ## Was du damit machst
 
-- 🔎 **Finden statt blättern** — *„Was sagt mein Korpus zum Nachtragsmanagement?"*
-  Antwort mit Seitenbeleg, ein Klick öffnet das PDF an genau der Stelle.
-- 📊 **Zahlen & Tabellen ziehen** — *„Finde Tabellen mit Kostenkennzahlen zu
-  Nacharbeit"* — auch Abbildungen werden inhaltlich beschrieben und sind so
-  auffindbar.
-- ✍️ **Schreiben mit Belegen** — beim Lesen zitierfähige Passagen sammeln, beim
-  Entwerfen *„Bau den Absatz aus diesen Passagen, Belege beibehalten."*
-- 🎓 **Lehre vorbereiten** — *„Entwirf drei Klausurfragen aus Kapitel 4, mit
-  Seitenangaben."*
-- 🧠 **Denken festhalten** — Zitate landen automatisch in deinem Wissensspeicher,
-  eigene Schlussfolgerungen optional über Obsidian; ein neuer Chat Tage später
-  macht genau dort weiter, wo der letzte aufhörte.
-- 🗂️ **Nach Projekt/Kurs filtern** — *„Such **nur im Projekt Schulzentrum**:
-  Welche Position deckt die Erdarbeiten ab?"*
-- 🔬 **Eine Idee entwickeln** — *„Was sagen meine Quellen zu Reifegradmodellen?
-  Wo widersprechen sie sich?"* — das Ergebnis als Konzeptnotiz festhalten und
-  Tage später im neuen Chat genau dort weitermachen.
+- 🔎 **Finden statt blättern** — *„Was sagt die VOB/B zur Behinderungsanzeige?"*
+  oder *„Was steht in meinen Unterlagen zum Nachtragsmanagement?"* Antwort mit
+  Seitenbeleg, ein Klick öffnet das PDF an genau der Stelle.
+- 📑 **Verträge, Normen & LV durchsuchen** — *„Welche Frist nennt der Bauvertrag
+  für die Mängelrüge?"*, *„Welche LV-Position deckt die Erdarbeiten ab?"* — die
+  richtige Klausel oder Position seitengenau statt stundenlang blättern.
+- 🗂️ **Bautagebuch & Schriftverkehr auswerten** — *„Wann wurde die Behinderung
+  an der Attika erstmals dokumentiert?"* — quer über Tagesberichte, Protokolle
+  und Baustellen-Mails, jede Aussage belegt.
+- 📊 **Zahlen & Tabellen ziehen** — *„Zeig mir die Mengen und Kostenkennzahlen
+  aus der Kalkulation"* — auch Tabellen und Abbildungen werden inhaltlich erfasst
+  und sind so auffindbar.
+- ✍️ **Schreiben mit Belegen** — Entwurf einer Behinderungsanzeige, einer
+  Aktennotiz oder eines Nachtrags: *„Bau den Text aus diesen Passagen, Belege
+  beibehalten."* Zitierfähige Stellen sammelst du schon beim Lesen.
+- 🏗️ **Nach Projekt/Baustelle filtern** — *„Such **nur im Projekt Schulzentrum**:
+  Welche Position deckt die Erdarbeiten ab?"* — jedes Vorhaben sauber getrennt.
+- 🧠 **Entscheidungen & Wissen festhalten** — Zitate landen automatisch in deinem
+  Wissensspeicher, eigene Schlussfolgerungen optional über Obsidian; ein neuer
+  Chat Tage später macht genau dort weiter, wo der letzte aufhörte.
+- 🎓 **… und natürlich Forschung & Lehre** — *„Entwirf drei Prüfungsfragen aus
+  Kapitel 4, mit Seitenangaben"* oder *„Wo widersprechen sich meine Quellen zu
+  Reifegradmodellen?"*
 
 Der Kerngedanke: **Chats vergessen — dein Wissensspeicher nicht.** Wissen sammelt sich in
 deinen Dateien an, nicht in einem flüchtigen Chatverlauf.
-
-### Beispiele aus der Baupraxis
-
-Sind deine Normen, Berichte und Projektunterlagen erst indexiert, bekommst du auf
-Fragen wie diese eine seitengenau belegte Antwort (ein Klick öffnet das PDF an
-der richtigen Stelle):
-
-- **Normen & Regelwerke** — *„Welche Mindestbetondeckung fordert der Eurocode 2
-  für die Expositionsklasse XC4?"* · *„Welche Anforderungen an die Flucht- und
-  Rettungswege gelten hier?"*
-- **Leistungsverzeichnis & Ausschreibung** — *„Finde die Position Erdarbeiten im
-  LV Schulzentrum"* · *„Vergleiche die Bewehrungsmengen in diesen zwei
-  Angeboten."*
-- **Nachträge & Claims** — *„Welche Nachträge betreffen geänderte
-  Baugrundverhältnisse?"* · *„Was sagt die VOB/B zur Behinderungsanzeige und zu
-  den Fristen?"*
-- **Gutachten & Prüfberichte** — *„Was sagt das Baugrundgutachten zum
-  Grundwasserstand und zur empfohlenen Gründung?"* · *„Fasse die in den
-  Abnahmeprotokollen festgehaltenen Mängel zusammen."*
-- **Kostenkennzahlen** — *„Finde Tabellen mit Kostenkennwerten für den Rohbau"* ·
-  *„Welche Kosten für Nacharbeit tauchen in meinen Berichten auf?"*
-- **Lehre & Klausuren** — *„Entwirf drei Klausurfragen zum Stahlbetonbau aus
-  Kapitel 4, mit Seitenangaben."*
-
-Jede dieser Fragen lässt sich per `_meta.txt`-Tag auf ein Projekt oder einen Kurs
-eingrenzen — z. B. *„such nur im Projekt Schulzentrum."*
 
 Ein „zweites Gehirn" ist keine neue Idee. Ich habe versucht, eine Variante zu
 bauen, die im Alltag wirklich trägt — kein Hype, kein Lock-in, einfach Dateien,
@@ -85,8 +69,8 @@ Feedback, Kritik und alle, die es ausprobieren möchten, freue ich mich wirklich
 
 ## Die Idee: eine Bibliothek und ein Notizbuch
 
-Ein „Second Brain" für die Forschung hat zwei Hälften — und ihre strikte
-Trennung ist der Kern dieses Designs:
+Ein „Second Brain" für dein Projekt — ob Forschung, Lehre oder die tägliche
+Praxis — hat zwei Hälften, und ihre strikte Trennung ist der Kern dieses Designs:
 
 |  | 📚 **Deine Bibliothek** | 📓 **Dein Notizbuch** |
 |---|---|---|
@@ -351,7 +335,7 @@ So ist der Wissensspeicher aufgebaut:
 
 ```
 wissensspeicher/
-├── CLAUDE.md      ← bringt Claude DEINE Forschung bei — ausfüllen!
+├── CLAUDE.md      ← bringt Claude dein Fachgebiet bei (hier trägst du es ein)
 ├── AGENTS.md      ← Zusatzregeln für autonome Agenten-Aufgaben
 ├── sources/       ← 📚 Dokumente hier ablegen (PDF, DOCX); Unterordner = Dokumenttypen
 │   └── _inbox/    ← Staging-Bereich, wird vom Indexer ignoriert
@@ -396,6 +380,10 @@ Ein Dokument in `…/Schulzentrum/2024/` trägt dann `auftraggeber`, `projekt`
 Schulzentrum"*). Die einzige Regel: nur der **erste** Unterordner unter
 `sources/` bestimmt den **Dokumenttyp**; alles Tiefere dient allein deinen
 `_meta.txt`-Tags.
+
+**Ändern wirkt sofort:** Legst du eine `_meta.txt` an oder bearbeitest sie
+nachträglich, frischt BRAG die Metadaten der bereits indexierten Dokumente
+dieses Ordners automatisch auf — ohne neu einzulesen.
 
 **Im Alltag** legst du neue Literatur einfach in `sources/` ab (in Minuten
 indexiert) und fragst Claude, was sie zu deinem Bestand ergänzt oder ob sie ihm

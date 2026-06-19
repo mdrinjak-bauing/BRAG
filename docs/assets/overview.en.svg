@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" width="1200" height="600" font-family="-apple-system,'Segoe UI',system-ui,sans-serif" role="img" aria-labelledby="ttl dsc">
+  <title id="ttl">The BRAG cycle</title>
+  <desc id="dsc">Five steps in a row — collect, process locally, ask with citations, think with AI, save as a note — over one shared knowledge store of library and notebook. The notebook has two-way traffic (write and read back). A return curve closes the cycle; optional services dock in via MCP.</desc>
+  <defs>
+    <marker id="ah" markerWidth="10" markerHeight="10" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#cfc8b8"></path></marker>
+    <marker id="aht" markerWidth="11" markerHeight="11" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#c0653f"></path></marker>
+  </defs>
+
+  <rect x="8" y="8" width="1184" height="584" rx="20" fill="#fffdf9" stroke="#e6e0d4" stroke-width="1.5"></rect>
+
+  <!-- header (own band, no overlap) -->
+  <text x="36" y="40" font-size="12.5" font-weight="700" letter-spacing="2.2" fill="#c0653f">ONE CYCLE — YOUR KNOWLEDGE GROWS</text>
+  <text x="1164" y="40" font-size="12" fill="#b0a999" text-anchor="end">🔒 can run local · every answer cited</text>
+  <text x="36" y="70" font-family="Georgia,'Times New Roman',serif" font-size="22" font-weight="600" fill="#243447">Your knowledge gathers — in files you own.</text>
+  <line x1="36" y1="84" x2="1164" y2="84" stroke="#eee8db" stroke-width="1"></line>
+
+  <!-- chevrons between the 5 cards (in the gaps) -->
+  <g fill="none" stroke="#cfc8b8" stroke-width="2.2">
+    <path d="M240 172 l18 0" marker-end="url(#ah)"></path>
+    <path d="M472 172 l18 0" marker-end="url(#ah)"></path>
+    <path d="M704 172 l18 0" marker-end="url(#ah)"></path>
+    <path d="M936 172 l18 0" marker-end="url(#ah)"></path>
+  </g>
+
+  <!-- ===== knowledge store band (two halves) ===== -->
+  <text x="600" y="306" font-size="12" font-weight="700" letter-spacing="1.4" fill="#8a8377" text-anchor="middle">YOUR KNOWLEDGE STORE — ONE FOLDER, LOCAL</text>
+  <rect x="36" y="316" width="1128" height="84" rx="16" fill="#faf8f3" stroke="#e6e0d4" stroke-width="1.5"></rect>
+  <line x1="600" y1="328" x2="600" y2="388" stroke="#e6e0d4" stroke-width="1.5" stroke-dasharray="4 5"></line>
+  <text x="64" y="352" font-size="15" font-weight="700" fill="#2e5d2e">📚 Library</text>
+  <text x="64" y="374" font-size="12" fill="#4a5568">external sources · only read by the AI · searchable</text>
+  <text x="636" y="352" font-size="15" font-weight="700" fill="#5a4a8e">📓 Notebook</text>
+  <text x="636" y="374" font-size="12" fill="#4a5568">your own thinking · deliberately not indexed</text>
+
+  <!-- vertical connectors in the gaps (straight) -->
+  <path d="M136 246 L136 312" stroke="#b5c9af" stroke-width="2.2" fill="none" marker-end="url(#ah)"></path>
+  <text x="144" y="284" font-size="11" fill="#8a8377">store</text>
+  <path d="M470 312 L470 246" stroke="#cfc8b8" stroke-width="2.2" fill="none" marker-end="url(#ah)"></path>
+  <text x="478" y="284" font-size="11" fill="#8a8377">read</text>
+
+  <!-- ===== the 5 step cards (painted on top) ===== -->
+  <!-- 1 Collect (green) -->
+  <g>
+    <rect x="36" y="96" width="200" height="150" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="62" cy="124" r="12" fill="#eef3ea" stroke="#b5c9af"></circle>
+    <text x="62" y="129" font-size="12" font-weight="700" fill="#2e5d2e" text-anchor="middle">1</text>
+    <text x="82" y="129" font-size="15" font-weight="700" fill="#243447">Collect</text>
+    <text x="54" y="156" font-size="11" fill="#8a8377" font-family="ui-monospace,Menlo,monospace">sources/</text>
+    <text x="54" y="184" font-size="12" fill="#4a5568">Drop documents into</text>
+    <text x="54" y="202" font-size="12" fill="#4a5568">a folder.</text>
+    <text x="54" y="228" font-size="11.5" fill="#8a8377">📄 PDF·Word·PPT·notes</text>
+  </g>
+  <!-- 2 Process locally (blue) -->
+  <g>
+    <rect x="268" y="96" width="200" height="150" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="294" cy="124" r="12" fill="#eaf0f7" stroke="#b9cde4"></circle>
+    <text x="294" y="129" font-size="12" font-weight="700" fill="#2c4a6e" text-anchor="middle">2</text>
+    <text x="314" y="129" font-size="15" font-weight="700" fill="#243447">Process locally</text>
+    <text x="286" y="156" font-size="11" fill="#8a8377" font-family="ui-monospace,Menlo,monospace">on your machine 🔒</text>
+    <text x="286" y="184" font-size="12" fill="#4a5568">made searchable:</text>
+    <text x="286" y="202" font-size="12" fill="#4a5568">hybrid index + reranking</text>
+    <text x="286" y="228" font-size="11.5" fill="#5a7ba6">● Meaning  ▪ Keyword</text>
+  </g>
+  <!-- 3 Ask (amber) -->
+  <g>
+    <rect x="500" y="96" width="200" height="150" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="526" cy="124" r="12" fill="#fdf3e7" stroke="#e2c79f"></circle>
+    <text x="526" y="129" font-size="12" font-weight="700" fill="#8a5a23" text-anchor="middle">3</text>
+    <text x="546" y="129" font-size="15" font-weight="700" fill="#243447">Ask</text>
+    <text x="518" y="156" font-size="11" fill="#8a8377" font-family="ui-monospace,Menlo,monospace">Claude / local AI</text>
+    <text x="518" y="184" font-size="12" fill="#4a5568">in plain language —</text>
+    <text x="518" y="202" font-size="12" fill="#4a5568">answer cited to the page.</text>
+    <g><rect x="518" y="214" width="166" height="20" rx="8" fill="#fdf3e7" stroke="#d99e80"></rect><text x="530" y="228" font-size="10.5" font-weight="600" fill="#a8512f">⚓ Müller 2021 · p. 14 ↗</text></g>
+  </g>
+  <!-- 4 Think with AI (terracotta) -->
+  <g>
+    <rect x="732" y="96" width="200" height="150" rx="16" fill="#ffffff" stroke="#e6e0d4" stroke-width="1.5"></rect>
+    <circle cx="758" cy="124" r="12" fill="#f3d9cb" stroke="#d99e80"></circle>
+    <text x="758" y="129" font-size="12" font-weight="700" fill="#a8512f" text-anchor="middle">4</text>
+    <text x="778" y="129" font-size="15" font-weight="700" fill="#243447">Think with AI</text>
+    <text x="750" y="156" font-size="11" fill="#8a8377" font-family="ui-monospace,Menlo,monospace">brainstorm · draft</text>
+    <text x="750" y="184" font-size="12" fill="#4a5568">a variation, a note,</text>
+    <text x="750" y="202" font-size="12" fill="#4a5568">a concept.</text>
+    <text x="750" y="228" font-size="11.5" fill="#8a8377">🧑 You + ✦ AI</text>
+  </g>
+  <!-- 5 Save as a note (violet) -->
+  <g>
+    <rect x="964" y="96" width="200" height="150" rx="16" fill="#ffffff" stroke="#c0653f" stroke-width="2"></rect>
+    <circle cx="990" cy="124" r="12" fill="#efeaf7" stroke="#c9bce4"></circle>
+    <text x="990" y="129" font-size="12" font-weight="700" fill="#5a4a8e" text-anchor="middle">5</text>
+    <text x="1010" y="129" font-size="15" font-weight="700" fill="#243447">Save as a note</text>
+    <text x="982" y="156" font-size="11" fill="#8a8377" font-family="ui-monospace,Menlo,monospace">wiki/ · passages/</text>
+    <text x="982" y="184" font-size="12" fill="#4a5568">result back into the</text>
+    <text x="982" y="202" font-size="12" fill="#4a5568">knowledge store — in</text>
+    <text x="982" y="220" font-size="12" font-weight="600" fill="#5a4a8e">files you own.</text>
+  </g>
+
+  <!-- the two-way traffic: bold arrow between step 5 and the notebook -->
+  <path d="M1064 246 L1064 312" stroke="#c0653f" stroke-width="3.2" fill="none" marker-start="url(#aht)" marker-end="url(#aht)"></path>
+  <text x="1076" y="284" font-size="11.5" font-weight="700" fill="#c0653f">⇅ in AND out</text>
+
+  <!-- return loop: closes the cycle (well below the store, clear of text) -->
+  <path d="M1064 402 C 1064 470, 860 476, 600 476 C 340 476, 136 470, 136 408" stroke="#c0653f" stroke-width="2.4" fill="none" marker-end="url(#aht)" opacity="0.9"></path>
+  <text x="600" y="464" font-size="14" font-style="italic" font-weight="600" fill="#c0653f" text-anchor="middle" font-family="Georgia,serif">your knowledge grows — every new chat picks up right here</text>
+
+  <!-- optional integrations -->
+  <rect x="360" y="504" width="480" height="40" rx="20" fill="#ffffff" stroke="#cfc8b8" stroke-width="1.5" stroke-dasharray="6 5"></rect>
+  <text x="600" y="529" font-size="12" fill="#4a5568" text-anchor="middle">optional · if you like:&#160;&#160;📅 Calendar&#160;·&#160;✉️ Mail&#160;·&#160;✅ Tasks&#160;·&#160;via MCP</text>
+
+  <!-- footer -->
+  <line x1="36" y1="562" x2="1164" y2="562" stroke="#eee8db" stroke-width="1"></line>
+  <text x="36" y="580" font-size="11.5" fill="#b0a999">BRAG — Building Retrieval-Augmented Generation · can run fully local, every answer cited</text>
+  <text x="1164" y="580" font-size="11.5" fill="#b0a999" text-anchor="end" font-family="Georgia,serif" font-style="italic">Chats forget — your knowledge store doesn't.</text>
+</svg>

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/overview.en.svg" alt="The BRAG cycle — collect, process locally, ask with citations, think with AI, and write notes back into your knowledge store" width="100%">
+</p>
+
 ![BRAG — talk to your own sources, with every answer cited](docs/assets/header.en.svg)
 
 # BRAG — Building Retrieval-Augmented Generation
@@ -30,51 +34,31 @@ Researchers, lecturers and PhD students — and just as much practitioners who n
 
 ## What you do with it
 
-- 🔎 **Find instead of leaf through** — *"What does my corpus say about
-  change-order management?"* Answer with a page citation, one click opens the
-  PDF right there.
-- 📊 **Pull numbers & tables** — *"Find tables with cost figures on rework"* —
-  figures are described by content too, so they're findable.
-- ✍️ **Write with citations** — collect quotable passages while reading, then
-  *"draft the paragraph from these passages, keep the citations."*
-- 🎓 **Prep teaching** — *"Draft three exam questions from chapter 4, with page
-  references."*
-- 🧠 **Capture thinking** — quotes land in your knowledge store automatically,
-  your own conclusions optionally via Obsidian; a fresh chat days later picks up
-  exactly where the last one stopped.
-- 🗂️ **Filter by project/course** — *"Search **only in the School Center
-  project**: which position covers the earthworks?"*
-- 🔬 **Develop an idea** — *"What do my sources say about maturity models? Where
-  do they disagree?"* — write the result as a concept note and, days later in a
-  fresh chat, continue exactly there.
+- 🔎 **Find instead of leaf through** — *"What does the contract say about delay
+  notices?"* or *"What's in my files on change-order management?"* Answer with a
+  page citation; one click opens the PDF right there.
+- 📑 **Search contracts, standards & bills of quantities** — *"What deadline does
+  the contract set for a defect notice?"*, *"Which BoQ item covers the
+  earthworks?"* — the right clause or line, page-precise, instead of hours of
+  leafing.
+- 🗂️ **Mine site diaries & correspondence** — *"When was the obstruction at the
+  parapet first recorded?"* — across daily reports, minutes and site emails, every
+  statement cited.
+- 📊 **Pull numbers & tables** — *"Show the quantities and cost figures from the
+  estimate"* — tables and figures are captured by content too, so they're findable.
+- ✍️ **Write with citations** — draft a delay notice, a file note or a variation
+  claim: *"build the text from these passages, keep the citations."* You collect
+  quotable passages as you read.
+- 🏗️ **Filter by project/site** — *"Search **only in the School Center project**:
+  which item covers the earthworks?"* — every job kept cleanly apart.
+- 🧠 **Capture decisions & knowledge** — quotes land in your knowledge store
+  automatically, your own conclusions optionally via Obsidian; a fresh chat days
+  later picks up exactly where the last one stopped.
+- 🎓 **… and research & teaching too** — *"Draft three exam questions from chapter
+  4, with page numbers"* or *"Where do my sources disagree on maturity models?"*
 
 The core idea: **chats forget — your knowledge store doesn't.** Knowledge accumulates in
 your files, not in a throwaway chat log.
-
-### Examples from construction practice
-
-Once your standards, reports and project files are indexed, questions like these
-get a page-cited answer (one click opens the PDF on the right page):
-
-- **Standards & codes** — *"What minimum concrete cover does Eurocode 2 require
-  for exposure class XC4?"* · *"Which fire-resistance requirements apply to the
-  escape routes here?"*
-- **Bills of quantities & tendering** — *"Find the earthworks item in the School
-  Center bill of quantities"* · *"Compare the rebar quantities in these two
-  tenders."*
-- **Claims & variations** — *"Which change orders relate to altered subsoil
-  conditions?"* · *"What does the VOB/B say about a notice of delay and its
-  deadlines?"*
-- **Reports & expert opinions** — *"What does the soil report say about the
-  groundwater level and the recommended foundation?"* · *"Summarise the defects
-  recorded in the acceptance protocols."*
-- **Cost data** — *"Find tables with cost benchmarks for the shell construction"*
-  · *"What rework cost figures show up across my reports?"*
-- **Teaching & exams** — *"Draft three exam questions on reinforced-concrete
-  design from chapter 4, with page references."*
-
-Scope any of these to a single project or course with a `_meta.txt` tag — e.g.
-*"search only in project School Center."*
 
 A "second brain" isn't a new idea. What I tried to do here is make a version
 that holds up day to day — no hype, no lock-in, just plain files that you own. I
@@ -84,8 +68,8 @@ anyone who wants to try it out.
 
 ## The idea: a library and a notebook
 
-A research "second brain" has two halves — and keeping them strictly apart is
-the heart of the design:
+A "second brain" for your work — research, teaching or day-to-day practice
+alike — has two halves, and keeping them strictly apart is the heart of the design:
 
 |  | 📚 **Your library** | 📓 **Your notebook** |
 |---|---|---|
@@ -334,7 +318,7 @@ This is how the knowledge store is laid out:
 
 ```
 wissensspeicher/
-├── CLAUDE.md      ← teaches Claude about YOUR research — fill it in!
+├── CLAUDE.md      ← teaches Claude about YOUR field (you fill it in)
 ├── AGENTS.md      ← extra rules for autonomous agent tasks
 ├── sources/       ← 📚 drop documents here (PDF, DOCX); subfolders = document types
 │   └── _inbox/    ← staging area, ignored by the indexer
@@ -378,6 +362,10 @@ A document in `…/School_Center/2024/` then carries `client`, `project` **and**
 `phase` — all filterable in search (*"search only in project School Center"*).
 The one rule: only the **first** subfolder under `sources/` sets the document
 **type**; everything deeper is purely for your `_meta.txt` tags.
+
+**Editing takes effect at once:** when you add or change a `_meta.txt`, BRAG
+refreshes the metadata of that folder's already-indexed documents
+automatically — without re-ingesting.
 
 **Day to day** you just drop new literature into `sources/` (indexed in minutes)
 and ask Claude what it adds to your existing material or whether it contradicts
