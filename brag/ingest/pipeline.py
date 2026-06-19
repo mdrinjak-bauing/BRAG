@@ -149,16 +149,31 @@ def ingest(path: Path) -> bool:
 
     print("  [3/4] embedding (dense + sparse)...")
     embedder = get_embedder()
+    # Batch the dense embeddings (far better CPU/BLAS use than one call per
+    # chunk). embed_documents returns a list ALIGNED to its input: one entry per
+    # chunk, in order, None where that chunk failed — so the zip below stays
+    # correct and a failed chunk is skipped+logged exactly as before.
+    texts = [c.embedding_text() for c in chunks]
+    vectors = embedder.embed_documents(texts)
+    if len(vectors) != len(chunks):
+        # A backend broke the one-entry-per-text contract. Never risk a
+        # misaligned vector↔chunk pairing (silent wrong-page citations) — fall
+        # back to the safe per-chunk path.
+        print("  embedder returned a misaligned batch — using safe per-chunk path")
+        vectors = []
+        for chunk in chunks:
+            try:
+                vectors.append(embedder.embed_document(chunk.embedding_text()))
+            except Exception:  # noqa: BLE001
+                vectors.append(None)
     paired = []
-    for i, chunk in enumerate(chunks):
-        try:
-            vec = embedder.embed_document(chunk.embedding_text())
-            paired.append((chunk, vec))
-        except Exception as e:  # noqa: BLE001
-            print(f"  embedding failed (p. {chunk.page_start}): {str(e)[:80]}")
+    for chunk, vec in zip(chunks, vectors):
+        if vec is None:
+            print(f"  embedding failed (p. {chunk.page_start})")
             _log_failed_chunk(chunk, "embedding_failed")
-        if (i + 1) % 25 == 0 or i + 1 == len(chunks):
-            print(f"  dense {i + 1}/{len(chunks)}")
+        else:
+            paired.append((chunk, vec))
+    print(f"  dense {len(paired)}/{len(chunks)}")
     if not paired:
         print("  no chunk could be embedded — aborting")
         return False

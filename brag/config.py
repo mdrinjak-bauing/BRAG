@@ -56,6 +56,10 @@ EMBEDDING_MODEL = _env("EMBEDDING_MODEL", _profile["embedding_model"])
 # reproducible, supply-chain-safe downloads. Empty = latest (current behaviour).
 EMBEDDING_REVISION = _env("EMBEDDING_REVISION", "")
 EMBEDDING_DIM = int(_env("EMBEDDING_DIM", _profile["embedding_dim"]))
+# How many chunk texts the embedder processes per batch during ingest. Batching
+# the local sentence-transformers model uses CPU/BLAS far better than one call
+# per chunk; conservative default keeps peak memory bounded on weak machines.
+EMBED_BATCH_SIZE = int(_env("EMBED_BATCH_SIZE", 32))
 LLM_BACKEND = _env("LLM_BACKEND", _profile["llm_backend"])
 LLM_MODEL = _env("LLM_MODEL", _profile["llm_model"])
 LLM_BASE_URL = _env("LLM_BASE_URL", _profile["llm_base_url"])
@@ -128,6 +132,16 @@ RERANK_FUSION_LIMIT = int(_env("RERANK_FUSION_LIMIT", _rerank["fusion"]))
 RERANK_BATCH_SIZE = int(_env("RERANK_BATCH_SIZE", 16))
 DEFAULT_TOP_K = int(_env("DEFAULT_TOP_K", 15))
 MAX_CHUNKS_PER_SOURCE = int(_env("MAX_CHUNKS_PER_SOURCE", 3))
+# A generous SANITY bound on top_k — NOT a feature cap. Large top_k stays
+# deliberately supported (see search/query.py); this only stops an absurd value
+# (e.g. a buggy caller passing a million) from making Qdrant prefetch/fuse a
+# pathological number of points and exhausting memory.
+MAX_TOP_K = int(_env("MAX_TOP_K", 2000))
+# Warm the (local, CPU) cross-encoder reranker in a background thread at MCP
+# server start, so the FIRST search isn't blocked by the one-time model load.
+# Never loaded synchronously in the start path (that could outlast Claude
+# Desktop's MCP handshake). Only warms when reranking is enabled.
+RERANK_WARMUP = _env("RERANK_WARMUP", "true").lower() == "true"
 
 # ── HTTP bridge ─────────────────────────────────────────────────
 # The browser setup wizard (and its config-writing API) is served ONLY when the

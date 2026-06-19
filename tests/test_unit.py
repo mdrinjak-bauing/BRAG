@@ -130,3 +130,112 @@ def test_write_claude_config_refuses_when_not_mounted(monkeypatch):
     monkeypatch.delenv("CLAUDE_CONFIG_MOUNTED", raising=False)
     ok, _ = sc.write_claude_config()
     assert not ok
+
+
+# ── embed_documents contract (P1 safety net) ────────────────────
+# The batched ingest relies on embed_documents returning ONE entry per input,
+# in order, with None for a failed item — otherwise a vector lands on the wrong
+# chunk (silent wrong-page citation). Lock that contract in on the default impl.
+def _fake_embedder(fail_on=()):
+    from brag.embeddings.base import EmbeddingBackend
+
+    class _Fake(EmbeddingBackend):
+        dim = 3
+
+        def embed_document(self, text):
+            if text in fail_on:
+                raise RuntimeError("boom")
+            return [float(len(text)), 0.0, 0.0]
+
+        def embed_query(self, text):
+            return [0.0, 0.0, 0.0]
+
+    return _Fake()
+
+
+def test_embed_documents_aligns_inputs_and_outputs():
+    out = _fake_embedder().embed_documents(["a", "bb", "ccc"])
+    assert out == [[1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [3.0, 0.0, 0.0]]
+
+
+def test_embed_documents_isolates_a_failure_as_none_without_shifting():
+    out = _fake_embedder(fail_on={"bb"}).embed_documents(["a", "bb", "ccc"])
+    assert len(out) == 3            # one entry per input — never dropped
+    assert out[0] == [1.0, 0.0, 0.0]
+    assert out[1] is None          # failure isolated in place
+    assert out[2] == [3.0, 0.0, 0.0]  # later items keep their correct vector
+
+
+def test_embed_documents_empty():
+    assert _fake_embedder().embed_documents([]) == []
+
+
+# ── retry classification + overall deadline (R2) ────────────────
+def test_retry_returns_value_on_success():
+    from brag.llm_backends.retry import call_with_retry
+    assert call_with_retry(lambda: "ok") == "ok"
+
+
+def test_retry_fails_fast_on_unclassified_error():
+    from brag.llm_backends.retry import call_with_retry
+    calls = {"n": 0}
+
+    def boom():
+        calls["n"] += 1
+        raise ValueError("not a rate limit or network issue")
+
+    assert call_with_retry(boom, label="t") is None
+    assert calls["n"] == 1  # unclassified → no retry
+
+
+def test_retry_waits_then_succeeds_on_rate_limit(monkeypatch):
+    import brag.llm_backends.retry as r
+    sleeps = []
+    monkeypatch.setattr(r.time, "sleep", lambda s: sleeps.append(s))
+    seq = [Exception("HTTP 429 too many requests"), "ok"]
+
+    def fn():
+        item = seq.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+    assert r.call_with_retry(fn, label="t") == "ok"
+    assert len(sleeps) == 1  # backed off once before the successful retry
+
+
+def test_retry_deadline_skips_unaffordable_backoff(monkeypatch):
+    import brag.llm_backends.retry as r
+    sleeps = []
+    monkeypatch.setattr(r.time, "sleep", lambda s: sleeps.append(s))
+    monkeypatch.setattr(r.time, "monotonic", lambda: 0.0)  # no time elapses
+
+    def always_rate_limited():
+        raise Exception("rate limit: 429")
+
+    # First backoff is >= 60s; with a 10s deadline it must give up immediately.
+    assert r.call_with_retry(always_rate_limited, deadline_seconds=10) is None
+    assert sleeps == []  # never slept past the deadline
+
+
+# ── config: _env default handling and RERANK preset fallback ────
+def test_env_empty_or_missing_falls_back_to_default(monkeypatch):
+    monkeypatch.delenv("BRAG_TEST_ENV_KEY", raising=False)
+    assert config._env("BRAG_TEST_ENV_KEY", "def") == "def"
+    monkeypatch.setenv("BRAG_TEST_ENV_KEY", "")
+    assert config._env("BRAG_TEST_ENV_KEY", "def") == "def"  # empty == unset
+    monkeypatch.setenv("BRAG_TEST_ENV_KEY", "value")
+    assert config._env("BRAG_TEST_ENV_KEY", "def") == "value"
+
+
+def test_unknown_rerank_profile_falls_back_to_eco(monkeypatch):
+    import importlib
+    monkeypatch.setenv("RERANK_PROFILE", "nonsense")
+    importlib.reload(config)
+    try:
+        assert config.RERANK_ENABLED is True
+        assert config.RERANK_PREFETCH == 60
+        assert config.RERANK_FUSION_LIMIT == 40  # the "eco" preset
+    finally:
+        monkeypatch.delenv("RERANK_PROFILE", raising=False)
+        importlib.reload(config)  # restore module state for other tests

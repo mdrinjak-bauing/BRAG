@@ -34,6 +34,28 @@ class SentenceTransformerEmbedder(EmbeddingBackend):
     def embed_document(self, text: str) -> list[float]:
         return self._model.encode(text[:MAX_INPUT_CHARS]).tolist()
 
+    def embed_documents(self, texts: list[str]) -> list[list[float] | None]:
+        """Batch encode — far better CPU/BLAS use than one call per chunk.
+        Each text keeps the SAME per-text MAX_INPUT_CHARS bound as the single
+        path, and the output stays in input order (entry i ↔ text i), so the
+        caller's vector↔chunk alignment holds. If the batch call itself raises,
+        fall back to per-text encoding so one bad text can't fail the whole
+        document."""
+        if not texts:
+            return []
+        bounded = [t[:MAX_INPUT_CHARS] for t in texts]
+        try:
+            vecs = self._model.encode(bounded, batch_size=config.EMBED_BATCH_SIZE)
+            return [v.tolist() for v in vecs]
+        except Exception:  # noqa: BLE001 — isolate failures via the per-text path
+            out: list[list[float] | None] = []
+            for t in bounded:
+                try:
+                    out.append(self._model.encode(t).tolist())
+                except Exception:  # noqa: BLE001
+                    out.append(None)
+            return out
+
     def embed_query(self, text: str) -> list[float]:
         # Same input bound as documents — keep query/document regimes symmetric.
         text = text[:MAX_INPUT_CHARS]

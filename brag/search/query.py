@@ -10,9 +10,16 @@ absolutely calibrated — any floor cuts legitimate top hits on factual queries,
 so scores are reported transparently instead of filtered.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from brag import config
 from brag.embeddings import get_embedder
 from brag.embeddings.sparse import embed_sparse_query
+
+if TYPE_CHECKING:
+    from qdrant_client.models import Filter
 
 _reranker = None
 
@@ -27,7 +34,8 @@ def _get_reranker():
 
 
 def _build_filter(doc_type=None, chunk_type=None, year_min=None, year_max=None,
-                  author=None, source_file=None, meta=None):
+                  author=None, source_file=None, meta=None) -> Filter | None:
+    """Build a Qdrant Filter from the given constraints, or None if none apply."""
     from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue, Range
     must = []
     if doc_type:
@@ -44,23 +52,35 @@ def _build_filter(doc_type=None, chunk_type=None, year_min=None, year_max=None,
             match=MatchAny(any=config.source_key_variants(source_file)),
         ))
     if year_min or year_max:
-        must.append(FieldCondition(key="year_num", range=Range(
-            gte=int(year_min) if year_min else None,
-            lte=int(year_max) if year_max else None,
-        )))
+        # Coerce defensively: a non-numeric year (malformed call) must drop the
+        # bound, not raise and crash the whole search.
+        def _as_year(v):
+            try:
+                return int(v)
+            except (TypeError, ValueError):
+                return None
+        gte = _as_year(year_min) if year_min else None
+        lte = _as_year(year_max) if year_max else None
+        if gte is not None or lte is not None:
+            must.append(FieldCondition(key="year_num", range=Range(gte=gte, lte=lte)))
     # User-defined metadata fields from _meta.txt (e.g. project, course)
     for key, value in (meta or {}).items():
         must.append(FieldCondition(key=key, match=MatchValue(value=value)))
     return Filter(must=must) if must else None
 
 
-def search(query: str, top_k: int = None, reranking: bool = None,
-           max_chunks_per_source: int = None, **filters) -> list[dict]:
+def search(query: str, top_k: int | None = None, reranking: bool | None = None,
+           max_chunks_per_source: int | None = None, **filters) -> list[dict]:
     """Run hybrid search, return ranked hits as plain dicts."""
     from qdrant_client.models import FusionQuery, Prefetch
     from brag import storage
 
     top_k = top_k or config.DEFAULT_TOP_K
+    if top_k <= 0:
+        top_k = config.DEFAULT_TOP_K
+    # Large top_k stays deliberately supported (prefetch/fusion scale with it);
+    # clamp only against an absurd value that would make Qdrant pathological.
+    top_k = min(top_k, config.MAX_TOP_K)
     if reranking is None:
         reranking = config.RERANK_ENABLED
     if max_chunks_per_source is None:

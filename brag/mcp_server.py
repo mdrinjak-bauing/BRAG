@@ -252,5 +252,22 @@ def list_passages(topic: str = "") -> str:
     return "\n".join(out)
 
 
+def _warmup_reranker() -> None:
+    """Load the (local, CPU) cross-encoder in the background so the FIRST search
+    isn't blocked by the one-time model load. Best-effort; runs only off the
+    start path — a multi-second synchronous load here could outlast Claude
+    Desktop's MCP initialize handshake. Errors go to stderr (stdout is the
+    JSON-RPC channel and must not be polluted)."""
+    import sys
+    try:
+        from brag.search.query import _get_reranker
+        _get_reranker()
+    except Exception as e:  # noqa: BLE001 — warmup must never break the server
+        print(f"reranker warmup skipped: {e}", file=sys.stderr)
+
+
 if __name__ == "__main__":
+    if config.RERANK_ENABLED and config.RERANK_WARMUP:
+        import threading
+        threading.Thread(target=_warmup_reranker, daemon=True).start()
     mcp.run()
