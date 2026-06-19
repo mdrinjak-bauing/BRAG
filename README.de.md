@@ -211,7 +211,7 @@ Rechner; lokale Text-KI und ein voll aufgedrehter Reranker brauchen mehr:
 
 | Stufe | Hardware | Schaltet frei | Preis |
 |---|---|---|---|
-| **Leicht** | ~8 GB RAM, jeder Rechner | Cloud-LLM, lokaler Index, Reranker sparsam/aus | API-Key nötig, Dokumenttext geht an Anbieter |
+| **Leicht** | 8 GB Minimum, 16 GB komfortabel; jeder Rechner, keine GPU | Cloud-LLM, lokaler Index, Reranker sparsam/aus | API-Key nötig; Dokumenttext geht an Anbieter; der erste Ingest ist RAM-intensiv |
 | **Mittel** | ~16 GB RAM | + Reranker flüssig, optional erstes lokales LLM (Ollama) | lokales LLM langsamer/schwächer |
 | **Privat-lokal** | M-Mac 32 GB, LM Studio | lokales LLM (z. B. qwen-14b), Reranker voll, Vision lokal | nichts verlässt den Rechner; mehr Setup |
 | **Voll-Version** | M-Mac 64 GB+, LM Studio | großes lokales LLM (z. B. gemma-27b) + Vision + Reranker voll | höchste Qualität, höchste Last |
@@ -220,7 +220,7 @@ Rechner; lokale Text-KI und ein voll aufgedrehter Reranker brauchen mehr:
 
 Nach der hybriden Suche kann ein zweiter Schritt die gefundenen Stellen noch
 einmal nach Passgenauigkeit sortieren — ein **Cross-Encoder** (`bge-reranker-v2-m3`,
-lokal auf deiner CPU), der deine Frage gemeinsam mit jeder Stelle liest. Das ist
+lokal auf deiner CPU — keine Grafikkarte nötig), der deine Frage gemeinsam mit jeder Stelle liest. Das ist
 der rechenintensivste Teil einer Suche; deshalb wählst du über `RERANK_PROFILE`
 (im Setup-Wizard oder in `.env`), wie gründlich er arbeitet. „Geladen" = wie
 viele Kandidaten aus der Suche gezogen werden (je 60 aus Bedeutungs- und
@@ -229,7 +229,7 @@ Stichwortsuche), „nachsortiert" = wie viele davon der Cross-Encoder bewertet:
 | Einstellung | geladen | nachsortiert | Tempo / Qualität | für |
 |---|---|---|---|---|
 | `off` | 120 (60+60) | 0 — reine RRF-Fusion | am schnellsten, mehr Rauschen | sehr schwache Rechner, kleiner Korpus |
-| `eco` *(Standard)* | 120 (60+60) | 40 | schonend, gute Qualität | normale Notebooks (~8–16 GB) |
+| `eco` *(Standard)* | 120 (60+60) | 40 | schonend, gute Qualität | normale Notebooks (16 GB komfortabel) |
 | `balanced` | 120 (60+60) | 60 | etwas langsamer, schärfer | Mittelklasse |
 | `full` | 120 (60+60) | 120 | am langsamsten, beste Reihenfolge | starke Maschinen (M-Chip, 32 GB+) |
 
@@ -266,10 +266,11 @@ Cloud-Embedding-Opt-in: [docs/PROFILES.de.md](docs/PROFILES.de.md).
 Aktiv zu tun ist nur etwa **15 Minuten**; der Rest sind **Downloads** (Docker
 Desktop, Claude Desktop und einmalig ~3 GB Analyse-Modelle beim ersten Start) —
 rechne bei einer Erstinstallation also mit insgesamt rund **30–60 Minuten**. Es
-läuft auf einem **normalen Rechner** — mit einem Cloud-Profil (dem
-Standard) reichen rund **8 GB RAM** und jede moderne CPU; starke Hardware
-brauchst du nur, wenn du auch die *Text*-KI lokal betreibst (siehe Profiltabelle
-oben).
+läuft auf einem **normalen Rechner** — mit einem Cloud-Profil (dem Standard)
+sind **8 GB RAM das Minimum, 16 GB komfortabel** (am meisten Speicher zieht der
+erste Ingest, der den lokalen Index und das Reranker-Modell lädt), jede moderne
+CPU genügt und **eine Grafikkarte ist nicht nötig**. Starke Hardware brauchst du
+nur, wenn du auch die *Text*-KI lokal betreibst (siehe Profiltabelle oben).
 
 **Du brauchst** (alles kostenlos): [Docker Desktop](https://www.docker.com/products/docker-desktop/),
 [Claude Desktop](https://claude.com/download) und einen API-Schlüssel —
