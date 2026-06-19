@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/overview.en.svg" alt="The BRAG cycle — collect, process locally, ask with citations, think with AI, and write notes back into your knowledge store" width="100%">
+</p>
+
 ![BRAG — talk to your own sources, with every answer cited](docs/assets/header.en.svg)
 
 # BRAG — Building Retrieval-Augmented Generation
@@ -319,15 +323,22 @@ wissensspeicher/
 Renaming or deleting in `sources/` is handled automatically: renaming an
 **already-indexed** file just updates its metadata (author, year, type, PDF
 path) in place — **no re-ingest** (no re-embedding, no API cost); deleting it
-removes it from the database. Subfolder names become the filterable document
-type (`sources/papers/`, `sources/reports/` …).
+removes it from the database. The **folder structure travels into the index**:
+the first subfolder under `sources/` becomes the filterable **document type**
+(`sources/papers/`, `sources/reports/` …), the full path is kept for the
+click-to-original link, and if you **move** a file into another folder it
+automatically takes on that folder's project/metadata — again with no re-ingest.
 
 **Your own metadata** (project, course, client …) goes into a `_meta.txt` in any
 folder under `sources/` — one `key: value` per line; that way hits from other
-projects don't bleed into your results. If a document's printed page numbers
-don't match the PDF's physical pages, a `page_offset` in the same file makes
-citations show the *printed* page. Both fields in detail (with examples):
-[docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
+projects don't bleed into your results. A `_meta.txt` is **inherited** — from
+`sources/` down to the document's folder, deeper folders win — and is searchable
+via `meta_filter` (this is how you model your project hierarchy). If you **edit**
+a `_meta.txt` later, BRAG refreshes the metadata of that folder's
+already-indexed documents automatically — without re-ingesting. And if a
+document's printed page numbers don't match the PDF's physical pages, a
+`page_offset` in the same file makes citations show the *printed* page. Both
+fields in detail (with examples): [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
 
 ```
 # sources/projects/School_Center/_meta.txt

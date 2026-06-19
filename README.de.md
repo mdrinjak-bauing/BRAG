@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/overview.de.svg" alt="Der BRAG-Kreislauf — sammeln, lokal verwerten, fragen mit Beleg, mit KI denken und Notizen zurück in den Wissensspeicher schreiben" width="100%">
+</p>
+
 ![BRAG — sprich mit deinen eigenen Quellen, jede Antwort mit Beleg](docs/assets/header.de.svg)
 
 # BRAG — Building Retrieval-Augmented Generation
@@ -336,15 +340,23 @@ Umbenennen oder Löschen in `sources/` wird automatisch nachgezogen: Benennst du
 eine **bereits indexierte** Datei um, werden nur die Metadaten (Autor, Jahr, Typ,
 PDF-Pfad) im Index aktualisiert — **ohne neu einzulesen** (kein erneutes
 Embedding, keine API-Kosten); löschst du sie, verschwindet sie aus der Datenbank.
-Unterordner-Namen werden zum filterbaren Dokumenttyp (`sources/Paper/`,
-`sources/Berichte/` …).
+Die **Ordnerstruktur wandert mit in den Index**: Der erste Unterordner unter
+`sources/` wird zum filterbaren **Dokumenttyp** (`sources/Paper/`,
+`sources/Berichte/` …), der volle Pfad bleibt für den Klick aufs Original
+erhalten, und **verschiebst** du eine Datei in einen anderen Ordner, übernimmt
+sie automatisch dessen Projekt-/Metadaten — wieder ohne Neu-Einlesen.
 
 **Eigene Metadaten** (Projekt, Kurs, Auftraggeber …) gibst du über eine
 `_meta.txt` in einem Ordner unter `sources/` an — eine Zeile pro `schlüssel: wert`;
-so mischen sich keine Treffer aus anderen Projekten in deine Ergebnisse. Stimmen
-die gedruckten Seitenzahlen nicht mit den physischen PDF-Seiten überein, regelt
-ein `page_offset` in derselben Datei, dass der Beleg die *gedruckte* Seite zeigt.
-Beide Felder im Detail (mit Beispielen): [docs/HOW_IT_WORKS.de.md](docs/HOW_IT_WORKS.de.md).
+so mischen sich keine Treffer aus anderen Projekten in deine Ergebnisse. Die
+`_meta.txt` wird **vererbt** — von `sources/` hinab bis zum Datei-Ordner, tiefere
+gewinnen — und ist über `meta_filter` durchsuchbar (so bildest du deine
+Projekt-Hierarchie ab). **Änderst** du eine `_meta.txt` nachträglich, frischt
+BRAG die Metadaten der bereits indexierten Dokumente dieses Ordners automatisch
+auf — ohne neu einzulesen. Stimmen die gedruckten Seitenzahlen nicht mit den
+physischen PDF-Seiten überein, regelt ein `page_offset` in derselben Datei, dass
+der Beleg die *gedruckte* Seite zeigt. Beide Felder im Detail (mit Beispielen):
+[docs/HOW_IT_WORKS.de.md](docs/HOW_IT_WORKS.de.md).
 
 ```
 # sources/Projekte/Schulzentrum/_meta.txt
