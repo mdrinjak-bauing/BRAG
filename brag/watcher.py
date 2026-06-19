@@ -16,7 +16,9 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver
 
 from brag import config, storage
-from brag.ingest.pipeline import ingest, remove_source, rename_source
+from brag.ingest.pipeline import (
+    ingest, reapply_folder_metadata, remove_source, rename_source,
+)
 
 # Paths currently being ingested, so a second event for the same file (the
 # PollingObserver can dispatch on multiple threads, and a rename fires both a
@@ -51,6 +53,27 @@ def _is_relevant(path: Path) -> bool:
     return not any(part in config.WATCH_IGNORE_DIRS for part in path.parts)
 
 
+def _is_meta_file(path: Path) -> bool:
+    """A `_meta.txt` under sources/ (outside ignored dirs). Editing it must
+    refresh the folder's already-indexed documents — unlike a document file,
+    `_meta.txt` is not a SUPPORTED_SUFFIX, so the normal ingest path skips it."""
+    if path.name != "_meta.txt":
+        return False
+    try:
+        path.resolve().relative_to(config.SOURCES_DIR.resolve())
+    except (ValueError, OSError):
+        return False
+    return not any(part in config.WATCH_IGNORE_DIRS for part in path.parts)
+
+
+def _refresh_folder_meta(path: Path, verb: str) -> None:
+    """Re-apply folder metadata to already-indexed docs after a _meta.txt change."""
+    n = reapply_folder_metadata(path.parent)
+    if n:
+        print(f"_meta.txt {verb} in {path.parent.name}/ — refreshed "
+              f"metadata on {n} document(s) (no re-ingest)")
+
+
 def _wait_for_stable_file(path: Path, min_wait=3, max_wait=120, poll=2) -> bool:
     """Wait until the file size stops changing (fully copied)."""
     if not path.exists():
@@ -75,6 +98,9 @@ class DocumentHandler(FileSystemEventHandler):
         if event.is_directory:
             return
         path = Path(event.src_path)
+        if _is_meta_file(path):
+            _refresh_folder_meta(path, "added")
+            return
         if not _is_relevant(path) or not _claim(path):
             return
         try:
@@ -86,10 +112,23 @@ class DocumentHandler(FileSystemEventHandler):
         finally:
             _release(path)
 
+    def on_modified(self, event):
+        # Document files are immutable in practice; the one editable file that
+        # affects the index is _meta.txt — refresh the folder when it changes.
+        if event.is_directory:
+            return
+        path = Path(event.src_path)
+        if _is_meta_file(path):
+            _refresh_folder_meta(path, "changed")
+
     def on_deleted(self, event):
         if event.is_directory:
             return
         path = Path(event.src_path)
+        if _is_meta_file(path):
+            # Metadata reverts to the remaining (parent) _meta.txt chain.
+            _refresh_folder_meta(path, "removed")
+            return
         if not _is_relevant(path):
             return
         try:
