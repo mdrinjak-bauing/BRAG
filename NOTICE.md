@@ -27,7 +27,7 @@ Pinned versions are listed in [`requirements.txt`](requirements.txt).
 | --- | --- | --- |
 | [docling](https://github.com/docling-project/docling) | 2.103.0 | MIT |
 | [qdrant-client](https://github.com/qdrant/qdrant-client) | 1.18.0 | Apache-2.0 |
-| [sentence-transformers](https://github.com/UKPLab/sentence-transformers) | 5.4.1 | Apache-2.0 |
+| [sentence-transformers](https://github.com/UKPLab/sentence-transformers) | 5.6.0 | Apache-2.0 |
 | [torch](https://github.com/pytorch/pytorch) | (via dependencies) | BSD-3-Clause |
 | [fastembed](https://github.com/qdrant/fastembed) | 0.8.0 | Apache-2.0 |
 | [google-genai](https://github.com/googleapis/python-genai) | 2.8.0 | Apache-2.0 |

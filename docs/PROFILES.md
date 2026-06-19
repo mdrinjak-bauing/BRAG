@@ -72,3 +72,7 @@ so: **fast cloud embeddings** on weak hardware with a large corpus — set
 `EMBEDDING_BACKEND=gemini` (or `openai`) with the matching `EMBEDDING_MODEL` /
 `EMBEDDING_DIM`. Note this is the one change that *does* require a one-time
 re-ingest (into a separate collection, handled safely). See `.env.example`.
+
+**Privacy note:** this override sends your document text to the embedding
+provider (Gemini/OpenAI) — not for confidential or personal content. For
+local-only, keep the standard-profile embedder.

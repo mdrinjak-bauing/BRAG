@@ -52,8 +52,8 @@ set up automatically in step 4 — nothing to do here yet.
 **What to do:**
 1. On the GitHub page, click the green **`Code`** button → **`Download ZIP`**.
    Unpack the ZIP by double-clicking it (e.g. into your home folder — see the
-   iCloud note below). A folder named `Academic-RAG-and-Second-Brain-main`
-   appears (the exact name may vary slightly).
+   iCloud note below). The unpacked BRAG folder appears (its name comes from
+   the ZIP).
 2. Open that folder in Finder and double-click **`setup.command`**.
    - If macOS blocks it ("unidentified developer"): **right-click** the file →
      **Open** → **Open** again in the dialog.

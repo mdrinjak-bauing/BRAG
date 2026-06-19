@@ -55,9 +55,8 @@ set up automatically in step 4.
 **What to do:**
 1. On the GitHub page, click the green **`Code`** button → **`Download ZIP`**.
    Right-click the ZIP → **"Extract All"** (e.g. to your home folder). The
-   extracted folder is named `Academic-RAG-and-Second-Brain-main` (the exact name
-   may vary slightly). Important: **extract** first — don't run it from inside
-   the ZIP.
+   unpacked BRAG folder appears (its name comes from the ZIP). Important:
+   **extract** first — don't run it from inside the ZIP.
 2. Open the extracted folder and double-click **`setup.bat`**.
    - If **Windows SmartScreen** warns ("Windows protected your PC"): click **"More
      info"** → **"Run anyway"**.

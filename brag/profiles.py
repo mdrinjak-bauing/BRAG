@@ -7,8 +7,9 @@ overridden per component via environment variables (see config.py).
 ── Design decision: embeddings are LOCAL by default in every profile ──
 All profiles use the same local sentence-transformers embedding model
 (Snowflake arctic, 1024 dim, CPU — no GPU needed). The chosen provider only
-controls the *text LLM* (contextual retrieval, image descriptions, document
-classification). This buys two things:
+controls the *text LLM* (contextual retrieval, image descriptions). The doc
+type is derived from the folder path, not from an LLM (no cloud transfer).
+This buys two things:
 
   1. Switching the cloud LLM provider (Gemini ↔ OpenAI ↔ Claude) needs NO
      re-indexing — every profile writes into the same 1024-dim collection.

@@ -51,9 +51,9 @@ Claude quietly uses them through a connection called MCP.
 There are **two** places — and it really helps to keep them apart:
 
 **1. The project folder — the one you created yourself.** When you unpacked the
-ZIP from GitHub, a folder appeared exactly where you unpacked it (e.g.
-`~/academic-rag-and-second-brain` on a Mac or
-`C:\Users\<you>\academic-rag-and-second-brain` on Windows). It holds: the setup
+ZIP from GitHub, the unpacked BRAG folder appeared exactly where you unpacked it
+(e.g. under `~/` on a Mac or `C:\Users\<you>\` on Windows — its name comes from
+the ZIP). It holds: the setup
 files, the `docker-compose.yml`, your settings file `.env`, and by default the
 `wissensspeicher/` folder with your documents. You can see, back up and move this folder —
 it's yours.

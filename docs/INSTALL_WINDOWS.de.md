@@ -57,9 +57,8 @@ richten wir in Schritt 4 automatisch ein.
 **Was du tust:**
 1. Auf der GitHub-Seite den grünen Knopf **`Code`** → **`Download ZIP`** klicken.
    Rechtsklick auf die ZIP → **„Alle extrahieren"** (z. B. in deinen
-   Benutzerordner). Der entpackte Ordner heißt `Academic-RAG-and-Second-Brain-main`
-   (der genaue Name kann leicht abweichen). Wichtig: erst **entpacken** — nicht
-   aus der ZIP heraus starten.
+   Benutzerordner). Es entsteht der entpackte BRAG-Ordner (sein Name stammt aus
+   der ZIP). Wichtig: erst **entpacken** — nicht aus der ZIP heraus starten.
 2. Öffne den entpackten Ordner und mache einen Doppelklick auf **`setup.bat`**.
    - Warnt **Windows SmartScreen** („Der Computer wurde geschützt"): klicke auf
      **„Weitere Informationen"** → **„Trotzdem ausführen"**.

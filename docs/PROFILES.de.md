@@ -79,3 +79,7 @@ setze `EMBEDDING_BACKEND=gemini` (oder `openai`) mit passendem `EMBEDDING_MODEL`
 / `EMBEDDING_DIM`. Beachte: Das ist die einzige Änderung, die ein einmaliges
 Neu-Einlesen *erfordert* (in eine separate Collection, sicher gehandhabt). Siehe
 `.env.example`.
+
+**Datenschutz-Hinweis:** Dieser Override sendet deinen Dokumenttext an den
+Embedding-Anbieter (Gemini/OpenAI) — nicht für vertrauliche oder
+personenbezogene Inhalte. Für lokal-only beim Standard-Profil-Embedder bleiben.
