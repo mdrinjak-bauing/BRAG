@@ -54,9 +54,9 @@ Claude, und Claude nutzt beides im Hintergrund über eine Verbindung namens MCP.
 Es gibt **zwei** Orte — und es hilft sehr, sie auseinanderzuhalten:
 
 **1. Der Projektordner — der, den du selbst angelegt hast.** Als du die
-ZIP-Datei von GitHub entpackt hast, ist ein Ordner entstanden — genau dort, wo
-du entpackt hast (z. B. `~/academic-rag-and-second-brain` auf dem Mac oder
-`C:\Users\<du>\academic-rag-and-second-brain` unter Windows). Darin liegen: die
+ZIP-Datei von GitHub entpackt hast, ist der entpackte BRAG-Ordner entstanden —
+genau dort, wo du entpackt hast (z. B. unter `~/` auf dem Mac oder
+`C:\Users\<du>\` unter Windows; sein Name stammt aus der ZIP). Darin liegen: die
 Setup-Dateien, die `docker-compose.yml`, deine Einstellungsdatei `.env` und
 standardmäßig der `wissensspeicher/`-Ordner mit deinen Dokumenten. Diesen Ordner kannst du
 sehen, sichern, verschieben — er gehört dir.

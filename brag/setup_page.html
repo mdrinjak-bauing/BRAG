@@ -231,6 +231,7 @@
       <input type="radio" name="rerank" value="full">
       <span data-i="rerank_full"></span>
     </label>
+    <p class="hint" data-i="rerank_hw"></p>
     <h3 data-i="vision_h" style="margin-top:18px;"></h3>
     <label class="check" style="display:block; margin:8px 0;">
       <input type="checkbox" id="vision" checked>
@@ -314,6 +315,7 @@ const STR = {
     rerank_off:"Off — fastest search, more noise. Hits without re-sorting. For very weak computers.",
     rerank_eco:"Economical — recommended. Re-sorts the 40 most important passages. A good middle ground, gentle on normal notebooks.",
     rerank_full:"Full — best result quality. Re-sorts up to 120 passages, noticeably slower on weak hardware.",
+    rerank_hw:"Recommended for your hardware: all of this runs on your CPU — no graphics card needed. On a normal laptop (about 16 GB of RAM, no dedicated GPU) keep “Economical”; pick “Full” only on a strong machine (e.g. an M-series Mac with 32 GB+), and “Off” on a very old/weak one.",
     vision_h:"Describe figures and diagrams?",
     vision_label:"Describe figures so they become searchable",
     vision_hint:"With a cloud profile, figures are sent to the provider for description. Turning this off saves tokens and load, and sends no images.",
@@ -373,6 +375,7 @@ const STR = {
     rerank_off:"Aus — schnellste Suche, mehr Rauschen. Treffer ohne Nachsortierung. Für sehr schwache Rechner.",
     rerank_eco:"Sparsam — empfohlen. Sortiert die wichtigsten 40 Stellen nach. Guter Mittelweg, schonend für normale Notebooks.",
     rerank_full:"Voll — beste Trefferqualität. Sortiert bis zu 120 Stellen nach, spürbar langsamer auf schwacher Hardware.",
+    rerank_hw:"Empfehlung für deine Hardware: Das läuft alles auf deinem Prozessor (CPU) — eine Grafikkarte ist nicht nötig. Auf einem normalen Notebook (etwa 16 GB RAM, keine dedizierte Grafikkarte) bei „Sparsam“ bleiben; „Voll“ nur auf einem starken Rechner (z. B. M-Mac mit 32 GB+), „Aus“ auf einem sehr alten/schwachen.",
     vision_h:"Abbildungen und Diagramme beschreiben?",
     vision_label:"Abbildungen beschreiben, damit sie durchsuchbar werden",
     vision_hint:"Bei einem Cloud-Profil werden Abbildungen zur Beschreibung an den Anbieter gesendet. Ausschalten spart Tokens und Last und sendet keine Bilder.",
@@ -415,8 +418,10 @@ function setProvider(p){
   show("s2key");
 }
 function quickstart(){
-  // Express path: Gemini cloud, economical reranking, figure descriptions on.
-  // Skips the language and performance steps (defaults are applied in apply()).
+  // Express path: pre-pick Gemini cloud + economical reranking + figures on, then
+  // jump straight to the API-key step. The language and performance steps are still
+  // shown afterwards (s2key → s3 → sperf → apply); only the profile/provider choice
+  // is skipped. Defaults (eco / vision on) hold even if the user clicks through.
   state.profile = "gemini"; state.provider = "gemini";
   state.rerank = "eco"; state.vision = true;
   const link = document.getElementById("keylink");

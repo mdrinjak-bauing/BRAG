@@ -56,8 +56,8 @@ nichts weiter tun.
 **Was du tust:**
 1. Auf der GitHub-Seite den grünen Knopf **`Code`** → **`Download ZIP`** klicken.
    Entpacke die ZIP per Doppelklick (z. B. in deinen Benutzerordner — siehe
-   Hinweis zu iCloud unten). Es entsteht ein Ordner namens
-   `Academic-RAG-and-Second-Brain-main` (der genaue Name kann leicht abweichen).
+   Hinweis zu iCloud unten). Es entsteht der entpackte BRAG-Ordner (sein Name
+   stammt aus der ZIP).
 2. Öffne diesen Ordner im Finder und mache einen Doppelklick auf
    **`setup.command`**.
    - Blockiert macOS mit „nicht verifizierter Entwickler": **Rechtsklick** auf

@@ -37,10 +37,10 @@ def _find(marker: str, top_k: int = 10):
 def main() -> int:
     failures: list[str] = []
 
-    print("[1/4] ingesting the sample corpus (reconcile_on_startup) ...", flush=True)
+    print("[1/6] ingesting the sample corpus (reconcile_on_startup) ...", flush=True)
     reconcile_on_startup()
 
-    print("[2/4] reading the corpus ...", flush=True)
+    print("[2/6] reading the corpus ...", flush=True)
     client = storage.get_client()
     try:
         corpus = storage.list_corpus_sources(client)
@@ -49,7 +49,7 @@ def main() -> int:
     print(f"  corpus: {sorted(corpus)}", flush=True)
 
     # --- basic: ingest + search + citation covers the marker's page ----------
-    print("[3/4] basic citation ...", flush=True)
+    print("[3/6] basic citation ...", flush=True)
     _, m = _find("BRAGZ9QXMARKER")
     if m is None:
         failures.append("basic: marker BRAGZ9QXMARKER not found in any hit")
@@ -61,7 +61,7 @@ def main() -> int:
             print(f"  ✓ basic: found and cited on pages {ps}-{pe}")
 
     # --- B1: same filename in two folders must not collide -------------------
-    print("[4/4] regression checks (B1 collision, H2 multi-page) ...", flush=True)
+    print("[4/6] regression checks (B1 collision, H2 multi-page) ...", flush=True)
     for key, marker in [("projectA/collide", "COLLIDEMARKERA"),
                         ("projectB/collide", "COLLIDEMARKERB")]:
         if config.normalize_source_key(key) not in corpus:
@@ -94,14 +94,44 @@ def main() -> int:
     else:
         print("  ✓ H3: inspect_chunks page filter covers spanning chunks")
 
+    # --- C9: re-ingesting the same file is idempotent (upsert-before-delete) -
+    print("[5/6] re-ingest idempotency (upsert-before-delete) ...", flush=True)
+    from brag.ingest.pipeline import ingest, reapply_folder_metadata
+    before = len(corpus)
+    ingest(config.SOURCES_DIR / "e2e_sample.pdf")
+    client = storage.get_client()
+    try:
+        corpus2 = storage.list_corpus_sources(client)
+    finally:
+        client.close()
+    if len(corpus2) != before:
+        failures.append(f"C9: corpus size changed on re-ingest ({before} -> {len(corpus2)}) "
+                        "— upsert-before-delete/exclude_ids idempotency broken")
+    elif _find("BRAGZ9QXMARKER")[1] is None:
+        failures.append("C9: marker lost after re-ingesting the same file")
+    else:
+        print("  ✓ C9: re-ingest left the corpus stable and the marker retrievable")
+
+    # --- C8: a _meta.txt change re-patches already-indexed docs (no re-ingest)-
+    print("[6/6] _meta.txt live-update (reapply_folder_metadata) ...", flush=True)
+    (config.SOURCES_DIR / "projectA" / "_meta.txt").write_text(
+        "client: TestClientX\n", encoding="utf-8")
+    patched = reapply_folder_metadata(config.SOURCES_DIR / "projectA")
+    if patched < 1:
+        failures.append(f"C8: reapply_folder_metadata patched {patched} docs in projectA/, "
+                        "expected >= 1 (already-indexed doc not re-tagged)")
+    else:
+        print(f"  ✓ C8: _meta.txt change re-applied to {patched} already-indexed doc(s)")
+
     if failures:
         print("\nFAIL:")
         for f in failures:
             print(f"  - {f}")
         return 1
 
-    print("\nPASS: basic citation, B1 no-collision, H2 multi-page citation and "
-          "H3 page-range inspect all verified")
+    print("\nPASS: basic citation, B1 no-collision, H2 multi-page citation, "
+          "H3 page-range inspect, C9 re-ingest idempotency and C8 _meta.txt "
+          "live-update all verified")
     return 0
 
 

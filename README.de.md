@@ -194,7 +194,7 @@ Belegen."*
 ## Wähle dein Profil
 
 Das Profil wählt nur die **Text-KI** (Kontext schreiben, Abbildungen
-beschreiben, klassifizieren). Der **Bedeutungs-Index (Embeddings) läuft immer
+beschreiben). Der **Bedeutungs-Index (Embeddings) läuft immer
 lokal** (arctic-Modell, keine GPU nötig) — du kannst den Anbieter also jederzeit
 wechseln, **ohne neu zu indexieren.**
 
@@ -211,16 +211,16 @@ Rechner; lokale Text-KI und ein voll aufgedrehter Reranker brauchen mehr:
 
 | Stufe | Hardware | Schaltet frei | Preis |
 |---|---|---|---|
-| **Leicht** | ~8 GB RAM, jeder Rechner | Cloud-LLM, lokaler Index, Reranker sparsam/aus | API-Key nötig, Dokumenttext geht an Anbieter |
+| **Leicht** | 8 GB Minimum, 16 GB komfortabel; jeder Rechner, keine GPU | Cloud-LLM, lokaler Index, Reranker sparsam/aus | API-Key nötig; Dokumenttext geht an Anbieter; der erste Ingest ist RAM-intensiv |
 | **Mittel** | ~16 GB RAM | + Reranker flüssig, optional erstes lokales LLM (Ollama) | lokales LLM langsamer/schwächer |
-| **Privat-lokal** | M-Mac 32 GB, LM Studio | lokales LLM (qwen-14b), Reranker voll, Vision lokal | nichts verlässt den Rechner; mehr Setup |
-| **Voll-Version** | M-Mac 64 GB+, LM Studio | großes lokales LLM (gemma-27b) + Vision + Reranker voll | höchste Qualität, höchste Last |
+| **Privat-lokal** | M-Mac 32 GB, LM Studio | lokales LLM (z. B. qwen-14b), Reranker voll, Vision lokal | nichts verlässt den Rechner; mehr Setup |
+| **Voll-Version** | M-Mac 64 GB+, LM Studio | großes lokales LLM (z. B. gemma-27b) + Vision + Reranker voll | höchste Qualität, höchste Last |
 
 ### Suchqualität einstellen: der Reranker
 
 Nach der hybriden Suche kann ein zweiter Schritt die gefundenen Stellen noch
 einmal nach Passgenauigkeit sortieren — ein **Cross-Encoder** (`bge-reranker-v2-m3`,
-lokal auf deiner CPU), der deine Frage gemeinsam mit jeder Stelle liest. Das ist
+lokal auf deiner CPU — keine Grafikkarte nötig), der deine Frage gemeinsam mit jeder Stelle liest. Das ist
 der rechenintensivste Teil einer Suche; deshalb wählst du über `RERANK_PROFILE`
 (im Setup-Wizard oder in `.env`), wie gründlich er arbeitet. „Geladen" = wie
 viele Kandidaten aus der Suche gezogen werden (je 60 aus Bedeutungs- und
@@ -229,7 +229,7 @@ Stichwortsuche), „nachsortiert" = wie viele davon der Cross-Encoder bewertet:
 | Einstellung | geladen | nachsortiert | Tempo / Qualität | für |
 |---|---|---|---|---|
 | `off` | 120 (60+60) | 0 — reine RRF-Fusion | am schnellsten, mehr Rauschen | sehr schwache Rechner, kleiner Korpus |
-| `eco` *(Standard)* | 120 (60+60) | 40 | schonend, gute Qualität | normale Notebooks (~8–16 GB) |
+| `eco` *(Standard)* | 120 (60+60) | 40 | schonend, gute Qualität | normale Notebooks (16 GB komfortabel) |
 | `balanced` | 120 (60+60) | 60 | etwas langsamer, schärfer | Mittelklasse |
 | `full` | 120 (60+60) | 120 | am langsamsten, beste Reihenfolge | starke Maschinen (M-Chip, 32 GB+) |
 
@@ -263,12 +263,14 @@ Cloud-Embedding-Opt-in: [docs/PROFILES.de.md](docs/PROFILES.de.md).
 
 ## Einrichten — realistisch etwa 1 Stunde
 
-Aktiv zu tun ist wenig; die Zeit geht fast komplett für **Downloads** drauf
-(Docker Desktop, Claude Desktop und einmalig ~3 GB Analyse-Modelle beim ersten
-Start). Es läuft auf einem **normalen Rechner** — mit einem Cloud-Profil (dem
-Standard) reichen rund **8 GB RAM** und jede moderne CPU; starke Hardware
-brauchst du nur, wenn du auch die *Text*-KI lokal betreibst (siehe Profiltabelle
-oben).
+Aktiv zu tun ist nur etwa **15 Minuten**; der Rest sind **Downloads** (Docker
+Desktop, Claude Desktop und einmalig ~3 GB Analyse-Modelle beim ersten Start) —
+rechne bei einer Erstinstallation also mit insgesamt rund **30–60 Minuten**. Es
+läuft auf einem **normalen Rechner** — mit einem Cloud-Profil (dem Standard)
+sind **8 GB RAM das Minimum, 16 GB komfortabel** (am meisten Speicher zieht der
+erste Ingest, der den lokalen Index und das Reranker-Modell lädt), jede moderne
+CPU genügt und **eine Grafikkarte ist nicht nötig**. Starke Hardware brauchst du
+nur, wenn du auch die *Text*-KI lokal betreibst (siehe Profiltabelle oben).
 
 **Du brauchst** (alles kostenlos): [Docker Desktop](https://www.docker.com/products/docker-desktop/),
 [Claude Desktop](https://claude.com/download) und einen API-Schlüssel —
@@ -356,7 +358,7 @@ Der **erste** Unterordner-Name wird zum filterbaren Dokumenttyp (`sources/Paper/
 so mischen sich keine Treffer aus anderen Projekten in deine Ergebnisse. Stimmen
 die gedruckten Seitenzahlen nicht mit den physischen PDF-Seiten überein, regelt
 ein `page_offset` in derselben Datei, dass der Beleg die *gedruckte* Seite zeigt.
-Beide Felder im Detail (mit Beispielen): [docs/HOW_IT_WORKS.de.md](docs/HOW_IT_WORKS.de.md).
+Beide Felder im Detail (mit Beispielen): [docs/FAQ.de.md](docs/FAQ.de.md).
 
 ```
 # sources/Projekte/Schulzentrum/_meta.txt
@@ -383,7 +385,8 @@ Schulzentrum"*). Die einzige Regel: nur der **erste** Unterordner unter
 
 **Ändern wirkt sofort:** Legst du eine `_meta.txt` an oder bearbeitest sie
 nachträglich, frischt BRAG die Metadaten der bereits indexierten Dokumente
-dieses Ordners automatisch auf — ohne neu einzulesen.
+dieses Ordners — und aller geschachtelten Dokumente, die davon erben —
+automatisch auf, ohne neu einzulesen.
 
 **Im Alltag** legst du neue Literatur einfach in `sources/` ab (in Minuten
 indexiert) und fragst Claude, was sie zu deinem Bestand ergänzt oder ob sie ihm

@@ -24,7 +24,9 @@ What leaves your machine depends on the chosen **profile**:
 
 - **Local profiles (Hybrid, Local):** **nothing** leaves your machine — neither
   document text nor embeddings. The meaning index is computed locally in every
-  profile anyway.
+  standard profile anyway. The one exception is the optional cloud-embedding
+  override (`EMBEDDING_BACKEND=gemini`/`openai`, documented in `.env.example`):
+  it additionally sends your document text to the embedding provider.
 - **Cloud profiles (Gemini, OpenAI, Claude):** to generate context, the **text
   excerpt of each chunk** is sent to the respective provider — and, with the
   **vision pass** on (the default), the **rendered images of your figures** as

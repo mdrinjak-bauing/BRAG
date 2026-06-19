@@ -183,6 +183,11 @@ nothing, just let reconciliation re-index after a restore).
 Delete the file from `sources/` — its index entries and the auto-note are
 cleaned up automatically.
 
+**I updated/overwrote a file, but search still shows the old content.**
+Overwriting a file under the same name does not trigger a re-ingest. To refresh
+it, rename the file, or briefly move it out of `sources/` and back in (or delete
+it and drop the new version in).
+
 **Can I delete the project folder or the ZIP?**
 You can delete the **ZIP** after unpacking. But **keep the project folder** (the
 unpacked ZIP) — it holds your configuration (`.env`), the controls

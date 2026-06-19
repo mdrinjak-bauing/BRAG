@@ -56,10 +56,13 @@ Claude Desktop als Benutzeroberfläche.
 4. **Embed** — dichter Vektor (arctic, 1024 Dim.) + dünnbesetzter BM25-Vektor
    mit sprachabhängiger Wortstamm-Reduktion. Fehlgeschlagene Embeddings werden
    protokolliert und übersprungen — nie als Null-Vektoren gespeichert.
-5. **Store** (`pipeline.py` / `storage.py`) — alte Abschnitte derselben Quelle
-   werden zuerst gelöscht (idempotentes Neu-Einlesen), dann gebündelter Upsert
-   (100 pro Päckchen) in eine hybride Qdrant-Collection (dicht + dünn mit
-   IDF-Modifikator).
+5. **Store** (`pipeline.py` / `storage.py`) — die neuen Punkte werden **zuerst**
+   eingespielt (gebündelter Upsert, 100 pro Päckchen, `wait=True`) in eine
+   hybride Qdrant-Collection (dicht + dünn mit IDF-Modifikator); erst **danach**,
+   wenn jeder Punkt serverseitig bestätigt ist, werden die verbleibenden alten
+   Abschnitte derselben Quelle gelöscht (idempotentes Neu-Einlesen). Ein Crash
+   zwischen den beiden Schritten hinterlässt höchstens harmlose Waisen, nie ein
+   halb-gelöschtes Dokument.
 6. **Note** (`notes.py`) — eine Obsidian-kompatible Literaturnotiz; der
    Abschnitt „Meine Notizen" des Nutzers übersteht jede Neugenerierung.
 

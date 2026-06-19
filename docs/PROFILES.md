@@ -3,8 +3,9 @@
 **🇬🇧 English | 🇩🇪 [Deutsch](PROFILES.de.md)**
 
 The profile decides **which AI writes the text work** — the 1–2 sentence
-context for each chunk during indexing, figure descriptions, and document
-classification. You choose it once during setup and can switch later.
+context for each chunk during indexing and the figure descriptions. (The
+document type comes from the folder path, not from an LLM.) You choose it once
+during setup and can switch later.
 
 **The meaning-index (embeddings) always runs locally**, in every profile
 (`snowflake-arctic-embed-l-v2.0`, 1024 dim, on CPU — no GPU needed). So:
@@ -72,3 +73,7 @@ so: **fast cloud embeddings** on weak hardware with a large corpus — set
 `EMBEDDING_BACKEND=gemini` (or `openai`) with the matching `EMBEDDING_MODEL` /
 `EMBEDDING_DIM`. Note this is the one change that *does* require a one-time
 re-ingest (into a separate collection, handled safely). See `.env.example`.
+
+**Privacy note:** this override sends your document text to the embedding
+provider (Gemini/OpenAI) — not for confidential or personal content. For
+local-only, keep the standard-profile embedder.

@@ -54,9 +54,21 @@ open "http://localhost:${PORT:-8765}/setup"
 
 echo
 echo "Finish the setup in your browser — this window waits for you."
+echo "(If you closed or cancelled the assistant: close this window and double-click setup.command again.)"
+waited=0
 while [ ! -f .setup_complete ]; do
   sleep 2
+  waited=$((waited + 2))
+  if [ $((waited % 30)) -eq 0 ]; then printf "."; fi
+  if [ "$waited" -ge 2700 ]; then
+    echo
+    echo "Timed out after 45 minutes. If you didn't finish the assistant, close this"
+    echo "window and run setup.command again."
+    docker compose --profile setup rm -sf setup >/dev/null 2>&1
+    exit 1
+  fi
 done
+echo
 
 echo "Applying your settings..."
 # Tear down the setup service (frees the port and drops its mounts), then start

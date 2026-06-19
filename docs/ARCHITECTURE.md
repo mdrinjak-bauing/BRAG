@@ -54,9 +54,12 @@ folder, Claude Desktop as the user interface.
 4. **Embed** — dense vector (local arctic-embed-l-v2.0, 1024-dim, CPU) + BM25
    sparse vector with language-aware stemming. Failed embeddings are logged and
    skipped — never stored as zero vectors.
-5. **Store** (`pipeline.py` / `storage.py`) — old chunks of the same source
-   are deleted first (idempotent re-ingest), then batched upsert (100 per batch)
-   into a hybrid Qdrant collection (dense + sparse with IDF modifier).
+5. **Store** (`pipeline.py` / `storage.py`) — the new points are upserted
+   **first** (batched, 100 per batch, `wait=True`) into a hybrid Qdrant
+   collection (dense + sparse with IDF modifier); only **after** every point is
+   server-side confirmed are the remaining stale chunks of the same source
+   deleted (idempotent re-ingest). A crash between the two steps leaves at worst
+   harmless orphans, never a half-deleted document.
 6. **Note** (`notes.py`) — an Obsidian-compatible literature note; the user's
    "My notes" section survives regeneration.
 

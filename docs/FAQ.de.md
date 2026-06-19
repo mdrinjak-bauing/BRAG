@@ -198,6 +198,11 @@ ab).
 Die Datei aus `sources/` löschen — ihre Indexeinträge und die automatische Notiz
 werden automatisch bereinigt.
 
+**Ich habe eine Datei aktualisiert/überschrieben, die Suche zeigt aber noch den alten Inhalt.**
+Ein gleichnamiges Überschreiben löst kein Neu-Einlesen aus. Zum Aktualisieren die
+Datei umbenennen oder kurz aus `sources/` heraus- und wieder hineinbewegen (oder
+löschen und die neue Fassung neu ablegen).
+
 **Kann ich den Projektordner oder die ZIP-Datei löschen?**
 Die **ZIP-Datei** kannst du nach dem Entpacken löschen. Den **Projektordner**
 (die entpackte ZIP) aber **behalten** — er enthält deine Konfiguration (`.env`),

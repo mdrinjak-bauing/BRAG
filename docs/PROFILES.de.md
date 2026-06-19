@@ -3,9 +3,9 @@
 **🇬🇧 [English](PROFILES.md) | 🇩🇪 Deutsch**
 
 Das Profil entscheidet, **welche KI die Textarbeit erledigt** — die 1–2 Sätze
-Kontext pro Abschnitt beim Indexieren, die Abbildungsbeschreibungen und die
-Dokumentklassifikation. Du wählst es einmal beim Setup und kannst später
-wechseln.
+Kontext pro Abschnitt beim Indexieren und die Abbildungsbeschreibungen. (Der
+Dokumenttyp wird aus dem Ordnerpfad abgeleitet, nicht per LLM.) Du wählst es
+einmal beim Setup und kannst später wechseln.
 
 **Der Bedeutungs-Index (die Embeddings) läuft immer lokal**, in jedem Profil
 (`snowflake-arctic-embed-l-v2.0`, 1024 Dimensionen, auf der CPU — keine GPU
@@ -79,3 +79,7 @@ setze `EMBEDDING_BACKEND=gemini` (oder `openai`) mit passendem `EMBEDDING_MODEL`
 / `EMBEDDING_DIM`. Beachte: Das ist die einzige Änderung, die ein einmaliges
 Neu-Einlesen *erfordert* (in eine separate Collection, sicher gehandhabt). Siehe
 `.env.example`.
+
+**Datenschutz-Hinweis:** Dieser Override sendet deinen Dokumenttext an den
+Embedding-Anbieter (Gemini/OpenAI) — nicht für vertrauliche oder
+personenbezogene Inhalte. Für lokal-only beim Standard-Profil-Embedder bleiben.

@@ -186,8 +186,8 @@ concept note (notebook), and fill in what's missing — with citations."*
 
 ## Choose your profile
 
-The profile only picks the **text AI** (writing context, describing figures,
-classifying). The **meaning index (embeddings) always runs locally** (arctic
+The profile only picks the **text AI** (writing context, describing figures).
+The **meaning index (embeddings) always runs locally** (arctic
 model, no GPU needed) — so you can switch provider any time **without
 re-indexing.**
 
@@ -204,15 +204,15 @@ text AI and a fully cranked-up reranker need more:
 
 | Tier | Hardware | Unlocks | Trade-off |
 |---|---|---|---|
-| **Light** | ~8 GB RAM, any computer | Cloud LLM, local index, reranker eco/off | API key needed, document text goes to the provider |
+| **Light** | 8 GB minimum, 16 GB comfortable; any computer, no GPU | Cloud LLM, local index, reranker eco/off | API key needed; document text goes to the provider; the first ingest is RAM-heavy |
 | **Medium** | ~16 GB RAM | + smooth reranker, optionally a first local LLM (Ollama) | local LLM slower/weaker |
-| **Private-local** | M-Mac 32 GB, LM Studio | local LLM (qwen-14b), reranker full, vision local | nothing leaves the machine; more setup |
-| **Full version** | M-Mac 64 GB+, LM Studio | large local LLM (gemma-27b) + vision + reranker full | highest quality, highest load |
+| **Private-local** | M-Mac 32 GB, LM Studio | local LLM (e.g. qwen-14b), reranker full, vision local | nothing leaves the machine; more setup |
+| **Full version** | M-Mac 64 GB+, LM Studio | large local LLM (e.g. gemma-27b) + vision + reranker full | highest quality, highest load |
 
 ### Tuning search quality: the reranker
 
 After the hybrid search, a second step can re-sort the hits by true fit — a
-**cross-encoder** (`bge-reranker-v2-m3`, locally on your CPU) that reads your
+**cross-encoder** (`bge-reranker-v2-m3`, locally on your CPU — no graphics card needed) that reads your
 question together with each passage. It is the most compute-heavy part of a
 search, so `RERANK_PROFILE` (in the setup wizard or `.env`) lets you choose how
 hard it works. "Loaded" = how many candidates are pulled from search (60 each
@@ -222,7 +222,7 @@ cross-encoder actually scores:
 | Setting | loaded | re-sorted | Speed / quality | for |
 |---|---|---|---|---|
 | `off` | 120 (60+60) | 0 — pure RRF fusion | fastest, more noise | very weak machines, small corpus |
-| `eco` *(default)* | 120 (60+60) | 40 | gentle, good quality | normal laptops (~8–16 GB) |
+| `eco` *(default)* | 120 (60+60) | 40 | gentle, good quality | normal laptops (16 GB comfortable) |
 | `balanced` | 120 (60+60) | 60 | a bit slower, sharper | mid-range |
 | `full` | 120 (60+60) | 120 | slowest, best ordering | strong machines (M-chip, 32 GB+) |
 
@@ -255,11 +255,14 @@ Details, model recommendations and the cloud-embedding opt-in:
 
 ## Setup — realistically about an hour
 
-There's little active work; the time is almost all **downloads** (Docker
-Desktop, Claude Desktop, and the ~3 GB of analysis models on first run). It runs
-on a **normal computer** — with a cloud profile (the default) about **8 GB of
-RAM** is plenty and any modern CPU will do; you only need a strong machine if you
-also run the *text* AI locally (see the profile table above).
+Only about **15 minutes of active work**; the rest is **downloads** (Docker
+Desktop, Claude Desktop, and the ~3 GB of analysis models on first run), so
+allow roughly **30–60 minutes total** on a first install. It runs
+on a **normal computer** — with a cloud profile (the default) **8 GB of RAM is
+the minimum and 16 GB is comfortable** (the first ingest, which loads the local
+index and reranker models, is the RAM-heavy moment), any modern CPU will do, and
+**no graphics card is needed**. You only need a strong machine if you also run
+the *text* AI locally (see the profile table above).
 
 **You need** (all free): [Docker Desktop](https://www.docker.com/products/docker-desktop/),
 [Claude Desktop](https://claude.com/download) and an API key — easiest is
@@ -339,7 +342,7 @@ folder under `sources/` — one `key: value` per line; that way hits from other
 projects don't bleed into your results. If a document's printed page numbers
 don't match the PDF's physical pages, a `page_offset` in the same file makes
 citations show the *printed* page. Both fields in detail (with examples):
-[docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
+[docs/FAQ.md](docs/FAQ.md).
 
 ```
 # sources/projects/School_Center/_meta.txt
@@ -364,8 +367,8 @@ The one rule: only the **first** subfolder under `sources/` sets the document
 **type**; everything deeper is purely for your `_meta.txt` tags.
 
 **Editing takes effect at once:** when you add or change a `_meta.txt`, BRAG
-refreshes the metadata of that folder's already-indexed documents
-automatically — without re-ingesting.
+refreshes the metadata of that folder's already-indexed documents — and every
+nested document that inherits from it — automatically, without re-ingesting.
 
 **Day to day** you just drop new literature into `sources/` (indexed in minutes)
 and ask Claude what it adds to your existing material or whether it contradicts

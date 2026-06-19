@@ -25,7 +25,10 @@ Was deinen Rechner verlässt, hängt vom gewählten **Profil** ab:
 
 - **Lokale Profile (Hybrid, Lokal):** Es verlässt **nichts** deinen Rechner —
   weder Dokumenttext noch Embeddings. Der Bedeutungs-Index wird ohnehin in jedem
-  Profil lokal erzeugt.
+  Standard-Profil lokal erzeugt. Die einzige Ausnahme ist der optionale
+  Cloud-Embedding-Override (`EMBEDDING_BACKEND=gemini`/`openai`, dokumentiert in
+  `.env.example`): Er überträgt deinen Dokumenttext zusätzlich an den
+  Embedding-Anbieter.
 - **Cloud-Profile (Gemini, OpenAI, Claude):** Zur Kontext-Erzeugung wird der
   **Textauszug jedes Abschnitts** an den jeweiligen Anbieter übermittelt — und
   bei aktivem **Vision-Pass** (standardmäßig an) zusätzlich die **gerenderten

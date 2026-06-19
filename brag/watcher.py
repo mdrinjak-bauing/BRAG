@@ -185,6 +185,7 @@ def reconcile_on_startup():
     """Index documents that arrived while the watcher was not running.
     Retries while Qdrant is still booting (compose race at startup)."""
     corpus = None
+    last_error = None
     for attempt in range(6):
         try:
             client = storage.get_client()
@@ -192,12 +193,15 @@ def reconcile_on_startup():
             corpus = storage.list_corpus_sources(client)
             client.close()
             break
-        except Exception:  # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
+            last_error = e
             if attempt < 5:
                 print("waiting for Qdrant to come up ...")
                 time.sleep(10)
     if corpus is None:
-        print("reconciliation skipped — Qdrant not reachable")
+        # Surface the real cause (not just "unreachable") — a dimension clash,
+        # auth or broken volume is otherwise swallowed and undiagnosable here.
+        print(f"reconciliation skipped — Qdrant not reachable: {str(last_error)[:160]}")
         return
 
     # Re-drive documents that are absent from the corpus AND documents whose
