@@ -62,3 +62,71 @@ def test_env_safe_strips_newlines_and_spaces():
     assert _env_safe("./my docs") == "./my docs"
     assert "\n" not in _env_safe("evil\nINJECTED=1")
     assert _env_safe("  spaced  ") == "spaced"
+
+
+# ── write_env: language mapping, perf options, key preservation ──
+def test_write_env_maps_answer_language_for_all_offered_languages(tmp_path, monkeypatch):
+    import brag.setup_core as sc
+    monkeypatch.setattr(sc, "WORKSPACE", tmp_path)
+    for lang, expected in [("english", "English"), ("german", "German"),
+                           ("french", "French"), ("portuguese", "Portuguese")]:
+        sc.write_env("gemini", "", lang)
+        env = (tmp_path / ".env").read_text(encoding="utf-8")
+        assert f"VAULT_LANGUAGE={lang}" in env
+        assert f"ANSWER_LANGUAGE={expected}" in env  # no longer collapses to English
+
+
+def test_write_env_writes_rerank_and_vision(tmp_path, monkeypatch):
+    import brag.setup_core as sc
+    monkeypatch.setattr(sc, "WORKSPACE", tmp_path)
+    sc.write_env("gemini", "", "english", rerank_profile="full", vision_enabled=False)
+    env = (tmp_path / ".env").read_text(encoding="utf-8")
+    assert "RERANK_PROFILE=full" in env
+    assert "VISION_ENABLED=false" in env
+
+
+def test_write_env_preserves_unmanaged_user_keys(tmp_path, monkeypatch):
+    import brag.setup_core as sc
+    monkeypatch.setattr(sc, "WORKSPACE", tmp_path)
+    (tmp_path / ".env").write_text(
+        "BRIDGE_HOST_PORT=8770\nBRIDGE_PUBLIC_URL=http://localhost:8770\n"
+        "CLAUDE_CONFIG_DIR=/some/dir\n", encoding="utf-8")
+    sc.write_env("gemini", "", "english")  # a re-run must not drop these
+    env = (tmp_path / ".env").read_text(encoding="utf-8")
+    assert "BRIDGE_HOST_PORT=8770" in env
+    assert "BRIDGE_PUBLIC_URL=http://localhost:8770" in env
+    assert "CLAUDE_CONFIG_DIR=/some/dir" in env
+
+
+# ── write_claude_config: backup / refuse-on-broken-JSON safety ───
+def test_write_claude_config_adds_entry_and_backs_up(tmp_path, monkeypatch):
+    import json
+    import brag.setup_core as sc
+    monkeypatch.setattr(sc, "CLAUDE_CONFIG_DIR", tmp_path)
+    monkeypatch.setenv("CLAUDE_CONFIG_MOUNTED", "1")
+    cfg = tmp_path / "claude_desktop_config.json"
+    cfg.write_text('{"mcpServers": {"other": {"command": "x"}}}', encoding="utf-8")
+    ok, _ = sc.write_claude_config()
+    assert ok
+    data = json.loads(cfg.read_text(encoding="utf-8"))
+    assert "academic-rag-and-second-brain" in data["mcpServers"]
+    assert "other" in data["mcpServers"]  # existing MCP servers preserved
+    assert (tmp_path / "claude_desktop_config.json.backup").exists()
+
+
+def test_write_claude_config_refuses_and_keeps_broken_json(tmp_path, monkeypatch):
+    import brag.setup_core as sc
+    monkeypatch.setattr(sc, "CLAUDE_CONFIG_DIR", tmp_path)
+    monkeypatch.setenv("CLAUDE_CONFIG_MOUNTED", "1")
+    cfg = tmp_path / "claude_desktop_config.json"
+    cfg.write_text("{ not valid json", encoding="utf-8")
+    ok, _ = sc.write_claude_config()
+    assert not ok
+    assert cfg.read_text(encoding="utf-8") == "{ not valid json"  # original untouched
+
+
+def test_write_claude_config_refuses_when_not_mounted(monkeypatch):
+    import brag.setup_core as sc
+    monkeypatch.delenv("CLAUDE_CONFIG_MOUNTED", raising=False)
+    ok, _ = sc.write_claude_config()
+    assert not ok
