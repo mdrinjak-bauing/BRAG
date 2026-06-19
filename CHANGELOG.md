@@ -33,6 +33,22 @@ one exception.
   presets.
 - **Clear error on an embedding-dimension mismatch** (model dim vs
   `EMBEDDING_DIM`) instead of an opaque crash on every upsert.
+- **Search robustness** — a malformed `year` filter value is now coerced away
+  instead of crashing the query, and an absurd `top_k` is clamped by a generous
+  sanity bound (ordinary large `top_k` stays supported).
+- **Bounded retry waits** — cloud LLM/embedding retries honour an overall
+  deadline, so repeated rate-limit backoffs can no longer hang a single call for
+  minutes.
+
+### Performance
+- **Batched local embeddings** — document chunks are embedded in batches (one
+  model call per batch instead of one per chunk), markedly faster bulk ingest on
+  the local, CPU-bound embedder that every profile uses. The batch contract
+  keeps each vector aligned to its chunk (no misattributed page citations) and
+  falls back to per-chunk embedding on any inconsistency.
+- **Reranker warm-up** — the local cross-encoder is loaded in a background
+  thread at MCP-server start, so the *first* search is no longer blocked by the
+  one-time model load.
 
 ### Security
 - **Setup is now a separate one-shot service.** The persistent app container no
@@ -52,6 +68,9 @@ one exception.
 - Optional **model-revision pinning** (`EMBEDDING_REVISION` / `RERANKER_REVISION`)
   for reproducible, supply-chain-safe model downloads.
 - Documented `BRIDGE_HOST_PORT` / `BRIDGE_PUBLIC_URL` in `.env.example`.
+- More **unit tests** (embedding-batch alignment contract, retry classification
+  and deadline, config fallbacks) and a **`pyproject.toml`** ruff configuration
+  (line length + whitespace) that now drives the CI lint step.
 
 ### Changed
 - A clear **API-key handling** note (stored only locally in `.env`, only ever
