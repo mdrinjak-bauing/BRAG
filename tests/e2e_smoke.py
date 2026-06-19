@@ -37,10 +37,10 @@ def _find(marker: str, top_k: int = 10):
 def main() -> int:
     failures: list[str] = []
 
-    print("[1/4] ingesting the sample corpus (reconcile_on_startup) ...", flush=True)
+    print("[1/6] ingesting the sample corpus (reconcile_on_startup) ...", flush=True)
     reconcile_on_startup()
 
-    print("[2/4] reading the corpus ...", flush=True)
+    print("[2/6] reading the corpus ...", flush=True)
     client = storage.get_client()
     try:
         corpus = storage.list_corpus_sources(client)
@@ -49,7 +49,7 @@ def main() -> int:
     print(f"  corpus: {sorted(corpus)}", flush=True)
 
     # --- basic: ingest + search + citation covers the marker's page ----------
-    print("[3/4] basic citation ...", flush=True)
+    print("[3/6] basic citation ...", flush=True)
     _, m = _find("BRAGZ9QXMARKER")
     if m is None:
         failures.append("basic: marker BRAGZ9QXMARKER not found in any hit")
@@ -61,7 +61,7 @@ def main() -> int:
             print(f"  ✓ basic: found and cited on pages {ps}-{pe}")
 
     # --- B1: same filename in two folders must not collide -------------------
-    print("[4/4] regression checks (B1 collision, H2 multi-page) ...", flush=True)
+    print("[4/6] regression checks (B1 collision, H2 multi-page) ...", flush=True)
     for key, marker in [("projectA/collide", "COLLIDEMARKERA"),
                         ("projectB/collide", "COLLIDEMARKERB")]:
         if config.normalize_source_key(key) not in corpus:
