@@ -269,6 +269,34 @@ def rename_source(old_source_file: str, new_path: Path) -> int:
     return n
 
 
+def reapply_folder_metadata(folder: Path) -> int:
+    """Re-derive and patch the metadata of every already-indexed document under
+    `folder` — without re-embedding. Used when a `_meta.txt` is added, edited or
+    removed: the project/client/custom fields it defines must then propagate to
+    documents that were indexed BEFORE the change (which the watcher otherwise
+    never revisits, because the document files themselves did not change).
+
+    Reuses the rename path with the same path in and out: rename_source re-reads
+    the full `_meta.txt` inheritance chain via metadata_payload and patches the
+    payload in place. Best-effort and idempotent; never raises.
+    Returns the number of documents whose metadata was refreshed."""
+    updated = 0
+    try:
+        for p in sorted(folder.rglob("*")):
+            if (p.is_file()
+                    and p.suffix.lower() in config.SUPPORTED_SUFFIXES
+                    and not p.name.startswith(".")
+                    and not any(part in config.WATCH_IGNORE_DIRS for part in p.parts)):
+                try:
+                    if rename_source(config.source_key_from_path(p), p):
+                        updated += 1
+                except Exception as e:  # noqa: BLE001 — one bad file must not stop the rest
+                    print(f"  metadata re-apply failed for {p.name}: {str(e)[:80]}")
+    except Exception as e:  # noqa: BLE001 — re-apply must never crash the watcher
+        print(f"  folder metadata re-apply failed for {folder}: {str(e)[:80]}")
+    return updated
+
+
 def index_passage(topic: str, text: str, source: str, page: str = "",
                   note: str = "") -> bool:
     """Embed a passage the user saved during a chat so it becomes findable by
