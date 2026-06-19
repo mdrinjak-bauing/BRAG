@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="docs/assets/overview.de.svg" alt="Der BRAG-Kreislauf — sammeln, lokal verwerten, fragen mit Beleg, mit KI denken und Notizen zurück in den Wissensspeicher schreiben" width="100%">
-</p>
-
 ![BRAG — sprich mit deinen eigenen Quellen, jede Antwort mit Beleg](docs/assets/header.de.svg)
 
 # BRAG — Building Retrieval-Augmented Generation
@@ -11,6 +7,10 @@
 > **Ein KI-Assistent, der deine eigenen Quellen wirklich kennt.** Leg deine Dokumente — PDFs, Word, PowerPoint, deine eigenen Notizen — in einen Ordner. BRAG erschließt sie **auf deinem Rechner** und reicht der KI bei jeder Frage genau die passenden Stellen — seitengenau belegt, ein Klick führt aufs Original. Ob die KI dabei lokal oder in der Cloud rechnet, entscheidest du; gesendet werden höchstens deine Frage und die passenden Stellen — nie der ganze Korpus.
 
 ## Was es tut
+
+<p align="center">
+  <img src="docs/assets/overview.de.svg" alt="Der BRAG-Kreislauf — sammeln, lokal verwerten, fragen mit Beleg, mit KI denken und Notizen zurück in den Wissensspeicher schreiben" width="100%">
+</p>
 
 Du pflegst einen Ordner mit Dateien. BRAG macht daraus einen durchsuchbaren Wissensspeicher und reicht der KI bei jeder Frage genau die passenden Stellen — so kommt jede Antwort **seitengenau belegt**, mit Link direkt zur Quelle. Zitate, die du behalten willst, werden in denselben Ordner zurückgeschrieben: Dein Wissen sammelt sich damit **in Dateien, die dir gehören**, nicht in einem Chatverlauf, der vergisst. Ein neuer Chat morgen — auch bei einem anderen Modell — knüpft genau dort an, wo du aufgehört hast.
 
@@ -29,8 +29,6 @@ Drei Dinge machen den Unterschied:
 Forschende, Lehrende und Promovierende — und genauso Praktiker, die im Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und Fachliteratur behalten müssen. **Ohne Programmierkenntnisse nutzbar.**
 
 ---
-
-![Der Weg vom PDF zur belegten Antwort: Dokument in sources legen, es wird indexiert, du fragst Claude, du bekommst eine seitengenau belegte Antwort](docs/assets/flow.de.svg)
 
 ## Was du damit machst
 

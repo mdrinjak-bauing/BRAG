@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="docs/assets/overview.en.svg" alt="The BRAG cycle — collect, process locally, ask with citations, think with AI, and write notes back into your knowledge store" width="100%">
-</p>
-
 ![BRAG — talk to your own sources, with every answer cited](docs/assets/header.en.svg)
 
 # BRAG — Building Retrieval-Augmented Generation
@@ -11,6 +7,10 @@
 > **An AI assistant that actually knows your sources.** Drop your documents — PDFs, Word, PowerPoint, your own notes — into a folder. BRAG makes sense of them **on your own machine** and hands the AI the right passages for every question — page-cited, one click from the original. Whether that AI runs locally or in the cloud is your call; at most your question and the matching passages are sent — never the whole corpus.
 
 ## What it does
+
+<p align="center">
+  <img src="docs/assets/overview.en.svg" alt="The BRAG cycle — collect, process locally, ask with citations, think with AI, and write notes back into your knowledge store" width="100%">
+</p>
 
 You keep a folder of files. BRAG turns it into a searchable knowledge store and hands the AI the right passages on demand — so every answer comes **page-cited**, with a link straight to the source. Quotes you want to keep are saved back into that same folder, which means your knowledge accumulates **in files you own**, not in a chat log that forgets. Start a new conversation tomorrow — even with a different model — and you pick up where you left off.
 
@@ -29,8 +29,6 @@ Three things set it apart:
 Researchers, lecturers and PhD students — and just as much practitioners who need to stay on top of standards, reports, bills of quantities and trade literature in everyday project work. **No programming required.**
 
 ---
-
-![From PDF to cited answer: drop a document into sources, it is indexed, you ask Claude, you get a page-cited answer](docs/assets/flow.en.svg)
 
 ## What you do with it
 
