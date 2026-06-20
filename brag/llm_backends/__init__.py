@@ -1,11 +1,18 @@
 """LLM backends. get_llm() returns the configured implementation."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from brag import config
+
+if TYPE_CHECKING:
+    from brag.llm_backends.base import LLMBackend
 
 _llm = None
 
 
-def get_llm():
+def get_llm() -> LLMBackend:
     global _llm
     if _llm is None:
         if config.LLM_BACKEND == "gemini":

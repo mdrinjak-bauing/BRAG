@@ -14,7 +14,7 @@ folder, Claude Desktop as the user interface.
 │ Browser ◀────────┼── localhost:8765 ─┤  ├─ http bridge (PDF links)    │
 │  (PDF at page N) │                   │  └─ search (hybrid + rerank)   │
 │                  │                   │            │                    │
-│ wissensspeicher/  ◀────────┼─── bind mount ───▶│            ▼                    │
+│ RAG-Verbindungsordner/  ◀────────┼─── bind mount ───▶│            ▼                    │
 │  sources/ notes/ │                   │ brag-qdrant (vector DB,          │
 │  passages/ wiki/ │                   │  named volume — no sync risk)   │
 │                  │                   └─────────────────────────────────┘
@@ -28,10 +28,22 @@ folder, Claude Desktop as the user interface.
    sections, tables, figure captions, page numbers. Table mode is pinned to
    ACCURATE so library updates cannot silently degrade quality. With the vision
    pass on, figure images are rendered (`generate_picture_images`) and described
-   in the contextualize step.
-2. **Chunk** (`chunking.py`) — paragraph-level sliding window (2000 chars,
-   200 overlap); long tables split by rows with the header replicated per
-   part; a hard splitter handles OCR text without paragraph boundaries.
+   in the contextualize step. The output is **not flat text** but an *ordered
+   stream of typed items* — heading, body paragraph, table, figure — each
+   tagged with the page it sits on.
+   - **Between extract and chunk** (`extract.py` walks that stream): consecutive
+     body paragraphs are collected per section (carrying their page numbers).
+     At every structural boundary — a new heading, a table or a figure — or at
+     the document's end, the collected text is handed to the chunker. **Tables
+     and figures do not go through the text window**: each becomes its own chunk
+     right here (with its page; a figure also carries its vision description).
+2. **Chunk** (`chunking.py`) — the per-section text from step 1 goes through a
+   paragraph-level sliding window (2000 chars, 200 overlap); each text chunk
+   keeps the **real page range** of the paragraphs it actually contains
+   (`page_start..page_end`), so a passage on page 18 is cited as page 18, not as
+   the section's first page. Long tables split by rows with the header
+   replicated per part; a hard splitter handles OCR text without paragraph
+   boundaries.
 3. **Contextualize** (`contextualize.py`) — each chunk gets 1–2 sentences of
    LLM context (table of contents + current chapter as grounding), processed in
    batches (5 chunks per LLM call by default). Figures go through the **vision
@@ -39,20 +51,25 @@ folder, Claude Desktop as the user interface.
    multimodal LLM for an honest description that is embedded too. Without a
    vision model or image, it falls back to the honest caption-only prompt (never
    describe unseen content).
-4. **Embed** — dense vector (profile-dependent) + BM25 sparse vector with
-   language-aware stemming. Failed embeddings are logged and skipped — never
-   stored as zero vectors.
-5. **Store** (`pipeline.py` / `storage.py`) — old chunks of the same source
-   are deleted first (idempotent re-ingest), then batched upsert into a
-   hybrid Qdrant collection (dense + sparse with IDF modifier).
+4. **Embed** — dense vector (local arctic-embed-l-v2.0, 1024-dim, CPU) + BM25
+   sparse vector with language-aware stemming. Failed embeddings are logged and
+   skipped — never stored as zero vectors.
+5. **Store** (`pipeline.py` / `storage.py`) — the new points are upserted
+   **first** (batched, 100 per batch, `wait=True`) into a hybrid Qdrant
+   collection (dense + sparse with IDF modifier); only **after** every point is
+   server-side confirmed are the remaining stale chunks of the same source
+   deleted (idempotent re-ingest). A crash between the two steps leaves at worst
+   harmless orphans, never a half-deleted document.
 6. **Note** (`notes.py`) — an Obsidian-compatible literature note; the user's
    "My notes" section survives regeneration.
 
 ## Query pipeline
 
-dense + sparse prefetch (150 each) → reciprocal rank fusion → top 80 →
+dense + sparse prefetch (80 each) → reciprocal rank fusion → top 40 →
 cross-encoder reranking (`BAAI/bge-reranker-v2-m3`) → source-diversity cap
-(max 3 chunks/source) → top k. Rerank scores are reported, never used as a
+(max 3 chunks/source) → top k (15 by default). These breadths follow the
+`RERANK_PROFILE` dial (default `eco` = load 160, rerank 40; also
+`off`/`balanced`/`full`). Rerank scores are reported, never used as a
 hard filter — cross-encoder scores are not absolutely calibrated, and any
 floor cuts legitimate top hits on factual queries.
 

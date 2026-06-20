@@ -14,14 +14,65 @@ Führe es stattdessen aus einem Terminal aus: Terminal/Eingabeaufforderung im
 Projektordner öffnen und `./setup.command` (Mac) bzw. `setup.bat` (Windows)
 ausführen.
 
+**Die Setup-Seite im Browser öffnet nicht, oder Port 8765 ist schon belegt.**
+Vielleicht nutzt ein anderes Programm auf deinem Rechner bereits Port 8765. Öffne
+die `.env`-Datei im Projektordner und trage einen freien Port ein, zum Beispiel:
+
+```
+BRIDGE_HOST_PORT=8780
+BRIDGE_PUBLIC_URL=http://localhost:8780
+```
+
+Dann das Setup erneut starten. Der Launcher (`setup.command` / `setup.bat`) liest
+`BRIDGE_HOST_PORT` aus der `.env` und öffnet die richtige URL. **Beide** Variablen
+müssen gesetzt sein: `BRIDGE_HOST_PORT` verschiebt den Port, und
+`BRIDGE_PUBLIC_URL` muss dazu passen — sonst funktionieren die PDF-Deep-Links in
+den Antworten (die zur richtigen Seite springen) nicht mehr.
+
+**Der Build ist fehlgeschlagen oder hängt fest.**
+Der erste Lauf lädt umfangreiche Abhängigkeiten und ~3 GB Modelle herunter. Bei
+einer wackeligen Verbindung — oder wenn Docker zu wenig Speicherplatz hat — kann
+dieser Download abbrechen oder stehen bleiben. Öffne Docker Desktop und prüfe,
+dass dort „running" steht und du Internet hast, dann mache einfach erneut einen
+Doppelklick auf das Setup. Es setzt aus dem Cache fort und fängt nicht von vorn
+an.
+
+**Was passiert mit meinem API-Schlüssel?**
+Dein API-Schlüssel wird nur in einer lokalen `.env`-Datei auf deinem Rechner
+gespeichert (nur für dich lesbar) und dient ausschließlich dazu, deine eigenen
+Anfragen beim gewählten Anbieter (Gemini / OpenAI / Anthropic) zu
+authentifizieren. Er wird nie an die Macher dieser App oder an Dritte gesendet;
+die Live-Prüfung beim Setup sendet lediglich eine kleine Testanfrage an diesen
+Anbieter, um die Gültigkeit zu bestätigen. Lokale Profile (Ollama / LM Studio)
+brauchen gar keinen Schlüssel.
+
+**macOS: Ein Doppelklick auf `setup.command` bewirkt nichts (kein Fenster).**
+Das ist etwas anderes als die Gatekeeper-Warnung „nicht verifizierter Entwickler"
+(dafür: Rechtsklick → Öffnen). Wenn *gar kein* Fenster erscheint, hat die Datei
+womöglich ihr Ausführbar-Bit verloren. Öffne das Terminal im Projektordner und
+gib ein:
+
+```
+chmod +x setup.command status.command
+```
+
+Dann erneut einen Doppelklick auf `setup.command` machen.
+
 **Claude Desktop zeigt die Werkzeuge nicht an.**
 1. Claude Desktop **komplett** beenden (Cmd+Q / Tray-Symbol → Beenden) und neu
    öffnen — ein Schließen des Fensters genügt nicht.
 2. Prüfen, ob der Container läuft: `docker ps` sollte `brag-app` auflisten.
 3. Prüfen, ob die Konfigurationsdatei (Pfad siehe [OBSIDIAN.de.md](OBSIDIAN.de.md))
-   den Eintrag `academic-rag-and-second-brain` enthält.
+   den Eintrag `brag` enthält (ältere Installationen zeigen ggf. noch den langen
+   Alt-Namen, bis du das Setup erneut ausführst).
 
 ## Indexierung
+
+**Welche Dateitypen kann ich ablegen?**
+PDF, Word (`.docx`), PowerPoint (`.pptx`), Markdown (`.md`) und HTML — einfach in
+`RAG-Verbindungsordner/sources/` legen. Seitengenaue Deep-Links gibt es bei PDFs; die
+anderen Formate werden indexiert und durchsucht, aber ohne Seiten-Link zitiert.
+**Excel (`.xlsx`) wird noch nicht unterstützt.**
 
 **Ich habe ein PDF abgelegt und es passiert nichts.**
 - ~30 Sekunden warten (der Ordner wird alle 10 Sekunden geprüft, Dateien müssen
@@ -44,7 +95,7 @@ Cloud-Profile.
 **„Rate limit"-Meldungen während der Indexierung (Cloud-Profil).**
 Der kostenlose Gemini-Tarif hat Limits pro Minute/Tag. Das System wartet und
 versucht es automatisch erneut — einfach laufen lassen; nichts geht verloren.
-Fehlgeschlagene Abschnitte werden in `wissensspeicher/.brag/failed_chunks.jsonl` vermerkt.
+Fehlgeschlagene Abschnitte werden in `RAG-Verbindungsordner/.brag/failed_chunks.jsonl` vermerkt.
 
 **Werden Abbildungen/Bilder ausgewertet?**
 Ja. Standardmäßig ist der **Vision-Pass** aktiv: Jedes Abbildungsbild wird beim
@@ -85,6 +136,14 @@ den Fall „schwache Hardware + sehr großer Korpus" gibt es die `.env`-Option
 
 ## Suche
 
+**Die Suche ist langsam / mein Rechner ächzt bei einer Frage.** Der lokale
+Cross-Encoder-Reranker ist der größte CPU-Posten einer Suche. Stell in der
+`.env` `RERANK_PROFILE` ein, um Qualität gegen Tempo zu tauschen: `eco`
+(Standard) lädt 160 Kandidaten und rerankt 40; `off` schaltet das Reranking ganz
+ab (am schnellsten); `balanced` und `full` reranken auf starken Rechnern mehr.
+Nach dem Ändern der `.env` die App neu starten (`docker compose up -d`).
+Vollständige Liste: [Backend-Profile](PROFILES.de.md).
+
 **Claude sagt, es habe nichts gefunden, aber das Dokument ist da.**
 - Bitte Claude, andere Formulierungen zu probieren (Synonyme, englische
   Begriffe).
@@ -93,10 +152,20 @@ den Fall „schwache Hardware + sehr großer Korpus" gibt es die `.env`-Option
   extrahierte Tabelle).
 - Prüfe, ob das Dokument indexiert ist: *„Liste meine Quellen."*
 
-**Der PDF-Link öffnet nicht die richtige Seite.**
-Der Link öffnet im Browser, der über `#page=N` zur Seite springt. Manche
-Browser/PDF-Einstellungen ignorieren den Seitenanker — Chrome und Edge kommen am
-besten damit zurecht. Die Seitenzahl steht außerdem im Suchtreffer selbst.
+**Der PDF-Link öffnet Seite 1 statt der zitierten Seite.**
+Der Link nutzt den Standard-Parameter `#page=N`. Die **eingebauten PDF-Viewer von
+Chrome, Edge und Firefox** befolgen ihn, **Safari nicht** — dort öffnet Seite 1.
+Öffne die Links in Chrome/Edge/Firefox, oder installiere einen kostenlosen Viewer,
+der zur Seite springt, und setze ihn als PDF-Standard: **Skim** (macOS) oder
+**SumatraPDF** (Windows). Die zitierte Seitenzahl steht außerdem im Suchtreffer.
+
+**Im Chat wird die PDF-Seite zitiert, nicht die gedruckte (Buch-)Seite.**
+Standardmäßig ist der Beleg die physische PDF-Seite. Bei Dokumenten mit
+abweichender Zählung (Buch mit Vorspann, Zeitschriften-Sonderdruck) setz einen
+`page_offset` in einer `_meta.txt` — dann zeigt der Beleg die gedruckte Seite,
+während der Link weiter die richtige PDF-Seite öffnet. Regel: `page_offset =
+physische Seite − gedruckte Seite` (siehe `_meta.txt`-Abschnitt im README).
+Danach das Dokument neu indexieren.
 
 **Die Suchqualität ist in meiner Sprache schlechter.**
 Setze `VAULT_LANGUAGE` in der `.env` auf deine Sprache (betrifft die
@@ -118,10 +187,10 @@ von Docker Desktop bringt es nach einem Neustart zurück.
 
 **Wie aktualisiere ich auf eine neue Version?**
 Die neue Version herunterladen, den Ordnerinhalt ersetzen (deine `.env` und
-`wissensspeicher/` behalten), dann `docker compose build && docker compose up -d`.
+`RAG-Verbindungsordner/` behalten), dann `docker compose build && docker compose up -d`.
 
 **Wie sichere ich meine Daten?**
-Deine Dokumente und Notizen liegen in `wissensspeicher/` — sichere diesen Ordner wie jeden
+Deine Dokumente und Notizen liegen in `RAG-Verbindungsordner/` — sichere diesen Ordner wie jeden
 anderen. Der Suchindex lässt sich jederzeit aus deinem Wissensspeicher neu aufbauen (nichts
 löschen; nach einer Wiederherstellung gleicht das System nach einem Neustart neu
 ab).
@@ -130,11 +199,16 @@ ab).
 Die Datei aus `sources/` löschen — ihre Indexeinträge und die automatische Notiz
 werden automatisch bereinigt.
 
+**Ich habe eine Datei aktualisiert/überschrieben, die Suche zeigt aber noch den alten Inhalt.**
+Ein gleichnamiges Überschreiben löst kein Neu-Einlesen aus. Zum Aktualisieren die
+Datei umbenennen oder kurz aus `sources/` heraus- und wieder hineinbewegen (oder
+löschen und die neue Fassung neu ablegen).
+
 **Kann ich den Projektordner oder die ZIP-Datei löschen?**
 Die **ZIP-Datei** kannst du nach dem Entpacken löschen. Den **Projektordner**
 (die entpackte ZIP) aber **behalten** — er enthält deine Konfiguration (`.env`),
 die Steuerung (`docker-compose.yml`) und standardmäßig deinen Wissensspeicher
-(`wissensspeicher/`) mit allen Dokumenten. Löschen würde deine Wissensbasis entfernen und
+(`RAG-Verbindungsordner/`) mit allen Dokumenten. Löschen würde deine Wissensbasis entfernen und
 das Starten/Stoppen unmöglich machen. Verschieben ist in Ordnung. Die ~3 GB
 Modelle liegen ohnehin in Dockers Speicher, nicht im Ordner — Löschen gibt
 diesen Platz also nicht frei.

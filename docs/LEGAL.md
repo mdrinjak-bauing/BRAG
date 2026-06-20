@@ -15,19 +15,31 @@ protection or legal compliance. You use it at your own risk and on your own
 responsibility. The authors and contributors are not liable for any damages,
 data loss or legal consequences arising from its use.
 
+AI-generated answers and citations can be incorrect or fabricated; always
+verify them against the linked original page before relying on or citing them.
+
 ## Data protection / confidentiality
 
 What leaves your machine depends on the chosen **profile**:
 
 - **Local profiles (Hybrid, Local):** **nothing** leaves your machine — neither
   document text nor embeddings. The meaning index is computed locally in every
-  profile anyway.
+  standard profile anyway. The one exception is the optional cloud-embedding
+  override (`EMBEDDING_BACKEND=gemini`/`openai`, documented in `.env.example`):
+  it additionally sends your document text to the embedding provider.
 - **Cloud profiles (Gemini, OpenAI, Claude):** to generate context, the **text
   excerpt of each chunk** is sent to the respective provider — and, with the
   **vision pass** on (the default), the **rendered images of your figures** as
   well. Whole files, the embeddings and your later chat questions are not sent.
   So content from your documents leaves your machine and is subject to the
   provider's terms. You can disable the image upload with `VISION_ENABLED=false`.
+
+**Your API key.** Your API key is stored only in a local `.env` file on your
+computer (owner-readable only) and is used solely to authenticate your own
+requests to the provider you chose. It is never sent to the makers of this app
+or any third party; the live check during setup just sends one small test
+request to that provider to confirm the key works. Local profiles (Ollama / LM
+Studio) need no key at all.
 
 **Important — free Gemini tier (the default):** On the *free* tier of Google AI
 Studio, Google may **use** the submitted inputs and outputs to **improve its

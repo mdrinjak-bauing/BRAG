@@ -1,11 +1,18 @@
 """Embedding backends. get_embedder() returns the configured implementation."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from brag import config
+
+if TYPE_CHECKING:
+    from brag.embeddings.base import EmbeddingBackend
 
 _embedder = None
 
 
-def get_embedder():
+def get_embedder() -> EmbeddingBackend:
     global _embedder
     if _embedder is None:
         if config.EMBEDDING_BACKEND == "gemini":

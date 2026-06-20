@@ -1,4 +1,4 @@
-# Your Vault
+# Your knowledge store
 
 This folder is your knowledge base. It is a normal folder of files — you can
 open it with [Obsidian](https://obsidian.md) as a vault, back it up, or sync

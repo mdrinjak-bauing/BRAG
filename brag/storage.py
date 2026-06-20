@@ -12,8 +12,7 @@ def ensure_collection(client=None):
     """Create the hybrid collection if missing.
 
     Sparse vectors get Modifier.IDF from day one — BM25 without IDF silently
-    degrades to TF-only scoring (a bug that survived four weeks unnoticed in
-    the originating system).
+    degrades to TF-only scoring (a subtle, easy-to-miss bug).
     """
     from qdrant_client.models import (
         Distance, Modifier, SparseIndexParams, SparseVectorParams, VectorParams,
@@ -52,13 +51,31 @@ def ensure_collection(client=None):
         client.close()
 
 
-def delete_chunks_by_source(client, source_file: str) -> int:
-    """Remove all chunks of one source. Returns the number deleted."""
-    from qdrant_client.models import FieldCondition, Filter, FilterSelector, MatchAny
+def delete_chunks_by_source(client, source_file: str,
+                            exclude_ids: set | None = None) -> int:
+    """Remove chunks of one source. Returns the number actually deleted.
 
-    flt = Filter(must=[FieldCondition(
-        key="source_file", match=MatchAny(any=config.source_key_variants(source_file)),
-    )])
+    With exclude_ids set, the points carrying those ids are spared — this is the
+    re-ingest case: the new chunks have already been upserted under deterministic
+    ids, and only the OLD, now-orphaned chunks (boundaries shifted, so their ids
+    are no longer produced) must be removed. Excluding the fresh ids means a
+    crash between upsert and delete can leave at worst harmless orphans, never a
+    half-deleted document.
+    """
+    from qdrant_client.models import (
+        FieldCondition, Filter, FilterSelector, HasIdCondition, MatchAny,
+    )
+
+    must_not = []
+    if exclude_ids:
+        must_not.append(HasIdCondition(has_id=list(exclude_ids)))
+    flt = Filter(
+        must=[FieldCondition(
+            key="source_file",
+            match=MatchAny(any=config.source_key_variants(source_file)),
+        )],
+        must_not=must_not or None,
+    )
     count = client.count(config.COLLECTION_NAME, count_filter=flt, exact=True).count
     if count:
         client.delete(
@@ -73,16 +90,54 @@ def patch_source_metadata(client, source_file: str, payload: dict) -> int:
     doc_type, rel_path, custom fields) for all chunks of a source IN PLACE —
     no re-embedding. Used when a file is renamed/moved but its content is
     unchanged. Returns the number of points updated."""
-    from qdrant_client.models import FieldCondition, Filter, MatchValue
+    from qdrant_client.models import FieldCondition, Filter, MatchAny
 
-    key = config.normalize_source_key(source_file)
-    flt = Filter(must=[FieldCondition(key="source_file", match=MatchValue(value=key))])
+    # NFC/NFD/raw triple-probe (consistent with delete/search/inspect): a
+    # single-NFC MatchValue silently misses payloads written under a different
+    # normalization, so the rename would wrongly fall back to a full re-ingest.
+    flt = Filter(must=[FieldCondition(
+        key="source_file", match=MatchAny(any=config.source_key_variants(source_file)),
+    )])
     count = client.count(config.COLLECTION_NAME, count_filter=flt, exact=True).count
-    if count:
-        client.set_payload(
-            collection_name=config.COLLECTION_NAME, payload=payload, points=flt,
-        )
+    if not count:
+        return 0
+    # set_payload only MERGES — custom fields from the OLD folder's _meta.txt
+    # that the new location no longer defines would otherwise survive the move
+    # (e.g. a stale `project=A` after moving into project B, leaking across the
+    # project/course filter). Remove those stale custom keys explicitly.
+    _PRESERVE = {
+        "text", "context", "chunk_type", "page_start", "page_end",
+        "chapter", "section", "language", "chunk_id", "ingest_timestamp",
+    }
+    points, _ = client.scroll(
+        config.COLLECTION_NAME, scroll_filter=flt, limit=1,
+        with_payload=True, with_vectors=False,
+    )
+    if points:
+        existing = set((points[0].payload or {}).keys())
+        stale = [k for k in existing if k not in payload and k not in _PRESERVE]
+        if stale:
+            client.delete_payload(
+                collection_name=config.COLLECTION_NAME, keys=stale, points=flt,
+            )
+    client.set_payload(
+        collection_name=config.COLLECTION_NAME, payload=payload, points=flt,
+    )
     return count
+
+
+def orphaned_collections(client) -> list[str]:
+    """asb_* collections OTHER than the active one — left behind when the user
+    changed the embedding backend/dimension (COLLECTION_NAME encodes both, so a
+    change targets a NEW collection and the old one lingers, consuming disk).
+    Returned for surfacing only; never auto-deleted (dropping a collection is
+    destructive and the user may be mid-migration)."""
+    try:
+        names = [c.name for c in client.get_collections().collections]
+    except Exception:  # noqa: BLE001 — best-effort housekeeping, never fatal
+        return []
+    return sorted(n for n in names
+                  if n.startswith("asb_") and n != config.COLLECTION_NAME)
 
 
 def list_corpus_sources(client) -> set[str]:

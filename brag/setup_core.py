@@ -2,6 +2,7 @@
 http_bridge) and the terminal fallback (setup_wizard)."""
 
 import json
+import os
 import shutil
 from pathlib import Path
 
@@ -17,6 +18,18 @@ MCP_ENTRY = {
     "args": ["exec", "-i", "brag-app", "python", "-m", "brag.mcp_server"],
 }
 
+# The key under which the entry is registered in claude_desktop_config.json — this
+# is the name Claude Desktop shows the user. Older installs used a longer legacy
+# name; setup migrates them by removing it when it writes MCP_KEY.
+MCP_KEY = "brag"
+LEGACY_MCP_KEYS = ("academic-rag-and-second-brain",)
+
+
+def _env_safe(value: str) -> str:
+    """Strip newlines/carriage returns so a wizard-supplied value (e.g. a custom
+    vault path) cannot inject extra lines into the generated .env file."""
+    return "".join(ch for ch in str(value) if ch not in "\r\n").strip()
+
 
 def read_existing_env() -> dict:
     env_path = WORKSPACE / ".env"
@@ -31,16 +44,37 @@ def read_existing_env() -> dict:
 
 
 def write_env(profile: str, api_key: str, language: str,
-              vault_path: str = "./wissensspeicher", llm_model: str = "") -> None:
+              vault_path: str = "./RAG-Verbindungsordner", llm_model: str = "",
+              rerank_profile: str = "eco", vision_enabled: bool = True) -> None:
     existing = read_existing_env()
-    answer_lang = "German" if language == "german" else "English"
+    # Sanitize every value that gets interpolated into a KEY=value line so a
+    # newline in (untrusted) wizard input cannot inject extra .env entries.
+    profile = _env_safe(profile)
+    language = _env_safe(language)
+    vault_path = _env_safe(vault_path)
+    api_key = _env_safe(api_key)
+    llm_model = _env_safe(llm_model)
+    rerank_profile = _env_safe(rerank_profile) or "eco"
+    # Map the document language to the answer/notes language. Falls back to
+    # English for anything outside the wizard's offered set, so a non-German,
+    # non-English corpus no longer silently gets English context embedded.
+    answer_lang = {
+        "english": "English", "german": "German", "french": "French",
+        "spanish": "Spanish", "italian": "Italian", "dutch": "Dutch",
+        "portuguese": "Portuguese",
+    }.get(language, "English")
     lines = [
         "# BRAG — Building Retrieval-Augmented Generation — written by the setup wizard.",
         "# Re-run setup to change these safely. Full reference: .env.example",
         f"PROFILE={profile}",
         f"VAULT_LANGUAGE={language}",
         f"ANSWER_LANGUAGE={answer_lang}",
-        f"VAULT_PATH={vault_path or './wissensspeicher'}",
+        f"VAULT_PATH={vault_path or existing.get('VAULT_PATH') or './RAG-Verbindungsordner'}",
+        # Search-quality vs. CPU cost (off/eco/balanced/full) and whether figures
+        # are sent to a cloud provider for description. Written explicitly so a
+        # later re-run always reflects the wizard's choice, even at the default.
+        f"RERANK_PROFILE={rerank_profile}",
+        f"VISION_ENABLED={'true' if vision_enabled else 'false'}",
     ]
     # Write the API key under the active provider's env var (cloud profiles only).
     key_env = PROFILES.get(profile, {}).get("key_env")
@@ -48,15 +82,41 @@ def write_env(profile: str, api_key: str, language: str,
         lines.append(f"{key_env}={api_key}")
     if llm_model:
         lines.append(f"LLM_MODEL={llm_model}")
-    # Preserve the host's Claude config dir (set by setup.command / setup.bat)
-    if existing.get("CLAUDE_CONFIG_DIR"):
-        lines.append(f"CLAUDE_CONFIG_DIR={existing['CLAUDE_CONFIG_DIR']}")
-    (WORKSPACE / ".env").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # Preserve keys the wizard itself does NOT manage but the user may have set
+    # by hand — a re-run (e.g. to switch provider) must never silently drop them:
+    #  - the Claude config dir (set by setup.bat/.command) and a custom bridge
+    #    port / public URL (used when 8765 is already taken);
+    #  - a hand-picked cloud model (LLM_MODEL — only when the wizard did not just
+    #    write one, i.e. cloud profiles), the LLM base URL, and any embedding /
+    #    retrieval overrides, which are advanced .env-only dials. Without this a
+    #    wizard re-run reverted the user to profile defaults.
+    preserved = [
+        "CLAUDE_CONFIG_DIR", "BRIDGE_HOST_PORT", "BRIDGE_PUBLIC_URL",
+        "LLM_BASE_URL", "EMBEDDING_BACKEND", "EMBEDDING_MODEL",
+        "EMBEDDING_DIM", "EMBEDDING_REVISION", "COLLECTION_NAME",
+        "RERANK_PREFETCH", "RERANK_FUSION_LIMIT", "RERANK_BATCH_SIZE",
+        "DEFAULT_TOP_K", "MAX_CHUNKS_PER_SOURCE",
+    ]
+    if not llm_model:
+        preserved.append("LLM_MODEL")
+    for key in preserved:
+        if existing.get(key):
+            lines.append(f"{key}={existing[key]}")
+    # Atomic write (temp + replace) so a crash mid-write can't truncate the
+    # config, and 0600 because this file holds the API key.
+    env_path = WORKSPACE / ".env"
+    tmp = WORKSPACE / ".env.tmp"
+    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    os.replace(tmp, env_path)
+    try:
+        os.chmod(env_path, 0o600)
+    except OSError:
+        pass
 
 
 def create_vault() -> bool:
-    """Copy the template to ./wissensspeicher. Returns False if it already existed."""
-    vault = WORKSPACE / "wissensspeicher"
+    """Copy the template to ./RAG-Verbindungsordner. Returns False if it already existed."""
+    vault = WORKSPACE / "RAG-Verbindungsordner"
     if vault.exists():
         return False
     shutil.copytree(VAULT_TEMPLATE, vault)
@@ -91,29 +151,65 @@ def write_claude_config() -> tuple[bool, str]:
     import os
 
     # The compose mount only sets a real config dir when the launcher exported
-    # CLAUDE_CONFIG_DIR; otherwise it mounts a throwaway sentinel.
+    # CLAUDE_CONFIG_DIR; otherwise it mounts a throwaway sentinel. Be explicit
+    # about WHICH precondition failed so the wizard/log can point at the cause
+    # instead of a generic "do it manually".
     if os.environ.get("CLAUDE_CONFIG_MOUNTED") != "1":
-        return False, "Claude Desktop config folder not detected — add the MCP entry manually"
+        return False, (
+            "Claude Desktop config folder was not mounted into setup "
+            "(CLAUDE_CONFIG_MOUNTED is not 1) — most likely the launcher could "
+            "not find your Claude Desktop config folder. Add the MCP entry "
+            "manually (see below)."
+        )
     if not CLAUDE_CONFIG_DIR.exists():
-        return False, "Claude config folder not mounted"
+        return False, (
+            "Claude config folder is not mounted inside the container "
+            "(/claude-config missing) — add the MCP entry manually (see below)."
+        )
 
     config_path = CLAUDE_CONFIG_DIR / "claude_desktop_config.json"
-    existing: dict = {}
-    if config_path.exists():
-        try:
-            existing = json.loads(config_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            backup = config_path.with_suffix(".json.backup")
-            shutil.copy(config_path, backup)
-            return False, (f"Existing Claude config is not valid JSON — backed it up to "
-                           f"{backup.name}; add the MCP entry manually")
-        # Back up the valid config before modifying it.
-        shutil.copy(config_path, config_path.with_suffix(".json.backup"))
 
-    existing.setdefault("mcpServers", {})["academic-rag-and-second-brain"] = MCP_ENTRY
-    tmp = config_path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(existing, indent=2), encoding="utf-8")
-    os.replace(tmp, config_path)
+    def _backup(path) -> None:
+        # copyfile, NOT shutil.copy: shutil.copy ALSO copies the file mode
+        # (chmod), which is "Operation not permitted" on a Windows Docker bind
+        # mount and would crash the whole setup with a PermissionError (the
+        # browser then shows "Failed to fetch" and setup never completes). The
+        # backup is best-effort — it must never abort the wizard.
+        try:
+            shutil.copyfile(path, path.with_suffix(".json.backup"))
+        except OSError:
+            pass
+
+    # NOTHING in here may raise: a crash here returns "Failed to fetch" to the
+    # browser and the setup never completes. On Windows the RELIABLE writer is
+    # the host launcher (tools/merge_claude_config.ps1, called by setup.bat);
+    # this container write is best-effort and works directly on macOS/Linux.
+    try:
+        existing: dict = {}
+        if config_path.exists():
+            try:
+                # utf-8-sig tolerates a BOM that some editors add.
+                existing = json.loads(config_path.read_text(encoding="utf-8-sig"))
+            except json.JSONDecodeError:
+                _backup(config_path)
+                return False, ("Existing Claude config is not valid JSON — backed it "
+                               "up; add the MCP entry manually (see below).")
+            _backup(config_path)
+        servers = existing.setdefault("mcpServers", {})
+        for _old in LEGACY_MCP_KEYS:
+            servers.pop(_old, None)  # migrate older installs to the new key
+        servers[MCP_KEY] = MCP_ENTRY
+        # Direct write (no temp+os.replace): the atomic-rename dance does not
+        # reliably reach the host on a Windows bind mount, and chmod is forbidden
+        # there. A direct write works on macOS/Linux; on Windows the host
+        # launcher writes the real entry afterwards.
+        config_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+    except OSError as e:
+        return False, (
+            f"Could not write the Claude config from the container "
+            f"({type(e).__name__}); the launcher will set it up, or add the MCP "
+            "entry manually (see below)."
+        )
     return True, "Claude Desktop configured"
 
 
@@ -132,9 +228,12 @@ def validate_api_key(provider: str, api_key: str) -> tuple[bool, str]:
         return False, "That doesn't look like a complete API key."
 
     if provider == "gemini":
-        url = ("https://generativelanguage.googleapis.com/v1beta/models"
-               f"?pageSize=1&key={api_key}")
-        req = urllib.request.Request(url)
+        # Pass the key in the header (x-goog-api-key), not the URL query, so it
+        # cannot leak into proxy/server logs — consistent with OpenAI/Anthropic.
+        req = urllib.request.Request(
+            "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1",
+            headers={"x-goog-api-key": api_key},
+        )
         rejected_hint = ("The key was rejected by Google. Copy it again from "
                          "https://aistudio.google.com/apikey")
     elif provider == "openai":

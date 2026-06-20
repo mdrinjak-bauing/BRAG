@@ -22,7 +22,7 @@ class GeminiEmbedder(EmbeddingBackend):
         def call():
             result = self._client.models.embed_content(
                 model=config.EMBEDDING_MODEL,
-                contents=text,
+                contents=text[:config.EMBEDDING_INPUT_MAX_CHARS],
                 config=types.EmbedContentConfig(
                     task_type=task_type, output_dimensionality=self.dim
                 ),
@@ -39,3 +39,40 @@ class GeminiEmbedder(EmbeddingBackend):
 
     def embed_query(self, text: str) -> list[float]:
         return self._embed(text, "RETRIEVAL_QUERY")
+
+    def embed_documents(self, texts: list[str]) -> list[list[float] | None]:
+        """Real batched embedding — embed_content accepts a list of contents in
+        one request, so we send EMBED_BATCH_SIZE texts per call instead of one
+        API round-trip per chunk. result.embeddings comes back in input order,
+        so the output stays ALIGNED to ``texts`` (one entry per input, in order,
+        ``None`` where a text/batch failed). On a batch-level failure we fall
+        back to the single-text path for just that batch so one bad input cannot
+        null out the whole document. Reuses the same call_with_retry wrapper."""
+        from google.genai import types
+
+        out: list[list[float] | None] = []
+        for start in range(0, len(texts), config.EMBED_BATCH_SIZE):
+            batch = [t[:config.EMBEDDING_INPUT_MAX_CHARS]
+                     for t in texts[start : start + config.EMBED_BATCH_SIZE]]
+
+            def call(batch=batch):
+                result = self._client.models.embed_content(
+                    model=config.EMBEDDING_MODEL,
+                    contents=batch,
+                    config=types.EmbedContentConfig(
+                        task_type="RETRIEVAL_DOCUMENT",
+                        output_dimensionality=self.dim,
+                    ),
+                )
+                return [list(e.values) for e in result.embeddings]
+
+            vecs = call_with_retry(call, label="gemini embeddings batch")
+            if vecs is not None and len(vecs) == len(batch):
+                out.extend(vecs)
+            else:  # batch failed or broke the count contract — isolate per text
+                for t in batch:
+                    try:
+                        out.append(self._embed(t, "RETRIEVAL_DOCUMENT"))
+                    except Exception:  # noqa: BLE001
+                        out.append(None)
+        return out

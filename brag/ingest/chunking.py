@@ -63,6 +63,56 @@ def split_text(text: str, max_chars: int, overlap: int) -> list[str]:
     return chunks or [text]
 
 
+def split_text_paged(
+    paragraphs_with_pages: list[tuple[str, int]], max_chars: int, overlap: int
+) -> list[tuple[str, int, int]]:
+    """Page-aware variant of split_text: each input paragraph carries its source
+    page, and each output chunk reports the (page_start, page_end) of the
+    paragraphs it actually contains.
+
+    Without this, every chunk of a multi-page section inherits the section's
+    first page, so text physically on page 18 gets cited (and deep-linked) to
+    page 10. Here a chunk's page range is the min/max page of its paragraphs —
+    min/max (not first/last) so overlap paragraphs pulled back from an earlier
+    page still keep the range honest and a later inspect_chunks(page=N) range
+    filter stays correct.
+    """
+    paras: list[tuple[str, int]] = []
+    for text, page in paragraphs_with_pages:
+        if not text.strip():
+            continue
+        if len(text) > max_chars:
+            paras.extend((piece, page) for piece in hard_split(text, max_chars)
+                         if piece.strip())
+        else:
+            paras.append((text, page))
+
+    chunks: list[tuple[str, int, int]] = []
+
+    def emit(items: list[tuple[str, int]]) -> None:
+        pages = [pg for _, pg in items]
+        chunks.append(("\n\n".join(t for t, _ in items), min(pages), max(pages)))
+
+    current: list[tuple[str, int]] = []
+    current_len = 0
+    for para, page in paras:
+        if current and current_len + len(para) > max_chars:
+            emit(current)
+            tail, tail_len = [], 0
+            for prev in reversed(current):
+                if tail_len + len(prev[0]) <= overlap:
+                    tail.insert(0, prev)
+                    tail_len += len(prev[0])
+                else:
+                    break
+            current, current_len = tail, tail_len
+        current.append((para, page))
+        current_len += len(para)
+    if current:
+        emit(current)
+    return chunks
+
+
 def split_long_table(table_md: str, max_chars: int) -> list[str]:
     """Split a long markdown table by rows, replicating the header per part.
     Preserves any explanatory text before the first '|' line."""

@@ -2,8 +2,16 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](INSTALL_MAC.de.md)**
 
-Time needed: ~15 minutes (most of it is downloads). You only need your mouse and
-the Terminal once — no programming required.
+> **First time using the Terminal?** This guide has you run a couple of commands
+> by hand. Take your time and read each step — and if anything is unclear, an AI
+> assistant like [Claude Code](https://claude.com/claude-code) can walk you
+> through it and explain what each command does.
+
+Time needed: about **15 minutes of active work** — you only need your mouse and
+the Terminal once, no programming required. On top of that, the first build and
+the one-time model downloads run mostly **unattended** in the background; on a
+first install, allow roughly **30–60 minutes total** depending on your internet
+connection.
 
 ## 1. Install Docker Desktop
 
@@ -41,21 +49,35 @@ set up automatically in step 4 — nothing to do here yet.
 
 ## 4. Download and set up BRAG
 
+> **One-time macOS note — and why it's safe.** A script downloaded from the
+> internet is "quarantined", so macOS shows an "unidentified developer" warning
+> the first time. `setup.command` is a short, readable text file (it only checks
+> Docker, writes a local config and starts the containers). The right-click →
+> **Open** below tells macOS to trust it once. To avoid the prompt entirely you
+> can instead `git clone` the repo (cloned files are not quarantined).
+
 **What to do:**
 1. On the GitHub page, click the green **`Code`** button → **`Download ZIP`**.
    Unpack the ZIP by double-clicking it (e.g. into your home folder — see the
-   iCloud note below). A folder named `academic-rag-and-second-brain` (or
-   similar) appears.
+   iCloud note below). The unpacked BRAG folder appears (its name comes from
+   the ZIP). *Prefer the terminal?* `git clone https://github.com/mdrinjak-bauing/BRAG.git`
+   avoids the quarantine prompt altogether.
 2. Open that folder in Finder and double-click **`setup.command`**.
    - If macOS blocks it ("unidentified developer"): **right-click** the file →
-     **Open** → **Open** again in the dialog.
+     **Open** → **Open** again in the dialog. (This is normal for any unsigned
+     downloaded script — you only confirm it once.)
 
 **What you see:** A small black Terminal window opens and, shortly after, **your
 browser opens automatically** with the setup assistant. There you answer, in
 plain language:
 - **Where should the AI run?** (cloud or local) — pick "Cloud" to start.
 - **Provider & key:** choose Gemini and paste the copied key. The assistant
-  checks it **live** and shows a green check when it's valid.
+  checks it **live** and shows a green check when it's valid. Your key is stored
+  only in a local `.env` file on your computer (owner-readable only) and is used
+  solely to authenticate your own requests to the provider you chose — it is
+  never sent to the makers of this app or any third party; the live check just
+  sends one small test request to that provider to confirm the key works. Local
+  profiles (Ollama / LM Studio) need no key at all.
 - **Your document language** and, optionally, a custom knowledge store folder.
 
 At the end the assistant writes the whole configuration itself — including the
@@ -68,11 +90,14 @@ minutes, first time only).
 
 ## 5. First document
 
-**What to do:** Put a PDF into the `wissensspeicher/sources/` folder (inside the project
+**What to do:** Put a PDF into the `RAG-Verbindungsordner/sources/` folder (inside the project
 folder).
 
-**What you see:** Nothing visible — processing runs in the background. A short
-document is indexed within ~30 seconds. To watch it, open Terminal in the
+**What you see:** Nothing visible — processing runs in the background. Note that
+the **very first** document also downloads the Docling layout models, so this one
+can take a few minutes (later documents are much faster). It's best to confirm
+the pipeline works with a small **1–2 page PDF** first; after that, expect about
+**1–3 minutes** for a normal 50-page paper. To watch it, open Terminal in the
 project folder and run:
 
 ```

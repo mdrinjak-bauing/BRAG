@@ -2,8 +2,17 @@
 
 **🇬🇧 [English](INSTALL_WINDOWS.md) | 🇩🇪 Deutsch**
 
-Zeitbedarf: ~20 Minuten (das meiste sind Downloads). Du brauchst nur deine Maus
-und einmal kurz die Eingabeaufforderung — keine Programmierkenntnisse.
+> **Zum ersten Mal in der Eingabeaufforderung?** Diese Anleitung lässt dich ein
+> paar Befehle von Hand ausführen. Lass dir Zeit und lies jeden Schritt — und
+> wenn etwas unklar ist, kann dich ein KI-Assistent wie
+> [Claude Code](https://claude.com/claude-code) hindurchführen und dir erklären,
+> was jeder Befehl tut.
+
+Zeitbedarf: etwa **15–20 Minuten aktive Arbeit** — du brauchst nur deine Maus und
+einmal kurz die Eingabeaufforderung, keine Programmierkenntnisse. Hinzu kommen der
+erste Build und die einmaligen Modell-Downloads, die größtenteils
+**unbeaufsichtigt** im Hintergrund laufen; beim ersten Einrichten solltest du je
+nach Internetverbindung mit insgesamt rund **30–60 Minuten** rechnen.
 
 ## 1. Docker Desktop installieren
 
@@ -45,13 +54,34 @@ richten wir in Schritt 4 automatisch ein.
 
 ## 4. BRAG herunterladen und einrichten
 
-**Was du tust:**
-1. Auf der GitHub-Seite den grünen Knopf **`Code`** → **`Download ZIP`** klicken.
-   Rechtsklick auf die ZIP → **„Alle extrahieren"** (z. B. nach
-   `C:\Users\<du>\academic-rag-and-second-brain`). Wichtig: erst **entpacken** —
-   nicht aus der ZIP heraus starten.
-2. Öffne den entpackten Ordner und mache einen Doppelklick auf **`setup.bat`**.
-   - Warnt **Windows SmartScreen** („Der Computer wurde geschützt"): klicke auf
+> **Einmaliger Windows-Hinweis — und warum es sicher ist.** Windows markiert
+> *jedes* aus dem Internet geladene Skript als möglicherweise gefährlich („Der
+> Computer wurde geschützt" oder „Diese Datei könnte Ihr Gerät beschädigen") — es
+> kann dein eigenes Open-Source-Setup-Skript nicht von einer echten Bedrohung
+> unterscheiden. `setup.bat` ist eine kurze, lesbare Textdatei, die du vorher im
+> Editor öffnen kannst: Sie prüft nur Docker, schreibt eine lokale Konfiguration
+> und startet die Container. Die zwei Optionen unten umgehen die Warnung sauber.
+
+**Was du tust — eine Option wählen:**
+
+- **Option A · ZIP herunterladen (am einfachsten).** Auf der GitHub-Seite den
+  grünen Knopf **`Code`** → **`Download ZIP`** klicken. **Vor dem Entpacken die
+  ZIP einmal freigeben:** Rechtsklick auf die `.zip` → **Eigenschaften** → unten
+  **„Zulassen"** anhaken → **OK**. Das entfernt die Internet-Markierung von
+  *allen* Dateien darin auf einen Schlag — so erscheint später keine
+  Skript-Warnung. Dann Rechtsklick auf die ZIP → **„Alle extrahieren"** (z. B. in
+  deinen Benutzerordner). Wichtig: erst **entpacken** — nicht aus der ZIP heraus
+  starten.
+- **Option B · git clone (gar keine Warnung).** Wenn du
+  [Git für Windows](https://git-scm.com/download/win) hast, öffne die
+  Eingabeaufforderung und führe aus:
+  `git clone https://github.com/mdrinjak-bauing/BRAG.git`. Von Git erzeugte
+  Dateien tragen keine Internet-Markierung — Windows warnt nie.
+
+Dann den Ordner öffnen und **`setup.bat`** doppelklicken.
+   - Falls du den Freigabe-Schritt übersprungen hast und Windows trotzdem warnt:
+     in der gelben Box **„Datei öffnen – Sicherheitswarnung"** auf **„Ausführen"**;
+     in der blauen **SmartScreen**-Box („Der Computer wurde geschützt") auf
      **„Weitere Informationen"** → **„Trotzdem ausführen"**.
 
 **Was du siehst:** Ein schwarzes Eingabeaufforderungs-Fenster öffnet sich und
@@ -60,7 +90,12 @@ beantwortest du in einfacher Sprache:
 - **Wo soll die KI rechnen?** (Cloud oder lokal) — für den Start „Cloud".
 - **Anbieter & Schlüssel:** Gemini wählen und den kopierten Schlüssel einfügen.
   Der Assistent prüft ihn **live** und zeigt einen grünen Haken, wenn er gültig
-  ist.
+  ist. Dein API-Schlüssel wird nur in einer lokalen `.env`-Datei auf deinem
+  Rechner gespeichert (nur für dich lesbar) und dient ausschließlich dazu, deine
+  eigenen Anfragen beim gewählten Anbieter zu authentifizieren — er wird nie an
+  die Macher dieser App oder an Dritte gesendet; die Live-Prüfung sendet
+  lediglich eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu
+  bestätigen. Lokale Profile (Ollama / LM Studio) brauchen gar keinen Schlüssel.
 - **Sprache deiner Dokumente** und optional ein eigener Wissensspeicher (eigener Pfad).
 
 Am Ende schreibt der Assistent die gesamte Konfiguration selbst — inklusive des
@@ -75,12 +110,16 @@ baut nun im Hintergrund die Docker-Container und lädt einmalig ~3 GB Modelle
 
 ## 5. Erstes Dokument
 
-**Was du tust:** Lege eine PDF-Datei in den Ordner `wissensspeicher\sources\` (innerhalb
+**Was du tust:** Lege eine PDF-Datei in den Ordner `RAG-Verbindungsordner\sources\` (innerhalb
 des Projektordners).
 
 **Was du siehst:** Nichts Sichtbares — die Verarbeitung läuft im Hintergrund.
-Nach ~30 Sekunden ist ein kurzes Dokument indexiert. Zum Zusehen eine
-Eingabeaufforderung im Projektordner öffnen und eingeben:
+Beachte: Das **allererste** Dokument lädt zusätzlich die Docling-Layout-Modelle
+herunter, daher kann gerade dieses ein paar Minuten dauern (spätere Dokumente
+sind deutlich schneller). Prüfe die Pipeline am besten zuerst mit einer kleinen
+**1–2-seitigen PDF**; danach rechne mit etwa **1–3 Minuten** für ein normales
+50-seitiges Paper. Zum Zusehen eine Eingabeaufforderung im Projektordner öffnen
+und eingeben:
 
 ```
 docker compose logs -f app

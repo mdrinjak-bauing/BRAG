@@ -2,8 +2,16 @@
 
 **🇬🇧 [English](INSTALL_MAC.md) | 🇩🇪 Deutsch**
 
-Zeitbedarf: ~15 Minuten (das meiste sind Downloads). Du brauchst nur deine Maus
-und einmal kurz das Terminal — keine Programmierkenntnisse.
+> **Zum ersten Mal im Terminal?** Diese Anleitung lässt dich ein paar Befehle von
+> Hand ausführen. Lass dir Zeit und lies jeden Schritt — und wenn etwas unklar
+> ist, kann dich ein KI-Assistent wie [Claude Code](https://claude.com/claude-code)
+> hindurchführen und dir erklären, was jeder Befehl tut.
+
+Zeitbedarf: etwa **15 Minuten aktive Arbeit** — du brauchst nur deine Maus und
+einmal kurz das Terminal, keine Programmierkenntnisse. Hinzu kommen der erste
+Build und die einmaligen Modell-Downloads, die größtenteils **unbeaufsichtigt**
+im Hintergrund laufen; beim ersten Einrichten solltest du je nach
+Internetverbindung mit insgesamt rund **30–60 Minuten** rechnen.
 
 ## 1. Docker Desktop installieren
 
@@ -45,15 +53,26 @@ nichts weiter tun.
 
 ## 4. BRAG herunterladen und einrichten
 
+> **Einmaliger macOS-Hinweis — und warum es sicher ist.** Ein aus dem Internet
+> geladenes Skript steht unter „Quarantäne", daher zeigt macOS beim ersten Mal
+> die Warnung „nicht verifizierter Entwickler". `setup.command` ist eine kurze,
+> lesbare Textdatei (sie prüft nur Docker, schreibt eine lokale Konfiguration und
+> startet die Container). Der Rechtsklick → **Öffnen** unten sagt macOS einmalig,
+> dass es der Datei vertrauen soll. Wer die Abfrage ganz vermeiden will, kann das
+> Repo stattdessen per `git clone` holen (geklonte Dateien sind nicht in
+> Quarantäne).
+
 **Was du tust:**
 1. Auf der GitHub-Seite den grünen Knopf **`Code`** → **`Download ZIP`** klicken.
    Entpacke die ZIP per Doppelklick (z. B. in deinen Benutzerordner — siehe
-   Hinweis zu iCloud unten). Es entsteht ein Ordner namens
-   `academic-rag-and-second-brain` (oder ähnlich).
+   Hinweis zu iCloud unten). Es entsteht der entpackte BRAG-Ordner (sein Name
+   stammt aus der ZIP). *Lieber Terminal?* `git clone https://github.com/mdrinjak-bauing/BRAG.git`
+   umgeht die Quarantäne-Abfrage komplett.
 2. Öffne diesen Ordner im Finder und mache einen Doppelklick auf
    **`setup.command`**.
    - Blockiert macOS mit „nicht verifizierter Entwickler": **Rechtsklick** auf
-     die Datei → **Öffnen** → im Dialog erneut **Öffnen**.
+     die Datei → **Öffnen** → im Dialog erneut **Öffnen**. (Das ist bei jedem
+     unsignierten heruntergeladenen Skript normal — du bestätigst es nur einmal.)
 
 **Was du siehst:** Es öffnet sich ein kleines schwarzes Terminal-Fenster und
 kurz darauf **automatisch dein Browser** mit dem Einrichtungs-Assistenten. Dort
@@ -61,7 +80,12 @@ beantwortest du in einfacher Sprache:
 - **Wo soll die KI rechnen?** (Cloud oder lokal) — für den Start „Cloud".
 - **Anbieter & Schlüssel:** Gemini wählen und den kopierten Schlüssel einfügen.
   Der Assistent prüft ihn **live** und zeigt einen grünen Haken, wenn er gültig
-  ist.
+  ist. Dein API-Schlüssel wird nur in einer lokalen `.env`-Datei auf deinem
+  Rechner gespeichert (nur für dich lesbar) und dient ausschließlich dazu, deine
+  eigenen Anfragen beim gewählten Anbieter zu authentifizieren — er wird nie an
+  die Macher dieser App oder an Dritte gesendet; die Live-Prüfung sendet
+  lediglich eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu
+  bestätigen. Lokale Profile (Ollama / LM Studio) brauchen gar keinen Schlüssel.
 - **Sprache deiner Dokumente** und optional ein eigener Wissensspeicher (eigener Pfad).
 
 Am Ende schreibt der Assistent die ganze Konfiguration selbst — inklusive des
@@ -75,12 +99,16 @@ Terminal-Fenster baut nun im Hintergrund die Docker-Container und lädt einmalig
 
 ## 5. Erstes Dokument
 
-**Was du tust:** Lege eine PDF-Datei in den Ordner `wissensspeicher/sources/` (innerhalb
+**Was du tust:** Lege eine PDF-Datei in den Ordner `RAG-Verbindungsordner/sources/` (innerhalb
 des Projektordners).
 
 **Was du siehst:** Nichts Sichtbares — die Verarbeitung läuft im Hintergrund.
-Nach ~30 Sekunden ist ein kurzes Dokument indexiert. Wenn du zusehen willst,
-öffne das Terminal im Projektordner und gib ein:
+Beachte: Das **allererste** Dokument lädt zusätzlich die Docling-Layout-Modelle
+herunter, daher kann gerade dieses ein paar Minuten dauern (spätere Dokumente
+sind deutlich schneller). Prüfe die Pipeline am besten zuerst mit einer kleinen
+**1–2-seitigen PDF**; danach rechne mit etwa **1–3 Minuten** für ein normales
+50-seitiges Paper. Wenn du zusehen willst, öffne das Terminal im Projektordner und
+gib ein:
 
 ```
 docker compose logs -f app

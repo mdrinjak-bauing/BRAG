@@ -4,6 +4,129 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.2] — 2026-06-20
+
+A reliability, security and documentation hardening release following a full
+pre-publication audit (correctness, security, licensing/privacy and
+release-readiness), plus a clean rebrand and LM Studio auto-configuration. Most
+changes need no re-indexing — see **Migration** for the one exception.
+
+### Fixed
+- **Silent data loss with same-named files (critical).** A document's identity
+  was its bare filename, so two files with the same name in different folders
+  (e.g. `projectA/Bericht.pdf` and `projectB/Bericht.pdf`) collided — ingesting
+  one deleted the other's chunks, and deleting one wiped both. Identity is now
+  **path-qualified**.
+- **Page citations across multi-page sections.** Every chunk of a section that
+  spanned pages inherited the section's *first* page, so a passage physically on
+  page 18 was cited (and deep-linked) to page 10. Each chunk now carries the
+  **real page range** of the text it contains.
+- **Partial ingests no longer lose pages silently.** A document whose chunks
+  partly failed to embed (e.g. a transient cloud rate-limit) was logged as
+  complete and never retried; it is now re-driven on the next start, with a
+  bounded number of attempts.
+- **`inspect_chunks(page=N)`** now returns chunks whose page range *covers* N,
+  not only chunks that start on N.
+- **Watcher concurrency** — the in-progress set is lock-guarded so the polling
+  observer cannot start a duplicate ingest of the same file.
+- **Large `top_k` searches** are no longer silently capped by the rerank/fusion
+  presets.
+- **Clear error on an embedding-dimension mismatch** (model dim vs
+  `EMBEDDING_DIM`) instead of an opaque crash on every upsert.
+- **Search robustness** — a malformed `year` filter value is now coerced away
+  instead of crashing the query, and an absurd `top_k` is clamped by a generous
+  sanity bound (ordinary large `top_k` stays supported).
+- **Bounded retry waits** — cloud LLM/embedding retries honour an overall
+  deadline, so repeated rate-limit backoffs can no longer hang a single call for
+  minutes.
+- **Deletions made while the app was stopped are now cleaned up.** On start,
+  index entries whose source file no longer exists are pruned (guarded so an
+  unmounted knowledge folder can never wipe the index) — this also clears stale
+  entries left over from the path-qualified-identity change.
+- **Edited documents are re-indexed automatically.** Overwriting a file in place
+  is detected (file mtime vs. last ingest) and the document is re-indexed — live
+  and on startup — instead of keeping the old content forever.
+- **Chunk-id collisions removed.** The per-chunk id now hashes the full chunk
+  text (not a 120-character prefix), so two chunks that share a long
+  chapter/section prefix can no longer overwrite each other on upsert.
+- **The setup wizard no longer drops hand-set `.env` keys** (e.g. `LLM_MODEL`,
+  `EMBEDDING_*`, rerank overrides) when you re-run it.
+
+### Performance
+- **Batched local embeddings** — document chunks are embedded in batches (one
+  model call per batch instead of one per chunk), markedly faster bulk ingest on
+  the local, CPU-bound embedder that every profile uses. The batch contract
+  keeps each vector aligned to its chunk (no misattributed page citations) and
+  falls back to per-chunk embedding on any inconsistency.
+- **Reranker warm-up** — the local cross-encoder is loaded in a background
+  thread at MCP-server start, so the *first* search is no longer blocked by the
+  one-time model load.
+- **Deeper rerank candidate pool** — each `RERANK_PROFILE` now retrieves a
+  larger pool before reranking (prefetch raised, e.g. `eco` 80+80 instead of
+  60+60), so the cross-encoder picks from better recall **without scoring more
+  pairs** — i.e. essentially no extra CPU, since retrieval is cheap and the
+  rerank count is unchanged.
+
+### Security
+- **Setup is now a separate one-shot service.** The persistent app container no
+  longer mounts the project directory or the Claude Desktop config — only the
+  short-lived `setup` service does. A compromised ingest/parse path can no
+  longer read `.env` or rewrite the host's Claude Desktop configuration.
+- **Qdrant telemetry disabled** by default (`QDRANT__TELEMETRY_DISABLED`).
+- **`.env` injection guard** — wizard-supplied values are sanitised so a newline
+  cannot inject extra `.env` entries.
+- Added **`SECURITY.md`** (private reporting + the prompt-injection threat model).
+
+### Added
+- A real **end-to-end CI test** (build → ingest a PDF → search → page citation)
+  and a light **unit-test suite**, both run in CI.
+- **`NOTICE.md`** (third-party model and dependency licenses).
+- **`CODE_OF_CONDUCT.md`**, GitHub issue forms and a pull-request template.
+- Optional **model-revision pinning** (`EMBEDDING_REVISION` / `RERANKER_REVISION`)
+  for reproducible, supply-chain-safe model downloads.
+- Documented `BRIDGE_HOST_PORT` / `BRIDGE_PUBLIC_URL` in `.env.example`.
+- More **unit tests** (embedding-batch alignment contract, retry classification
+  and deadline, config fallbacks) and a **`pyproject.toml`** ruff configuration
+  (line length + whitespace) that now drives the CI lint step.
+- **Corpus management from Claude**: `remove_source` (drops a source from the
+  index and moves its file to `sources/_inbox/`, reversible) and `rename_source`
+  (re-files an indexed document, metadata patched in place, no re-embedding).
+- **Notebook tools in the MCP server**: `list_notebook`, `read_note`,
+  `write_note` — Claude reads and extends your notebook (wiki/notes) directly,
+  without a second server; the search index is never touched.
+- **Optional cloud-model picker** in the setup wizard.
+- **LM Studio auto-configured too.** Setup now adds the BRAG connection to LM
+  Studio's `mcp.json` if LM Studio is installed (not only Claude Desktop), so its
+  chat can use the same search + notebook tools. Ollama is a model backend, not an
+  MCP host, so there is nothing to configure there.
+- Startup now **flags leftover Qdrant collections** from a previous embedding
+  setting (never auto-deleted) so unused collections don't silently waste disk.
+
+### Changed
+- **Renamed for a clean public release** (backward-compatible): the assistant
+  connection now shows as **`brag`** (was a long internal name; setup migrates
+  older installs), and the default knowledge folder for new installs is
+  **`RAG-Verbindungsordner/`** (existing installs keep their `VAULT_PATH`); the
+  not-indexed marker now follows the language setting. `pyproject.toml` declares
+  package metadata and `brag` now exposes `__version__`.
+- A clear **API-key handling** note (stored only locally in `.env`, only ever
+  sent to your chosen provider, never to the project or third parties) now
+  appears in the setup wizard and across the docs.
+- The ingest-pipeline docs now explain the **extract→chunk** handoff.
+- A **hallucination / citation-accuracy disclaimer** was added to the README and
+  the legal notice.
+- `PROFILE` now defaults to `gemini` (previously the equivalent `cloud` alias).
+- Routine dependency updates (sentence-transformers, GitHub Actions).
+
+### Migration
+Pull and **re-run setup once** (`setup.command` / `setup.bat`) so the new
+one-shot setup service writes your configuration. **Top-level documents are
+unaffected.** If you keep documents in **subfolders** of `sources/`, their
+identity keys change to include the folder path: they are re-indexed
+automatically on next start, but the old entries linger — for a clean index,
+rebuild it (re-ingest your corpus, or remove the Qdrant volume and let it
+re-index).
+
 ## [0.3.0] — 2026-06
 
 ### Changed
@@ -21,6 +144,14 @@ All notable changes to this project are documented here. The format follows
 - Knowledge-store default folder renamed `vault/` → `wissensspeicher/`. The
   `VAULT_PATH` / `VAULT_DIR` environment variables and the internal `/vault`
   mount point are kept for backwards compatibility.
+- **Search-speed dial (`RERANK_PROFILE`).** The local cross-encoder reranker is
+  the main CPU cost of a search, so it is now a single setting: `off` /
+  **`eco`** (new default — load 120 candidates, rerank 40) / `balanced` (rerank
+  60) / `full` (rerank 120). The previous heavier behaviour (prefetch 150,
+  rerank 80) is roughly the `full` preset; the lighter default keeps searches
+  responsive on consumer PCs. Individual values can still be pinned via
+  `RERANK_ENABLED` / `RERANK_PREFETCH` / `RERANK_FUSION_LIMIT`. The `search` MCP
+  tool now follows the configured default instead of forcing reranking on.
 
 ### Added
 - **One-click status check** (`status.command` / `status.bat`) and an
@@ -34,6 +165,15 @@ All notable changes to this project are documented here. The format follows
   whole document. Re-ingest only happens when the file was not indexed yet.
 - New doc **"Which Claude surface?"** (`docs/WHICH_CLAUDE.md` / `.de.md`):
   when to use Chat vs. Cowork vs. Code, and why Chat is BRAG's home.
+- **Saved passages are now searchable.** `save_passage` not only writes the
+  quote into `wissensspeicher/passages/` but also indexes it, so a later chat —
+  even with a different AI provider — finds it again via `search`, tagged as a
+  *saved passage* and kept distinct from primary sources. This makes the
+  "knowledge lives in the folder, not the chat history" promise literally true.
+  (The rest of the notebook — `wiki/`, `notes/` — stays out of the index by
+  design; see the README "library and notebook" section.)
+- The `sources/_inbox/` staging area now ships in the knowledge-store template,
+  matching the documented folder layout.
 
 ### Security
 - HTTP bridge now enforces a **localhost Host-header allowlist** (and an Origin
@@ -47,6 +187,13 @@ All notable changes to this project are documented here. The format follows
   config that is not valid JSON. Added `no-new-privileges` to the app container
   and a `CLAUDE_CONFIG_MOUNTED` guard so the wizard no longer reports success
   when no real Claude config dir is mounted.
+- Setup page builds the local-model dropdown from DOM nodes instead of
+  `innerHTML` and is served with a strict **Content-Security-Policy** — closes a
+  reflected-XSS vector via attacker-controlled local-model names.
+- App container now runs as a **non-root user** with **all Linux capabilities
+  dropped** (`cap_drop: ALL`). The `.env` file (which holds the API key) is
+  written atomically and set to mode `0600`, and the setup API caps the request
+  body size. Added `pip-audit` to CI and a Dependabot config (pip + Actions).
 
 ### Fixed
 - `source_file` filters (search, `inspect_chunks`, delete) now use an
@@ -59,6 +206,32 @@ All notable changes to this project are documented here. The format follows
   descriptions for the rest of a document (latches off only after two in a row).
 - Docs: corrected leftover "profile B/C" naming in `ARCHITECTURE.md` and
   `FAQ.md`; fixed a German "see also" link that pointed at the English docs.
+- **Rename in place** now uses the NFC/NFD/raw triple-probe too, so a file whose
+  chunks were stored under a different Unicode form is patched in place instead
+  of silently re-ingested; and stale custom `_meta` fields from a previous
+  folder are removed on a move, so a moved document no longer leaks into the old
+  project/course filter.
+- Page links no longer drift by one after a table or figure (text-chunk
+  `page_end` is now reset together with `page_start`).
+- Contextual retrieval matches a chunk's chapter by the **exact** heading text
+  instead of a case-insensitive substring, so short/repeated titles no longer
+  pull in the wrong section's context.
+- The setup wizard no longer wrongly requires an Ollama embedding model
+  (`nomic-embed-text`) for the local profile — embeddings are always local
+  (arctic), so only a chat model is needed.
+- A heavy batch of embedding failures (e.g. a sustained cloud rate limit) now
+  aborts the document instead of freezing a partial index, so reconciliation
+  retries it later.
+- The setup launcher opens the right URL when `BRIDGE_HOST_PORT` is customized
+  (port 8765 already in use); the cross-encoder reranker takes an explicit batch
+  size for predictable latency on weak CPUs; and the knowledge-store template no
+  longer ships files titled "Vault".
+- **Citations can show the printed (book) page, not the physical PDF page.** Set
+  `page_offset` in a `_meta.txt` (printed page = physical page − offset): the
+  citation then shows the printed page while the deep-link still jumps to the
+  correct physical PDF page. Documented the `#page=` viewer behaviour — Chrome,
+  Edge and Firefox honour it; Safari opens page 1, so **Skim** (macOS) /
+  **SumatraPDF** (Windows) are recommended as page-jumping viewers.
 
 ## [0.2.0] — 2026-06
 
@@ -108,5 +281,7 @@ All notable changes to this project are documented here. The format follows
 - Knowledge store (library vs. notebook) and the search MCP server for
   Claude Desktop.
 
-[0.2.0]: https://github.com/mdrinjak-bauing/academic-rag-and-second-brain
-[0.1.0]: https://github.com/mdrinjak-bauing/academic-rag-and-second-brain
+[0.3.2]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.3.2
+[0.3.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.3.0
+[0.2.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.2.0
+[0.1.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.1.0

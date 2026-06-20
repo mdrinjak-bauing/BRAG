@@ -34,11 +34,19 @@ fi
 
 # 4. Claude Desktop wired up?
 CFG="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
-if [ -f "$CFG" ] && grep -q "academic-rag-and-second-brain" "$CFG"; then
-  echo "  [ OK ]  Claude Desktop is connected to the search tools"
+if [ ! -f "$CFG" ]; then
+  echo "  [FAIL]  Claude Desktop config not found at:"
+  echo "          $CFG"
+  echo "          Fix: start Claude Desktop once so it creates the config, then"
+  echo "          re-run setup.command."
+elif grep -q "brag.mcp_server" "$CFG"; then
+  echo "  [ OK ]  Claude Desktop is connected to the BRAG tools"
 else
-  echo "  [FAIL]  Claude Desktop entry missing — re-run setup.command,"
-  echo "          then fully quit Claude Desktop (Cmd+Q) and reopen it."
+  echo "  [FAIL]  Claude Desktop BRAG connection 'brag' missing in:"
+  echo "          $CFG"
+  echo "          Fix: re-run setup.command (it shows the exact entry to paste if"
+  echo "          it cannot write it), then fully quit Claude Desktop (Cmd+Q) and"
+  echo "          reopen it."
 fi
 
 echo

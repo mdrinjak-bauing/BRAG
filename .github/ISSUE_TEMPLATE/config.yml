@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & troubleshooting
+    url: https://github.com/mdrinjak-bauing/BRAG/blob/main/docs/FAQ.md
+    about: For "how do I…" and setup problems, the FAQ usually has the answer.

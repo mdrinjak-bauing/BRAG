@@ -3,7 +3,9 @@
 Serves:
 - /file/<store-relative-path>   knowledge-store documents for the browser, so search
                                 results can deep-link to a PDF page (#page=N)
-- /setup + /api/...             the browser-based setup wizard
+- /setup + /api/...             the browser-based setup wizard — ONLY when
+                                SETUP_MODE=1 (the one-shot `setup` compose
+                                service); the persistent app keeps it disabled
 - /healthz                      liveness probe
 """
 
@@ -16,6 +18,18 @@ from pathlib import Path
 from brag import config
 
 SETUP_PAGE = Path(__file__).parent / "setup_page.html"
+
+# Setup API bodies are tiny JSON — cap the read so a loopback client cannot
+# exhaust memory with a huge Content-Length.
+MAX_BODY_BYTES = 1_000_000
+
+# The setup page uses inline script/style and only talks to its own origin.
+# A strict CSP keeps it from loading or exfiltrating to anywhere else — a
+# second line of defence behind output-escaping on the page itself.
+SETUP_CSP = (
+    "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
+    "connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'"
+)
 
 # Only requests addressed to the loopback interface are served. The bridge
 # binds 0.0.0.0 (Docker port-publishing connects via the container's eth0, so
@@ -38,7 +52,18 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if parsed.path == "/healthz":
             self._send(200, b"ok", "text/plain")
         elif parsed.path in ("/", "/setup"):
-            self._send(200, SETUP_PAGE.read_bytes(), "text/html; charset=utf-8")
+            # The wizard is served only by the one-shot setup service (the only
+            # one with the project + Claude-config mounts). On the persistent
+            # app, point the user at the launcher instead of a wizard that
+            # could not write anything anyway.
+            if not config.SETUP_MODE:
+                self._send(200,
+                           b"Setup is not running here. Double-click setup.command "
+                           b"(macOS) or setup.bat (Windows) to (re-)configure BRAG.",
+                           "text/plain")
+                return
+            self._send(200, SETUP_PAGE.read_bytes(), "text/html; charset=utf-8",
+                       extra={"Content-Security-Policy": SETUP_CSP})
         elif parsed.path.startswith("/file/"):
             rel = urllib.parse.unquote(parsed.path[len("/file/"):])
             self._serve_vault_file(rel)
@@ -50,9 +75,16 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if not self._host_ok() or not self._origin_ok():
             self._send_json(403, {"ok": False, "message": "forbidden"})
             return
+        # The config-writing setup API exists only in the one-shot setup service.
+        if not config.SETUP_MODE:
+            self._send_json(404, {"ok": False, "message": "setup not active"})
+            return
         parsed = urllib.parse.urlparse(self.path)
         try:
             length = int(self.headers.get("Content-Length", 0))
+            if length > MAX_BODY_BYTES:
+                self._send_json(413, {"ok": False, "message": "request too large"})
+                return
             body = json.loads(self.rfile.read(length) or b"{}")
         except (ValueError, json.JSONDecodeError):
             self._send_json(400, {"ok": False, "message": "invalid request"})
@@ -92,15 +124,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
                                   "message": f"{app} is not reachable. {hint}"})
             return
 
+        # Embeddings are ALWAYS local (arctic, in-container) in every profile —
+        # the local/Ollama profile only needs a chat model, NOT a pulled Ollama
+        # embedding model. So we gate on the chat model alone.
         chat_models = [m for m in models if "embed" not in m.lower()]
-        if profile == "local" and not any("nomic-embed-text" in m for m in models):
-            self._send_json(200, {
-                "ok": False, "models": chat_models,
-                "message": ("Ollama is running, but the embedding model is "
-                            "missing. Run in your terminal:  "
-                            "ollama pull nomic-embed-text"),
-            })
-            return
         if not chat_models:
             self._send_json(200, {
                 "ok": False, "models": [],
@@ -121,8 +148,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 profile=str(body.get("profile", "cloud")),
                 api_key=str(body.get("api_key", "")),
                 language=str(body.get("language", "english")),
-                vault_path=str(body.get("vault_path", "")).strip() or "./wissensspeicher",
+                vault_path=str(body.get("vault_path", "")).strip() or "./RAG-Verbindungsordner",
                 llm_model=str(body.get("llm_model", "")).strip(),
+                rerank_profile=str(body.get("rerank_profile", "eco")).strip() or "eco",
+                vision_enabled=bool(body.get("vision_enabled", True)),
             )
             steps.append({"ok": True, "message": "Configuration saved"})
         except OSError as e:
@@ -137,7 +166,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         else:
             created = setup_core.create_vault()
             steps.append({"ok": True, "message":
-                          "Knowledge folder created (wissensspeicher/)" if created
+                          "Knowledge folder created (RAG-Verbindungsordner/)" if created
                           else "Knowledge folder already exists — kept untouched"})
 
         claude_ok, claude_msg = setup_core.write_claude_config()
@@ -145,10 +174,23 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
         setup_core.mark_setup_complete()
         steps.append({"ok": True, "message": "Restarting with your settings…"})
-        self._send_json(200, {
+        response = {
             "ok": True, "steps": steps,
             "claude_manual_snippet": not claude_ok,
-        })
+        }
+        if not claude_ok:
+            # Hand the exact JSON entry back so the user can paste it directly,
+            # instead of being sent to the FAQ.
+            response["claude_snippet"] = json.dumps(
+                {"mcpServers": {setup_core.MCP_KEY: setup_core.MCP_ENTRY}},
+                indent=2,
+            )
+            response["claude_config_path"] = (
+                "claude_desktop_config.json — on macOS at "
+                "~/Library/Application Support/Claude/claude_desktop_config.json, "
+                "on Windows at %APPDATA%\\Claude\\claude_desktop_config.json"
+            )
+        self._send_json(200, response)
 
     # ── helpers ─────────────────────────────────────────────────
     def _host_ok(self) -> bool:

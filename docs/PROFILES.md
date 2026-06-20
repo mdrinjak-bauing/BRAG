@@ -3,8 +3,9 @@
 **🇬🇧 English | 🇩🇪 [Deutsch](PROFILES.de.md)**
 
 The profile decides **which AI writes the text work** — the 1–2 sentence
-context for each chunk during indexing, figure descriptions, and document
-classification. You choose it once during setup and can switch later.
+context for each chunk during indexing and the figure descriptions. (The
+document type comes from the folder path, not from an LLM.) You choose it once
+during setup and can switch later.
 
 **The meaning-index (embeddings) always runs locally**, in every profile
 (`snowflake-arctic-embed-l-v2.0`, 1024 dim, on CPU — no GPU needed). So:
@@ -17,7 +18,10 @@ classification. You choose it once during setup and can switch later.
 The cross-encoder re-ranker already runs locally on CPU for every profile, so
 doing the embeddings locally too is consistent. The trade-off: the first
 ingest downloads the arctic model (~2.3 GB into the model cache) and bulk
-ingest on a weak CPU is slower than a cloud embedding API would be.
+ingest on a weak CPU is slower than a cloud embedding API would be. The
+re-ranker is also the main CPU cost of each *search* — on a weak machine, lower
+it (or turn it off) with `RERANK_PROFILE` (`off`/`eco`/`balanced`/`full`,
+default `eco`); see `.env.example`.
 
 ## Quick decision guide
 
@@ -38,6 +42,11 @@ figures too — never the whole files, never the embeddings.
 | **Gemini** (default) | Google Gemini | `gemini-2.5-flash-lite` | <https://aistudio.google.com/apikey> (free tier) |
 | **OpenAI** | OpenAI / ChatGPT | `gpt-4o-mini` | <https://platform.openai.com/api-keys> |
 | **Claude** | Anthropic Claude | `claude-haiku-4-5` | <https://console.anthropic.com/> |
+
+Your key stays on your machine: it is stored only in the local `.env` file
+(owner-readable) and used solely to authenticate your own requests to the
+provider you chose — never sent to the makers of this app or any third party.
+The local profiles below need no key at all.
 
 Gemini's free tier covers steady personal use; heavy bulk indexing may hit
 daily limits (the system backs off and retries automatically). OpenAI and
@@ -64,3 +73,7 @@ so: **fast cloud embeddings** on weak hardware with a large corpus — set
 `EMBEDDING_BACKEND=gemini` (or `openai`) with the matching `EMBEDDING_MODEL` /
 `EMBEDDING_DIM`. Note this is the one change that *does* require a one-time
 re-ingest (into a separate collection, handled safely). See `.env.example`.
+
+**Privacy note:** this override sends your document text to the embedding
+provider (Gemini/OpenAI) — not for confidential or personal content. For
+local-only, keep the standard-profile embedder.

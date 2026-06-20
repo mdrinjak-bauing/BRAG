@@ -3,7 +3,8 @@
 .setup_complete
 .claude-config-unset/
 
-# User data (default knowledge store; vault/ kept for older setups)
+# User data (default knowledge store; older default names kept for older setups)
+RAG-Verbindungsordner/
 wissensspeicher/
 vault/
 
@@ -11,6 +12,12 @@ vault/
 __pycache__/
 *.pyc
 .venv/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.log
 
 # Model caches
 /models/

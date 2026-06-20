@@ -1,7 +1,15 @@
-"""Terminal fallback for the setup (the primary path is the browser wizard
-at http://localhost:8765/setup). Run via:
-  docker compose run --rm -v "$PWD":/workspace \
-    -v "<claude config dir>":/claude-config app python -m brag.setup_wizard
+"""Terminal fallback for the setup — an emergency backstop only. The primary,
+recommended path is the browser wizard at http://localhost:8765/setup, started
+by setup.command / setup.bat.
+
+Run it against the one-shot `setup` service (it provides the project +
+Claude-config mounts and SETUP_MODE; the persistent `app` service deliberately
+does not):
+  CLAUDE_CONFIG_DIR="<claude config dir>" \
+    docker compose --profile setup run --rm setup python -m brag.setup_wizard
+
+Note: this backstop uses the default performance options (reranker eco, vision
+on); tune them in the browser wizard or directly in .env.
 """
 
 import sys
@@ -63,21 +71,24 @@ def main():
                    "(english/german/french/...)", "english").lower()
 
     print("\nSetting things up:")
-    setup_core.write_env(profile, api_key, language)
+    # Backstop: reranker/vision stay at their write_env defaults (eco / on);
+    # the browser wizard exposes them, here we keep the safe defaults explicit.
+    setup_core.write_env(profile, api_key, language,
+                         rerank_profile="eco", vision_enabled=True)
     print("  configuration saved")
     created = setup_core.create_vault()
-    print("  wissensspeicher/ created" if created else "  wissensspeicher/ already exists — kept")
+    print(f"  RAG-Verbindungsordner/ {'created' if created else 'already exists — kept'}")
     claude_ok, claude_msg = setup_core.write_claude_config()
     print(f"  {claude_msg}")
     if not claude_ok:
         import json
         print("  Add this entry manually to claude_desktop_config.json:")
-        print(json.dumps({"academic-rag-and-second-brain": setup_core.MCP_ENTRY}, indent=2))
+        print(json.dumps({setup_core.MCP_KEY: setup_core.MCP_ENTRY}, indent=2))
     setup_core.mark_setup_complete()
 
     print("\n=== Setup complete ===")
     print("1. Quit Claude Desktop completely and reopen it.")
-    print("2. Drop a PDF into wissensspeicher/sources/.")
+    print("2. Drop a PDF into RAG-Verbindungsordner/sources/.")
     print("3. Ask Claude: 'What documents are in my knowledge base?'")
     if profile in ("hybrid", "local"):
         app = "LM Studio" if profile == "hybrid" else "Ollama"

@@ -9,8 +9,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: "3.12"
       - name: Syntax check
@@ -18,11 +18,53 @@ jobs:
       - name: Lint
         run: |
           pip install ruff
-          ruff check brag --select E9,F63,F7,F82,F401,F811
+          ruff check brag  # rules configured in pyproject.toml
+      # Advisory only: a CVE here logs a warning but does not block the build,
+      # because the deps are exact-pinned and can't be patched ad hoc. The actual
+      # safeguard is the weekly Dependabot pip run (see .github/dependabot.yml),
+      # which opens version-bump PRs.
+      - name: Dependency audit (advisory)
+        continue-on-error: true
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
+      # Advisory only, mirroring the pip-audit pattern above: surfaces type
+      # errors as a warning without blocking the build. ML deps (docling,
+      # sentence-transformers, fastembed) ship few stubs, hence
+      # --ignore-missing-imports. Drop continue-on-error to make it a gate.
+      - name: Type check (advisory)
+        continue-on-error: true
+        run: |
+          pip install mypy
+          mypy brag --ignore-missing-imports
+
+      # Advisory only: extra lint groups (import-sort + pyupgrade) that would
+      # cause churn if added to the gating select in pyproject.toml. Warns only.
+      - name: Extra lint groups (advisory)
+        continue-on-error: true
+        run: |
+          pip install ruff
+          ruff check --select I,UP brag
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.12"
+      - name: Unit tests (light — no heavy runtime deps)
+        run: |
+          pip install pytest pytest-cov
+          # Coverage is informational, NOT a gate (no --cov-fail-under). Promote
+          # it to a hard threshold later once a baseline is known.
+          python -m pytest tests/test_unit.py tests/test_http_bridge.py -q \
+            --cov=brag --cov-report=term-missing
 
   docker-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
       - name: Build image
         run: docker build -t brag-ci .

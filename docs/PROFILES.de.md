@@ -3,9 +3,9 @@
 **🇬🇧 [English](PROFILES.md) | 🇩🇪 Deutsch**
 
 Das Profil entscheidet, **welche KI die Textarbeit erledigt** — die 1–2 Sätze
-Kontext pro Abschnitt beim Indexieren, die Abbildungsbeschreibungen und die
-Dokumentklassifikation. Du wählst es einmal beim Setup und kannst später
-wechseln.
+Kontext pro Abschnitt beim Indexieren und die Abbildungsbeschreibungen. (Der
+Dokumenttyp wird aus dem Ordnerpfad abgeleitet, nicht per LLM.) Du wählst es
+einmal beim Setup und kannst später wechseln.
 
 **Der Bedeutungs-Index (die Embeddings) läuft immer lokal**, in jedem Profil
 (`snowflake-arctic-embed-l-v2.0`, 1024 Dimensionen, auf der CPU — keine GPU
@@ -21,7 +21,10 @@ Der Cross-Encoder-Reranker läuft in jedem Profil ohnehin schon lokal auf der
 CPU — die Embeddings ebenfalls lokal zu rechnen, ist also konsequent. Der
 Kompromiss: Der erste Einlesevorgang lädt das arctic-Modell herunter (~2,3 GB
 in den Modell-Cache), und das Masseneinlesen auf einer schwachen CPU ist
-langsamer als eine Cloud-Embedding-API es wäre.
+langsamer als eine Cloud-Embedding-API es wäre. Der Reranker ist zudem der
+größte CPU-Posten *jeder Suche* — auf schwachen Rechnern per `RERANK_PROFILE`
+(`off`/`eco`/`balanced`/`full`, Standard `eco`) drosseln oder abschalten; siehe
+`.env.example`.
 
 ## Schnelle Entscheidungshilfe
 
@@ -42,6 +45,12 @@ Bilder deiner Abbildungen — nie die ganzen Dateien, nie die Embeddings.
 | **Gemini** (Standard) | Google Gemini | `gemini-2.5-flash-lite` | <https://aistudio.google.com/apikey> (kostenloser Tarif) |
 | **OpenAI** | OpenAI / ChatGPT | `gpt-4o-mini` | <https://platform.openai.com/api-keys> |
 | **Claude** | Anthropic Claude | `claude-haiku-4-5` | <https://console.anthropic.com/> |
+
+Dein Schlüssel bleibt auf deinem Rechner: Er wird nur in der lokalen
+`.env`-Datei gespeichert (nur für dich lesbar) und dient ausschließlich dazu,
+deine eigenen Anfragen beim gewählten Anbieter zu authentifizieren — nie an die
+Macher dieser App oder an Dritte gesendet. Die lokalen Profile weiter unten
+brauchen gar keinen Schlüssel.
 
 Der kostenlose Gemini-Tarif deckt einen gleichmäßigen persönlichen Gebrauch ab;
 umfangreiches Masseneinlesen kann an Tageslimits stoßen (das System wartet und
@@ -70,3 +79,7 @@ setze `EMBEDDING_BACKEND=gemini` (oder `openai`) mit passendem `EMBEDDING_MODEL`
 / `EMBEDDING_DIM`. Beachte: Das ist die einzige Änderung, die ein einmaliges
 Neu-Einlesen *erfordert* (in eine separate Collection, sicher gehandhabt). Siehe
 `.env.example`.
+
+**Datenschutz-Hinweis:** Dieser Override sendet deinen Dokumenttext an den
+Embedding-Anbieter (Gemini/OpenAI) — nicht für vertrauliche oder
+personenbezogene Inhalte. Für lokal-only beim Standard-Profil-Embedder bleiben.

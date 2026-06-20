@@ -54,11 +54,11 @@ Claude, und Claude nutzt beides im Hintergrund über eine Verbindung namens MCP.
 Es gibt **zwei** Orte — und es hilft sehr, sie auseinanderzuhalten:
 
 **1. Der Projektordner — der, den du selbst angelegt hast.** Als du die
-ZIP-Datei von GitHub entpackt hast, ist ein Ordner entstanden — genau dort, wo
-du entpackt hast (z. B. `~/academic-rag-and-second-brain` auf dem Mac oder
-`C:\Users\<du>\academic-rag-and-second-brain` unter Windows). Darin liegen: die
+ZIP-Datei von GitHub entpackt hast, ist der entpackte BRAG-Ordner entstanden —
+genau dort, wo du entpackt hast (z. B. unter `~/` auf dem Mac oder
+`C:\Users\<du>\` unter Windows; sein Name stammt aus der ZIP). Darin liegen: die
 Setup-Dateien, die `docker-compose.yml`, deine Einstellungsdatei `.env` und
-standardmäßig der `wissensspeicher/`-Ordner mit deinen Dokumenten. Diesen Ordner kannst du
+standardmäßig der `RAG-Verbindungsordner/`-Ordner mit deinen Dokumenten. Diesen Ordner kannst du
 sehen, sichern, verschieben — er gehört dir.
 
 **2. Dockers eigener Speicher — den du nie direkt anfasst.** Beim ersten Start
@@ -84,10 +84,10 @@ auftauchen.
 
 | Was | Wo | Hinweis |
 |---|---|---|
-| Deine Dokumente & Notizen | der Ordner `wissensspeicher/` auf deinem Rechner | einfache PDF-/Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
+| Deine Dokumente & Notizen | der Ordner `RAG-Verbindungsordner/` auf deinem Rechner | einfache PDF-/Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
 | Der Suchindex (Qdrant) | in Docker, in einem verwalteten Speicherbereich | jederzeit aus deinem Wissensspeicher neu aufbaubar; nie in iCloud/OneDrive legen |
 | Programmcode & KI-Modelle | im Docker-Image | einmal beim ersten Build geladen (~3 GB); fasst du nie an |
-| Einstellungen & API-Schlüssel | die Datei `.env` im Projektordner | vom Setup-Assistenten geschrieben; nie teilen |
+| Einstellungen & API-Schlüssel | die Datei `.env` im Projektordner | vom Setup-Assistenten geschrieben; der Schlüssel bleibt hier (nur für dich lesbar), dient nur der Authentifizierung deiner eigenen Anfragen beim gewählten Anbieter und wird nie an die Macher der App oder an Dritte gesendet |
 
 Der wichtige Punkt: **deine Bibliothek (`sources/`) und dein Notizbuch (`wiki/`,
 `notes/`) sind ganz normale Dateien, die dir gehören.** Die Datenbank ist nur
@@ -98,7 +98,7 @@ Dateien neu auf.
 
 ## Was beim Ablegen eines Dokuments passiert (Einlesen)
 
-Du legst ein PDF in `wissensspeicher/sources/`. Binnen Sekunden bemerkt die App es und
+Du legst ein PDF in `RAG-Verbindungsordner/sources/`. Binnen Sekunden bemerkt die App es und
 durchläuft fünf Schritte:
 
 1. **Das Layout lesen — „Docling".** Docling ist das Werkzeug, das *die Seite
@@ -159,16 +159,20 @@ entfernt.
 Du fragst Claude etwas. Hinter den Kulissen:
 
 1. **Zwei Suchen gleichzeitig.** Deine Frage läuft durch *beide* Suchen —
-   Bedeutung und Stichwort. Jede liefert ihre besten ~150 Kandidaten.
+   Bedeutung und Stichwort. Jede liefert ihre besten ~80 Kandidaten.
 
 2. **Zusammenführen.** Die zwei Kandidatenlisten werden zu einer verschmolzen
    (ein Schritt namens RRF) — Passagen, die beide Verfahren mochten, steigen
-   nach oben. Etwa 80 bleiben übrig.
+   nach oben. Etwa 40 bleiben übrig (Standard — einstellbar, siehe unten).
 
 3. **Neu sortieren — der Präzisionsschritt.** Eine zweite, gründlichere KI (der
-   „Reranker") liest deine echte Frage *zusammen mit* jeder dieser 80 Passagen
+   „Reranker") liest deine echte Frage *zusammen mit* jeder dieser ~40 Passagen
    und ordnet sie danach, wie gut sie wirklich antworten. Das ist der
    Unterschied zwischen „enthält die Wörter" und „beantwortet die Frage".
+   Der Reranker läuft **lokal auf deiner CPU** und ist der teuerste Teil einer
+   Suche — wie viele Passagen er bewertet (oder ob überhaupt) ist daher eine
+   Einstellung (`RERANK_PROFILE`: `off` / `eco` / `balanced` / `full`): auf
+   schwachen Rechnern `eco` (Standard) oder `off`, auf starken `full`.
 
 4. **Kürzen und durchmischen.** Die besten Treffer bleiben (standardmäßig 15,
    höchstens 3 aus einer einzelnen Quelle, damit ein Buch nicht alles

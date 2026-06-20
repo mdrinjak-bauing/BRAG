@@ -51,11 +51,11 @@ Claude quietly uses them through a connection called MCP.
 There are **two** places — and it really helps to keep them apart:
 
 **1. The project folder — the one you created yourself.** When you unpacked the
-ZIP from GitHub, a folder appeared exactly where you unpacked it (e.g.
-`~/academic-rag-and-second-brain` on a Mac or
-`C:\Users\<you>\academic-rag-and-second-brain` on Windows). It holds: the setup
+ZIP from GitHub, the unpacked BRAG folder appeared exactly where you unpacked it
+(e.g. under `~/` on a Mac or `C:\Users\<you>\` on Windows — its name comes from
+the ZIP). It holds: the setup
 files, the `docker-compose.yml`, your settings file `.env`, and by default the
-`wissensspeicher/` folder with your documents. You can see, back up and move this folder —
+`RAG-Verbindungsordner/` folder with your documents. You can see, back up and move this folder —
 it's yours.
 
 **2. Docker's own storage — which you never touch directly.** On first launch
@@ -78,10 +78,10 @@ To check everything is running, open a terminal in the project folder and type
 
 | What | Where | Notes |
 |---|---|---|
-| Your documents & notes | the `wissensspeicher/` folder on your computer | plain PDF and Markdown files — yours, back them up like any folder |
+| Your documents & notes | the `RAG-Verbindungsordner/` folder on your computer | plain PDF and Markdown files — yours, back them up like any folder |
 | The search index (Qdrant) | inside Docker, in a managed storage area | rebuildable anytime from your knowledge store; never put it in iCloud/OneDrive |
 | The program code & AI models | inside the Docker image | downloaded once at first build (~3 GB); you never touch it |
-| Your settings & API key | the `.env` file in the project folder | written by the setup assistant; never shared |
+| Your settings & API key | the `.env` file in the project folder | written by the setup assistant; the key stays here (owner-readable), is used only to authenticate your own requests to your chosen provider, and is never sent to the app's makers or any third party |
 
 The important point: **your library (`sources/`) and your notebook (`wiki/`,
 `notes/`) are normal files you own.** The database is just a derived index — if
@@ -91,7 +91,7 @@ it were ever lost, the system rebuilds it from your files.
 
 ## What happens when you drop in a document (ingest)
 
-You drop a PDF into `wissensspeicher/sources/`. Within seconds the app notices it and
+You drop a PDF into `RAG-Verbindungsordner/sources/`. Within seconds the app notices it and
 runs five steps:
 
 1. **Read the layout — "Docling".** Docling is the tool that *understands the
@@ -148,15 +148,20 @@ the background, and a removed file is cleaned out of the index automatically.
 You ask Claude something. Behind the scenes:
 
 1. **Two searches at once.** Your question is run through *both* the
-   meaning-search and the keyword-search. Each returns its best ~150 candidates.
+   meaning-search and the keyword-search. Each returns its best ~80 candidates.
 
 2. **Merge.** The two candidate lists are fused into one (a step called RRF) —
-   passages that both methods liked rise to the top. About 80 survive.
+   passages that both methods liked rise to the top. About 40 survive (the
+   default — tunable, see below).
 
 3. **Re-rank — the precision step.** A second, more careful AI (the
-   "re-ranker") reads your actual question *together with* each of those 80
+   "re-ranker") reads your actual question *together with* each of those ~40
    passages and re-orders them by how well they truly answer it. This is the
    difference between "contains the words" and "actually answers the question".
+   The re-ranker runs **locally on your CPU** and is the main cost of a search,
+   so how many passages it scores — or whether it runs at all — is a setting
+   (`RERANK_PROFILE`: `off` / `eco` / `balanced` / `full`); pick `eco` (default)
+   or `off` on a weak machine, `full` on a strong one.
 
 4. **Trim and diversify.** The top results are kept (by default 15, at most 3
    from any single source so one book can't crowd out the rest). This "how many

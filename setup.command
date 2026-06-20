@@ -33,27 +33,85 @@ elif ! grep -q "^CLAUDE_CONFIG_DIR=" .env; then
 fi
 export CLAUDE_CONFIG_DIR="$CLAUDE_DIR"
 
-echo "Building the application (first run downloads ~3 GB, please be patient)..."
-docker compose build || { echo "Build failed — see message above."; read -r -p "Press Enter to close..."; exit 1; }
+# REQUIRED step: choose the knowledge folder (RAG connection folder) via a native
+# macOS folder picker, then store it as VAULT_PATH in .env. On cancel/failure it
+# falls back to the default folder and never blocks setup.
+echo "=== Choose your knowledge folder (a folder-picker window opens) ==="
+RAGDIR="$(osascript -e 'POSIX path of (choose folder with prompt "Choose your BRAG knowledge folder (RAG connection folder)")' 2>/dev/null)"
+if [ -n "$RAGDIR" ]; then
+  if [ -f .env ]; then grep -v '^[[:space:]]*VAULT_PATH[[:space:]]*=' .env > .env.tmp && mv .env.tmp .env; fi
+  echo "VAULT_PATH=$RAGDIR" >> .env
+  echo "  RAG connection folder: $RAGDIR"
+else
+  echo "  No folder chosen — the default folder (RAG-Verbindungsordner/) will be used."
+fi
 
-echo "Starting..."
+# Prefer the prebuilt image from GHCR (fast, avoids local build errors); fall
+# back to building locally if none is published yet or we're offline.
+echo "Fetching the prebuilt application image..."
+if ! docker compose pull app >/dev/null 2>&1; then
+  echo "No prebuilt image available — building it locally (first run downloads ~3 GB)..."
+  docker compose build || { echo "Build failed — see message above."; read -r -p "Press Enter to close..."; exit 1; }
+fi
+
+echo "Starting the setup assistant..."
 rm -f .setup_complete
-docker compose up -d || { echo "Start failed — see message above."; read -r -p "Press Enter to close..."; exit 1; }
+# If a previous session left the app running, stop it so the setup service can
+# use the bridge port (no-op on a fresh install).
+docker compose stop app >/dev/null 2>&1
+# Remove any leftover one-shot setup container from a previous, INTERRUPTED run.
+# Its container_name (brag-setup) is fixed, so a leftover (even from a different
+# project folder) blocks the new one by name — clear it so compose can recreate.
+docker rm -f brag-setup >/dev/null 2>&1
+# Only the one-shot setup service runs now — it serves the wizard and is the
+# only container that mounts the project dir + Claude Desktop config.
+docker compose --profile setup up -d setup || { echo "Start failed — see message above."; read -r -p "Press Enter to close..."; exit 1; }
 
 echo
 echo "Opening the setup assistant in your browser..."
 sleep 3
-open "http://localhost:8765/setup"
+# Honour a custom BRIDGE_HOST_PORT from .env (set it there if 8765 is taken).
+PORT="$(grep -E '^BRIDGE_HOST_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2 | tr -d '[:space:]')"
+open "http://localhost:${PORT:-8765}/setup"
 
 echo
 echo "Finish the setup in your browser — this window waits for you."
+echo "(If you closed or cancelled the assistant: close this window and double-click setup.command again.)"
+waited=0
 while [ ! -f .setup_complete ]; do
   sleep 2
+  waited=$((waited + 2))
+  if [ $((waited % 30)) -eq 0 ]; then printf "."; fi
+  if [ "$waited" -ge 2700 ]; then
+    echo
+    echo "Timed out after 45 minutes. If you didn't finish the assistant, close this"
+    echo "window and run setup.command again."
+    docker compose --profile setup rm -sf setup >/dev/null 2>&1
+    exit 1
+  fi
 done
+echo
 
 echo "Applying your settings..."
-docker compose up -d --force-recreate app >/dev/null 2>&1
+# Tear down the setup service (frees the port and drops its mounts), then start
+# the persistent app — which never mounts the project dir or the Claude config.
+docker compose --profile setup rm -sf setup >/dev/null 2>&1
+docker compose up -d >/dev/null 2>&1
+
+# Also connect LM Studio if it is installed (its chat is an MCP host too). The
+# helper no-ops when LM Studio is absent. Ollama is a model backend, not an MCP
+# host, so there is nothing to configure there.
+if [ -d "$HOME/.lmstudio" ]; then
+  echo
+  echo "Connecting BRAG to LM Studio..."
+  if command -v python3 >/dev/null 2>&1; then
+    python3 tools/merge_lmstudio_config.py || true
+  else
+    echo "  LM Studio detected but python3 is unavailable - add the 'brag' MCP entry to ~/.lmstudio/mcp.json by hand (see README)."
+  fi
+fi
 
 echo
 echo "All done! Quit Claude Desktop completely (Cmd+Q) and reopen it."
+echo "(If you use LM Studio, also fully restart it so the new connection loads.)"
 read -r -p "Press Enter to close..."
