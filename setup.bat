@@ -112,6 +112,14 @@ REM start the persistent app - which never mounts the project or Claude config.
 docker compose --profile setup rm -sf setup >nul 2>nul
 docker compose up -d >nul 2>nul
 
+REM Connect BRAG to Claude Desktop from the HOST. Writing this Claude-managed
+REM file from INSIDE the container does NOT reliably reach the host on Windows
+REM (it silently no-ops while reporting success), so the merge is done here in
+REM PowerShell, which works and persists.
 echo.
-echo All done! Quit Claude Desktop completely and reopen it.
+echo Connecting BRAG to Claude Desktop...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_claude_config.ps1"
+
+echo.
+echo All done! Quit Claude Desktop completely ^(tray ^> Quit^) and reopen it.
 pause

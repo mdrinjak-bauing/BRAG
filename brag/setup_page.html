@@ -162,6 +162,7 @@
     </div>
     <div id="modelpick-hybrid" style="display:none; margin-top:14px;">
       <p data-i="pick_model"></p><select id="modelsel-hybrid"></select>
+      <p class="hint" data-i="model_min"></p>
     </div>
     <div class="row">
       <button onclick="show('s1b')" data-i="back"></button><span class="spacer"></span>
@@ -186,6 +187,7 @@
     </div>
     <div id="modelpick-local" style="display:none; margin-top:14px;">
       <p data-i="pick_model"></p><select id="modelsel-local"></select>
+      <p class="hint" data-i="model_min"></p>
     </div>
     <div class="row">
       <button onclick="show('s1b')" data-i="back"></button><span class="spacer"></span>
@@ -315,7 +317,7 @@ const STR = {
     lms_1:"Install LM Studio (free): lmstudio.ai → Download → open it once.",
     lms_2:"Download a model matching your memory:", lms_mem:"Your Mac", lms_model:"Recommended model",
     lms_3:"Start the server: Developer tab → turn the server ON (localhost:1234) and load the model.",
-    check_conn:"Check connection", pick_model:"Found these models — which should do the document analysis?",
+    check_conn:"Check connection", pick_model:"Found these models — which should do the document analysis?", model_min:"Tip: pick an instruction model with roughly 7B parameters or more. Small models (3–4B) often return empty or malformed context, and BRAG then falls back to no context (still searchable, just without the extra anchoring sentences). The models recommended above are a safe choice.",
     oll_h:"Install Ollama and download the text model",
     oll_1:"Install Ollama (free): ollama.com → Download → install (runs in the background).",
     oll_2:"Open a terminal and run this line (downloads a few GB). You only need the text model — the meaning-index runs locally on its own, no embedding model to pull:",
@@ -380,7 +382,7 @@ const STR = {
     lms_1:"LM Studio installieren (kostenlos): lmstudio.ai → Download → einmal öffnen.",
     lms_2:"Ein Modell passend zum Arbeitsspeicher laden:", lms_mem:"Dein Mac", lms_model:"Empfohlenes Modell",
     lms_3:"Server starten: Reiter „Developer“ → Server auf AN (localhost:1234) und Modell laden.",
-    check_conn:"Verbindung prüfen", pick_model:"Diese Modelle gefunden — welches soll die Dokumentanalyse machen?",
+    check_conn:"Verbindung prüfen", pick_model:"Diese Modelle gefunden — welches soll die Dokumentanalyse machen?", model_min:"Tipp: Wähle ein Instruktionsmodell mit etwa 7B Parametern oder mehr. Kleine Modelle (3–4B) liefern oft leeren oder fehlerhaften Kontext — BRAG fällt dann auf „kein Kontext“ zurück (weiterhin durchsuchbar, nur ohne die zusätzlichen Anker-Sätze). Die oben empfohlenen Modelle sind eine sichere Wahl.",
     oll_h:"Ollama installieren und das Textmodell laden",
     oll_1:"Ollama installieren (kostenlos): ollama.com → Download → installieren (läuft im Hintergrund).",
     oll_2:"Ein Terminal öffnen und diese Zeile ausführen (lädt ein paar GB). Du brauchst nur das Textmodell — der Bedeutungs-Index läuft eigenständig lokal, kein Embedding-Modell nötig:",

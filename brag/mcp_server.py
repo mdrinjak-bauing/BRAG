@@ -252,6 +252,82 @@ def list_passages(topic: str = "") -> str:
     return "\n".join(out)
 
 
+# ── Notebook (wiki/ + notes/) — your own thinking, NOT search-indexed ──────────
+# A second "connection" without a second MCP server: instead of a separate
+# filesystem MCP (extra dependency + its own Claude-config entry), the notebook
+# read/write tools live in THIS server. The source library stays read-only via
+# search(); the search index is never touched by these.
+def _resolve_under(rel, base):
+    """Resolve `rel` under `base`, or None if it escapes (path-traversal guard)."""
+    base = base.resolve()
+    target = (base / str(rel).replace("\\", "/").lstrip("/")).resolve()
+    try:
+        target.relative_to(base)
+        return target
+    except ValueError:
+        return None
+
+
+def _is_within(target, base) -> bool:
+    try:
+        target.resolve().relative_to(base.resolve())
+        return True
+    except ValueError:
+        return False
+
+
+@mcp.tool()
+def list_notebook() -> str:
+    """List your NOTEBOOK — your own wiki pages and the auto-generated literature
+    notes. This is the part of the knowledge store deliberately NOT search-indexed
+    (use search() for the source library). Open one with read_note, create or
+    update a wiki page with write_note."""
+    out = []
+    for label, d in (("wiki", config.WIKI_DIR), ("notes", config.NOTES_DIR)):
+        files = sorted(d.rglob("*.md")) if d.exists() else []
+        out.append(f"## {label}/ ({len(files)})")
+        out += [f"- {p.relative_to(config.VAULT).as_posix()}" for p in files]
+    joined = "\n".join(out).strip()
+    return joined or "Notebook is empty — no wiki/ or notes/ files yet."
+
+
+@mcp.tool()
+def read_note(path: str) -> str:
+    """Read a NOTEBOOK markdown file. `path` is relative to the knowledge store,
+    e.g. 'wiki/process-maturity.md' or 'notes/Mueller_2023.md'. Only the notebook
+    (wiki/, notes/) is reachable here — the source library and the search index
+    are not (use search() for those)."""
+    target = _resolve_under(path, config.VAULT)
+    if target is None:
+        return "Refused: path escapes the knowledge store."
+    if not (_is_within(target, config.WIKI_DIR) or _is_within(target, config.NOTES_DIR)):
+        return "read_note only reads the notebook (wiki/, notes/). Use search() for sources."
+    if not target.is_file():
+        return f"No such note: {path}"
+    return target.read_text(encoding="utf-8")
+
+
+@mcp.tool()
+def write_note(path: str, content: str) -> str:
+    """Create or overwrite a WIKI note — YOUR own thinking (concepts, drafts,
+    conclusions, intermediate results). Saved as plain Markdown under wiki/ and
+    deliberately NEVER added to the search index. `path` is relative to wiki/,
+    e.g. 'process-maturity.md' or 'methods/maturity-models.md'. The source
+    library (sources/) and the search index are never touched."""
+    rel = path.strip().replace("\\", "/").lstrip("/")
+    if rel.startswith("wiki/"):
+        rel = rel[len("wiki/"):]
+    target = _resolve_under(rel, config.WIKI_DIR)
+    if target is None:
+        return "Refused: path escapes wiki/."
+    if target.suffix.lower() != ".md":
+        target = target.with_suffix(".md")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content, encoding="utf-8")
+    rel_out = target.relative_to(config.WIKI_DIR).as_posix()
+    return f"Saved to wiki/{rel_out} — your notebook (not indexed)."
+
+
 def _warmup_reranker() -> None:
     """Load the (local, CPU) cross-encoder in the background so the FIRST search
     isn't blocked by the one-time model load. Best-effort; runs only off the

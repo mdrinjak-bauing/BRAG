@@ -32,6 +32,7 @@ VAULT = Path(_env("VAULT_DIR", "/vault"))
 SOURCES_DIR = VAULT / "sources"
 NOTES_DIR = VAULT / "notes"
 PASSAGES_DIR = VAULT / "passages"
+WIKI_DIR = VAULT / "wiki"            # your own thinking — read/write, NOT indexed
 DATA_DIR = VAULT / ".brag"            # ingest log, failed-chunk log
 INGEST_LOG = DATA_DIR / "ingest_log.jsonl"
 FAILED_CHUNKS_LOG = DATA_DIR / "failed_chunks.jsonl"
