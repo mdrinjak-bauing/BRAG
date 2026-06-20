@@ -52,14 +52,32 @@ set up automatically in step 4.
 
 ## 4. Download and set up BRAG
 
-**What to do:**
-1. On the GitHub page, click the green **`Code`** button → **`Download ZIP`**.
-   Right-click the ZIP → **"Extract All"** (e.g. to your home folder). The
-   unpacked BRAG folder appears (its name comes from the ZIP). Important:
-   **extract** first — don't run it from inside the ZIP.
-2. Open the extracted folder and double-click **`setup.bat`**.
-   - If **Windows SmartScreen** warns ("Windows protected your PC"): click **"More
-     info"** → **"Run anyway"**.
+> **One-time Windows note — and why it's safe.** Windows flags *any* script
+> downloaded from the internet as possibly unsafe ("Windows protected your PC" or
+> "this file could harm your device") — it can't tell your own open-source setup
+> script from a real threat. `setup.bat` is a short, readable text file you can
+> open in Notepad first: it only checks Docker, writes a local config and starts
+> the containers. The two options below avoid the warning cleanly.
+
+**What to do — pick one:**
+
+- **Option A · Download ZIP (simplest).** On the GitHub page, click the green
+  **`Code`** button → **`Download ZIP`**. **Before extracting, unblock the ZIP
+  once:** right-click the downloaded `.zip` → **Properties** → tick **"Unblock"**
+  at the bottom → **OK**. This clears the internet mark from *every* file inside
+  at once, so no script warning appears later. Then right-click the ZIP →
+  **"Extract All"** (e.g. to your home folder). Important: **extract** first —
+  don't run it from inside the ZIP.
+- **Option B · git clone (no warning at all).** If you have
+  [Git for Windows](https://git-scm.com/download/win), open a Command Prompt and
+  run `git clone https://github.com/mdrinjak-bauing/BRAG.git`. Files created by
+  Git carry no internet mark, so Windows never warns.
+
+Then open the folder and double-click **`setup.bat`**.
+   - If you skipped the unblock step and Windows still warns: on the yellow
+     **"Open File – Security Warning"** box click **Run**; on the blue
+     **SmartScreen** box ("Windows protected your PC") click **"More info"** →
+     **"Run anyway"**.
 
 **What you see:** A black Command Prompt window opens and, shortly after, **your
 browser opens automatically** with the setup assistant. There you answer, in

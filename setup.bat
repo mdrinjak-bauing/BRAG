@@ -16,11 +16,28 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM Pre-flight: hardware virtualization must be on for Docker's engine to start.
+REM If it is off, Docker Desktop fails with a cryptic message — detect the BIOS
+REM cause up front so we can show the actual fix. Defaults to "on" if the query
+REM fails, to avoid a false alarm.
+set "VTON=1"
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "try{[int][bool](Get-CimInstance Win32_Processor).VirtualizationFirmwareEnabled}catch{1}"`) do set "VTON=%%V"
+
 docker info >nul 2>nul
 if errorlevel 1 (
   echo Docker is installed but not running.
-  echo Please open the Docker Desktop app, wait until it says "running",
-  echo then double-click this file again.
+  echo.
+  if "%VTON%"=="0" (
+    echo IMPORTANT: Hardware virtualization is DISABLED in your BIOS/UEFI -
+    echo Docker's engine cannot start without it. To fix:
+    echo   1. Restart and open the BIOS/UEFI ^(usually the Del or F2 key at boot^).
+    echo   2. Enable virtualization - on AMD look for "SVM Mode",
+    echo      on Intel for "Intel VT-x" / "Virtualization Technology".
+    echo   3. Save ^& exit, let Windows boot, open Docker Desktop, then run this again.
+  ) else (
+    echo Please open the Docker Desktop app, wait until it says "running",
+    echo then double-click this file again.
+  )
   pause
   exit /b 1
 )

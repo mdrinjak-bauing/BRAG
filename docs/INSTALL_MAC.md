@@ -49,14 +49,23 @@ set up automatically in step 4 — nothing to do here yet.
 
 ## 4. Download and set up BRAG
 
+> **One-time macOS note — and why it's safe.** A script downloaded from the
+> internet is "quarantined", so macOS shows an "unidentified developer" warning
+> the first time. `setup.command` is a short, readable text file (it only checks
+> Docker, writes a local config and starts the containers). The right-click →
+> **Open** below tells macOS to trust it once. To avoid the prompt entirely you
+> can instead `git clone` the repo (cloned files are not quarantined).
+
 **What to do:**
 1. On the GitHub page, click the green **`Code`** button → **`Download ZIP`**.
    Unpack the ZIP by double-clicking it (e.g. into your home folder — see the
    iCloud note below). The unpacked BRAG folder appears (its name comes from
-   the ZIP).
+   the ZIP). *Prefer the terminal?* `git clone https://github.com/mdrinjak-bauing/BRAG.git`
+   avoids the quarantine prompt altogether.
 2. Open that folder in Finder and double-click **`setup.command`**.
    - If macOS blocks it ("unidentified developer"): **right-click** the file →
-     **Open** → **Open** again in the dialog.
+     **Open** → **Open** again in the dialog. (This is normal for any unsigned
+     downloaded script — you only confirm it once.)
 
 **What you see:** A small black Terminal window opens and, shortly after, **your
 browser opens automatically** with the setup assistant. There you answer, in

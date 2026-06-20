@@ -53,15 +53,26 @@ nichts weiter tun.
 
 ## 4. BRAG herunterladen und einrichten
 
+> **Einmaliger macOS-Hinweis — und warum es sicher ist.** Ein aus dem Internet
+> geladenes Skript steht unter „Quarantäne", daher zeigt macOS beim ersten Mal
+> die Warnung „nicht verifizierter Entwickler". `setup.command` ist eine kurze,
+> lesbare Textdatei (sie prüft nur Docker, schreibt eine lokale Konfiguration und
+> startet die Container). Der Rechtsklick → **Öffnen** unten sagt macOS einmalig,
+> dass es der Datei vertrauen soll. Wer die Abfrage ganz vermeiden will, kann das
+> Repo stattdessen per `git clone` holen (geklonte Dateien sind nicht in
+> Quarantäne).
+
 **Was du tust:**
 1. Auf der GitHub-Seite den grünen Knopf **`Code`** → **`Download ZIP`** klicken.
    Entpacke die ZIP per Doppelklick (z. B. in deinen Benutzerordner — siehe
    Hinweis zu iCloud unten). Es entsteht der entpackte BRAG-Ordner (sein Name
-   stammt aus der ZIP).
+   stammt aus der ZIP). *Lieber Terminal?* `git clone https://github.com/mdrinjak-bauing/BRAG.git`
+   umgeht die Quarantäne-Abfrage komplett.
 2. Öffne diesen Ordner im Finder und mache einen Doppelklick auf
    **`setup.command`**.
    - Blockiert macOS mit „nicht verifizierter Entwickler": **Rechtsklick** auf
-     die Datei → **Öffnen** → im Dialog erneut **Öffnen**.
+     die Datei → **Öffnen** → im Dialog erneut **Öffnen**. (Das ist bei jedem
+     unsignierten heruntergeladenen Skript normal — du bestätigst es nur einmal.)
 
 **Was du siehst:** Es öffnet sich ein kleines schwarzes Terminal-Fenster und
 kurz darauf **automatisch dein Browser** mit dem Einrichtungs-Assistenten. Dort

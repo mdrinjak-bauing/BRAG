@@ -54,13 +54,34 @@ richten wir in Schritt 4 automatisch ein.
 
 ## 4. BRAG herunterladen und einrichten
 
-**Was du tust:**
-1. Auf der GitHub-Seite den grünen Knopf **`Code`** → **`Download ZIP`** klicken.
-   Rechtsklick auf die ZIP → **„Alle extrahieren"** (z. B. in deinen
-   Benutzerordner). Es entsteht der entpackte BRAG-Ordner (sein Name stammt aus
-   der ZIP). Wichtig: erst **entpacken** — nicht aus der ZIP heraus starten.
-2. Öffne den entpackten Ordner und mache einen Doppelklick auf **`setup.bat`**.
-   - Warnt **Windows SmartScreen** („Der Computer wurde geschützt"): klicke auf
+> **Einmaliger Windows-Hinweis — und warum es sicher ist.** Windows markiert
+> *jedes* aus dem Internet geladene Skript als möglicherweise gefährlich („Der
+> Computer wurde geschützt" oder „Diese Datei könnte Ihr Gerät beschädigen") — es
+> kann dein eigenes Open-Source-Setup-Skript nicht von einer echten Bedrohung
+> unterscheiden. `setup.bat` ist eine kurze, lesbare Textdatei, die du vorher im
+> Editor öffnen kannst: Sie prüft nur Docker, schreibt eine lokale Konfiguration
+> und startet die Container. Die zwei Optionen unten umgehen die Warnung sauber.
+
+**Was du tust — eine Option wählen:**
+
+- **Option A · ZIP herunterladen (am einfachsten).** Auf der GitHub-Seite den
+  grünen Knopf **`Code`** → **`Download ZIP`** klicken. **Vor dem Entpacken die
+  ZIP einmal freigeben:** Rechtsklick auf die `.zip` → **Eigenschaften** → unten
+  **„Zulassen"** anhaken → **OK**. Das entfernt die Internet-Markierung von
+  *allen* Dateien darin auf einen Schlag — so erscheint später keine
+  Skript-Warnung. Dann Rechtsklick auf die ZIP → **„Alle extrahieren"** (z. B. in
+  deinen Benutzerordner). Wichtig: erst **entpacken** — nicht aus der ZIP heraus
+  starten.
+- **Option B · git clone (gar keine Warnung).** Wenn du
+  [Git für Windows](https://git-scm.com/download/win) hast, öffne die
+  Eingabeaufforderung und führe aus:
+  `git clone https://github.com/mdrinjak-bauing/BRAG.git`. Von Git erzeugte
+  Dateien tragen keine Internet-Markierung — Windows warnt nie.
+
+Dann den Ordner öffnen und **`setup.bat`** doppelklicken.
+   - Falls du den Freigabe-Schritt übersprungen hast und Windows trotzdem warnt:
+     in der gelben Box **„Datei öffnen – Sicherheitswarnung"** auf **„Ausführen"**;
+     in der blauen **SmartScreen**-Box („Der Computer wurde geschützt") auf
      **„Weitere Informationen"** → **„Trotzdem ausführen"**.
 
 **Was du siehst:** Ein schwarzes Eingabeaufforderungs-Fenster öffnet sich und
