@@ -79,7 +79,8 @@ def _mark_not_indexed(path: Path) -> None:
 
 
 def _append_ingest_log(source_file: str, path: Path, n_chunks: int,
-                       partial: bool = False, attempts: int = 1) -> None:
+                       partial: bool = False, attempts: int = 1,
+                       contextualized: int | None = None) -> None:
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     entry = {
         "source_file": source_file, "file": str(path.name),
@@ -87,6 +88,12 @@ def _append_ingest_log(source_file: str, path: Path, n_chunks: int,
         "collection": config.COLLECTION_NAME,
         "partial": partial, "attempts": attempts,
     }
+    if contextualized is not None:
+        # Persist contextualization coverage so a document whose anchoring-
+        # sentence LLM call failed (chunks embedded as raw text) is visible in
+        # the durable log, not just a transient stdout line. Additive field —
+        # existing readers ignore it.
+        entry["contextualized"] = contextualized
     with open(config.INGEST_LOG, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
@@ -146,6 +153,10 @@ def ingest(path: Path) -> bool:
 
     print("  [2/4] contextual retrieval...")
     chunks = contextualize(chunks, full_markdown)
+    # Coverage captured on the full chunk list (before any embedding drops),
+    # threaded into the ingest log so a silently-failed contextualization is
+    # visible per source.
+    n_contextualized = sum(1 for c in chunks if c.context)
 
     print("  [3/4] embedding (dense + sparse)...")
     embedder = get_embedder()
@@ -192,6 +203,24 @@ def ingest(path: Path) -> bool:
     chunks = [c for c, _ in paired]
     dense = [v for _, v in paired]
     sparse = embed_sparse_documents([c.embedding_text() for c in chunks])
+    # Keep sparse aligned with dense/chunks: a chunk whose BM25 vector failed
+    # (None) is skipped+logged exactly like a failed dense embedding, never
+    # stored with a missing sparse vector. Mirrors the dense per-chunk path and
+    # adds to `skipped` so the document is marked partial and retried.
+    if any(sv is None for sv in sparse):
+        kept = [(c, dv, sv)
+                for c, dv, sv in zip(chunks, dense, sparse) if sv is not None]
+        for c, sv in zip(chunks, sparse):
+            if sv is None:
+                print(f"  sparse embedding failed (p. {c.page_start})")
+                _log_failed_chunk(c, "sparse_embedding_failed")
+        if not kept:
+            print("  no chunk could be sparse-embedded — aborting")
+            return False
+        skipped += len(chunks) - len(kept)
+        chunks = [c for c, _, _ in kept]
+        dense = [dv for _, dv, _ in kept]
+        sparse = [sv for _, _, sv in kept]
 
     print("  [4/4] storing in Qdrant...")
     from qdrant_client.models import PointStruct
@@ -235,7 +264,8 @@ def ingest(path: Path) -> bool:
     try:
         write_note(chunks)
         _append_ingest_log(chunks[0].source_file, path, len(chunks),
-                           partial=partial, attempts=attempts)
+                           partial=partial, attempts=attempts,
+                           contextualized=n_contextualized)
     except Exception as e:  # noqa: BLE001 — post-stages never fail the ingest
         print(f"  note/log writing failed (non-fatal): {e}")
 

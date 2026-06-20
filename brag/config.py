@@ -60,6 +60,13 @@ EMBEDDING_DIM = int(_env("EMBEDDING_DIM", _profile["embedding_dim"]))
 # the local sentence-transformers model uses CPU/BLAS far better than one call
 # per chunk; conservative default keeps peak memory bounded on weak machines.
 EMBED_BATCH_SIZE = int(_env("EMBED_BATCH_SIZE", 32))
+# Upper bound on the characters of any single text handed to an embedding
+# backend, applied UNIFORMLY across all backends (local sentence-transformers,
+# OpenAI, Ollama, Gemini). Each backend previously hard-coded its own cap (local
+# 20000, OpenAI/Ollama 8000, Gemini none), so the SAME text could embed
+# differently depending only on the active backend — non-reproducible vectors
+# across profiles. One shared, env-overridable dial removes that asymmetry.
+EMBEDDING_INPUT_MAX_CHARS = int(_env("EMBEDDING_INPUT_MAX_CHARS", 20000))
 LLM_BACKEND = _env("LLM_BACKEND", _profile["llm_backend"])
 LLM_MODEL = _env("LLM_MODEL", _profile["llm_model"])
 LLM_BASE_URL = _env("LLM_BASE_URL", _profile["llm_base_url"])
@@ -133,6 +140,13 @@ RERANK_FUSION_LIMIT = int(_env("RERANK_FUSION_LIMIT", _rerank["fusion"]))
 RERANK_BATCH_SIZE = int(_env("RERANK_BATCH_SIZE", 16))
 DEFAULT_TOP_K = int(_env("DEFAULT_TOP_K", 15))
 MAX_CHUNKS_PER_SOURCE = int(_env("MAX_CHUNKS_PER_SOURCE", 3))
+# Cross-source near-duplicate filter: drop a candidate whose chunk text is a
+# near-duplicate (token-set / Jaccard similarity) of an already-accepted hit.
+# Catches the SAME passage reproduced across DIFFERENT source files (quoted
+# text, shared boilerplate, a standard reproduced in several books), which the
+# per-source cap above cannot see. High threshold so only genuine duplicates
+# are removed; set to 1.0 (or higher) to disable the filter entirely.
+DEDUP_SIMILARITY_THRESHOLD = float(_env("DEDUP_SIMILARITY_THRESHOLD", 0.90))
 # A generous SANITY bound on top_k — NOT a feature cap. Large top_k stays
 # deliberately supported (see search/query.py); this only stops an absurd value
 # (e.g. a buggy caller passing a million) from making Qdrant prefetch/fuse a

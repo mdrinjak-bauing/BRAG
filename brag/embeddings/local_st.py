@@ -8,9 +8,11 @@ fine for steady ingest, slower for bulk re-ingest.
 from brag import config
 from brag.embeddings.base import EmbeddingBackend
 
-# Keep total embedding input bounded; consistent for ingest AND batch paths
-# (lesson from the originating system: asymmetric truncation loses context).
-MAX_INPUT_CHARS = 20000
+# Total embedding input is bounded by the shared config.EMBEDDING_INPUT_MAX_CHARS
+# so every backend (local, OpenAI, Ollama, Gemini) truncates identically —
+# asymmetric per-backend truncation silently loses context (lesson from the
+# originating system). Aliased here for the call sites below.
+MAX_INPUT_CHARS = config.EMBEDDING_INPUT_MAX_CHARS
 
 
 class SentenceTransformerEmbedder(EmbeddingBackend):

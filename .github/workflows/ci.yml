@@ -39,7 +39,7 @@ jobs:
       - name: Unit tests (light — no heavy runtime deps)
         run: |
           pip install pytest
-          python -m pytest tests/test_unit.py -q
+          python -m pytest tests/test_unit.py tests/test_http_bridge.py -q
 
   docker-build:
     runs-on: ubuntu-latest

@@ -15,7 +15,7 @@ class OllamaEmbedder(EmbeddingBackend):
     def _embed(self, text: str) -> list[float]:
         payload = json.dumps({
             "model": config.EMBEDDING_MODEL,
-            "input": text[:8000],
+            "input": text[:config.EMBEDDING_INPUT_MAX_CHARS],
         }).encode()
         req = urllib.request.Request(
             f"{self._url}/embeddings", data=payload,
@@ -30,3 +30,9 @@ class OllamaEmbedder(EmbeddingBackend):
 
     def embed_query(self, text: str) -> list[float]:
         return self._embed(text)
+
+    # No embed_documents override on purpose: Ollama's OpenAI-compatible
+    # /embeddings endpoint is effectively one-text-per-request for most
+    # embedding models (batch support is model/version-dependent and not
+    # guaranteed), so it keeps the safe inherited per-text loop from
+    # EmbeddingBackend rather than risk a silently truncated/misaligned batch.

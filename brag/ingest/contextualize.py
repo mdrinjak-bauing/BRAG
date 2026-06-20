@@ -29,22 +29,34 @@ def _toc(full_markdown: str) -> str:
     return "\n".join(lines)[: config.TOC_MAX_CHARS]
 
 
+def _norm_heading(s: str) -> str:
+    r"""Normalize a heading for matching: drop markdown backslash-escapes
+    (Docling emits e.g. '1\. Introduction'), collapse internal whitespace,
+    lowercase. Only representation-level noise is removed — this never changes
+    WHICH logical heading a string denotes — so exact equality on the normalized
+    form stays safe against matching the wrong chapter."""
+    s = re.sub(r"\\(.)", r"\1", s)
+    return re.sub(r"\s+", " ", s).strip().lower()
+
+
 def _chapter_text(full_markdown: str, chapter: str) -> str:
     if not chapter:
         return ""
-    # Match the chapter heading by its EXACT text (after stripping the leading
-    # '#' markers), not a case-insensitive substring — otherwise a short or
-    # repeated title ("Methods", "1 Introduction") captures the wrong section
-    # and the chunk gets grounded in unrelated context. If no exact heading
-    # matches, the caller falls back to whole-document context.
-    target = chapter.strip().lower()
+    # Match the chapter heading by its EXACT (normalized) text, not a
+    # case-insensitive substring — otherwise a short or repeated title
+    # ("Methods", "1 Introduction") captures the wrong section and the chunk
+    # gets grounded in unrelated context. Normalization only collapses
+    # whitespace / strips markdown escapes / lowercases, so cosmetic differences
+    # between the Docling section text and the markdown export do not defeat the
+    # match. If no heading matches, the caller falls back to whole-document.
+    target = _norm_heading(chapter)
     lines = full_markdown.splitlines()
     capturing, level, result = False, None, []
     for line in lines:
         s = line.strip()
         is_heading = s.startswith("#")
         if not capturing:
-            if is_heading and s.lstrip("#").strip().lower() == target:
+            if is_heading and _norm_heading(s.lstrip("#")) == target:
                 capturing = True
                 level = len(s) - len(s.lstrip("#"))
                 result.append(line)
@@ -62,6 +74,11 @@ def _doc_context(full_markdown: str, toc: str, chapter: str) -> str:
             f"<table_of_contents>\n{toc}\n</table_of_contents>\n\n"
             f'<current_chapter title="{chapter}">\n{chapter_text}\n</current_chapter>'
         )
+    if chapter:
+        # A chapter was named but no heading matched — the chunk now gets the
+        # weaker whole-document grounding. Make that visible instead of silent.
+        print(f"  [contextualize] chapter heading not found, using "
+              f"whole-document context: {chapter!r}")
     return f"<document>\n{full_markdown[: config.CONTEXT_DOC_CHARS]}\n</document>"
 
 
@@ -184,5 +201,14 @@ def contextualize(chunks: list[Chunk], full_markdown: str) -> list[Chunk]:
     for chunk, ctx in zip(chunks, contexts):
         chunk.context = ctx
     generated = sum(1 for c in chunks if c.context)
+    missing = len(chunks) - generated
     print(f"  {generated}/{len(chunks)} chunks contextualized")
+    if missing:
+        # Surface the silent degradation: these chunks are still embedded as raw
+        # text (the intended fallback), but without this line a failed anchoring-
+        # sentence LLM call leaves no trace once the run scrolls past. The count
+        # is also persisted to the ingest log by the caller.
+        src = chunks[0].source_file if chunks else "?"
+        print(f"  WARNING: {missing}/{len(chunks)} chunks have NO context "
+              f"(embedded as raw text) for {src} — contextualization may have failed")
     return chunks

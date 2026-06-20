@@ -69,6 +69,33 @@ def _build_filter(doc_type=None, chunk_type=None, year_min=None, year_max=None,
     return Filter(must=must) if must else None
 
 
+def _token_set(text: str) -> frozenset[str]:
+    """Lowercased word-token set of a chunk, for cheap Jaccard similarity."""
+    import re
+    return frozenset(re.findall(r"\w+", text.lower()))
+
+
+def _is_near_duplicate(text: str, accepted_tokens: list) -> bool:
+    """True if `text` is a near-duplicate of an already-accepted hit.
+
+    Token-set (Jaccard) similarity against each accepted chunk; a hit at or above
+    config.DEDUP_SIMILARITY_THRESHOLD is dropped. Empty / whitespace-only text is
+    NEVER treated as a duplicate (figure/table chunks may carry content
+    elsewhere), and a threshold >= 1.0 disables the filter entirely."""
+    if config.DEDUP_SIMILARITY_THRESHOLD >= 1.0:
+        return False
+    tokens = _token_set(text)
+    if not tokens:
+        return False
+    for prev in accepted_tokens:
+        if not prev:
+            continue
+        union = len(tokens | prev)
+        if union and len(tokens & prev) / union >= config.DEDUP_SIMILARITY_THRESHOLD:
+            return True
+    return False
+
+
 def search(query: str, top_k: int | None = None, reranking: bool | None = None,
            max_chunks_per_source: int | None = None, **filters) -> list[dict]:
     """Run hybrid search, return ranked hits as plain dicts."""
@@ -126,13 +153,18 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
             c["rerank_score"] = float(s)
         candidates.sort(key=lambda c: c["rerank_score"], reverse=True)
 
-    # Source diversity: cap hits per source so one book cannot fill the list
-    hits, per_source = [], {}
+    # Source diversity: cap hits per source so one book cannot fill the list,
+    # and drop cross-source near-duplicates (the same passage reproduced in a
+    # different file) that the per-source count cap cannot catch.
+    hits, per_source, accepted_tokens = [], {}, []
     for c in candidates:
         src = c.get("source_file", "")
         if per_source.get(src, 0) >= max_chunks_per_source:
             continue
+        if _is_near_duplicate(c.get("text", ""), accepted_tokens):
+            continue
         per_source[src] = per_source.get(src, 0) + 1
+        accepted_tokens.append(_token_set(c.get("text", "")))
         hits.append(c)
         if len(hits) >= top_k:
             break
