@@ -33,6 +33,19 @@ elif ! grep -q "^CLAUDE_CONFIG_DIR=" .env; then
 fi
 export CLAUDE_CONFIG_DIR="$CLAUDE_DIR"
 
+# REQUIRED step: choose the knowledge folder (RAG connection folder) via a native
+# macOS folder picker, then store it as VAULT_PATH in .env. On cancel/failure it
+# falls back to the default folder and never blocks setup.
+echo "=== Choose your knowledge folder (a folder-picker window opens) ==="
+RAGDIR="$(osascript -e 'POSIX path of (choose folder with prompt "Choose your BRAG knowledge folder (RAG connection folder)")' 2>/dev/null)"
+if [ -n "$RAGDIR" ]; then
+  if [ -f .env ]; then grep -v '^[[:space:]]*VAULT_PATH[[:space:]]*=' .env > .env.tmp && mv .env.tmp .env; fi
+  echo "VAULT_PATH=$RAGDIR" >> .env
+  echo "  RAG connection folder: $RAGDIR"
+else
+  echo "  No folder chosen — the default folder (wissensspeicher/) will be used."
+fi
+
 # Prefer the prebuilt image from GHCR (fast, avoids local build errors); fall
 # back to building locally if none is published yet or we're offline.
 echo "Fetching the prebuilt application image..."

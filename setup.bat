@@ -50,6 +50,14 @@ if not exist .env (
 )
 set "CLAUDE_CONFIG_DIR=%APPDATA%\Claude"
 
+REM REQUIRED step: choose where the knowledge folder (RAG connection folder)
+REM lives, via a NATIVE folder-picker window. A browser cannot open a real folder
+REM dialog, so it is done here on the host; it writes VAULT_PATH into .env. On
+REM cancel or any error it falls back to the default folder and never blocks setup.
+echo.
+echo === Choose your knowledge folder (a folder-picker window opens) ===
+powershell -NoProfile -STA -ExecutionPolicy Bypass -File "%~dp0tools\pick_folder.ps1" "%~dp0"
+
 REM Prefer the prebuilt image from GHCR (fast, avoids local "pip install failed"
 REM errors); fall back to building locally if none is published yet or we're
 REM offline. Pull output is hidden so a "not found" message doesn't alarm.

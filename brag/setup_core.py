@@ -63,7 +63,7 @@ def write_env(profile: str, api_key: str, language: str,
         f"PROFILE={profile}",
         f"VAULT_LANGUAGE={language}",
         f"ANSWER_LANGUAGE={answer_lang}",
-        f"VAULT_PATH={vault_path or './wissensspeicher'}",
+        f"VAULT_PATH={vault_path or existing.get('VAULT_PATH') or './wissensspeicher'}",
         # Search-quality vs. CPU cost (off/eco/balanced/full) and whether figures
         # are sent to a cloud provider for description. Written explicitly so a
         # later re-run always reflects the wizard's choice, even at the default.

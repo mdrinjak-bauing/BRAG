@@ -206,11 +206,6 @@
       <option value="dutch">Dutch / Nederlands</option>
       <option value="portuguese">Portuguese / Português</option>
     </select>
-    <details>
-      <summary data-i="advanced"></summary>
-      <p data-i="adv_folder"></p>
-      <input id="vaultpath" placeholder="default: ./wissensspeicher">
-    </details>
     <div class="row">
       <button onclick="back3()" data-i="back"></button><span class="spacer"></span>
       <button class="primary" onclick="show('sperf')" data-i="continue"></button>
@@ -500,7 +495,7 @@ async function apply(){
         profile: state.profile,
         api_key: cloud ? state.apikey : "",
         language: document.getElementById("language").value,
-        vault_path: document.getElementById("vaultpath").value.trim(),
+        vault_path: "",
         llm_model: cloud ? "" : state.localModel,
         rerank_profile,
         vision_enabled,
