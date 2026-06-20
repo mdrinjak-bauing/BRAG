@@ -34,7 +34,14 @@ class Chunk:
 
     def __post_init__(self):
         if not self.chunk_id:
-            raw = f"{self.source_file}|{self.page_start}|{self.text[:120]}"
+            # Hash the FULL text, not a 120-char prefix: two distinct chunks on
+            # the same page whose first 120 chars matched (a long
+            # "[Chapter: …] [Section: …]" prefix, repeated boilerplate, or split
+            # table parts whose "part i/n" label trails that prefix) would
+            # otherwise collide on the same id and silently overwrite each other
+            # on upsert. Hashing the whole text stays deterministic, so an
+            # idempotent re-ingest of an identical chunk still overwrites in place.
+            raw = f"{self.source_file}|{self.page_start}|{self.text}"
             self.chunk_id = hashlib.sha256(raw.encode()).hexdigest()[:32]
 
     def qdrant_id(self) -> int:

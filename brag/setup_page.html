@@ -131,6 +131,11 @@
     <input id="apikey" placeholder="sk-... / AIza..." autocomplete="off">
     <p id="keymsg" class="hint"></p>
     <p class="hint" data-i="key_privacy"></p>
+    <details>
+      <summary data-i="cloud_model_adv"></summary>
+      <p class="hint" data-i="cloud_model_p"></p>
+      <input id="cloudmodel" placeholder="" autocomplete="off">
+    </details>
     <div class="row">
       <button onclick="show('s2cloud')" data-i="back"></button><span class="spacer"></span>
       <button class="primary" id="keybtn" onclick="checkKey()" data-i="key_check"></button>
@@ -332,6 +337,8 @@ const STR = {
     prov_gemini_warn:"Free tier: Google may use submitted inputs to improve its products and humans may review them — not for confidential or personal content. For sensitive data, pick the local option in the previous step.",
     key_h:"Your API key", key_step1:"Open", key_step2:"Create an API key", key_step3:"Copy it and paste it here:",
     key_privacy:"What happens to your key: it is saved only in a local file (.env) on your computer — never sent to the makers of this app or any third party. It is used solely to authenticate your own requests to the provider you picked. Checking it sends one small test request to that provider to confirm it is valid.",
+    cloud_model_adv:"Advanced: choose a specific model (optional)",
+    cloud_model_p:"Leave empty to use the provider's recommended default. To switch to a stronger or cheaper model, enter its exact model id — e.g. for Google, gemini-2.5-flash (higher quality) or gemini-2.5-flash-lite (faster); for OpenAI/Anthropic, use an id from that provider's model list. You can change this later by re-running setup.",
     key_check:"Check key & continue",
     lms_h:"Install LM Studio and load a model",
     lms_1:"Install LM Studio (free): lmstudio.ai → Download → open it once.",
@@ -415,6 +422,8 @@ const STR = {
     prov_gemini_warn:"Gratis-Tarif: Google darf die übermittelten Eingaben zur Produktverbesserung nutzen, und Menschen können sie prüfen — nicht für vertrauliche oder personenbezogene Inhalte. Für sensible Daten im vorigen Schritt die lokale Option wählen.",
     key_h:"Dein API-Schlüssel", key_step1:"Öffne", key_step2:"Erstelle einen API-Schlüssel", key_step3:"Kopiere ihn und füge ihn hier ein:",
     key_privacy:"Was mit deinem Schlüssel passiert: Er wird nur in einer lokalen Datei (.env) auf deinem Rechner gespeichert — nie an die Macher dieser App oder an Dritte gesendet. Er dient ausschließlich dazu, deine eigenen Anfragen beim gewählten Anbieter zu authentifizieren. Die Prüfung sendet eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu bestätigen.",
+    cloud_model_adv:"Erweitert: bestimmtes Modell wählen (optional)",
+    cloud_model_p:"Leer lassen für das empfohlene Standardmodell des Anbieters. Für ein stärkeres oder günstigeres Modell die genaue Modell-ID eintragen — z. B. bei Google gemini-2.5-flash (höhere Qualität) oder gemini-2.5-flash-lite (schneller); bei OpenAI/Anthropic eine ID aus der Modell-Liste des Anbieters. Später jederzeit per erneutem Setup änderbar.",
     key_check:"Schlüssel prüfen & weiter",
     lms_h:"LM Studio installieren und ein Modell laden",
     lms_1:"LM Studio installieren (kostenlos): lmstudio.ai → Download → einmal öffnen.",
@@ -561,7 +570,7 @@ async function apply(){
         api_key: cloud ? state.apikey : "",
         language: document.getElementById("language").value,
         vault_path: "",
-        llm_model: cloud ? "" : state.localModel,
+        llm_model: cloud ? document.getElementById("cloudmodel").value.trim() : state.localModel,
         rerank_profile,
         vision_enabled,
       })});

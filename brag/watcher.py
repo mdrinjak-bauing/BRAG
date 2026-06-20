@@ -10,6 +10,7 @@ macOS and Windows hosts). Includes:
 
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 
 from watchdog.events import FileSystemEventHandler
@@ -93,6 +94,27 @@ def _wait_for_stable_file(path: Path, min_wait=3, max_wait=120, poll=2) -> bool:
     return True
 
 
+def _changed_since_ingest(path: Path, states: dict) -> bool:
+    """True if `path` was modified AFTER its last ingest — i.e. the document was
+    overwritten in place and its indexed chunks are now stale. Missing files are
+    caught by the corpus check and under-limit partials by the retry check; this
+    ALSO catches a file edited in place after ANY prior ingest, including a
+    retry-exhausted partial the user re-saved to fix. (An unchanged partial is
+    not re-driven here, because its mtime has not advanced — so this never
+    reintroduces an unbounded retry of a permanently-failing document.) `states`
+    is the per-source ingest-log map (fetch once, reuse across files); the small
+    margin absorbs copy-time jitter so a file is never re-ingested right after
+    its first ingest."""
+    st = states.get(config.source_key_from_path(path))
+    if not st or not st.get("ingested_at"):
+        return False
+    try:
+        ingested = datetime.fromisoformat(st["ingested_at"]).timestamp()
+        return path.stat().st_mtime > ingested + 5
+    except (ValueError, OSError):
+        return False
+
+
 class DocumentHandler(FileSystemEventHandler):
     def on_created(self, event):
         if event.is_directory:
@@ -113,13 +135,30 @@ class DocumentHandler(FileSystemEventHandler):
             _release(path)
 
     def on_modified(self, event):
-        # Document files are immutable in practice; the one editable file that
-        # affects the index is _meta.txt — refresh the folder when it changes.
         if event.is_directory:
             return
         path = Path(event.src_path)
+        # The one editable non-document file that affects the index is _meta.txt.
         if _is_meta_file(path):
             _refresh_folder_meta(path, "changed")
+            return
+        # A document overwritten IN PLACE (same path, new content) must be
+        # re-indexed, or its OLD chunks would linger forever. Re-ingest only when
+        # the file actually changed since its last successful ingest, so routine
+        # modify events (and our own just-finished ingest) don't trigger needless
+        # work. ingest() is idempotent (upsert-then-delete-by-source).
+        if not _is_relevant(path) or not _claim(path):
+            return
+        try:
+            from brag.ingest.pipeline import _ingest_log_states
+            if _changed_since_ingest(path, _ingest_log_states()):
+                print(f"document changed: {path.name} — re-indexing")
+                if _wait_for_stable_file(path):
+                    ingest(path)
+        except Exception as e:  # noqa: BLE001 — watcher must survive anything
+            print(f"re-ingest error for {path.name}: {e}")
+        finally:
+            _release(path)
 
     def on_deleted(self, event):
         if event.is_directory:
@@ -185,12 +224,14 @@ def reconcile_on_startup():
     """Index documents that arrived while the watcher was not running.
     Retries while Qdrant is still booting (compose race at startup)."""
     corpus = None
+    orphans: list[str] = []
     last_error = None
     for attempt in range(6):
         try:
             client = storage.get_client()
             storage.ensure_collection(client)
             corpus = storage.list_corpus_sources(client)
+            orphans = storage.orphaned_collections(client)
             client.close()
             break
         except Exception as e:  # noqa: BLE001
@@ -203,17 +244,50 @@ def reconcile_on_startup():
         # auth or broken volume is otherwise swallowed and undiagnosable here.
         print(f"reconciliation skipped — Qdrant not reachable: {str(last_error)[:160]}")
         return
+    # Surface (never auto-delete) Qdrant collections left over from a previous
+    # embedding backend/dimension — COLLECTION_NAME encodes both, so a change
+    # targets a NEW collection and the old one lingers, consuming disk.
+    if orphans:
+        print("note: leftover Qdrant collection(s) from a previous embedding "
+              f"setting, not in use: {', '.join(orphans)} — they consume disk; "
+              "drop them deliberately (Qdrant dashboard) when you are sure.")
 
-    # Re-drive documents that are absent from the corpus AND documents whose
-    # last ingest was only partial (some chunks failed transiently) — the latter
-    # are in the corpus but still need missing pages retried.
-    from brag.ingest.pipeline import sources_needing_retry
+    from brag.ingest.pipeline import _ingest_log_states, sources_needing_retry
     retry = sources_needing_retry()
+    log_states = _ingest_log_states()
+
+    files = [p for p in sorted(config.SOURCES_DIR.rglob("*"))
+             if p.is_file() and _is_relevant(p)]
+    fs_keys = {config.source_key_from_path(p) for p in files}
+
+    # Prune documents deleted while the watcher was DOWN: the live on_deleted
+    # handler cannot see a deletion that happened with the container stopped (or
+    # a delete event the poller missed), so reconcile removes corpus entries
+    # whose source file is gone. Skip passages (passage:* keys have no file on
+    # disk). GUARD: never prune when the filesystem scan found ZERO files — a
+    # broken/unmounted bind mount would otherwise wipe the entire index.
+    if files:
+        orphaned = sorted(
+            k for k in corpus
+            if k not in fs_keys and not k.startswith("passage:")
+        )
+        if orphaned:
+            print(f"reconciliation: pruning {len(orphaned)} deleted document(s)")
+            for key in orphaned:
+                try:
+                    n = remove_source(key)
+                    print(f"  pruned {key} — {n} chunks removed")
+                except Exception as e:  # noqa: BLE001
+                    print(f"  prune failed for {key}: {str(e)[:80]}")
+
+    # Re-drive documents that are: absent from the corpus; OR whose last ingest
+    # was only partial (transient embedding failures — retry the missing pages);
+    # OR that were edited in place since their last successful ingest (stale).
     backlog = [
-        p for p in sorted(config.SOURCES_DIR.rglob("*"))
-        if p.is_file() and _is_relevant(p)
-        and (config.source_key_from_path(p) not in corpus
-             or config.source_key_from_path(p) in retry)
+        p for p in files
+        if (config.source_key_from_path(p) not in corpus
+            or config.source_key_from_path(p) in retry
+            or _changed_since_ingest(p, log_states))
     ]
     if not backlog:
         print("reconciliation: index is complete")

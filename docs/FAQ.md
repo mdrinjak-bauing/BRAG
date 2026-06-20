@@ -128,8 +128,8 @@ corpus" there is the `.env` **cloud embeddings** option (see [PROFILES.md](PROFI
 cross-encoder reranker is the main CPU cost of a search. Set `RERANK_PROFILE` in
 `.env` to trade quality for speed: `eco` (default) loads 160 candidates and
 reranks 40; `off` skips reranking entirely (fastest); `balanced` and `full`
-rerank more for a strong machine. After editing `.env`, restart the app
-(`docker compose up -d`). Full list: [Backend profiles](PROFILES.md).
+rerank more for a strong machine. After editing `.env`, apply it with
+`docker compose up -d --force-recreate`. Full list: [Backend profiles](PROFILES.md).
 
 **Claude says it found nothing, but the document is there.**
 - Ask Claude to try different phrasings (synonyms, English terms).

@@ -76,13 +76,26 @@ def write_env(profile: str, api_key: str, language: str,
         lines.append(f"{key_env}={api_key}")
     if llm_model:
         lines.append(f"LLM_MODEL={llm_model}")
-    # Preserve known keys the wizard itself does not manage but the user may
-    # have set by hand — a re-run (e.g. to switch provider) must not silently
-    # drop them: the Claude config dir (set by setup.command / setup.bat) and a
-    # custom bridge port / public URL (used when 8765 is already taken).
-    for preserved in ("CLAUDE_CONFIG_DIR", "BRIDGE_HOST_PORT", "BRIDGE_PUBLIC_URL"):
-        if existing.get(preserved):
-            lines.append(f"{preserved}={existing[preserved]}")
+    # Preserve keys the wizard itself does NOT manage but the user may have set
+    # by hand — a re-run (e.g. to switch provider) must never silently drop them:
+    #  - the Claude config dir (set by setup.bat/.command) and a custom bridge
+    #    port / public URL (used when 8765 is already taken);
+    #  - a hand-picked cloud model (LLM_MODEL — only when the wizard did not just
+    #    write one, i.e. cloud profiles), the LLM base URL, and any embedding /
+    #    retrieval overrides, which are advanced .env-only dials. Without this a
+    #    wizard re-run reverted the user to profile defaults.
+    preserved = [
+        "CLAUDE_CONFIG_DIR", "BRIDGE_HOST_PORT", "BRIDGE_PUBLIC_URL",
+        "LLM_BASE_URL", "EMBEDDING_BACKEND", "EMBEDDING_MODEL",
+        "EMBEDDING_DIM", "EMBEDDING_REVISION", "COLLECTION_NAME",
+        "RERANK_PREFETCH", "RERANK_FUSION_LIMIT", "RERANK_BATCH_SIZE",
+        "DEFAULT_TOP_K", "MAX_CHUNKS_PER_SOURCE",
+    ]
+    if not llm_model:
+        preserved.append("LLM_MODEL")
+    for key in preserved:
+        if existing.get(key):
+            lines.append(f"{key}={existing[key]}")
     # Atomic write (temp + replace) so a crash mid-write can't truncate the
     # config, and 0600 because this file holds the API key.
     env_path = WORKSPACE / ".env"

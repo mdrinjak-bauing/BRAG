@@ -36,6 +36,33 @@ def test_source_key_variants_nonempty():
     assert config.source_key_variants("projectA/Bericht")
 
 
+# ── chunk_id collision-resistance (full-text hash, not a 120-char prefix) ──
+def _mk_chunk(text):
+    from brag.ingest.extract import Chunk
+    return Chunk(
+        text=text, chunk_type="text", source_file="A/x",
+        rel_path="sources/A/x.pdf", page_start=1, page_end=1,
+        chapter="", section="", doc_type="doc", author="", year="",
+        language="en",
+    )
+
+
+def test_chunk_id_distinguishes_same_120char_prefix():
+    # Two distinct chunks whose first 120 chars are identical (a long
+    # "[Chapter…][Section…]" prefix, boilerplate, or split table parts) must NOT
+    # collide on one id — else one silently overwrites the other on upsert.
+    common = "x" * 200
+    a, b = _mk_chunk(common + " ALPHA"), _mk_chunk(common + " BETA")
+    assert a.chunk_id != b.chunk_id
+    assert a.qdrant_id() != b.qdrant_id()
+
+
+def test_chunk_id_deterministic_for_identical_chunk():
+    # Same content+location → same id, so an idempotent re-ingest overwrites in
+    # place instead of duplicating.
+    assert _mk_chunk("same text").chunk_id == _mk_chunk("same text").chunk_id
+
+
 # ── H2: page-aware chunking ─────────────────────────────────────
 def test_split_text_paged_keeps_real_page_ranges():
     paras = [(f"P{pg} " + "x" * 600, pg) for pg in range(10, 14)]  # pages 10..13

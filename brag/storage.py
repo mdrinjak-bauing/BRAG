@@ -127,6 +127,20 @@ def patch_source_metadata(client, source_file: str, payload: dict) -> int:
     return count
 
 
+def orphaned_collections(client) -> list[str]:
+    """asb_* collections OTHER than the active one — left behind when the user
+    changed the embedding backend/dimension (COLLECTION_NAME encodes both, so a
+    change targets a NEW collection and the old one lingers, consuming disk).
+    Returned for surfacing only; never auto-deleted (dropping a collection is
+    destructive and the user may be mid-migration)."""
+    try:
+        names = [c.name for c in client.get_collections().collections]
+    except Exception:  # noqa: BLE001 — best-effort housekeeping, never fatal
+        return []
+    return sorted(n for n in names
+                  if n.startswith("asb_") and n != config.COLLECTION_NAME)
+
+
 def list_corpus_sources(client) -> set[str]:
     """All source_file values currently in the collection (NFC-normalized)."""
     sources: set[str] = set()

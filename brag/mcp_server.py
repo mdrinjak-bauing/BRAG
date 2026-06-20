@@ -3,10 +3,12 @@
 Claude Desktop starts this via `docker exec -i brag-app python -m brag.mcp_server`
 inside the running container — the setup wizard writes that config entry.
 
-Tools: search, list_sources, inspect_chunks, save_passage, list_passages.
+Tools: search, list_sources, inspect_chunks, remove_source, rename_source,
+save_passage, list_passages, list_notebook, read_note, write_note.
 """
 
 import re
+import shutil
 from datetime import date
 
 from mcp.server.fastmcp import FastMCP
@@ -192,6 +194,99 @@ def inspect_chunks(source_file: str, page: int = 0, limit: int = 10) -> str:
             f"text: {(pl.get('text') or '')[:600]}\n"
         )
     return "\n".join(out)
+
+
+def _find_source_file(key: str):
+    """Locate the on-disk document under sources/ whose identity key matches
+    `key` (any supported suffix), skipping the ignored _inbox staging area.
+    Returns the Path or None."""
+    for p in config.SOURCES_DIR.rglob("*"):
+        if (p.is_file()
+                and p.suffix.lower() in config.SUPPORTED_SUFFIXES
+                and "_inbox" not in p.parts
+                and config.source_key_from_path(p) == key):
+            return p
+    return None
+
+
+@mcp.tool()
+def remove_source(source_file: str) -> str:
+    """Remove a document from the SEARCH INDEX — use it to drop a wrong,
+    duplicate or outdated source the user no longer wants in results.
+
+    Safe and reversible: the file is NOT deleted, it is moved into
+    sources/_inbox/ (a staging area the watcher ignores) so it can't be
+    re-indexed, and its chunks + literature note are removed from the index.
+    `source_file` is the key shown by list_sources (e.g. 'projects/Bericht').
+    Call once per source."""
+    from brag.ingest.pipeline import remove_source as _remove_source
+
+    key = config.normalize_source_key(source_file)
+    if not key or key.startswith("passage:"):
+        return "Provide a document source_file from list_sources() (not a saved passage)."
+    moved_to = ""
+    src = _find_source_file(key)
+    if src is not None:
+        try:
+            inbox = config.SOURCES_DIR / "_inbox"
+            inbox.mkdir(parents=True, exist_ok=True)
+            dest = inbox / src.name
+            i = 1
+            while dest.exists():
+                dest = inbox / f"{src.stem}_{i}{src.suffix}"
+                i += 1
+            shutil.move(str(src), str(dest))
+            moved_to = dest.name
+        except OSError as e:
+            return f"Could not move the file out of the index: {e}"
+    n = _remove_source(key)
+    if not n and not moved_to:
+        return (f"Nothing to remove — no indexed chunks and no file found for "
+                f"'{source_file}'. Check the exact key via list_sources().")
+    msg = f"Removed `{key}` from the index ({n} chunks)"
+    if moved_to:
+        msg += f"; the file was moved to sources/_inbox/{moved_to} (not deleted)"
+    return msg + "."
+
+
+@mcp.tool()
+def rename_source(source_file: str, new_name: str) -> str:
+    """Rename / re-file an indexed document and update its index metadata IN
+    PLACE (no re-embedding). Renames the FILE under sources/; `new_name` may
+    include a relative folder to also move it (e.g.
+    'projects/School_Center/Final_Report'). The original file suffix is kept if
+    you omit it. `source_file` is the current key from list_sources."""
+    from brag.ingest.pipeline import rename_source as _rename_source
+
+    key = config.normalize_source_key(source_file)
+    if not key or key.startswith("passage:"):
+        return "Provide a document source_file from list_sources() (not a saved passage)."
+    current = _find_source_file(key)
+    if current is None:
+        return (f"No file found for '{source_file}' under sources/. "
+                "Check the exact key via list_sources().")
+    rel = new_name.strip().replace("\\", "/").lstrip("/")
+    if not rel:
+        return "Provide a new name."
+    new_path = config.SOURCES_DIR / rel
+    if new_path.suffix.lower() not in config.SUPPORTED_SUFFIXES:
+        new_path = new_path.with_suffix(current.suffix)
+    try:
+        new_path.resolve().relative_to(config.SOURCES_DIR.resolve())
+    except ValueError:
+        return "Refused: the new name escapes sources/."
+    if new_path.resolve() == current.resolve():
+        return "The new name is the same as the current one."
+    if new_path.exists():
+        return f"A file named {new_path.name} already exists there — choose another name."
+    try:
+        new_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(current), str(new_path))
+    except OSError as e:
+        return f"Could not rename the file: {e}"
+    n = _rename_source(key, new_path)
+    return (f"Renamed to `{config.source_key_from_path(new_path)}` "
+            f"({n} chunks updated in place, no re-embedding).")
 
 
 def _passage_file(topic: str):
