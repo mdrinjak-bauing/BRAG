@@ -149,22 +149,45 @@ def write_claude_config() -> tuple[bool, str]:
         )
 
     config_path = CLAUDE_CONFIG_DIR / "claude_desktop_config.json"
-    existing: dict = {}
-    if config_path.exists():
-        try:
-            existing = json.loads(config_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            backup = config_path.with_suffix(".json.backup")
-            shutil.copy(config_path, backup)
-            return False, (f"Existing Claude config is not valid JSON — backed it up to "
-                           f"{backup.name}; add the MCP entry manually")
-        # Back up the valid config before modifying it.
-        shutil.copy(config_path, config_path.with_suffix(".json.backup"))
 
-    existing.setdefault("mcpServers", {})["academic-rag-and-second-brain"] = MCP_ENTRY
-    tmp = config_path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(existing, indent=2), encoding="utf-8")
-    os.replace(tmp, config_path)
+    def _backup(path) -> None:
+        # copyfile, NOT shutil.copy: shutil.copy ALSO copies the file mode
+        # (chmod), which is "Operation not permitted" on a Windows Docker bind
+        # mount and would crash the whole setup with a PermissionError (the
+        # browser then shows "Failed to fetch" and setup never completes). The
+        # backup is best-effort — it must never abort the wizard.
+        try:
+            shutil.copyfile(path, path.with_suffix(".json.backup"))
+        except OSError:
+            pass
+
+    # NOTHING in here may raise: a crash here returns "Failed to fetch" to the
+    # browser and the setup never completes. On Windows the RELIABLE writer is
+    # the host launcher (tools/merge_claude_config.ps1, called by setup.bat);
+    # this container write is best-effort and works directly on macOS/Linux.
+    try:
+        existing: dict = {}
+        if config_path.exists():
+            try:
+                # utf-8-sig tolerates a BOM that some editors add.
+                existing = json.loads(config_path.read_text(encoding="utf-8-sig"))
+            except json.JSONDecodeError:
+                _backup(config_path)
+                return False, ("Existing Claude config is not valid JSON — backed it "
+                               "up; add the MCP entry manually (see below).")
+            _backup(config_path)
+        existing.setdefault("mcpServers", {})["academic-rag-and-second-brain"] = MCP_ENTRY
+        # Direct write (no temp+os.replace): the atomic-rename dance does not
+        # reliably reach the host on a Windows bind mount, and chmod is forbidden
+        # there. A direct write works on macOS/Linux; on Windows the host
+        # launcher writes the real entry afterwards.
+        config_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+    except OSError as e:
+        return False, (
+            f"Could not write the Claude config from the container "
+            f"({type(e).__name__}); the launcher will set it up, or add the MCP "
+            "entry manually (see below)."
+        )
     return True, "Claude Desktop configured"
 
 
