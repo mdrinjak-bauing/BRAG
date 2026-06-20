@@ -18,6 +18,12 @@ MCP_ENTRY = {
     "args": ["exec", "-i", "brag-app", "python", "-m", "brag.mcp_server"],
 }
 
+# The key under which the entry is registered in claude_desktop_config.json — this
+# is the name Claude Desktop shows the user. Older installs used a longer legacy
+# name; setup migrates them by removing it when it writes MCP_KEY.
+MCP_KEY = "brag"
+LEGACY_MCP_KEYS = ("academic-rag-and-second-brain",)
+
 
 def _env_safe(value: str) -> str:
     """Strip newlines/carriage returns so a wizard-supplied value (e.g. a custom
@@ -38,7 +44,7 @@ def read_existing_env() -> dict:
 
 
 def write_env(profile: str, api_key: str, language: str,
-              vault_path: str = "./wissensspeicher", llm_model: str = "",
+              vault_path: str = "./RAG-Verbindungsordner", llm_model: str = "",
               rerank_profile: str = "eco", vision_enabled: bool = True) -> None:
     existing = read_existing_env()
     # Sanitize every value that gets interpolated into a KEY=value line so a
@@ -63,7 +69,7 @@ def write_env(profile: str, api_key: str, language: str,
         f"PROFILE={profile}",
         f"VAULT_LANGUAGE={language}",
         f"ANSWER_LANGUAGE={answer_lang}",
-        f"VAULT_PATH={vault_path or existing.get('VAULT_PATH') or './wissensspeicher'}",
+        f"VAULT_PATH={vault_path or existing.get('VAULT_PATH') or './RAG-Verbindungsordner'}",
         # Search-quality vs. CPU cost (off/eco/balanced/full) and whether figures
         # are sent to a cloud provider for description. Written explicitly so a
         # later re-run always reflects the wizard's choice, even at the default.
@@ -109,8 +115,8 @@ def write_env(profile: str, api_key: str, language: str,
 
 
 def create_vault() -> bool:
-    """Copy the template to ./wissensspeicher. Returns False if it already existed."""
-    vault = WORKSPACE / "wissensspeicher"
+    """Copy the template to ./RAG-Verbindungsordner. Returns False if it already existed."""
+    vault = WORKSPACE / "RAG-Verbindungsordner"
     if vault.exists():
         return False
     shutil.copytree(VAULT_TEMPLATE, vault)
@@ -189,7 +195,10 @@ def write_claude_config() -> tuple[bool, str]:
                 return False, ("Existing Claude config is not valid JSON — backed it "
                                "up; add the MCP entry manually (see below).")
             _backup(config_path)
-        existing.setdefault("mcpServers", {})["academic-rag-and-second-brain"] = MCP_ENTRY
+        servers = existing.setdefault("mcpServers", {})
+        for _old in LEGACY_MCP_KEYS:
+            servers.pop(_old, None)  # migrate older installs to the new key
+        servers[MCP_KEY] = MCP_ENTRY
         # Direct write (no temp+os.replace): the atomic-rename dance does not
         # reliably reach the host on a Windows bind mount, and chmod is forbidden
         # there. A direct write works on macOS/Linux; on Windows the host

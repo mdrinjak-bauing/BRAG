@@ -136,7 +136,7 @@ def test_write_claude_config_adds_entry_and_backs_up(tmp_path, monkeypatch):
     ok, _ = sc.write_claude_config()
     assert ok
     data = json.loads(cfg.read_text(encoding="utf-8"))
-    assert "academic-rag-and-second-brain" in data["mcpServers"]
+    assert "brag" in data["mcpServers"]
     assert "other" in data["mcpServers"]  # existing MCP servers preserved
     assert (tmp_path / "claude_desktop_config.json.backup").exists()
 

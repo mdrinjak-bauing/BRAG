@@ -15,7 +15,7 @@ try {
 
     if ($dlg.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK -or
             [string]::IsNullOrWhiteSpace($dlg.SelectedPath)) {
-        Write-Host "  No folder chosen - the default folder (wissensspeicher\ next to this program) will be used."
+        Write-Host "  No folder chosen - the default folder (RAG-Verbindungsordner\ next to this program) will be used."
         exit 0
     }
 

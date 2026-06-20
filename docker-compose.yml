@@ -41,7 +41,7 @@ services:
       # solely on the one-shot `setup` service below, so the long-running
       # ingest/bridge process cannot read .env or rewrite the host's Claude
       # Desktop config (defence in depth against a parser/RCE in this container).
-      - ${VAULT_PATH:-./wissensspeicher}:/vault
+      - ${VAULT_PATH:-./RAG-Verbindungsordner}:/vault
       - models_cache:/models
     ports:
       # localhost only — the bridge serves your documents (PDF deep-links); it

@@ -1,3 +1,12 @@
+[project]
+name = "brag"
+version = "0.3.1"  # keep in sync with brag/__init__.py:__version__
+description = "BRAG — Building Retrieval-Augmented Generation: a local, page-cited RAG second brain for Claude Desktop."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Marko Drinjak" }]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"

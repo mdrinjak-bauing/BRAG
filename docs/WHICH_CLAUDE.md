@@ -27,7 +27,7 @@ for:
   chat**.
 - The **PDF deep-links** in every answer open in your browser at the cited page —
   a desktop/chat workflow.
-- Claude Desktop **Projects** let you load your `wissensspeicher/CLAUDE.md` instructions, so
+- Claude Desktop **Projects** let you load your `RAG-Verbindungsordner/CLAUDE.md` instructions, so
   every chat starts grounded in your field and your citation style.
 - It keeps **you in the loop**: ask, read the cited passages, refine. That is
   exactly the research rhythm BRAG is designed around — and it is the most

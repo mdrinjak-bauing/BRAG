@@ -1,5 +1,5 @@
 """Auto-generated literature notes: one markdown file per ingested source,
-Obsidian-compatible, written to wissensspeicher/notes/."""
+Obsidian-compatible, written to RAG-Verbindungsordner/notes/."""
 
 from datetime import date
 from pathlib import Path

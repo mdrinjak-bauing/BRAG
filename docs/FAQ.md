@@ -57,13 +57,14 @@ Then double-click `setup.command` again.
    a window close is not enough.
 2. Check the container is running: `docker ps` should list `brag-app`.
 3. Check the config file (see [OBSIDIAN.md](OBSIDIAN.md) for the path)
-   contains the `academic-rag-and-second-brain` entry.
+   contains the `brag` entry (older installs may show the longer legacy name
+   until you re-run setup).
 
 ## Indexing
 
 **Which file types can I add?**
 PDF, Word (`.docx`), PowerPoint (`.pptx`), Markdown (`.md`) and HTML — just drop
-them into `wissensspeicher/sources/`. Page-precise deep-links work for PDFs; the
+them into `RAG-Verbindungsordner/sources/`. Page-precise deep-links work for PDFs; the
 other formats are indexed and searchable but cited without a page link.
 **Excel (`.xlsx`) is not supported yet.**
 
@@ -86,7 +87,7 @@ The hybrid/local profiles are slower than the cloud profiles.
 **"Rate limit" messages during indexing (Cloud profile).**
 The free Gemini tier has per-minute/per-day limits. The system waits and
 retries automatically — let it run; nothing is lost. Failed chunks are
-recorded in `wissensspeicher/.brag/failed_chunks.jsonl`.
+recorded in `RAG-Verbindungsordner/.brag/failed_chunks.jsonl`.
 
 **Are figures/images analyzed?**
 Yes. The **vision pass** is on by default: on ingest each figure image is sent
@@ -172,10 +173,10 @@ Docker Desktop's autostart brings it back after a reboot.
 
 **How do I update to a new version?**
 Download the new release, replace the folder contents (keep your `.env` and
-`wissensspeicher/`), then `docker compose build && docker compose up -d`.
+`RAG-Verbindungsordner/`), then `docker compose build && docker compose up -d`.
 
 **How do I back up?**
-Your documents and notes are in `wissensspeicher/` — back that folder up like any
+Your documents and notes are in `RAG-Verbindungsordner/` — back that folder up like any
 other folder. The search index can always be rebuilt from the knowledge store (delete
 nothing, just let reconciliation re-index after a restore).
 
@@ -195,7 +196,7 @@ seconds; you can watch for the *"document changed … re-indexing"* line in
 **Can I delete the project folder or the ZIP?**
 You can delete the **ZIP** after unpacking. But **keep the project folder** (the
 unpacked ZIP) — it holds your configuration (`.env`), the controls
-(`docker-compose.yml`) and, by default, your knowledge store (`wissensspeicher/`) with all your
+(`docker-compose.yml`) and, by default, your knowledge store (`RAG-Verbindungsordner/`) with all your
 documents. Deleting it would remove your knowledge base and make starting/
 stopping impossible. Moving it is fine. The ~3 GB of models live in Docker's
 storage, not in the folder, so deleting it won't free that space.

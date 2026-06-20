@@ -16,14 +16,14 @@ both retrieval and page-citation behaviour:
                                    pages, not collapse everything to page 1).
 
 Runs on the CI runner (needs ``fpdf2``), writing into the
-``wissensspeicher/sources/`` folder that docker-compose bind-mounts into /vault.
+``RAG-Verbindungsordner/sources/`` folder that docker-compose bind-mounts into /vault.
 """
 
 from pathlib import Path
 
 from fpdf import FPDF
 
-SOURCES = Path("wissensspeicher/sources")
+SOURCES = Path("RAG-Verbindungsordner/sources")
 
 # ~2 KB of ordinary body text so a page is dense enough to form its own chunk
 # (MAX_CHUNK_CHARS defaults to 2000), which is what makes the H2 fixture force

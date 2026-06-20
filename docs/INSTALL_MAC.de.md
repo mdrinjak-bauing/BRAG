@@ -99,7 +99,7 @@ Terminal-Fenster baut nun im Hintergrund die Docker-Container und lädt einmalig
 
 ## 5. Erstes Dokument
 
-**Was du tust:** Lege eine PDF-Datei in den Ordner `wissensspeicher/sources/` (innerhalb
+**Was du tust:** Lege eine PDF-Datei in den Ordner `RAG-Verbindungsordner/sources/` (innerhalb
 des Projektordners).
 
 **Was du siehst:** Nichts Sichtbares — die Verarbeitung läuft im Hintergrund.

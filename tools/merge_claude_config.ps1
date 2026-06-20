@@ -10,7 +10,7 @@
 # and verifies the entry landed.
 
 $ErrorActionPreference = "Stop"
-$name  = "academic-rag-and-second-brain"
+$name  = "brag"
 $entry = [ordered]@{
     command = "docker"
     args    = @("exec", "-i", "brag-app", "python", "-m", "brag.mcp_server")
@@ -36,6 +36,11 @@ if ($null -eq $root) { $root = [pscustomobject]@{} }
 # Ensure an mcpServers object exists, then add/replace ONLY our entry.
 if (-not ($root.PSObject.Properties.Name -contains "mcpServers") -or $null -eq $root.mcpServers) {
     $root | Add-Member -NotePropertyName mcpServers -NotePropertyValue ([pscustomobject]@{}) -Force
+}
+# Migrate older installs: drop the previous long key name if present, so the user
+# isn't left with a duplicate/orphan connection under the old name.
+if ($root.mcpServers.PSObject.Properties.Name -contains "academic-rag-and-second-brain") {
+    $root.mcpServers.PSObject.Properties.Remove("academic-rag-and-second-brain")
 }
 $root.mcpServers | Add-Member -NotePropertyName $name -NotePropertyValue ([pscustomobject]$entry) -Force
 

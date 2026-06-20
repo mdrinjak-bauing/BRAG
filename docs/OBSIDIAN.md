@@ -8,7 +8,7 @@ perfect way to read and write it.
 ## Part 1: Open the knowledge store in Obsidian
 
 1. Install [Obsidian](https://obsidian.md) (free).
-2. "Open folder as vault" → choose the `wissensspeicher/` folder inside your
+2. "Open folder as vault" → choose the `RAG-Verbindungsordner/` folder inside your
    BRAG directory.
 3. Done. Literature notes appear in `notes/`, your saved passages in
    `passages/`, your own thinking goes into `wiki/`.

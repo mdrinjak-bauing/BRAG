@@ -148,7 +148,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 profile=str(body.get("profile", "cloud")),
                 api_key=str(body.get("api_key", "")),
                 language=str(body.get("language", "english")),
-                vault_path=str(body.get("vault_path", "")).strip() or "./wissensspeicher",
+                vault_path=str(body.get("vault_path", "")).strip() or "./RAG-Verbindungsordner",
                 llm_model=str(body.get("llm_model", "")).strip(),
                 rerank_profile=str(body.get("rerank_profile", "eco")).strip() or "eco",
                 vision_enabled=bool(body.get("vision_enabled", True)),
@@ -166,7 +166,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         else:
             created = setup_core.create_vault()
             steps.append({"ok": True, "message":
-                          "Knowledge folder created (wissensspeicher/)" if created
+                          "Knowledge folder created (RAG-Verbindungsordner/)" if created
                           else "Knowledge folder already exists — kept untouched"})
 
         claude_ok, claude_msg = setup_core.write_claude_config()
@@ -182,7 +182,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
             # Hand the exact JSON entry back so the user can paste it directly,
             # instead of being sent to the FAQ.
             response["claude_snippet"] = json.dumps(
-                {"mcpServers": {"academic-rag-and-second-brain": setup_core.MCP_ENTRY}},
+                {"mcpServers": {setup_core.MCP_KEY: setup_core.MCP_ENTRY}},
                 indent=2,
             )
             response["claude_config_path"] = (

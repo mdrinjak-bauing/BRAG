@@ -48,34 +48,45 @@ def _mark_not_indexed(path: Path) -> None:
     """Make a non-indexable document VISIBLE to the user. A scanned PDF without
     a text layer yields zero chunks and would otherwise vanish silently from the
     corpus — the user keeps believing it is searchable. We append one line per
-    affected file to NICHT-INDEXIERT.md in the wissensspeicher root (next to
-    sources/notes, where the user will actually see it). Idempotent: a file
-    already listed is not added again. Fully best-effort — never crashes the
-    ingest (the on-screen log line is printed regardless by the caller)."""
+    affected file to a marker file in the knowledge-store root (next to
+    sources/notes, where the user will actually see it); its name and text follow
+    VAULT_LANGUAGE. Idempotent: a file already listed is not added again. Fully
+    best-effort — never crashes the ingest (the on-screen log line is printed
+    regardless by the caller)."""
+    german = config.VAULT_LANGUAGE.strip().lower().startswith("german")
+    if german:
+        marker_name = "NICHT-INDEXIERT.md"
+        header = (
+            "# Nicht indexierte Dokumente\n\n"
+            "Diese Dateien konnten nicht in den Wissensspeicher aufgenommen "
+            "werden und sind daher **nicht durchsuchbar**.\n\n"
+        )
+        reason = ("vermutlich gescanntes PDF ohne Textebene, nicht durchsuchbar; "
+                  "ggf. OCR anwenden und erneut ablegen")
+    else:
+        marker_name = "NOT-INDEXED.md"
+        header = (
+            "# Documents that could not be indexed\n\n"
+            "These files could not be added to the knowledge store and are "
+            "therefore **not searchable**.\n\n"
+        )
+        reason = ("likely a scanned PDF without a text layer, not searchable; "
+                  "apply OCR and drop it in again")
     try:
-        marker = config.VAULT / "NICHT-INDEXIERT.md"
+        marker = config.VAULT / marker_name
         name = config.normalize_source_key(path.name)
         existing = ""
         if marker.exists():
             existing = marker.read_text(encoding="utf-8")
             if name in existing:
                 return
-        header = (
-            "# Nicht indexierte Dokumente\n\n"
-            "Diese Dateien konnten nicht in den Wissensspeicher aufgenommen "
-            "werden und sind daher **nicht durchsuchbar**.\n\n"
-        )
         config.VAULT.mkdir(parents=True, exist_ok=True)
         with open(marker, "a", encoding="utf-8") as f:
             if not existing:
                 f.write(header)
-            f.write(
-                f"- `{name}` — {date.today().isoformat()} — vermutlich "
-                "gescanntes PDF ohne Textebene, nicht durchsuchbar; "
-                "ggf. OCR anwenden und erneut ablegen\n"
-            )
+            f.write(f"- `{name}` — {date.today().isoformat()} — {reason}\n")
     except Exception as e:  # noqa: BLE001 — marking must never fail the ingest
-        print(f"  could not write NICHT-INDEXIERT.md marker (non-fatal): {e}")
+        print(f"  could not write the not-indexed marker (non-fatal): {e}")
 
 
 def _append_ingest_log(source_file: str, path: Path, n_chunks: int,

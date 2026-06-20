@@ -43,7 +43,7 @@ if [ -n "$RAGDIR" ]; then
   echo "VAULT_PATH=$RAGDIR" >> .env
   echo "  RAG connection folder: $RAGDIR"
 else
-  echo "  No folder chosen — the default folder (wissensspeicher/) will be used."
+  echo "  No folder chosen — the default folder (RAG-Verbindungsordner/) will be used."
 fi
 
 # Prefer the prebuilt image from GHCR (fast, avoids local build errors); fall

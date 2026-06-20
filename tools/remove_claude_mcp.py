@@ -9,7 +9,7 @@ on the host, e.g.:
 
 Behaviour (mirrors, in reverse, brag/setup_core.py:write_claude_config):
 - Backs up the config to <name>.json.backup before changing anything.
-- Removes ONLY the 'academic-rag-and-second-brain' key — other MCP servers stay.
+- Removes ONLY BRAG's key ('brag', plus the legacy name) — other MCP servers stay.
 - Drops an empty 'mcpServers' object afterwards.
 - No-op (exit 0) if the file, the mcpServers section, or the key is absent.
 - On unreadable/invalid JSON: leaves the file untouched and asks the user to
@@ -21,7 +21,8 @@ import os
 import shutil
 import sys
 
-KEY = "academic-rag-and-second-brain"
+KEY = "brag"
+LEGACY_KEYS = ("academic-rag-and-second-brain",)
 
 
 def main(path: str) -> int:
@@ -40,12 +41,15 @@ def main(path: str) -> int:
         return 1
 
     servers = cfg.get("mcpServers")
-    if not isinstance(servers, dict) or KEY not in servers:
+    keys = [k for k in (KEY, *LEGACY_KEYS)
+            if isinstance(servers, dict) and k in servers]
+    if not keys:
         print(f"BRAG entry '{KEY}' not found — nothing to remove.")
         return 0
 
     shutil.copy(path, path + ".backup")
-    del servers[KEY]
+    for k in keys:
+        del servers[k]
     if not servers:
         cfg.pop("mcpServers", None)
 

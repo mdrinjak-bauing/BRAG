@@ -63,13 +63,14 @@ Dann erneut einen Doppelklick auf `setup.command` machen.
    öffnen — ein Schließen des Fensters genügt nicht.
 2. Prüfen, ob der Container läuft: `docker ps` sollte `brag-app` auflisten.
 3. Prüfen, ob die Konfigurationsdatei (Pfad siehe [OBSIDIAN.de.md](OBSIDIAN.de.md))
-   den Eintrag `academic-rag-and-second-brain` enthält.
+   den Eintrag `brag` enthält (ältere Installationen zeigen ggf. noch den langen
+   Alt-Namen, bis du das Setup erneut ausführst).
 
 ## Indexierung
 
 **Welche Dateitypen kann ich ablegen?**
 PDF, Word (`.docx`), PowerPoint (`.pptx`), Markdown (`.md`) und HTML — einfach in
-`wissensspeicher/sources/` legen. Seitengenaue Deep-Links gibt es bei PDFs; die
+`RAG-Verbindungsordner/sources/` legen. Seitengenaue Deep-Links gibt es bei PDFs; die
 anderen Formate werden indexiert und durchsucht, aber ohne Seiten-Link zitiert.
 **Excel (`.xlsx`) wird noch nicht unterstützt.**
 
@@ -94,7 +95,7 @@ Cloud-Profile.
 **„Rate limit"-Meldungen während der Indexierung (Cloud-Profil).**
 Der kostenlose Gemini-Tarif hat Limits pro Minute/Tag. Das System wartet und
 versucht es automatisch erneut — einfach laufen lassen; nichts geht verloren.
-Fehlgeschlagene Abschnitte werden in `wissensspeicher/.brag/failed_chunks.jsonl` vermerkt.
+Fehlgeschlagene Abschnitte werden in `RAG-Verbindungsordner/.brag/failed_chunks.jsonl` vermerkt.
 
 **Werden Abbildungen/Bilder ausgewertet?**
 Ja. Standardmäßig ist der **Vision-Pass** aktiv: Jedes Abbildungsbild wird beim
@@ -186,10 +187,10 @@ von Docker Desktop bringt es nach einem Neustart zurück.
 
 **Wie aktualisiere ich auf eine neue Version?**
 Die neue Version herunterladen, den Ordnerinhalt ersetzen (deine `.env` und
-`wissensspeicher/` behalten), dann `docker compose build && docker compose up -d`.
+`RAG-Verbindungsordner/` behalten), dann `docker compose build && docker compose up -d`.
 
 **Wie sichere ich meine Daten?**
-Deine Dokumente und Notizen liegen in `wissensspeicher/` — sichere diesen Ordner wie jeden
+Deine Dokumente und Notizen liegen in `RAG-Verbindungsordner/` — sichere diesen Ordner wie jeden
 anderen. Der Suchindex lässt sich jederzeit aus deinem Wissensspeicher neu aufbauen (nichts
 löschen; nach einer Wiederherstellung gleicht das System nach einem Neustart neu
 ab).
@@ -207,7 +208,7 @@ löschen und die neue Fassung neu ablegen).
 Die **ZIP-Datei** kannst du nach dem Entpacken löschen. Den **Projektordner**
 (die entpackte ZIP) aber **behalten** — er enthält deine Konfiguration (`.env`),
 die Steuerung (`docker-compose.yml`) und standardmäßig deinen Wissensspeicher
-(`wissensspeicher/`) mit allen Dokumenten. Löschen würde deine Wissensbasis entfernen und
+(`RAG-Verbindungsordner/`) mit allen Dokumenten. Löschen würde deine Wissensbasis entfernen und
 das Starten/Stoppen unmöglich machen. Verschieben ist in Ordnung. Die ~3 GB
 Modelle liegen ohnehin in Dockers Speicher, nicht im Ordner — Löschen gibt
 diesen Platz also nicht frei.

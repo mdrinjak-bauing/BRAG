@@ -17,7 +17,7 @@ from brag import config, storage
 from brag.http_bridge import pdf_link
 from brag.search.query import search as run_search
 
-mcp = FastMCP("academic-rag-and-second-brain")
+mcp = FastMCP("brag")
 
 PREVIEW_CHARS = 1000  # tables are never truncated, text gets a preview
 
@@ -128,7 +128,7 @@ def list_sources(doc_type: str = "") -> str:
     finally:
         client.close()
     if not counts:
-        return "The index is empty — drop documents into wissensspeicher/sources/."
+        return "The index is empty — drop documents into RAG-Verbindungsordner/sources/."
     by_type: dict[str, list] = {}
     for (dtype, src), n in sorted(counts.items()):
         if doc_type and dtype != doc_type:
@@ -300,7 +300,7 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
                  note: str = "") -> str:
     """Save a quotable passage under a topic (e.g. a chapter or theme).
 
-    Builds your evidence base in wissensspeicher/passages/<topic>.md AND indexes
+    Builds your evidence base in RAG-Verbindungsordner/passages/<topic>.md AND indexes
     the passage for semantic search, so a later chat (even with a different
     provider) finds it again via `search` — it appears as a clearly marked
     "saved passage", distinct from primary sources. Use this to persist the

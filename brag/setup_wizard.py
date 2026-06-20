@@ -77,18 +77,18 @@ def main():
                          rerank_profile="eco", vision_enabled=True)
     print("  configuration saved")
     created = setup_core.create_vault()
-    print("  wissensspeicher/ created" if created else "  wissensspeicher/ already exists — kept")
+    print(f"  RAG-Verbindungsordner/ {'created' if created else 'already exists — kept'}")
     claude_ok, claude_msg = setup_core.write_claude_config()
     print(f"  {claude_msg}")
     if not claude_ok:
         import json
         print("  Add this entry manually to claude_desktop_config.json:")
-        print(json.dumps({"academic-rag-and-second-brain": setup_core.MCP_ENTRY}, indent=2))
+        print(json.dumps({setup_core.MCP_KEY: setup_core.MCP_ENTRY}, indent=2))
     setup_core.mark_setup_complete()
 
     print("\n=== Setup complete ===")
     print("1. Quit Claude Desktop completely and reopen it.")
-    print("2. Drop a PDF into wissensspeicher/sources/.")
+    print("2. Drop a PDF into RAG-Verbindungsordner/sources/.")
     print("3. Ask Claude: 'What documents are in my knowledge base?'")
     if profile in ("hybrid", "local"):
         app = "LM Studio" if profile == "hybrid" else "Ollama"

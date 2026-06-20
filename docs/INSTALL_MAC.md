@@ -90,7 +90,7 @@ minutes, first time only).
 
 ## 5. First document
 
-**What to do:** Put a PDF into the `wissensspeicher/sources/` folder (inside the project
+**What to do:** Put a PDF into the `RAG-Verbindungsordner/sources/` folder (inside the project
 folder).
 
 **What you see:** Nothing visible — processing runs in the background. Note that

@@ -39,10 +39,10 @@ if [ ! -f "$CFG" ]; then
   echo "          $CFG"
   echo "          Fix: start Claude Desktop once so it creates the config, then"
   echo "          re-run setup.command."
-elif grep -q "academic-rag-and-second-brain" "$CFG"; then
-  echo "  [ OK ]  Claude Desktop is connected to the search tools"
+elif grep -q "brag.mcp_server" "$CFG"; then
+  echo "  [ OK ]  Claude Desktop is connected to the BRAG tools"
 else
-  echo "  [FAIL]  Claude Desktop entry 'academic-rag-and-second-brain' missing in:"
+  echo "  [FAIL]  Claude Desktop BRAG connection 'brag' missing in:"
   echo "          $CFG"
   echo "          Fix: re-run setup.command (it shows the exact entry to paste if"
   echo "          it cannot write it), then fully quit Claude Desktop (Cmd+Q) and"

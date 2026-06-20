@@ -36,10 +36,10 @@ docker ps --format "{{.Names}}" | findstr /x "brag-app" >nul && (
 REM 4. Claude Desktop wired up?
 set "CFG=%APPDATA%\Claude\claude_desktop_config.json"
 if exist "%CFG%" (
-  findstr /c:"academic-rag-and-second-brain" "%CFG%" >nul && (
-    echo   [ OK ]  Claude Desktop is connected to the search tools
+  findstr /c:"brag.mcp_server" "%CFG%" >nul && (
+    echo   [ OK ]  Claude Desktop is connected to the BRAG tools
   ) || (
-    echo   [FAIL]  Claude Desktop entry 'academic-rag-and-second-brain' missing
+    echo   [FAIL]  Claude Desktop BRAG connection 'brag' missing
     echo           in %CFG%
     echo           Fix: re-run setup.bat ^(it shows the exact entry to paste if it
     echo           cannot write it^), then fully quit Claude Desktop
