@@ -72,14 +72,14 @@ Praxis — hat zwei Hälften, und ihre strikte Trennung ist der Kern dieses Desi
 
 |  | 📚 **Deine Bibliothek** | 📓 **Dein Notizbuch** |
 |---|---|---|
-| Ordner | `RAG-Verbindungsordner/sources/` | `RAG-Verbindungsordner/wiki/`, `RAG-Verbindungsordner/notes/` |
+| Ordner | `WissensWIKI/sources/` | `WissensWIKI/wiki/`, `WissensWIKI/notes/` |
 | Enthält | externe Quellen: Paper, Bücher, Berichte | **dein eigenes Denken**: Konzepte, Entwürfe, Lesenotizen |
 | Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | bewusst **nein** |
 | Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die optionale Obsidian-Anbindung |
 
 **Dazu eine dritte Ebene dazwischen — gespeicherte Passagen.** Wenn du Claude
 (in Claude Desktop) sagst *„speichere diese Passage"*, schreibt es das Zitat
-(mit Quelle und Seite) nach `RAG-Verbindungsordner/passages/` **und indexiert es** —
+(mit Quelle und Seite) nach `WissensWIKI/passages/` **und indexiert es** —
 sodass jeder spätere Chat, sogar bei einem anderen KI-Anbieter, es über `search`
 wiederfindet, klar als *deine gespeicherte Passage* markiert. Das ist kuratierte
 Evidenz, die du behalten wolltest (ein echtes Zitat aus einer echten Quelle),
@@ -134,7 +134,7 @@ in **[So funktioniert's](docs/HOW_IT_WORKS.de.md)** — hier das Wichtigste.
 installieren (und mit Versionskonflikten zu kämpfen), startet Docker eine fertig
 geschnürte Box, die auf jedem Rechner identisch ist. Du installierst einmal
 Docker Desktop; den Rest startet das Projekt. Die ~3 GB Modelle liegen in Dockers
-verwaltetem Speicher — **nicht** in deinem Projektordner; dein `RAG-Verbindungsordner/` enthält
+verwaltetem Speicher — **nicht** in deinem Projektordner; dein `WissensWIKI/` enthält
 nur deine eigenen Dateien.
 
 ![Pipeline: Einlesen und Abfrage](docs/assets/pipeline.svg)
@@ -298,7 +298,7 @@ mit [LM Studio](https://lmstudio.ai).
    KI rechnen soll, deinen Schlüssel (mit Live-Prüfung), die Dokumentsprache.
    Er schreibt die ganze Konfiguration selbst — **du editierst nie eine Datei.**
 3. **Claude Desktop komplett beenden** (Cmd+Q / Tray → Beenden) und neu öffnen.
-4. **Ein PDF in `RAG-Verbindungsordner/sources/` legen** — binnen Sekunden automatisch indexiert.
+4. **Ein PDF in `WissensWIKI/sources/` legen** — binnen Sekunden automatisch indexiert.
 5. Claude fragen: *„Welche Dokumente sind in meiner Wissensbasis?"*
 
 **Läuft alles?** Doppelklick auf `status.command` (Mac) bzw. `status.bat`
@@ -307,7 +307,7 @@ KI-Anschluss — ✓/✗ pro Punkt.
 
 **BRAG entfernen?** Doppelklick auf `uninstall.command` (Mac) bzw. `uninstall.bat`
 (Windows): entfernt Container, Modell-Cache, App-Image und die
-Claude-Desktop-Verbindung — **deine Dokumente** (`RAG-Verbindungsordner/`) und der
+Claude-Desktop-Verbindung — **deine Dokumente** (`WissensWIKI/`) und der
 Suchindex **bleiben erhalten**, eine Neuinstallation findet sie wieder. Den
 Projektordner danach löschen, wenn du die Dateien nicht mehr brauchst.
 
@@ -331,33 +331,40 @@ siehst": [Installation macOS](docs/INSTALL_MAC.de.md) ·
 
 ## Dein Wissensspeicher
 
-Hier die wichtigste Unterscheidung — **zwei Ordner, zwei Rollen:**
+Hier die wichtigste Unterscheidung — **ein Verbindungsordner, darin zwei Rollen:**
 
-- **Der Projektordner** = das **Programm** (die entpackte ZIP). Den brauchst du
-  zum Starten/Stoppen; **nicht löschen.** *Wo* er liegt, ist egal
-  (Arbeits-/Projektverzeichnis, OneDrive …) — Hauptsache, er bleibt liegen.
-- **Dein Wissensspeicher** = deine **Inhalte**. Standardmäßig ist das der
-  Unterordner `RAG-Verbindungsordner/` *im* Projektordner. Beim Setup kannst du
-  stattdessen einen **bestehenden Ordner** angeben — z. B. deinen vorhandenen
-  „Projekt XY"-Ordner — und ihm beim Einrichten Zugriff geben.
+Beim Setup wählst (oder erstellst) du einen **RAG-Verbindungsordner** an einem
+beliebigen Ort (Desktop, Dokumente, OneDrive …). BRAG ordnet sich darin in **zwei
+Ordner:**
 
-**Die eine Regel, die alles erklärt:** Durchsucht wird genau **dieser eine
-Ordner**. Alles, was du in `sources/` legst, wandert automatisch in die
-Suchdatenbank (den Index); nimmst du eine Datei wieder heraus oder löschst sie,
-verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem
-Rechner angefasst.
+- **`WissensWIKI/`** = deine **Inhalte** — Dokumente, Notizen und gespeicherte
+  Passagen. Nur dieser Ordner wird durchsucht; er gehört dir, also sichere ihn.
+- **`RAG Setup/`** = das **Programm** (hier landet die entpackte ZIP). Das
+  brauchst du zum Starten/Stoppen; **nicht löschen** — öffnen musst du es nie.
 
-So ist der Wissensspeicher aufgebaut:
+*(Überspringst du die Ordnerauswahl, installiert BRAG an Ort und Stelle und legt
+`WissensWIKI/` direkt neben das Programm — dieselben zwei Rollen, eine Ebene
+weniger.)*
+
+**Die eine Regel, die alles erklärt:** Durchsucht wird genau der Ordner
+**`WissensWIKI/`**. Alles, was du in `WissensWIKI/sources/` legst, wandert
+automatisch in die Suchdatenbank (den Index); nimmst du eine Datei wieder heraus
+oder löschst sie, verschwindet sie auch aus der Datenbank. Sonst wird **nichts**
+auf deinem Rechner angefasst.
+
+So sieht es auf der Festplatte aus:
 
 ```
-RAG-Verbindungsordner/
-├── CLAUDE.md      ← bringt Claude dein Fachgebiet bei (hier trägst du es ein)
-├── AGENTS.md      ← Zusatzregeln für autonome Agenten-Aufgaben
-├── sources/       ← 📚 Dokumente hier ablegen (PDF, DOCX); Unterordner = Dokumenttypen
-│   └── _inbox/    ← Staging-Bereich, ignoriert (hier parkt auch remove_source entfernte Quellen)
-├── notes/         ← auto-generierte Literaturnotiz pro Quelle
-├── passages/      ← über Claude gespeicherte Zitate, nach Themen
-└── wiki/          ← 📓 dein eigenes Denken — wird nie indexiert
+<dein RAG-Verbindungsordner>/
+├── WissensWIKI/          ← 📚 dein Wissen (genau das wird durchsucht)
+│   ├── CLAUDE.md      ← bringt Claude dein Fachgebiet bei (hier trägst du es ein)
+│   ├── AGENTS.md      ← Zusatzregeln für autonome Agenten-Aufgaben
+│   ├── sources/       ← 📚 Dokumente hier ablegen (PDF, DOCX); Unterordner = Dokumenttypen
+│   │   └── _inbox/    ← Staging-Bereich, ignoriert (hier parkt auch remove_source entfernte Quellen)
+│   ├── notes/         ← auto-generierte Literaturnotiz pro Quelle
+│   ├── passages/      ← über Claude gespeicherte Zitate, nach Themen
+│   └── wiki/          ← 📓 dein eigenes Denken — wird nie indexiert
+└── RAG Setup/            ← das Programm (setup.bat / setup.command liegen hier)
 ```
 
 Änderungen in `sources/` werden automatisch nachgezogen: Benennst du eine
@@ -408,7 +415,7 @@ automatisch auf, ohne neu einzulesen.
 **Im Alltag** legst du neue Literatur einfach in `sources/` ab (in Minuten
 indexiert) und fragst Claude, was sie zu deinem Bestand ergänzt oder ob sie ihm
 widerspricht — Antwort mit seitenverlinkten Belegen. Korrigierst du Claude
-zweimal dieselbe Sache, gehört die Korrektur in **`RAG-Verbindungsordner/CLAUDE.md`**,
+zweimal dieselbe Sache, gehört die Korrektur in **`WissensWIKI/CLAUDE.md`**,
 nicht in den nächsten Chat — eine gepflegte Instruktionsdatei macht aus einem
 generischen Assistenten *deinen* (Beispiele:
 [docs/CUSTOMIZE_CLAUDE.de.md](docs/CUSTOMIZE_CLAUDE.de.md)).
@@ -445,7 +452,7 @@ Mögliche Ausbaurichtungen (offene Architektur, noch nicht fertig eingebaut):
   Claude auch dort nachschlagen oder Einträge vorbereiten kann.
 - **Automatisierungen** — automatische Datei-Benennung, regelmäßige
   Zusammenfassungen neuer Quellen, watcher-getriggerte Reports, geplante
-  Aufgaben über Agenten-Sitzungen (Regeln dafür in `RAG-Verbindungsordner/AGENTS.md`).
+  Aufgaben über Agenten-Sitzungen (Regeln dafür in `WissensWIKI/AGENTS.md`).
 
 Ein Coding-Agent kann genau solche Erweiterungen Schritt für Schritt umsetzen —
 ein neues MCP-Werkzeug hier, ein zusätzlicher Pipeline-Schritt dort. Wenn du in
@@ -524,7 +531,7 @@ Aktuelle Version: **0.3.3** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHA
   leichtgewichtiges Metadaten-Update statt einer vollen Neu-Indexierung.
   Sicherheits-Härtung der Setup-Bridge (Host-Header-Allowlist, statische Dateien
   nur als Download, atomare Config-Schreibvorgänge). Wissensspeicher-Ordner
-  umbenannt `vault/` → `RAG-Verbindungsordner/`. Neues Dokument: welche Claude-Oberfläche
+  umbenannt `vault/` → `WissensWIKI/`. Neues Dokument: welche Claude-Oberfläche
   wann (Chat / Cowork / Code).
 - **0.2.0** — Neben Google Gemini jetzt auch **OpenAI/ChatGPT** und
   **Anthropic/Claude** als Cloud-Anbieter. Zweisprachiger Einrichtungs-Assistent.

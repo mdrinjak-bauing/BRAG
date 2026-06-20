@@ -63,6 +63,19 @@ def test_chunk_id_deterministic_for_identical_chunk():
     assert _mk_chunk("same text").chunk_id == _mk_chunk("same text").chunk_id
 
 
+# ── write_env preserves a host-set VAULT_PATH (relocation safety) ──
+def test_write_env_preserves_existing_vault_path(tmp_path, monkeypatch):
+    # Critical: an empty wizard vault field must NOT overwrite the absolute
+    # VAULT_PATH the host launcher wrote (e.g. <RAG folder>\WissensWIKI) — else
+    # the relocated vault is silently repointed to the in-project default.
+    import brag.setup_core as sc
+    monkeypatch.setattr(sc, "WORKSPACE", tmp_path)
+    (tmp_path / ".env").write_text("VAULT_PATH=D:/RAGfolder/WissensWIKI\n", encoding="utf-8")
+    sc.write_env(profile="gemini", api_key="", language="english", vault_path="")
+    out = (tmp_path / ".env").read_text(encoding="utf-8")
+    assert "VAULT_PATH=D:/RAGfolder/WissensWIKI" in out
+
+
 # ── H2: page-aware chunking ─────────────────────────────────────
 def test_split_text_paged_keeps_real_page_ranges():
     paras = [(f"P{pg} " + "x" * 600, pg) for pg in range(10, 14)]  # pages 10..13

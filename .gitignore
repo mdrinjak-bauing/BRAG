@@ -4,6 +4,7 @@
 .claude-config-unset/
 
 # User data (default knowledge store; older default names kept for older setups)
+WissensWIKI/
 RAG-Verbindungsordner/
 wissensspeicher/
 vault/

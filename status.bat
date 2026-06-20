@@ -51,5 +51,15 @@ if exist "%CFG%" (
   echo           re-run setup.bat.
 )
 
+REM 5. LM Studio wired up (only if LM Studio is installed)?
+if exist "%USERPROFILE%\.lmstudio\mcp.json" (
+  findstr /c:"brag.mcp_server" "%USERPROFILE%\.lmstudio\mcp.json" >nul && (
+    echo   [ OK ]  LM Studio is connected to the BRAG tools
+  ) || (
+    echo   [note]  LM Studio is installed but not connected - re-run setup.bat,
+    echo           then fully restart LM Studio.
+  )
+)
+
 echo.
 pause

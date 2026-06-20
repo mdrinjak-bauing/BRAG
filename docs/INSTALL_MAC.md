@@ -67,6 +67,12 @@ set up automatically in step 4 — nothing to do here yet.
      **Open** → **Open** again in the dialog. (This is normal for any unsigned
      downloaded script — you only confirm it once.)
 
+**First, a folder picker opens.** Choose *where* BRAG should live — pick or create
+your **RAG connection folder** (e.g. on your Desktop). BRAG copies the program
+into a `RAG Setup` subfolder, creates your `WissensWIKI` knowledge folder next to
+it, and continues from there in a fresh window. *(Cancel the picker to install in
+place instead.)*
+
 **What you see:** A small black Terminal window opens and, shortly after, **your
 browser opens automatically** with the setup assistant. There you answer, in
 plain language:
@@ -78,7 +84,8 @@ plain language:
   never sent to the makers of this app or any third party; the live check just
   sends one small test request to that provider to confirm the key works. The
   local profile (LM Studio) needs no key at all.
-- **Your document language** and, optionally, a custom knowledge store folder.
+- **Your document language.** (Your knowledge folder was already chosen by the
+  folder picker above.)
 
 At the end the assistant writes the whole configuration itself — including the
 Claude Desktop entry. **You never edit a single file.** The Terminal then builds
@@ -90,8 +97,8 @@ minutes, first time only).
 
 ## 5. First document
 
-**What to do:** Put a PDF into the `RAG-Verbindungsordner/sources/` folder (inside the project
-folder).
+**What to do:** Put a PDF into the `WissensWIKI/sources/` folder (in your RAG
+connection folder, next to `RAG Setup`).
 
 **What you see:** Nothing visible — processing runs in the background. Note that
 the **very first** document also downloads the Docling layout models, so this one
@@ -131,5 +138,7 @@ Now ask Claude:
   To stop manually: open Terminal in the project folder, `docker compose down`.
   To start: `docker compose up -d`.
 - **Local profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first,
-  load a model, then run setup. See [PROFILES.md](PROFILES.md).
+  load a model, then run setup. Setup auto-connects the `brag` tools to LM Studio's
+  chat too (not just Claude); if you install LM Studio *after* setup, just run
+  `setup.command` again to add the connection. See [PROFILES.md](PROFILES.md).
 - Trouble? See [FAQ.md](FAQ.md).

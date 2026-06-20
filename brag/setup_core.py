@@ -44,8 +44,12 @@ def read_existing_env() -> dict:
 
 
 def write_env(profile: str, api_key: str, language: str,
-              vault_path: str = "./RAG-Verbindungsordner", llm_model: str = "",
+              vault_path: str = "", llm_model: str = "",
               rerank_profile: str = "eco", vision_enabled: bool = True) -> None:
+    # vault_path defaults to "" (NOT a folder) so an empty wizard field falls
+    # through to the existing VAULT_PATH in .env — the absolute path the host
+    # launcher's folder picker / relocation wrote (e.g. <RAG folder>\WissensWIKI).
+    # Coercing it to a relative default here would silently repoint the vault.
     existing = read_existing_env()
     # Sanitize every value that gets interpolated into a KEY=value line so a
     # newline in (untrusted) wizard input cannot inject extra .env entries.
@@ -69,7 +73,7 @@ def write_env(profile: str, api_key: str, language: str,
         f"PROFILE={profile}",
         f"VAULT_LANGUAGE={language}",
         f"ANSWER_LANGUAGE={answer_lang}",
-        f"VAULT_PATH={vault_path or existing.get('VAULT_PATH') or './RAG-Verbindungsordner'}",
+        f"VAULT_PATH={vault_path or existing.get('VAULT_PATH') or './WissensWIKI'}",
         # Search-quality vs. CPU cost (off/eco/balanced/full) and whether figures
         # are sent to a cloud provider for description. Written explicitly so a
         # later re-run always reflects the wizard's choice, even at the default.
@@ -92,10 +96,10 @@ def write_env(profile: str, api_key: str, language: str,
     #    wizard re-run reverted the user to profile defaults.
     preserved = [
         "CLAUDE_CONFIG_DIR", "BRIDGE_HOST_PORT", "BRIDGE_PUBLIC_URL",
-        "LLM_BASE_URL", "EMBEDDING_BACKEND", "EMBEDDING_MODEL",
-        "EMBEDDING_DIM", "EMBEDDING_REVISION", "COLLECTION_NAME",
-        "RERANK_PREFETCH", "RERANK_FUSION_LIMIT", "RERANK_BATCH_SIZE",
-        "DEFAULT_TOP_K", "MAX_CHUNKS_PER_SOURCE",
+        "COMPOSE_PROJECT_NAME", "LLM_BASE_URL", "EMBEDDING_BACKEND",
+        "EMBEDDING_MODEL", "EMBEDDING_DIM", "EMBEDDING_REVISION",
+        "COLLECTION_NAME", "RERANK_PREFETCH", "RERANK_FUSION_LIMIT",
+        "RERANK_BATCH_SIZE", "DEFAULT_TOP_K", "MAX_CHUNKS_PER_SOURCE",
     ]
     if not llm_model:
         preserved.append("LLM_MODEL")
@@ -115,8 +119,8 @@ def write_env(profile: str, api_key: str, language: str,
 
 
 def create_vault() -> bool:
-    """Copy the template to ./RAG-Verbindungsordner. Returns False if it already existed."""
-    vault = WORKSPACE / "RAG-Verbindungsordner"
+    """Copy the template to ./WissensWIKI. Returns False if it already existed."""
+    vault = WORKSPACE / "WissensWIKI"
     if vault.exists():
         return False
     shutil.copytree(VAULT_TEMPLATE, vault)

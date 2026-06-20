@@ -64,7 +64,7 @@ Then double-click `setup.command` again.
 
 **Which file types can I add?**
 PDF, Word (`.docx`), PowerPoint (`.pptx`), Markdown (`.md`) and HTML — just drop
-them into `RAG-Verbindungsordner/sources/`. Page-precise deep-links work for PDFs; the
+them into `WissensWIKI/sources/`. Page-precise deep-links work for PDFs; the
 other formats are indexed and searchable but cited without a page link.
 **Excel (`.xlsx`) is not supported yet.**
 
@@ -87,7 +87,7 @@ The local profile (LM Studio) is slower than the cloud profiles.
 **"Rate limit" messages during indexing (Cloud profile).**
 The free Gemini tier has per-minute/per-day limits. The system waits and
 retries automatically — let it run; nothing is lost. Failed chunks are
-recorded in `RAG-Verbindungsordner/.brag/failed_chunks.jsonl`.
+recorded in `WissensWIKI/.brag/failed_chunks.jsonl`.
 
 **Are figures/images analyzed?**
 Yes. The **vision pass** is on by default: on ingest each figure image is sent
@@ -173,10 +173,10 @@ Docker Desktop's autostart brings it back after a reboot.
 
 **How do I update to a new version?**
 Download the new release, replace the folder contents (keep your `.env` and
-`RAG-Verbindungsordner/`), then `docker compose build && docker compose up -d`.
+`WissensWIKI/`), then `docker compose build && docker compose up -d`.
 
 **How do I back up?**
-Your documents and notes are in `RAG-Verbindungsordner/` — back that folder up like any
+Your documents and notes are in `WissensWIKI/` — back that folder up like any
 other folder. The search index can always be rebuilt from the knowledge store (delete
 nothing, just let reconciliation re-index after a restore).
 
@@ -196,7 +196,7 @@ seconds; you can watch for the *"document changed … re-indexing"* line in
 **Can I delete the project folder or the ZIP?**
 You can delete the **ZIP** after unpacking. But **keep the project folder** (the
 unpacked ZIP) — it holds your configuration (`.env`), the controls
-(`docker-compose.yml`) and, by default, your knowledge store (`RAG-Verbindungsordner/`) with all your
+(`docker-compose.yml`) and, by default, your knowledge store (`WissensWIKI/`) with all your
 documents. Deleting it would remove your knowledge base and make starting/
 stopping impossible. Moving it is fine. The ~3 GB of models live in Docker's
 storage, not in the folder, so deleting it won't free that space.

@@ -84,6 +84,12 @@ Dann den Ordner öffnen und **`setup.bat`** doppelklicken.
      in der blauen **SmartScreen**-Box („Der Computer wurde geschützt") auf
      **„Weitere Informationen"** → **„Trotzdem ausführen"**.
 
+**Zuerst öffnet sich ein Ordner-Auswahlfenster.** Wähle, *wo* BRAG liegen soll —
+wähle oder erstelle deinen **RAG-Verbindungsordner** (z. B. auf dem Desktop). BRAG
+kopiert das Programm in einen Unterordner `RAG Setup`, legt daneben deinen
+Wissensordner `WissensWIKI` an und macht von dort in einem neuen Fenster weiter.
+*(Brichst du die Auswahl ab, installiert BRAG einfach an Ort und Stelle.)*
+
 **Was du siehst:** Ein schwarzes Eingabeaufforderungs-Fenster öffnet sich und
 kurz darauf **automatisch dein Browser** mit dem Einrichtungs-Assistenten. Dort
 beantwortest du in einfacher Sprache:
@@ -96,7 +102,8 @@ beantwortest du in einfacher Sprache:
   die Macher dieser App oder an Dritte gesendet; die Live-Prüfung sendet
   lediglich eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu
   bestätigen. Lokale Profile (LM Studio) brauchen gar keinen Schlüssel.
-- **Sprache deiner Dokumente** und optional ein eigener Wissensspeicher (eigener Pfad).
+- **Sprache deiner Dokumente.** (Dein Wissensordner wurde oben bereits über die
+  Ordnerauswahl festgelegt.)
 
 Am Ende schreibt der Assistent die gesamte Konfiguration selbst — inklusive des
 Eintrags in Claude Desktop. **Du editierst keine einzige Datei.** Das Fenster
@@ -110,8 +117,8 @@ baut nun im Hintergrund die Docker-Container und lädt einmalig ~3 GB Modelle
 
 ## 5. Erstes Dokument
 
-**Was du tust:** Lege eine PDF-Datei in den Ordner `RAG-Verbindungsordner\sources\` (innerhalb
-des Projektordners).
+**Was du tust:** Lege eine PDF-Datei in den Ordner `WissensWIKI\sources\` (in
+deinem RAG-Verbindungsordner, neben `RAG Setup`).
 
 **Was du siehst:** Nichts Sichtbares — die Verarbeitung läuft im Hintergrund.
 Beachte: Das **allererste** Dokument lädt zusätzlich die Docling-Layout-Modelle
@@ -150,6 +157,9 @@ Stelle Claude jetzt eine Frage:
 - **Stoppen/Starten:** Zum Stoppen eine Eingabeaufforderung im Projektordner
   öffnen, `docker compose down`. Zum Starten: `docker compose up -d`.
 - **Profil Hybrid (lokal):** zuerst [LM Studio](https://lmstudio.ai) installieren
-  (unter Windows empfohlen), dann das Setup ausführen. Siehe
+  (unter Windows empfohlen), dann das Setup ausführen. Das Setup verbindet die
+  `brag`-Werkzeuge automatisch auch mit dem LM-Studio-Chat (nicht nur Claude);
+  installierst du LM Studio *nach* dem Setup, einfach `setup.bat` erneut
+  doppelklicken, um die Verbindung zu ergänzen. Siehe
   [PROFILES.de.md](PROFILES.de.md).
 - Probleme? Siehe [FAQ.de.md](FAQ.de.md).

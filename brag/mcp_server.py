@@ -128,7 +128,7 @@ def list_sources(doc_type: str = "") -> str:
     finally:
         client.close()
     if not counts:
-        return "The index is empty — drop documents into RAG-Verbindungsordner/sources/."
+        return "The index is empty — drop documents into WissensWIKI/sources/."
     by_type: dict[str, list] = {}
     for (dtype, src), n in sorted(counts.items()):
         if doc_type and dtype != doc_type:
@@ -300,7 +300,7 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
                  note: str = "") -> str:
     """Save a quotable passage under a topic (e.g. a chapter or theme).
 
-    Builds your evidence base in RAG-Verbindungsordner/passages/<topic>.md AND indexes
+    Builds your evidence base in WissensWIKI/passages/<topic>.md AND indexes
     the passage for semantic search, so a later chat (even with a different
     provider) finds it again via `search` — it appears as a clearly marked
     "saved passage", distinct from primary sources. Use this to persist the

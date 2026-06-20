@@ -140,7 +140,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 profile=str(body.get("profile", "cloud")),
                 api_key=str(body.get("api_key", "")),
                 language=str(body.get("language", "english")),
-                vault_path=str(body.get("vault_path", "")).strip() or "./RAG-Verbindungsordner",
+                vault_path=str(body.get("vault_path", "")).strip(),
                 llm_model=str(body.get("llm_model", "")).strip(),
                 rerank_profile=str(body.get("rerank_profile", "eco")).strip() or "eco",
                 vision_enabled=bool(body.get("vision_enabled", True)),
@@ -151,14 +151,19 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send_json(200, {"ok": False, "steps": steps})
             return
 
-        custom_vault = bool(str(body.get("vault_path", "")).strip())
-        if custom_vault:
-            steps.append({"ok": True, "message":
-                          "Custom knowledge folder noted — it will be prepared on first start"})
+        # Only fabricate the default in-project vault when NO vault is chosen yet
+        # — neither a wizard field nor an existing VAULT_PATH in .env (which the
+        # host launcher's picker/relocation sets, e.g. <RAG folder>\WissensWIKI).
+        # Otherwise create_vault() would make the wrong folder and the mount of
+        # the real vault would be defeated.
+        has_vault = (bool(str(body.get("vault_path", "")).strip())
+                     or bool(setup_core.read_existing_env().get("VAULT_PATH")))
+        if has_vault:
+            steps.append({"ok": True, "message": "Using your chosen knowledge folder"})
         else:
             created = setup_core.create_vault()
             steps.append({"ok": True, "message":
-                          "Knowledge folder created (RAG-Verbindungsordner/)" if created
+                          "Knowledge folder created" if created
                           else "Knowledge folder already exists — kept untouched"})
 
         claude_ok, claude_msg = setup_core.write_claude_config()

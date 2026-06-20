@@ -4,6 +4,46 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.4] — 2026-06-21
+
+A plug-and-play install and a clearer on-disk layout. No re-indexing needed.
+
+### Added
+- **Self-organizing install.** On first run the launcher opens a native folder
+  picker (PowerShell on Windows, osascript on macOS) and asks *where* to create
+  your **RAG connection folder**. BRAG then copies itself into a `RAG Setup/`
+  subfolder, creates your knowledge folder `WissensWIKI/` next to it, and
+  continues setup from the new location. Cancel the picker to install in place.
+- **WissensWIKI is seeded immediately** with its `sources/ notes/ wiki/
+  passages/` structure (and the CLAUDE.md / AGENTS.md guides), so you see the
+  full layout right after choosing the folder — not only after the first start.
+- **LM Studio on the final screen + status check.** The done screen now also
+  describes the LM Studio connection (restart it, enable the `brag` integration),
+  and `status.bat` / `status.command` verify the LM Studio `brag` entry alongside
+  Claude Desktop.
+
+### Changed
+- **Knowledge folder renamed to `WissensWIKI`** (the default was previously the
+  generic `RAG-Verbindungsordner`). Clear three-part model: the **RAG connection
+  folder** is the container; **`WissensWIKI/`** is the searched knowledge vault;
+  **`RAG Setup/`** is the program. Existing installs keep their current
+  `VAULT_PATH`; nothing is moved or re-indexed.
+
+### Fixed
+- **Claude Desktop connection now persists.** A running Claude Desktop rewrites
+  its own config file and would silently drop the `brag` entry added underneath
+  it — the connection appeared "missing" after setup. The launcher now writes the
+  entry only **after** Claude is fully quit (it waits for you), so it sticks.
+  Added a host-side `tools/merge_claude_config.py` so macOS gets the same
+  reliable, post-quit write as Windows, and the wizard's final-screen wording now
+  explains this.
+- **An empty wizard folder field no longer repoints a chosen vault.** The wizard
+  now preserves the `VAULT_PATH` written by the picker/relocation instead of
+  coercing it back to the default — so your documents stay where you put them.
+- **Picker robustness:** the chosen path is rejected if it contains shell-unsafe
+  characters; Windows uses a UTF-8 codepage so umlaut paths survive; macOS
+  escapes `$` so Docker Compose never mis-reads the mounted path.
+
 ## [0.3.3] — 2026-06-20
 
 ### Removed

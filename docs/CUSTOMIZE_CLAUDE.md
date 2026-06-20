@@ -3,7 +3,7 @@
 **🇬🇧 English | 🇩🇪 [Deutsch](CUSTOMIZE_CLAUDE.de.md)**
 
 The single highest-impact thing you can do after installation is to fill in
-**`RAG-Verbindungsordner/CLAUDE.md`**. It is read automatically by Claude (in Claude
+**`WissensWIKI/CLAUDE.md`**. It is read automatically by Claude (in Claude
 Desktop Projects and Claude Code) and turns a generic assistant into one that
 knows your field, your conventions, and your corpus — **whether you do research
 or work in practice.**
@@ -30,7 +30,7 @@ that correction belongs in CLAUDE.md.
 
 ## What goes into AGENTS.md
 
-`RAG-Verbindungsordner/AGENTS.md` holds **extra rules for autonomous work** — when Claude
+`WissensWIKI/AGENTS.md` holds **extra rules for autonomous work** — when Claude
 operates on its own (long tasks, scheduled jobs, agent sessions) rather than
 in a conversation with you. Typical content: "never delete files in
 sources/", "propose changes instead of bulk-editing", "summarize what you

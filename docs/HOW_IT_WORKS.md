@@ -55,7 +55,7 @@ ZIP from GitHub, the unpacked BRAG folder appeared exactly where you unpacked it
 (e.g. under `~/` on a Mac or `C:\Users\<you>\` on Windows — its name comes from
 the ZIP). It holds: the setup
 files, the `docker-compose.yml`, your settings file `.env`, and by default the
-`RAG-Verbindungsordner/` folder with your documents. You can see, back up and move this folder —
+`WissensWIKI/` folder with your documents. You can see, back up and move this folder —
 it's yours.
 
 **2. Docker's own storage — which you never touch directly.** On first launch
@@ -78,7 +78,7 @@ To check everything is running, open a terminal in the project folder and type
 
 | What | Where | Notes |
 |---|---|---|
-| Your documents & notes | the `RAG-Verbindungsordner/` folder on your computer | plain PDF and Markdown files — yours, back them up like any folder |
+| Your documents & notes | the `WissensWIKI/` folder on your computer | plain PDF and Markdown files — yours, back them up like any folder |
 | The search index (Qdrant) | inside Docker, in a managed storage area | rebuildable anytime from your knowledge store; never put it in iCloud/OneDrive |
 | The program code & AI models | inside the Docker image | downloaded once at first build (~3 GB); you never touch it |
 | Your settings & API key | the `.env` file in the project folder | written by the setup assistant; the key stays here (owner-readable), is used only to authenticate your own requests to your chosen provider, and is never sent to the app's makers or any third party |
@@ -91,7 +91,7 @@ it were ever lost, the system rebuilds it from your files.
 
 ## What happens when you drop in a document (ingest)
 
-You drop a PDF into `RAG-Verbindungsordner/sources/`. Within seconds the app notices it and
+You drop a PDF into `WissensWIKI/sources/`. Within seconds the app notices it and
 runs five steps:
 
 1. **Read the layout — "Docling".** Docling is the tool that *understands the

@@ -45,9 +45,9 @@ jobs:
         run: |
           python -m pip install --quiet fpdf2
           python tests/make_sample_pdf.py
-          mkdir -p RAG-Verbindungsordner/notes RAG-Verbindungsordner/passages
+          mkdir -p WissensWIKI/notes WissensWIKI/passages
           # the app container runs as uid 1000 and must write notes/logs to /vault
-          chmod -R 777 RAG-Verbindungsordner
+          chmod -R 777 WissensWIKI
 
       - name: Build the app image
         run: docker compose build app

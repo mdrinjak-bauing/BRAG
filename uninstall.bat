@@ -1,7 +1,7 @@
 @echo off
 REM BRAG - Building Retrieval-Augmented Generation - uninstall for Windows.
 REM Removes BRAG's containers, the model cache, the app image, the local config
-REM and the Claude Desktop connection. KEEPS your documents (RAG-Verbindungsordner\)
+REM and the Claude Desktop connection. KEEPS your documents (WissensWIKI\)
 REM and the search index (the qdrant_data volume), so a re-install finds your
 REM corpus again. Double-click is fine; it runs from the project folder.
 cd /d "%~dp0"
@@ -16,7 +16,7 @@ echo   - the local .env ^(it holds your API key^)
 echo   - the BRAG entry in Claude Desktop and LM Studio ^(your other MCP servers are kept^)
 echo.
 echo This will KEEP:
-echo   - your documents in RAG-Verbindungsordner\
+echo   - your documents in WissensWIKI\
 echo   - the search index ^(the qdrant_data volume^)
 echo.
 set /p CONFIRM="Type y and press Enter to continue (anything else cancels): "
@@ -69,7 +69,7 @@ if exist .setup_complete del /q .setup_complete
 
 echo.
 echo Done - BRAG is uninstalled.
-echo   KEPT: your documents in RAG-Verbindungsordner\ and the search index.
+echo   KEPT: your documents in WissensWIKI\ and the search index.
 echo   You can delete this folder now if you no longer need the documents.
 echo   Docker Desktop and Claude Desktop are untouched - uninstall them the
 echo   normal way if you only used them for BRAG.

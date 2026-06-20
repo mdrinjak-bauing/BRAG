@@ -58,7 +58,7 @@ ZIP-Datei von GitHub entpackt hast, ist der entpackte BRAG-Ordner entstanden —
 genau dort, wo du entpackt hast (z. B. unter `~/` auf dem Mac oder
 `C:\Users\<du>\` unter Windows; sein Name stammt aus der ZIP). Darin liegen: die
 Setup-Dateien, die `docker-compose.yml`, deine Einstellungsdatei `.env` und
-standardmäßig der `RAG-Verbindungsordner/`-Ordner mit deinen Dokumenten. Diesen Ordner kannst du
+standardmäßig der `WissensWIKI/`-Ordner mit deinen Dokumenten. Diesen Ordner kannst du
 sehen, sichern, verschieben — er gehört dir.
 
 **2. Dockers eigener Speicher — den du nie direkt anfasst.** Beim ersten Start
@@ -84,7 +84,7 @@ auftauchen.
 
 | Was | Wo | Hinweis |
 |---|---|---|
-| Deine Dokumente & Notizen | der Ordner `RAG-Verbindungsordner/` auf deinem Rechner | einfache PDF-/Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
+| Deine Dokumente & Notizen | der Ordner `WissensWIKI/` auf deinem Rechner | einfache PDF-/Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
 | Der Suchindex (Qdrant) | in Docker, in einem verwalteten Speicherbereich | jederzeit aus deinem Wissensspeicher neu aufbaubar; nie in iCloud/OneDrive legen |
 | Programmcode & KI-Modelle | im Docker-Image | einmal beim ersten Build geladen (~3 GB); fasst du nie an |
 | Einstellungen & API-Schlüssel | die Datei `.env` im Projektordner | vom Setup-Assistenten geschrieben; der Schlüssel bleibt hier (nur für dich lesbar), dient nur der Authentifizierung deiner eigenen Anfragen beim gewählten Anbieter und wird nie an die Macher der App oder an Dritte gesendet |
@@ -98,7 +98,7 @@ Dateien neu auf.
 
 ## Was beim Ablegen eines Dokuments passiert (Einlesen)
 
-Du legst ein PDF in `RAG-Verbindungsordner/sources/`. Binnen Sekunden bemerkt die App es und
+Du legst ein PDF in `WissensWIKI/sources/`. Binnen Sekunden bemerkt die App es und
 durchläuft fünf Schritte:
 
 1. **Das Layout lesen — „Docling".** Docling ist das Werkzeug, das *die Seite

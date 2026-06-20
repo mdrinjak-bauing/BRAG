@@ -71,14 +71,14 @@ alike — has two halves, and keeping them strictly apart is the heart of the de
 
 |  | 📚 **Your library** | 📓 **Your notebook** |
 |---|---|---|
-| Folder | `RAG-Verbindungsordner/sources/` | `RAG-Verbindungsordner/wiki/`, `RAG-Verbindungsordner/notes/` |
+| Folder | `WissensWIKI/sources/` | `WissensWIKI/wiki/`, `WissensWIKI/notes/` |
 | Contains | external sources: papers, books, reports | **your own thinking**: concepts, drafts, reading notes |
 | Searchable by Claude? | yes — hybrid search with page-precise citations | deliberately **no** |
 | Claude can read/write it? | read-only (via search) | yes — via the optional Obsidian connection |
 
 **Plus a third, in-between layer — saved passages.** When you tell Claude (in
 Claude Desktop) *"save this passage,"* it writes the quote (with its source and
-page) into `RAG-Verbindungsordner/passages/` **and indexes it** — so any later chat,
+page) into `WissensWIKI/passages/` **and indexes it** — so any later chat,
 even with a different AI provider, finds it again via `search`, clearly marked as
 *your saved passage*. This is curated evidence you chose to keep (a real quote
 from a real source), not the AI's own output — which is exactly why it is
@@ -130,7 +130,7 @@ your computer. A thorough, jargon-free explanation lives in
 hand (and fighting version conflicts), Docker runs a ready-made box that is
 identical on every machine. You install Docker Desktop once; the project starts
 the rest. The ~3 GB of models live in Docker's managed storage — **not** in your
-project folder; your `RAG-Verbindungsordner/` holds only your own files.
+project folder; your `WissensWIKI/` holds only your own files.
 
 ![Pipeline: ingest and query](docs/assets/pipeline.svg)
 
@@ -281,7 +281,7 @@ Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai).
    should run, your key (with a live check), your document language. It writes
    the whole configuration itself — **you never edit a file.**
 3. **Quit Claude Desktop completely** (Cmd+Q / tray → Quit) and reopen it.
-4. **Drop a PDF into `RAG-Verbindungsordner/sources/`** — indexed automatically within seconds.
+4. **Drop a PDF into `WissensWIKI/sources/`** — indexed automatically within seconds.
 5. Ask Claude: *"What documents are in my knowledge base?"*
 
 **Everything working?** Double-click `status.command` (Mac) / `status.bat`
@@ -290,7 +290,7 @@ the AI connection — ✓/✗ per item.
 
 **Want to remove BRAG?** Double-click `uninstall.command` (Mac) / `uninstall.bat`
 (Windows). It removes the containers, the model cache, the app image and the
-Claude Desktop connection — but **keeps your documents** (`RAG-Verbindungsordner/`) and
+Claude Desktop connection — but **keeps your documents** (`WissensWIKI/`) and
 the search index, so a re-install picks them up again. Delete the project folder
 afterwards if you no longer need the files.
 
@@ -312,32 +312,37 @@ see": [Install macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md)
 
 ## Your knowledge store
 
-Here's the most important distinction — **two folders, two roles:**
+Here's the most important distinction — **one connection folder, two roles inside it:**
 
-- **The project folder** = the **program** (the unpacked ZIP). You need it to
-  start/stop the app; **don't delete it.** *Where* it lives doesn't matter
-  (your work/project directory, OneDrive …) — just keep it.
-- **Your knowledge store** = your **content**. By default that's the
-  `RAG-Verbindungsordner/` subfolder *inside* the project folder. During setup you can
-  instead point it at an **existing folder** — e.g. your current "Project XY"
-  folder — and grant access to it.
+During setup you pick (or create) a **RAG connection folder** anywhere you like
+(Desktop, Documents, OneDrive …). BRAG organizes itself into **two folders inside it:**
 
-**The one rule that explains everything:** exactly **this one folder** is
-searched. Anything you put in `sources/` is automatically added to the search
-database (the index); take a file back out or delete it and it disappears from
-the database too. Nothing else on your computer is touched.
+- **`WissensWIKI/`** = your **content** — documents, notes and saved passages.
+  This is the only folder that is searched; it's yours, so back it up.
+- **`RAG Setup/`** = the **program** (the unpacked ZIP lands here). You need it
+  to start/stop the app; **don't delete it**, but you never have to open it.
 
-This is how the knowledge store is laid out:
+*(If you skip the folder picker, BRAG installs in place and creates `WissensWIKI/`
+right next to the program instead — same two roles, one less level.)*
+
+**The one rule that explains everything:** exactly the **`WissensWIKI/` folder**
+is searched. Anything you put in `WissensWIKI/sources/` is automatically added to
+the search database (the index); take a file back out or delete it and it
+disappears from the database too. Nothing else on your computer is touched.
+
+On your disk it looks like this:
 
 ```
-RAG-Verbindungsordner/
-├── CLAUDE.md      ← teaches Claude about YOUR field (you fill it in)
-├── AGENTS.md      ← extra rules for autonomous agent tasks
-├── sources/       ← 📚 drop documents here (PDF, DOCX); subfolders = document types
-│   └── _inbox/    ← staging area, ignored (also where remove_source parks dropped sources)
-├── notes/         ← auto-generated literature note per source
-├── passages/      ← quotes you saved via Claude, grouped by topic
-└── wiki/          ← 📓 your own thinking — never indexed
+<your RAG connection folder>/
+├── WissensWIKI/          ← 📚 your knowledge (this is what gets searched)
+│   ├── CLAUDE.md      ← teaches Claude about YOUR field (you fill it in)
+│   ├── AGENTS.md      ← extra rules for autonomous agent tasks
+│   ├── sources/       ← 📚 drop documents here (PDF, DOCX); subfolders = document types
+│   │   └── _inbox/    ← staging area, ignored (also where remove_source parks dropped sources)
+│   ├── notes/         ← auto-generated literature note per source
+│   ├── passages/      ← quotes you saved via Claude, grouped by topic
+│   └── wiki/          ← 📓 your own thinking — never indexed
+└── RAG Setup/            ← the program (setup.bat / setup.command live here)
 ```
 
 Changes in `sources/` are handled automatically: **renaming or moving** an
@@ -385,7 +390,7 @@ nested document that inherits from it — automatically, without re-ingesting.
 **Day to day** you just drop new literature into `sources/` (indexed in minutes)
 and ask Claude what it adds to your existing material or whether it contradicts
 it — answer with page-linked citations. And whenever you correct Claude twice
-about the same thing, that correction belongs in **`RAG-Verbindungsordner/CLAUDE.md`**,
+about the same thing, that correction belongs in **`WissensWIKI/CLAUDE.md`**,
 not in the next chat — a well-kept instruction file turns a generic assistant
 into *yours* (examples: [docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md)).
 
@@ -419,7 +424,7 @@ Possible directions (open architecture, not yet built in):
   so Claude can look things up there or prepare entries.
 - **Automations** — automatic file naming, periodic summaries of new sources,
   watcher-triggered reports, scheduled tasks via agent sessions (rules in
-  `RAG-Verbindungsordner/AGENTS.md`).
+  `WissensWIKI/AGENTS.md`).
 
 A coding agent can implement exactly these extensions step by step — a new MCP
 tool here, an extra pipeline stage there. If you build in this direction,
@@ -492,7 +497,7 @@ Current version: **0.3.3** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
   is now a lightweight metadata update instead of a full re-ingest. Security
   hardening of the setup bridge (Host-header allowlist, download-only static
   files, atomic config writes). Knowledge-store folder renamed `vault/` →
-  `RAG-Verbindungsordner/`. New doc: which Claude surface to use (Chat / Cowork / Code).
+  `WissensWIKI/`. New doc: which Claude surface to use (Chat / Cowork / Code).
 - **0.2.0** — Added **OpenAI/ChatGPT** and **Anthropic/Claude** alongside Google
   Gemini. Bilingual setup wizard. The meaning index (arctic) runs locally in
   **every** profile (switch provider without re-indexing). Reworked guide (query

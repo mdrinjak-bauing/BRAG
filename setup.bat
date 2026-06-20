@@ -1,11 +1,25 @@
 @echo off
 REM BRAG - Building Retrieval-Augmented Generation - one-click setup for Windows.
-REM Double-click this file. It starts the app and opens the setup assistant
-REM in your browser; this window finishes the restart afterwards.
+REM Double-click this file. On the FIRST run from the unpacked ZIP it asks where
+REM your "RAG connection folder" should live, copies itself in there as
+REM "RAG Setup" next to a "WissensWIKI" knowledge folder, and continues from
+REM that new location. It then starts the app and opens the setup assistant in
+REM your browser; this window finishes the restart afterwards.
+setlocal EnableExtensions
 cd /d "%~dp0"
+REM UTF-8 so a knowledge-folder path with non-ASCII characters (e.g. German
+REM umlauts) round-trips correctly through .ragpick and into .env.
+chcp 65001 >nul 2>nul
 
 echo === BRAG - Building Retrieval-Augmented Generation ===
 echo.
+
+REM If this copy already lives inside a RAG connection folder (marker present),
+REM or a previous run already finished setup here (in-place), skip relocation.
+if exist ".ragsetup_home" goto real_setup
+if exist ".setup_complete" goto real_setup
+
+REM ============ FIRST RUN: relocate into the chosen RAG connection folder ============
 
 where docker >nul 2>nul
 if errorlevel 1 (
@@ -17,9 +31,6 @@ if errorlevel 1 (
 )
 
 REM Pre-flight: hardware virtualization must be on for Docker's engine to start.
-REM If it is off, Docker Desktop fails with a cryptic message — detect the BIOS
-REM cause up front so we can show the actual fix. Defaults to "on" if the query
-REM fails, to avoid a false alarm.
 set "VTON=1"
 for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "try{[int][bool](Get-CimInstance Win32_Processor).VirtualizationFirmwareEnabled}catch{1}"`) do set "VTON=%%V"
 
@@ -42,25 +53,109 @@ if errorlevel 1 (
   exit /b 1
 )
 
+echo === Choose WHERE your BRAG folder should be created ===
+echo A "RAG connection folder" with your knowledge ^(WissensWIKI^) and the
+echo program ^(RAG Setup^) will be placed inside it. A picker window opens...
+echo.
+del ".ragpick" >nul 2>nul
+powershell -NoProfile -STA -ExecutionPolicy Bypass -File "%~dp0tools\pick_folder.ps1"
+if not exist ".ragpick" (
+  echo No location chosen - installing in this folder instead.
+  goto real_setup
+)
+set "RAGDIR="
+set /p RAGDIR=<".ragpick"
+del ".ragpick" >nul 2>nul
+if not defined RAGDIR goto real_setup
+
+set "TARGET=%RAGDIR%\RAG Setup"
+set "VAULTDIR=%RAGDIR%\WissensWIKI"
+
+REM Already installed there? Just continue in the existing copy.
+if exist "%TARGET%\.ragsetup_home" (
+  echo BRAG is already installed at: %TARGET%
+  echo Continuing there...
+  start "" "%TARGET%\setup.bat"
+  exit /b 0
+)
+
+echo.
+echo Setting up your RAG connection folder:
+echo   "%RAGDIR%"
+echo       \WissensWIKI   ^(your documents and notes^)
+echo       \RAG Setup     ^(the program^)
+REM Create + seed the knowledge folder (sources, notes, wiki, passages + guides)
+REM right away, so you see the full structure immediately. Only when it is new,
+REM so a re-run never overwrites your documents or edited CLAUDE.md. The app also
+REM seeds anything still missing on first start.
+if not exist "%VAULTDIR%" (
+  mkdir "%VAULTDIR%"
+  robocopy "%~dp0vault_template" "%VAULTDIR%" /E /NFL /NDL /NJH /NJS /NP >nul
+)
+if not exist "%TARGET%" mkdir "%TARGET%"
+
+REM Copy the program into <RAGDIR>\RAG Setup. Exclude VCS, any nested target
+REM names, and per-install files that must be written fresh in the new copy.
+robocopy "%~dp0." "%TARGET%" /E /NFL /NDL /NJH /NJS /NP /XD ".git" "%TARGET%" "%VAULTDIR%" /XF ".ragpick" ".env" ".setup_complete" .ragsetup_home >nul
+if errorlevel 8 (
+  echo.
+  echo Could not copy the program to "%TARGET%".
+  echo Please move this folder there by hand, or re-run setup.
+  pause
+  exit /b 1
+)
+if not exist "%TARGET%\setup.bat" (
+  echo.
+  echo The copy did not include setup.bat - cannot continue safely.
+  echo Please move this folder into your RAG connection folder by hand.
+  pause
+  exit /b 1
+)
+
+REM Write the installed-copy marker and a fresh .env. Each value is written on
+REM its OWN line (not inside a parenthesized block) so a folder path containing
+REM parentheses cannot terminate the block early. The compose project name is
+REM left to default (the stable "RAG Setup" folder name), so the search-index
+REM volume stays attached without a machine-global pin.
+>"%TARGET%\.ragsetup_home" echo %RAGDIR%
+REM Only write a fresh .env if none exists (keeps an API key if the marker was
+REM removed by hand). Done with goto, NOT a parenthesized block, so a folder path
+REM containing parentheses cannot close the block early.
+if exist "%TARGET%\.env" goto env_ready
+>"%TARGET%\.env" echo CLAUDE_CONFIG_DIR=%APPDATA%\Claude
+>>"%TARGET%\.env" echo VAULT_PATH=%VAULTDIR%
+:env_ready
+
+echo.
+echo Organized. Continuing setup from the new location ^(a new window opens^)...
+start "" "%TARGET%\setup.bat"
+echo.
+echo You can CLOSE this window and DELETE this original unpacked folder now -
+echo everything lives in your RAG connection folder from here on.
+pause
+exit /b 0
+
+REM ====================== REAL SETUP (runs in the installed copy) ======================
+:real_setup
+cd /d "%~dp0"
+
 if not exist "%APPDATA%\Claude" mkdir "%APPDATA%\Claude"
-if not exist .env (
+if not exist ".env" (
   echo CLAUDE_CONFIG_DIR=%APPDATA%\Claude> .env
 ) else (
   findstr /b "CLAUDE_CONFIG_DIR=" .env >nul || echo CLAUDE_CONFIG_DIR=%APPDATA%\Claude>> .env
 )
 set "CLAUDE_CONFIG_DIR=%APPDATA%\Claude"
 
-REM REQUIRED step: choose where the knowledge folder (RAG connection folder)
-REM lives, via a NATIVE folder-picker window. A browser cannot open a real folder
-REM dialog, so it is done here on the host; it writes VAULT_PATH into .env. On
-REM cancel or any error it falls back to the default folder and never blocks setup.
-echo.
-echo === Choose your knowledge folder (a folder-picker window opens) ===
-powershell -NoProfile -STA -ExecutionPolicy Bypass -File "%~dp0tools\pick_folder.ps1" "%~dp0"
+docker info >nul 2>nul
+if errorlevel 1 (
+  echo Docker is not running - open Docker Desktop, wait until it says "running",
+  echo then double-click setup.bat again.
+  pause
+  exit /b 1
+)
 
-REM Prefer the prebuilt image from GHCR (fast, avoids local "pip install failed"
-REM errors); fall back to building locally if none is published yet or we're
-REM offline. Pull output is hidden so a "not found" message doesn't alarm.
+REM Prefer the prebuilt image from GHCR (fast); fall back to a local build.
 echo Fetching the prebuilt application image...
 docker compose pull app >nul 2>nul
 if errorlevel 1 (
@@ -76,16 +171,8 @@ if errorlevel 1 (
 
 echo Starting the setup assistant...
 if exist .setup_complete del .setup_complete
-REM If a previous session left the app running, stop it so the setup service can
-REM use the bridge port (no-op on a fresh install).
 docker compose stop app >nul 2>nul
-REM Remove any leftover one-shot setup container from a previous, INTERRUPTED
-REM run. Its container_name (brag-setup) is fixed, so a leftover (even from a
-REM different project folder) blocks the new one by name — clear it by name so
-REM docker compose can recreate it cleanly.
 docker rm -f brag-setup >nul 2>nul
-REM Only the one-shot setup service runs now - it serves the wizard and is the
-REM only container that mounts the project dir + Claude Desktop config.
 docker compose --profile setup up -d setup
 if errorlevel 1 (
   echo Start failed - see message above.
@@ -96,7 +183,6 @@ if errorlevel 1 (
 echo.
 echo Opening the setup assistant in your browser...
 timeout /t 3 /nobreak >nul
-REM Honour a custom BRIDGE_HOST_PORT from .env (set it there if 8765 is taken).
 set "PORT=8765"
 for /f "tokens=2 delims==" %%P in ('findstr /b "BRIDGE_HOST_PORT=" .env 2^>nul') do set "PORT=%%P"
 start "" "http://localhost:%PORT%/setup"
@@ -120,26 +206,41 @@ goto waitloop
 :setupdone
 
 echo Applying your settings...
-REM Tear down the setup service (frees the port and drops its mounts), then
-REM start the persistent app - which never mounts the project or Claude config.
 docker compose --profile setup rm -sf setup >nul 2>nul
 docker compose up -d >nul 2>nul
 
-REM Connect BRAG to Claude Desktop from the HOST. Writing this Claude-managed
-REM file from INSIDE the container does NOT reliably reach the host on Windows
-REM (it silently no-ops while reporting success), so the merge is done here in
-REM PowerShell, which works and persists.
+REM Connect BRAG to Claude Desktop from the HOST (a container write does not
+REM reliably reach the host on Windows), then LM Studio if it is installed.
+REM Claude Desktop REWRITES this config while running and would drop an entry
+REM added underneath it, so wait until Claude is fully closed before writing -
+REM that is what makes the connection persist.
 echo.
+tasklist /fi "imagename eq Claude.exe" 2>nul | find /i "Claude.exe" >nul
+if errorlevel 1 goto claude_write
+echo Claude Desktop is running. To save the BRAG connection PERMANENTLY, quit it
+echo completely now: click the Claude icon in the system tray ^(bottom-right, near
+echo the clock^) and choose Quit. Closing the window is NOT enough.
+echo.
+echo Waiting for Claude Desktop to close...
+set /a cwait=0
+:wait_claude
+tasklist /fi "imagename eq Claude.exe" 2>nul | find /i "Claude.exe" >nul
+if errorlevel 1 goto claude_write
+timeout /t 2 /nobreak >nul
+set /a cwait+=2
+if %cwait% lss 120 goto wait_claude
+echo Claude is still running after 2 minutes - writing anyway. If the connection
+echo is missing later, quit Claude completely and run status.bat.
+:claude_write
 echo Connecting BRAG to Claude Desktop...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_claude_config.ps1"
 
-REM Also connect LM Studio if it is installed (its chat is an MCP host too). The
-REM script no-ops when LM Studio is absent.
 echo.
 echo Connecting BRAG to LM Studio (if installed)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_lmstudio_config.ps1"
 
 echo.
-echo All done! Quit Claude Desktop completely ^(tray ^> Quit^) and reopen it.
+echo All done! Your knowledge lives in the WissensWIKI folder next to this one.
+echo Quit Claude Desktop completely ^(tray ^> Quit^) and reopen it.
 echo (If you use LM Studio, also fully restart it so the new connection loads.)
 pause
