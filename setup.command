@@ -46,6 +46,10 @@ rm -f .setup_complete
 # If a previous session left the app running, stop it so the setup service can
 # use the bridge port (no-op on a fresh install).
 docker compose stop app >/dev/null 2>&1
+# Remove any leftover one-shot setup container from a previous, INTERRUPTED run.
+# Its container_name (brag-setup) is fixed, so a leftover (even from a different
+# project folder) blocks the new one by name — clear it so compose can recreate.
+docker rm -f brag-setup >/dev/null 2>&1
 # Only the one-shot setup service runs now — it serves the wizard and is the
 # only container that mounts the project dir + Claude Desktop config.
 docker compose --profile setup up -d setup || { echo "Start failed — see message above."; read -r -p "Press Enter to close..."; exit 1; }

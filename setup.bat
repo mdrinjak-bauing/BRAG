@@ -71,6 +71,11 @@ if exist .setup_complete del .setup_complete
 REM If a previous session left the app running, stop it so the setup service can
 REM use the bridge port (no-op on a fresh install).
 docker compose stop app >nul 2>nul
+REM Remove any leftover one-shot setup container from a previous, INTERRUPTED
+REM run. Its container_name (brag-setup) is fixed, so a leftover (even from a
+REM different project folder) blocks the new one by name — clear it by name so
+REM docker compose can recreate it cleanly.
+docker rm -f brag-setup >nul 2>nul
 REM Only the one-shot setup service runs now - it serves the wizard and is the
 REM only container that mounts the project dir + Claude Desktop config.
 docker compose --profile setup up -d setup
