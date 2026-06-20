@@ -30,6 +30,16 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
+      # The amd64 + arm64 build of a torch/docling image is large; the default
+      # runner otherwise runs out of disk ("No space left on device"). Reclaim
+      # ~20 GB of preinstalled toolchains we don't need before building.
+      - name: Free up runner disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /usr/local/.ghcup /opt/hostedtoolcache/CodeQL || true
+          sudo docker image prune --all --force || true
+          df -h /
+
       # QEMU lets this amd64 runner also build the arm64 (Apple Silicon) image.
       # NOTE: pin these docker/* actions by commit SHA later to match the rest of
       # the repo (the github-actions Dependabot config will help with that).
