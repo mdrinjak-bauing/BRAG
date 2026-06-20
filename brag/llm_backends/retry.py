@@ -8,6 +8,7 @@ DNS hiccups that were treated as fatal).
 
 import random
 import time
+import urllib.error
 
 RATE_LIMIT_MARKERS = ("429", "503", "529", "RESOURCE_EXHAUSTED", "UNAVAILABLE", "overloaded")
 NETWORK_MARKERS = (
@@ -29,6 +30,17 @@ def call_with_retry(fn, max_retries: int = 5, label: str = "",
             return fn()
         except Exception as e:  # noqa: BLE001 — classified below
             err = str(e)
+            # A 4xx with a concrete status is a CLIENT error (bad request, auth,
+            # payload too large) — retrying the identical request cannot help, so
+            # fail fast and don't waste the backoff budget. 408 (timeout) and 429
+            # (rate limit) are the retryable exceptions; 429 also matches the
+            # rate-limit markers below for its long backoff. Checked first so a
+            # 4xx whose message text happens to contain a marker substring (e.g.
+            # "503" inside a request id) still fails fast.
+            if isinstance(e, urllib.error.HTTPError) and \
+                    400 <= e.code < 500 and e.code not in (408, 429):
+                print(f"  failed ({label}): HTTP {e.code} {err[:100]}")
+                return None
             is_rate_limit = any(m in err for m in RATE_LIMIT_MARKERS)
             is_network = any(m in err for m in NETWORK_MARKERS)
             last_attempt = attempt == max_retries - 1

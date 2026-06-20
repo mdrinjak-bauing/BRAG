@@ -47,6 +47,12 @@
   .langtoggle { float:right; }
   .langtoggle button { padding:4px 10px; font-size:.85rem; }
   .callout { background:#fdf3e7; border:1px solid #e2c79f; border-radius:9px; padding:12px 14px; margin-top:12px; font-size:.9rem; }
+  /* Loud, unmissable warning when Claude Desktop was NOT auto-configured. */
+  .alert { background:#fdecea; border:2px solid var(--warn); border-radius:10px;
+           padding:16px 18px; margin:0 0 18px; }
+  .alert h3 { color:var(--warn); margin:0 0 6px; font-size:1.05rem; }
+  .alert .cmd { background:#fff; border:1px solid #e7b7b3; }
+  .pill.warn { background:#fdecea; color:var(--warn); }
 </style>
 </head>
 <body>
@@ -252,7 +258,18 @@
 
   <!-- STEP 5 -->
   <div class="card step" id="s5">
-    <span class="pill ok" data-i="done_badge"></span>
+    <!-- Shown ONLY when Claude Desktop was not auto-configured. Rendered first,
+         loud, and outside the green "complete" framing so it cannot be missed. -->
+    <div class="alert" id="claudealert" style="display:none">
+      <h3 data-i="claude_warn_h"></h3>
+      <p data-i="claude_warn_p"></p>
+      <p class="hint" id="claude_warn_path"></p>
+      <pre class="cmd"><code id="claude_warn_code"></code><button id="claude_warn_copy" type="button">copy</button></pre>
+      <p class="hint" data-i="claude_warn_after"></p>
+      <details><summary data-i="claude_warn_why_s"></summary>
+        <p class="hint" data-i="claude_warn_why_p"></p></details>
+    </div>
+    <span class="pill ok" id="done_badge" data-i="done_badge"></span>
     <h2 data-i="done_h"></h2>
     <div class="two">
       <div><h3 data-i="lib_h"></h3><p><code>wissensspeicher/sources/</code></p><p data-i="lib_p"></p></div>
@@ -262,7 +279,6 @@
     <ol>
       <li data-i="next_1"></li><li data-i="next_2"></li><li data-i="next_3"></li><li data-i="next_4"></li>
     </ol>
-    <p class="hint" id="claudenote"></p>
     <p class="hint" data-i="done_close"></p>
   </div>
 </div>
@@ -328,6 +344,11 @@ const STR = {
     next_3:"Ask Claude: “What documents are in my knowledge base?”",
     next_4:"Open wissensspeicher/CLAUDE.md and fill in the blanks — it teaches Claude your field, citation style and how to search.",
     done_close:"You can close this window. The setup window in the Terminal finishes the restart automatically.",
+    claude_warn_h:"⚠ Claude Desktop is NOT connected yet — one manual step needed",
+    claude_warn_p:"Everything else is set up, but BRAG could not write its entry into Claude Desktop automatically. Until you add it, Claude will NOT show the search tools. Open the file below, paste this entry into it (merge it into an existing \"mcpServers\" block if one is there), save, then fully quit and reopen Claude Desktop.",
+    claude_warn_after:"After saving, quit Claude Desktop completely (Cmd+Q / tray → Quit) and reopen it, then run the status check to confirm.",
+    claude_warn_why_s:"Why did this happen?",
+    claude_warn_why_p:"Most often the launcher could not locate your Claude Desktop config folder, so it was not mounted into the setup container (CLAUDE_CONFIG_MOUNTED was not 1). This happens if Claude Desktop has never been started, or if it is installed somewhere non-standard. Starting Claude Desktop once and re-running setup usually fixes it automatically.",
   },
   de: {
     badge_intro:"Einrichtung · 3–10 Minuten", intro_h:"Deine persönliche Wissensbasis",
@@ -388,6 +409,11 @@ const STR = {
     next_3:"Claude fragen: „Welche Dokumente sind in meiner Wissensbasis?“",
     next_4:"wissensspeicher/CLAUDE.md öffnen und die Platzhalter ausfüllen — das bringt Claude dein Fachgebiet, deine Zitierweise und dein Suchverhalten bei.",
     done_close:"Du kannst dieses Fenster schließen. Das Terminal-Fenster schließt den Neustart automatisch ab.",
+    claude_warn_h:"⚠ Claude Desktop ist NOCH NICHT verbunden — ein manueller Schritt nötig",
+    claude_warn_p:"Alles andere ist eingerichtet, aber BRAG konnte den Eintrag nicht automatisch in Claude Desktop schreiben. Bis du ihn einträgst, zeigt Claude die Such-Werkzeuge NICHT an. Öffne die untenstehende Datei, füge diesen Eintrag ein (in einen bestehenden \"mcpServers\"-Block einfügen, falls vorhanden), speichere, beende Claude Desktop dann komplett und öffne es neu.",
+    claude_warn_after:"Nach dem Speichern Claude Desktop komplett beenden (Cmd+Q / Tray → Beenden) und neu öffnen, dann die Statusprüfung zur Kontrolle ausführen.",
+    claude_warn_why_s:"Warum ist das passiert?",
+    claude_warn_why_p:"Meistens konnte der Starter deinen Claude-Desktop-Konfigurationsordner nicht finden, sodass er nicht in den Setup-Container eingebunden wurde (CLAUDE_CONFIG_MOUNTED war nicht 1). Das passiert, wenn Claude Desktop noch nie gestartet wurde oder an einem ungewöhnlichen Ort installiert ist. Claude Desktop einmal starten und Setup erneut ausführen behebt es meist automatisch.",
   },
 };
 const KEYLINKS = {
@@ -494,23 +520,25 @@ async function apply(){
       })});
     const d = await r.json();
     (d.steps||[]).forEach(s=>add((s.ok?"✓ ":"⚠ ")+s.message, s.ok?"ok":"warn"));
-    if(d.claude_snippet){
-      const note = document.getElementById("claudenote");
-      note.textContent = (lang==="de"
-        ? "Claude Desktop konnte nicht automatisch konfiguriert werden. Füge diesen Eintrag in deine claude_desktop_config.json ein:"
-        : "Claude Desktop could not be configured automatically. Add this entry to your claude_desktop_config.json:");
+    // Claude Desktop not auto-configured → surface a LOUD, unmissable warning at
+    // the TOP of the final screen, and downgrade the green "complete" badge so
+    // the user is never told the install is fully done when it is not.
+    if(d.claude_manual_snippet){
+      const alert=document.getElementById("claudealert");
+      alert.style.display="block";
       if(d.claude_config_path){
-        const path=document.createElement("p"); path.className="hint"; path.textContent=d.claude_config_path;
-        note.appendChild(path);
+        document.getElementById("claude_warn_path").textContent = d.claude_config_path;
       }
-      const pre=document.createElement("pre"); pre.className="cmd";
-      const code=document.createElement("code"); code.textContent=d.claude_snippet; pre.appendChild(code);
-      const btn=document.createElement("button"); btn.textContent="copy";
-      btn.onclick=()=>{ navigator.clipboard.writeText(d.claude_snippet); btn.textContent="copied ✓"; setTimeout(()=>btn.textContent="copy",1500); };
-      pre.appendChild(btn); note.appendChild(pre);
-    } else if(d.claude_manual_snippet){
-      document.getElementById("claudenote").textContent =
-        "Note: Claude Desktop could not be configured automatically — see the FAQ for the manual one-line entry.";
+      const snippet = d.claude_snippet || "";
+      document.getElementById("claude_warn_code").textContent = snippet;
+      const cp=document.getElementById("claude_warn_copy");
+      cp.onclick=()=>{ navigator.clipboard.writeText(snippet); cp.textContent="copied ✓"; setTimeout(()=>cp.textContent="copy",1500); };
+      // Downgrade the badge: setup did NOT fully complete. Drop data-i so a
+      // later language toggle (applyLang) cannot restore the green "complete".
+      const badge=document.getElementById("done_badge");
+      badge.removeAttribute("data-i");
+      badge.className="pill warn";
+      badge.textContent = (lang==="de" ? "⚠ Fast fertig — ein Schritt fehlt" : "⚠ Almost done — one step left");
     }
     setTimeout(()=>show("s5"),900);
   }catch(e){ add("Something went wrong: "+e,"warn"); }

@@ -319,4 +319,8 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
                 buffer.append((txt, page))
 
     flush()
-    return chunks, full_markdown[: config.CONTEXT_DOC_CHARS]
+    # Return the FULL markdown (bounded only against a pathological export) — it
+    # feeds the table-of-contents and chapter/section matching in contextualize,
+    # which must see the WHOLE document. The grounding fallback is capped
+    # separately (CONTEXT_DOC_CHARS) inside _doc_context.
+    return chunks, full_markdown[: config.MARKDOWN_FULL_MAX_CHARS]

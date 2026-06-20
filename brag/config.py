@@ -71,6 +71,13 @@ LLM_BACKEND = _env("LLM_BACKEND", _profile["llm_backend"])
 LLM_MODEL = _env("LLM_MODEL", _profile["llm_model"])
 LLM_BASE_URL = _env("LLM_BASE_URL", _profile["llm_base_url"])
 
+# Whether the active LLM runs on-device (LM Studio / Ollama via the
+# OpenAI-compatible backend). Local models have SMALL, fixed context windows
+# (LM Studio defaults to ~4k tokens), so the contextualization prompt must be
+# bounded far more tightly than for cloud providers (which have 100k+ windows).
+# Used only to pick safe DEFAULTS below; every value remains env-overridable.
+LLM_IS_LOCAL = LLM_BACKEND == "openai_compatible"
+
 # Cloud API keys — one per provider; only the active provider's key is needed.
 GEMINI_API_KEY = _env("GEMINI_API_KEY", "")
 OPENAI_API_KEY = _env("OPENAI_API_KEY", "")
@@ -93,10 +100,51 @@ MAX_TABLE_CHARS = int(_env("MAX_TABLE_CHARS", 8000))
 
 # ── Contextual retrieval ────────────────────────────────────────
 CR_ENABLED = _env("CR_ENABLED", "true").lower() == "true"
-CR_BATCH_SIZE = int(_env("CR_BATCH_SIZE", 5))
-CONTEXT_DOC_CHARS = int(_env("CONTEXT_DOC_CHARS", 15000))
-TOC_MAX_CHARS = int(_env("TOC_MAX_CHARS", 3000))
-CHAPTER_CONTEXT_CHARS = int(_env("CHAPTER_CONTEXT_CHARS", 10000))
+# Chunks per LLM call. The whole batch's texts share ONE context window, so a
+# local model (small window) must use a smaller batch than cloud: 5 chunks at
+# MAX_CHUNK_CHARS=2000 are up to 10k chars of payload alone — already the entire
+# ≈4k-token local window before any grounding or output. 3 leaves headroom for
+# the grounding block and the reserved output tokens. Cloud keeps the proven 5.
+CR_BATCH_SIZE = int(_env("CR_BATCH_SIZE", 3 if LLM_IS_LOCAL else 5))
+# Per-source-text caps for the grounding context handed to the contextualization
+# LLM. Cloud models have huge windows, so the defaults stay generous there; on
+# a LOCAL model the same sizes overflow the (≈4k-token) window and the server
+# returns HTTP 400 for EVERY batch, producing zero context. Hence the defaults
+# are profile-aware. These bound the INDIVIDUAL pieces; CR_PROMPT_MAX_CHARS
+# below is the hard cap on the WHOLE assembled prompt and is what actually
+# guarantees the request fits — even on the chapter-found path.
+CONTEXT_DOC_CHARS = int(_env("CONTEXT_DOC_CHARS", 4000 if LLM_IS_LOCAL else 15000))
+TOC_MAX_CHARS = int(_env("TOC_MAX_CHARS", 1500 if LLM_IS_LOCAL else 3000))
+CHAPTER_CONTEXT_CHARS = int(
+    _env("CHAPTER_CONTEXT_CHARS", 3000 if LLM_IS_LOCAL else 10000)
+)
+# Hard upper bound on the ENTIRE contextualization prompt (doc context + all
+# chunk texts + task/format scaffolding), in characters. _fit_doc_context trims
+# the grounding block to whatever budget remains AFTER the chunk texts are
+# placed, so the request can never blow the model's context window regardless of
+# which grounding path was taken or how the individual caps are set.
+#
+# Local sizing (≈4k-token default LM Studio / Ollama window, ≈3.4 chars/token
+# for German), worst case at CR_BATCH_SIZE=3:
+#   chunk payload   3 × 2000 = 6000 chars   (≈1760 tok)
+#   scaffolding     ~700 chars              (≈210 tok)
+#   grounding       remainder up to ~2300   (≈680 tok)   ⇒ input ≈ 2650 tok
+#   reserved output 200×3 + 100 = 700 tok
+#   total           ≈ 3350 tok  <  4096     ✓ comfortably fits
+# So 9000 chars is the local cap. Cloud gets a deliberately loose 60k-char cap
+# (well under every cloud provider's 100k+ window) so nothing changes for it.
+CR_PROMPT_MAX_CHARS = int(
+    _env("CR_PROMPT_MAX_CHARS", 9000 if LLM_IS_LOCAL else 60000)
+)
+# The FULL document markdown handed to contextual retrieval (used to build the
+# table-of-contents and to locate each chunk's chapter/section heading) must
+# cover the WHOLE document — it must NOT be shrunk to a grounding cap. Previously
+# it was truncated to CONTEXT_DOC_CHARS at extraction time (extract.py), which on
+# a long document hid every heading past the first ~15k chars and forced the
+# whole-document grounding fallback for nearly every chunk (the real cause of the
+# "chapter heading not found" storm). Kept large but bounded against a
+# pathological multi-hundred-MB export.
+MARKDOWN_FULL_MAX_CHARS = int(_env("MARKDOWN_FULL_MAX_CHARS", 2_000_000))
 
 # ── Vision pass (figure descriptions) ───────────────────────────
 # When enabled, each figure's image is sent to the (multimodal) text LLM for an

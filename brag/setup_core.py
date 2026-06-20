@@ -132,11 +132,21 @@ def write_claude_config() -> tuple[bool, str]:
     import os
 
     # The compose mount only sets a real config dir when the launcher exported
-    # CLAUDE_CONFIG_DIR; otherwise it mounts a throwaway sentinel.
+    # CLAUDE_CONFIG_DIR; otherwise it mounts a throwaway sentinel. Be explicit
+    # about WHICH precondition failed so the wizard/log can point at the cause
+    # instead of a generic "do it manually".
     if os.environ.get("CLAUDE_CONFIG_MOUNTED") != "1":
-        return False, "Claude Desktop config folder not detected — add the MCP entry manually"
+        return False, (
+            "Claude Desktop config folder was not mounted into setup "
+            "(CLAUDE_CONFIG_MOUNTED is not 1) — most likely the launcher could "
+            "not find your Claude Desktop config folder. Add the MCP entry "
+            "manually (see below)."
+        )
     if not CLAUDE_CONFIG_DIR.exists():
-        return False, "Claude config folder not mounted"
+        return False, (
+            "Claude config folder is not mounted inside the container "
+            "(/claude-config missing) — add the MCP entry manually (see below)."
+        )
 
     config_path = CLAUDE_CONFIG_DIR / "claude_desktop_config.json"
     existing: dict = {}

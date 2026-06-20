@@ -39,52 +39,118 @@ def _norm_heading(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip().lower()
 
 
+def _strip_section_number(s: str) -> str:
+    """Drop a leading numeric section label like '2.1.1', '1.3' or '4.' so a
+    Docling-captured heading ('2.1.1 Projektleitung') still matches a markdown
+    heading that renders the number differently. ONLY a digits-and-dots prefix is
+    stripped — never a leading word — so 'Chapter 4' or 'Tabellenverzeichnis'
+    are untouched."""
+    return re.sub(r"^\d+(?:\.\d+)*\.?\s+", "", s).strip()
+
+
 def _chapter_text(full_markdown: str, chapter: str) -> str:
     if not chapter:
         return ""
-    # Match the chapter heading by its EXACT (normalized) text, not a
-    # case-insensitive substring — otherwise a short or repeated title
-    # ("Methods", "1 Introduction") captures the wrong section and the chunk
-    # gets grounded in unrelated context. Normalization only collapses
-    # whitespace / strips markdown escapes / lowercases, so cosmetic differences
-    # between the Docling section text and the markdown export do not defeat the
-    # match. If no heading matches, the caller falls back to whole-document.
-    target = _norm_heading(chapter)
+    # Collect every markdown heading once: (line index, level, normalized text).
     lines = full_markdown.splitlines()
-    capturing, level, result = False, None, []
-    for line in lines:
+    headings = [
+        (i, len(s) - len(s.lstrip("#")), _norm_heading(s.lstrip("#")))
+        for i, line in enumerate(lines)
+        for s in (line.strip(),)
+        if s.startswith("#")
+    ]
+    target = _norm_heading(chapter)
+    # 1) EXACT normalized match — safest; can never pick the wrong section.
+    matches = [h for h in headings if h[2] == target]
+    # 2) Guarded number-stripped fallback: tolerate a numeric-prefix rendering
+    #    difference ('2.1.1 Projektleitung' vs 'Projektleitung'), but ACCEPT it
+    #    ONLY when exactly one heading matches the number-stripped target. A
+    #    repeated bare title yields >1 candidate and is refused, never guessed —
+    #    this preserves the no-wrong-chapter guarantee.
+    if not matches:
+        target_ns = _strip_section_number(target)
+        if target_ns:
+            cand = [h for h in headings if _strip_section_number(h[2]) == target_ns]
+            if len(cand) == 1:
+                matches = cand
+    if not matches:
+        return ""
+    # Capture from the matched heading down to the next heading of equal/higher
+    # level (i.e. the body of this section).
+    start_idx, level, _ = matches[0]
+    result = [lines[start_idx]]
+    for line in lines[start_idx + 1:]:
         s = line.strip()
-        is_heading = s.startswith("#")
-        if not capturing:
-            if is_heading and _norm_heading(s.lstrip("#")) == target:
-                capturing = True
-                level = len(s) - len(s.lstrip("#"))
-                result.append(line)
-        else:
-            if is_heading and (len(s) - len(s.lstrip("#"))) <= level:
-                break
-            result.append(line)
+        if s.startswith("#") and (len(s) - len(s.lstrip("#"))) <= level:
+            break
+        result.append(line)
     return "\n".join(result)[: config.CHAPTER_CONTEXT_CHARS]
 
 
-def _doc_context(full_markdown: str, toc: str, chapter: str) -> str:
-    chapter_text = _chapter_text(full_markdown, chapter)
+def _doc_context(full_markdown: str, toc: str, chapter: str, section: str = "") -> str:
+    # Try the DEEPEST heading first: a chunk under '2.1.1 Projektleitung' carries
+    # that in `section`, while only the level<=1 `chapter` used to be tried — so
+    # deep headings could never match. Fall back to chapter, then whole-document.
+    chapter_text, matched = "", ""
+    for heading in (section, chapter):
+        if heading:
+            chapter_text = _chapter_text(full_markdown, heading)
+            if chapter_text:
+                matched = heading
+                break
     if chapter_text:
         return (
             f"<table_of_contents>\n{toc}\n</table_of_contents>\n\n"
-            f'<current_chapter title="{chapter}">\n{chapter_text}\n</current_chapter>'
+            f'<current_chapter title="{matched}">\n{chapter_text}\n</current_chapter>'
         )
-    if chapter:
-        # A chapter was named but no heading matched — the chunk now gets the
-        # weaker whole-document grounding. Make that visible instead of silent.
+    if chapter or section:
+        # A heading was named but none matched — the chunk now gets the weaker
+        # whole-document grounding. Make that visible instead of silent.
         print(f"  [contextualize] chapter heading not found, using "
-              f"whole-document context: {chapter!r}")
+              f"whole-document context: {(section or chapter)!r}")
     return f"<document>\n{full_markdown[: config.CONTEXT_DOC_CHARS]}\n</document>"
 
 
+def _fit_doc_context(doc_context: str, fixed_chars: int) -> str:
+    """Trim the grounding-context block so the WHOLE prompt stays within
+    config.CR_PROMPT_MAX_CHARS. ``fixed_chars`` is the length of everything else
+    in the prompt (chunk texts, task, format, language line). This is the single
+    guarantee that the request fits the model's context window — it bounds BOTH
+    the whole-document fallback AND the chapter-found path, regardless of how the
+    individual *_CHARS caps are set. The outermost wrapper tag of a truncated
+    block is re-closed so the XML the model sees is never left dangling."""
+    budget = config.CR_PROMPT_MAX_CHARS - fixed_chars
+    if len(doc_context) <= budget:
+        return doc_context
+    if budget <= 0:
+        # The fixed parts alone already fill the budget (e.g. very large chunk
+        # texts) — drop grounding entirely rather than emit a request that cannot
+        # fit. The chunk is still contextualized from its own text; weaker
+        # grounding beats an HTTP 400 that yields zero context.
+        return ""
+    head = doc_context[:budget].rstrip()
+    # Re-close the outermost wrapper tag if truncation cut it off, so the model
+    # receives well-formed context instead of a half-open element.
+    m = re.match(r"\s*<([a-z_]+)", doc_context)
+    if m:
+        close = f"</{m.group(1)}>"
+        if close not in head:
+            head = head[: max(0, budget - len(close) - 1)].rstrip() + f"\n{close}"
+    return head
+
+
 def _build_prompt(doc_context: str, batch: list[tuple[int, Chunk]], figures_only: bool) -> str:
+    # Bound each chunk's text so the chunk payload + scaffolding always leaves
+    # room for the grounding block within CR_PROMPT_MAX_CHARS — otherwise one
+    # oversized chunk (e.g. an 8000-char table) blows a local model's context
+    # window even after grounding is dropped. The FULL chunk text is still stored
+    # and embedded; this only bounds what the LLM SEES to write the 1-2 sentence
+    # context. Cloud's large budget leaves normal and table chunks untouched.
+    n = max(1, len(batch))
+    per_chunk = max(400, (config.CR_PROMPT_MAX_CHARS - 1500) // n)
     chunks_xml = "\n".join(
-        f'<chunk id="{i}">\n{c.text}\n</chunk>' for i, (_, c) in enumerate(batch)
+        f'<chunk id="{i}">\n{c.text[:per_chunk]}\n</chunk>'
+        for i, (_, c) in enumerate(batch)
     )
     if figures_only:
         task = (
@@ -106,11 +172,16 @@ def _build_prompt(doc_context: str, batch: list[tuple[int, Chunk]], figures_only
             "term is not in the chunk, do not mention it."
         )
     fmt = "\n".join(f'<context id="{i}">...</context>' for i in range(len(batch)))
-    return (
-        f"{doc_context}\n\n{task}\n\n"
+    # Assemble the fixed parts first, then trim ONLY the grounding-context block
+    # to whatever budget remains, so the total prompt can never exceed
+    # config.CR_PROMPT_MAX_CHARS (the guarantee that the request fits a local
+    # model's context window — on BOTH the chapter-found and whole-doc paths).
+    tail = (
+        f"\n\n{task}\n\n"
         f"Respond in {config.ANSWER_LANGUAGE}.\n\n{chunks_xml}\n\n"
         f"Answer ONLY in this exact format, nothing else:\n{fmt}"
     )
+    return f"{_fit_doc_context(doc_context, len(tail))}{tail}"
 
 
 def _vision_prompt(doc_context: str) -> str:
@@ -122,48 +193,108 @@ def _vision_prompt(doc_context: str) -> str:
         "relationships that are clearly legible. Do not guess illegible text "
         "and never invent data or numbers."
     )
-    return (
-        f"{doc_context}\n\n{task}\n\n"
+    tail = (
+        f"\n\n{task}\n\n"
         f"Respond in {config.ANSWER_LANGUAGE}. Give the description only, no preamble."
     )
+    # Bound the vision prompt the same way. Image tokens are NOT counted here —
+    # only a local model that accepts images reaches this path, and one image
+    # plus this (already small) trimmed text fits a vision model's window.
+    return f"{_fit_doc_context(doc_context, len(tail))}{tail}"
 
 
-def _contextualize_batched(llm, group, full_markdown, toc, contexts, figures_only):
+# After this many CONSECUTIVE failing LLM calls within a single document, stop
+# calling the LLM for the rest of that document and fall back to raw-text
+# embedding. Mirrors the vision consecutive-failure latch: a broken, missing or
+# over-context LLM then costs seconds (a couple of failed batches), not many
+# minutes (every batch failing), and ingest still COMPLETES with raw text.
+LLM_FAIL_LATCH_THRESHOLD = 2
+
+
+class _LLMHealth:
+    """Per-document latch shared across the text and figure-caption passes, so
+    consecutive failures in EITHER stop further LLM calls for the whole document.
+    Starts healthy; latches off after LLM_FAIL_LATCH_THRESHOLD consecutive
+    failures; any success resets the counter."""
+
+    def __init__(self):
+        self.alive = True
+        self._consecutive_fail = 0
+
+    def record_success(self):
+        self._consecutive_fail = 0
+
+    def record_failure(self):
+        self._consecutive_fail += 1
+        if self._consecutive_fail >= LLM_FAIL_LATCH_THRESHOLD:
+            self.alive = False
+            print(f"  [contextualize] LLM failed {self._consecutive_fail}x in a "
+                  "row — disabling contextualization for the rest of this "
+                  "document; remaining chunks embed as raw text")
+
+
+def _contextualize_batched(llm, group, full_markdown, toc, contexts, figures_only,
+                           health):
     """Original batched contextual-retrieval path (text chunks, and figures
     that have no usable image / when vision is off)."""
     for start in range(0, len(group), config.CR_BATCH_SIZE):
+        if not health.alive:
+            # Latched off earlier in this document — skip the (futile) call and
+            # leave these chunks' context empty so they embed as raw text.
+            return
         batch = group[start : start + config.CR_BATCH_SIZE]
         prompt = _build_prompt(
-            _doc_context(full_markdown, toc, batch[0][1].chapter),
+            _doc_context(full_markdown, toc, batch[0][1].chapter, batch[0][1].section),
             batch, figures_only,
         )
-        answer = llm.chat(prompt, max_tokens=200 * len(batch) + 100) or ""
+        answer = llm.chat(prompt, max_tokens=200 * len(batch) + 100)
+        if not answer:
+            # The LLM call failed (None / empty) — count it toward the latch so a
+            # persistently broken LLM stops wasting time on every batch.
+            health.record_failure()
+            continue
         parsed = dict(CONTEXT_TAG.findall(answer))
+        if not parsed:
+            # Reachable but unparseable output (wrong format / off-context) is
+            # still a failure for these chunks; treat it like a failed call.
+            health.record_failure()
+            continue
+        health.record_success()
         for local_i, (idx, _) in enumerate(batch):
             ctx = parsed.get(str(local_i), "").strip()
             if ctx:
                 contexts[idx] = ctx
 
 
-def _contextualize_figures_vision(llm, figures, full_markdown, toc, contexts):
+def _contextualize_figures_vision(llm, figures, full_markdown, toc, contexts, health):
     """Send each figure's image to the multimodal LLM for an honest
     description. Returns the figures that could NOT be described this way (no
-    image, or the model is not multimodal) for the caption-only fallback."""
+    image, or the model is not multimodal) for the caption-only fallback.
+
+    Vision keeps its OWN latch (``vision_alive``): two empty replies most likely
+    mean a non-multimodal model, so the figures should fall through to the
+    caption-only TEXT path rather than be abandoned. But each failure ALSO feeds
+    the shared document-level ``health`` latch, and each success resets it — so a
+    wholesale broken/over-context LLM (failing text AND vision) stops the
+    caption-only fallback too, instead of failing every remaining batch."""
     leftover, described = [], 0
     vision_alive, consecutive_fail = True, 0
     for idx, chunk in figures:
-        if vision_alive and chunk.image_b64:
-            prompt = _vision_prompt(_doc_context(full_markdown, toc, chunk.chapter))
+        if vision_alive and health.alive and chunk.image_b64:
+            prompt = _vision_prompt(
+                _doc_context(full_markdown, toc, chunk.chapter, chunk.section))
             desc = llm.chat(prompt, max_tokens=220, images=[chunk.image_b64])
             if desc and desc.strip():
                 contexts[idx] = desc.strip()
                 described += 1
                 consecutive_fail = 0
+                health.record_success()
                 continue
             # Don't disable vision on a single transient empty response; only
             # latch off after two in a row (then assume a non-multimodal model)
             # so one hiccup can't cost a whole document's figure descriptions.
             consecutive_fail += 1
+            health.record_failure()
             if consecutive_fail >= 2:
                 vision_alive = False
                 print("  [vision] figure description unavailable — falling back to "
@@ -183,17 +314,21 @@ def contextualize(chunks: list[Chunk], full_markdown: str) -> list[Chunk]:
     text_like = [(i, c) for i, c in enumerate(chunks) if c.chunk_type != "figure"]
     figures = [(i, c) for i, c in enumerate(chunks) if c.chunk_type == "figure"]
     contexts = [""] * len(chunks)
+    # Per-document failure latch shared across the text and figure passes.
+    health = _LLMHealth()
 
-    _contextualize_batched(llm, text_like, full_markdown, toc, contexts, False)
+    _contextualize_batched(llm, text_like, full_markdown, toc, contexts, False, health)
 
     if figures:
         vision_on = config.VISION_ENABLED and getattr(llm, "vision_capable", False)
         leftover = (
-            _contextualize_figures_vision(llm, figures, full_markdown, toc, contexts)
+            _contextualize_figures_vision(
+                llm, figures, full_markdown, toc, contexts, health)
             if vision_on else figures
         )
         if leftover:
-            _contextualize_batched(llm, leftover, full_markdown, toc, contexts, True)
+            _contextualize_batched(
+                llm, leftover, full_markdown, toc, contexts, True, health)
         # image bytes are no longer needed (never stored in Qdrant)
         for _, chunk in figures:
             chunk.image_b64 = ""

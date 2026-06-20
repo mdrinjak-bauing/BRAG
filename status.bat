@@ -39,11 +39,16 @@ if exist "%CFG%" (
   findstr /c:"academic-rag-and-second-brain" "%CFG%" >nul && (
     echo   [ OK ]  Claude Desktop is connected to the search tools
   ) || (
-    echo   [FAIL]  Claude Desktop entry missing - re-run setup.bat, then fully
-    echo           quit Claude Desktop ^(tray ^> Quit^) and reopen it.
+    echo   [FAIL]  Claude Desktop entry 'academic-rag-and-second-brain' missing
+    echo           in %CFG%
+    echo           Fix: re-run setup.bat ^(it shows the exact entry to paste if it
+    echo           cannot write it^), then fully quit Claude Desktop
+    echo           ^(tray ^> Quit^) and reopen it.
   )
 ) else (
-  echo   [FAIL]  Claude Desktop config not found - re-run setup.bat.
+  echo   [FAIL]  Claude Desktop config not found at %CFG%
+  echo           Fix: start Claude Desktop once so it creates the config, then
+  echo           re-run setup.bat.
 )
 
 echo.

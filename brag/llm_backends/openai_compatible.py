@@ -68,6 +68,21 @@ class OpenAICompatibleLLM(LLMBackend):
                 text = THINK_TAG.sub("", text).strip()
                 if text:
                     return text
+            except urllib.error.HTTPError as e:
+                # An HTTP status came back, so the server IS reachable. A 4xx is a
+                # CLIENT error — the request itself is bad (e.g. 400 when the
+                # prompt exceeds the model's loaded context window). Retrying the
+                # IDENTICAL request just 400s again, burning the sleep budget for
+                # nothing, so fail fast. The two retryable exceptions are 408
+                # (request timeout) and 429 (too many requests); everything else
+                # in 4xx is non-retryable. 5xx falls through to the retry path.
+                if 400 <= e.code < 500 and e.code not in (408, 429):
+                    print(f"  local LLM client error (HTTP {e.code}, not retrying): "
+                          f"{str(e)[:100]}")
+                    return None
+                print(f"  local LLM error (retry {attempt + 1}/3): HTTP {e.code} "
+                      f"{str(e)[:80]}")
+                time.sleep(2 * (attempt + 1))
             except (OSError, KeyError, json.JSONDecodeError) as e:
                 if attempt == 0 and not self.server_alive():
                     print(
