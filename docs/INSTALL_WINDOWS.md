@@ -88,8 +88,8 @@ plain language:
   only in a local `.env` file on your computer (owner-readable only) and is used
   solely to authenticate your own requests to the provider you chose — it is
   never sent to the makers of this app or any third party; the live check just
-  sends one small test request to that provider to confirm the key works. Local
-  profiles (Ollama / LM Studio) need no key at all.
+  sends one small test request to that provider to confirm the key works. The
+  local profile (LM Studio) needs no key at all.
 - **Your document language** and, optionally, a custom knowledge store folder.
 
 At the end the assistant writes the whole configuration itself — including the
@@ -140,6 +140,6 @@ Now ask Claude:
   lives inside Docker, safely outside any sync folder.
 - **Stopping/starting:** To stop, open a Command Prompt in the project folder and
   run `docker compose down`. To start: `docker compose up -d`.
-- **Hybrid/Local profiles:** install [Ollama](https://ollama.com) (recommended
-  on Windows) first, then run setup. See [PROFILES.md](PROFILES.md).
+- **Local profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first, then
+  run setup. See [PROFILES.md](PROFILES.md).
 - Trouble? See [FAQ.md](FAQ.md).

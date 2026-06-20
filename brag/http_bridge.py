@@ -103,18 +103,11 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send_json(404, {"ok": False, "message": "unknown endpoint"})
 
     def _check_local(self, body: dict):
-        """Probe the LLM app on the host (LM Studio / Ollama) and list models."""
+        """Probe LM Studio on the host and list its loaded models."""
         import urllib.request
-        profile = str(body.get("profile", "hybrid"))
-        if profile == "hybrid":
-            url, app = "http://host.docker.internal:1234/v1/models", "LM Studio"
-            hint = ("Open LM Studio, go to the Developer tab and click "
-                    "'Start Server', then check again.")
-        else:
-            url, app = "http://host.docker.internal:11434/v1/models", "Ollama"
-            hint = ("Install Ollama from ollama.com and make sure it is "
-                    "running (its icon appears in the menu bar / tray), "
-                    "then check again.")
+        url, app = "http://host.docker.internal:1234/v1/models", "LM Studio"
+        hint = ("Open LM Studio, go to the Developer tab and click "
+                "'Start Server', then check again.")
         try:
             with urllib.request.urlopen(url, timeout=5) as resp:
                 data = json.loads(resp.read())
@@ -125,8 +118,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
             return
 
         # Embeddings are ALWAYS local (arctic, in-container) in every profile —
-        # the local/Ollama profile only needs a chat model, NOT a pulled Ollama
-        # embedding model. So we gate on the chat model alone.
+        # the local profile only needs a chat model, so we gate on that alone.
         chat_models = [m for m in models if "embed" not in m.lower()]
         if not chat_models:
             self._send_json(200, {

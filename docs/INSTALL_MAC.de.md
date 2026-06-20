@@ -85,7 +85,7 @@ beantwortest du in einfacher Sprache:
   eigenen Anfragen beim gewählten Anbieter zu authentifizieren — er wird nie an
   die Macher dieser App oder an Dritte gesendet; die Live-Prüfung sendet
   lediglich eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu
-  bestätigen. Lokale Profile (Ollama / LM Studio) brauchen gar keinen Schlüssel.
+  bestätigen. Das lokale Profil (LM Studio) braucht gar keinen Schlüssel.
 - **Sprache deiner Dokumente** und optional ein eigener Wissensspeicher (eigener Pfad).
 
 Am Ende schreibt der Assistent die ganze Konfiguration selbst — inklusive des
@@ -141,7 +141,7 @@ Stelle Claude jetzt eine Frage:
 - **Stoppen/Starten:** Docker Desktop startet die App nach dem Hochfahren
   automatisch. Zum manuellen Stoppen: Terminal im Projektordner öffnen,
   `docker compose down`. Zum Starten: `docker compose up -d`.
-- **Profile Hybrid/Lokal:** zuerst [LM Studio](https://lmstudio.ai) oder
-  [Ollama](https://ollama.com) installieren, ein Modell laden, dann das Setup
+- **Profil Hybrid (lokal):** zuerst [LM Studio](https://lmstudio.ai)
+  installieren, ein Modell laden, dann das Setup
   ausführen. Siehe [PROFILES.de.md](PROFILES.de.md).
 - Probleme? Siehe [FAQ.de.md](FAQ.de.md).

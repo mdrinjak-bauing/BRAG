@@ -27,8 +27,7 @@ default `eco`); see `.env.example`.
 
 - *"I just want it to work, on this laptop."* → **Gemini** (free tier)
 - *"I already pay for ChatGPT / Claude and want to use it."* → **OpenAI** / **Claude**
-- *"My documents are confidential and I have a strong Mac."* → **Hybrid**
-- *"Confidential documents, on Windows/Linux or an older Mac."* → **Local**
+- *"My documents are confidential."* → **Hybrid**
 
 ## Cloud-LLM profiles (any laptop, need an API key)
 
@@ -55,16 +54,16 @@ cents for a typical corpus.
 
 ## Local-LLM profiles (nothing leaves your machine)
 
-| | **Hybrid** (Apple Silicon Mac) | **Local** (cross-platform) |
-|---|---|---|
-| Text LLM | your model in [LM Studio](https://lmstudio.ai) | your model via [Ollama](https://ollama.com) (default `llama3.1`) |
-| Needs | LM Studio running on the host with a loaded model | Ollama installed; `ollama pull llama3.1` once |
-| Hardware | M-series Mac, 32 GB RAM recommended | 16 GB RAM minimum; a GPU helps a lot |
-| Privacy | nothing leaves your machine | nothing leaves your machine |
+| | **Hybrid** (cross-platform) |
+|---|---|
+| Text LLM | your model in [LM Studio](https://lmstudio.ai) |
+| Needs | LM Studio running on the host with a loaded model |
+| Hardware | ~16 GB RAM runs a ~7B model (`qwen2.5-7b-instruct`); 32 GB a 14B (`qwen2.5-14b-instruct`); 64 GB+ a 27B (`gemma-3-27b-it`) |
+| Privacy | nothing leaves your machine |
 
 You **don't** pull an embedding model — arctic runs inside the container on its
-own. The app runs in Docker and reaches LM Studio / Ollama on the host via
-`host.docker.internal` (port 1234 / 11434).
+own. The app runs in Docker and reaches LM Studio on the host via
+`host.docker.internal` (port 1234).
 
 ## Mixing (advanced)
 

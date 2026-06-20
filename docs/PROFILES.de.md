@@ -30,8 +30,7 @@ größte CPU-Posten *jeder Suche* — auf schwachen Rechnern per `RERANK_PROFILE
 
 - *„Es soll einfach laufen, auf diesem Laptop."* → **Gemini** (kostenloser Tarif)
 - *„Ich zahle ohnehin für ChatGPT / Claude und will es nutzen."* → **OpenAI** / **Claude**
-- *„Meine Dokumente sind vertraulich und ich habe einen starken Mac."* → **Hybrid**
-- *„Vertrauliche Dokumente, unter Windows/Linux oder auf einem älteren Mac."* → **Lokal**
+- *„Meine Dokumente sind vertraulich und ich will sie lokal verarbeiten."* → **Hybrid**
 
 ## Cloud-LLM-Profile (jeder Laptop, API-Schlüssel nötig)
 
@@ -49,8 +48,8 @@ Bilder deiner Abbildungen — nie die ganzen Dateien, nie die Embeddings.
 Dein Schlüssel bleibt auf deinem Rechner: Er wird nur in der lokalen
 `.env`-Datei gespeichert (nur für dich lesbar) und dient ausschließlich dazu,
 deine eigenen Anfragen beim gewählten Anbieter zu authentifizieren — nie an die
-Macher dieser App oder an Dritte gesendet. Die lokalen Profile weiter unten
-brauchen gar keinen Schlüssel.
+Macher dieser App oder an Dritte gesendet. Das lokale Profil weiter unten
+braucht gar keinen Schlüssel.
 
 Der kostenlose Gemini-Tarif deckt einen gleichmäßigen persönlichen Gebrauch ab;
 umfangreiches Masseneinlesen kann an Tageslimits stoßen (das System wartet und
@@ -58,18 +57,18 @@ versucht es automatisch erneut). OpenAI und Anthropic rechnen pro Token ab — d
 oben genannten günstigsten Modelle halten das für einen typischen Korpus bei
 wenigen Cent.
 
-## Lokale LLM-Profile (nichts verlässt den Rechner)
+## Lokales LLM-Profil (nichts verlässt den Rechner)
 
-| | **Hybrid** (Apple-Silicon-Mac) | **Lokal** (plattformübergreifend) |
-|---|---|---|
-| Text-LLM | dein Modell in [LM Studio](https://lmstudio.ai) | dein Modell über [Ollama](https://ollama.com) (Standard `llama3.1`) |
-| Voraussetzung | LM Studio läuft auf dem Host mit geladenem Modell | Ollama installiert; einmal `ollama pull llama3.1` |
-| Hardware | M-Mac, 32 GB RAM empfohlen | mind. 16 GB RAM; eine GPU hilft sehr |
-| Datenschutz | nichts verlässt den Rechner | nichts verlässt den Rechner |
+| | **Hybrid** (plattformübergreifend) |
+|---|---|
+| Text-LLM | dein Modell in [LM Studio](https://lmstudio.ai) |
+| Voraussetzung | LM Studio läuft auf dem Host mit geladenem Modell |
+| Hardware | ~16 GB RAM für ein ~7B-Modell (`qwen2.5-7b-instruct`), 32 GB für ein 14B (`qwen2.5-14b-instruct`), 64 GB+ für ein 27B (`gemma-3-27b-it`); eine GPU hilft sehr |
+| Datenschutz | nichts verlässt den Rechner |
 
 Du lädst **kein** Embedding-Modell — arctic läuft eigenständig im Container. Die
-App läuft in Docker und erreicht LM Studio / Ollama auf dem Host über
-`host.docker.internal` (Port 1234 / 11434).
+App läuft in Docker und erreicht LM Studio auf dem Host über
+`host.docker.internal` (Port 1234).
 
 ## Mischen (für Fortgeschrittene)
 

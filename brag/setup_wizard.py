@@ -22,17 +22,16 @@ Choose your backend profile:
   [1] Gemini (RECOMMENDED) — Google Gemini cloud API (free tier), any computer.
   [2] OpenAI — ChatGPT cloud API (gpt-4o-mini).
   [3] Claude — Anthropic Claude Haiku.
-  [4] Hybrid — local LLM via LM Studio (strong Apple Silicon Mac needed).
-  [5] Local — local LLM via Ollama (cross-platform, slower).
+  [4] Local — local LLM via LM Studio (free app, any computer).
 
 The profile picks the TEXT AI only. Embeddings always run locally on your
 computer in every profile, so you can switch provider later WITHOUT
 re-indexing. Profiles 1-3 send document text to the chosen cloud provider for
-that text work; 4-5 keep everything local.
+that text work; 4 keeps everything local.
 """
 
 PROFILE_KEYS = {"1": "gemini", "2": "openai", "3": "anthropic",
-                "4": "hybrid", "5": "local"}
+                "4": "hybrid"}
 CLOUD_PROFILES = {"gemini", "openai", "anthropic"}
 
 
@@ -90,9 +89,8 @@ def main():
     print("1. Quit Claude Desktop completely and reopen it.")
     print("2. Drop a PDF into RAG-Verbindungsordner/sources/.")
     print("3. Ask Claude: 'What documents are in my knowledge base?'")
-    if profile in ("hybrid", "local"):
-        app = "LM Studio" if profile == "hybrid" else "Ollama"
-        print(f"\nRemember: {app} must be running whenever documents are indexed.")
+    if profile == "hybrid":
+        print("\nRemember: LM Studio must be running whenever documents are indexed.")
 
 
 if __name__ == "__main__":

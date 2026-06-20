@@ -49,7 +49,7 @@ services:
       # machine, set BRIDGE_HOST_PORT and BRIDGE_PUBLIC_URL in .env.
       - "127.0.0.1:${BRIDGE_HOST_PORT:-8765}:8765"
     extra_hosts:
-      - "host.docker.internal:host-gateway"   # reach LM Studio/Ollama on the host (Linux)
+      - "host.docker.internal:host-gateway"   # reach LM Studio on the host (Linux)
 
   # One-shot configuration service: serves the browser setup wizard and is the
   # ONLY service that mounts the project dir + the Claude Desktop config (so it
@@ -80,7 +80,7 @@ services:
     ports:
       - "127.0.0.1:${BRIDGE_HOST_PORT:-8765}:8765"
     extra_hosts:
-      - "host.docker.internal:host-gateway"   # reach LM Studio/Ollama on the host (Linux)
+      - "host.docker.internal:host-gateway"   # reach LM Studio on the host (Linux)
 
 volumes:
   qdrant_data:

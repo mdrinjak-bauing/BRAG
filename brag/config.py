@@ -63,8 +63,8 @@ EMBEDDING_DIM = int(_env("EMBEDDING_DIM", _profile["embedding_dim"]))
 EMBED_BATCH_SIZE = int(_env("EMBED_BATCH_SIZE", 32))
 # Upper bound on the characters of any single text handed to an embedding
 # backend, applied UNIFORMLY across all backends (local sentence-transformers,
-# OpenAI, Ollama, Gemini). Each backend previously hard-coded its own cap (local
-# 20000, OpenAI/Ollama 8000, Gemini none), so the SAME text could embed
+# OpenAI, Gemini). Each backend previously hard-coded its own cap (local
+# 20000, OpenAI 8000, Gemini none), so the SAME text could embed
 # differently depending only on the active backend — non-reproducible vectors
 # across profiles. One shared, env-overridable dial removes that asymmetry.
 EMBEDDING_INPUT_MAX_CHARS = int(_env("EMBEDDING_INPUT_MAX_CHARS", 20000))
@@ -72,7 +72,7 @@ LLM_BACKEND = _env("LLM_BACKEND", _profile["llm_backend"])
 LLM_MODEL = _env("LLM_MODEL", _profile["llm_model"])
 LLM_BASE_URL = _env("LLM_BASE_URL", _profile["llm_base_url"])
 
-# Whether the active LLM runs on-device (LM Studio / Ollama via the
+# Whether the active LLM runs on-device (LM Studio via the
 # OpenAI-compatible backend). Local models have SMALL, fixed context windows
 # (LM Studio defaults to ~4k tokens), so the contextualization prompt must be
 # bounded far more tightly than for cloud providers (which have 100k+ windows).
@@ -125,7 +125,7 @@ CHAPTER_CONTEXT_CHARS = int(
 # placed, so the request can never blow the model's context window regardless of
 # which grounding path was taken or how the individual caps are set.
 #
-# Local sizing (≈4k-token default LM Studio / Ollama window, ≈3.4 chars/token
+# Local sizing (≈4k-token default LM Studio window, ≈3.4 chars/token
 # for German), worst case at CR_BATCH_SIZE=3:
 #   chunk payload   3 × 2000 = 6000 chars   (≈1760 tok)
 #   scaffolding     ~700 chars              (≈210 tok)

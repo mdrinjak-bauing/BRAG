@@ -134,8 +134,7 @@ echo Connecting BRAG to Claude Desktop...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_claude_config.ps1"
 
 REM Also connect LM Studio if it is installed (its chat is an MCP host too). The
-REM script no-ops when LM Studio is absent. Ollama is a model backend, not an MCP
-REM host, so there is nothing to configure there.
+REM script no-ops when LM Studio is absent.
 echo.
 echo Connecting BRAG to LM Studio (if installed)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_lmstudio_config.ps1"

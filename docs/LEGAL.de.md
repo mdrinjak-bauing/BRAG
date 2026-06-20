@@ -42,7 +42,7 @@ Was deinen Rechner verlässt, hängt vom gewählten **Profil** ab:
 ausschließlich dazu, deine eigenen Anfragen beim gewählten Anbieter zu
 authentifizieren. Er wird nie an die Macher dieser App oder an Dritte gesendet;
 die Live-Prüfung beim Setup sendet lediglich eine kleine Testanfrage an diesen
-Anbieter, um die Gültigkeit zu bestätigen. Lokale Profile (Ollama / LM Studio)
+Anbieter, um die Gültigkeit zu bestätigen. Lokale Profile (LM Studio)
 brauchen gar keinen Schlüssel.
 
 **Wichtig — kostenloser Gemini-Tarif (Standard):** Beim *kostenlosen* Tarif von
@@ -77,14 +77,14 @@ Personalrat und die Rechtsabteilung. Das ist kein Formalismus, sondern schützt
 dich und deine Organisation.
 
 Aus Sicht der Datensicherheit sind in diesem Kontext **lokale Profile klar zu
-bevorzugen** (Hybrid/Lokal): Dokumenttexte und Bilder verlassen den Rechner
+bevorzugen** (Hybrid – LM Studio): Dokumenttexte und Bilder verlassen den Rechner
 nicht, es entsteht kein Drittlandtransfer und keine Auftragsverarbeitung mit
 externen Anbietern. Für vertrauliche oder personenbezogene Unterlagen ist das
 der bedenkenlose Standardweg.
 
 **IT-Abteilungen** können BRAG für den organisationalen Einsatz
 **professionalisieren** — etwa durch: ausschließlich lokale Modelle
-(LM Studio/Ollama oder ein selbst gehostetes Inferenz-Backend), zentral
+(LM Studio oder ein selbst gehostetes Inferenz-Backend), zentral
 verwaltete Konfiguration und Schlüssel, Zugriffs- und Netzwerkbeschränkungen,
 Backup- und Löschkonzepte für Wissensspeicher und Index sowie eine dokumentierte Bewertung
 (z. B. eine Datenschutz-Folgenabschätzung, sofern erforderlich). Die offene

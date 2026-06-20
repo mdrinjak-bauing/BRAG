@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.3] — 2026-06-20
+
+### Removed
+- **Ollama support dropped.** BRAG is driven by an MCP host, and Ollama is a
+  model backend, not an MCP host — so it could never auto-connect the way Claude
+  Desktop and LM Studio do. **LM Studio is now the single local-LLM option** (it
+  runs on Windows, macOS and Linux, including weaker laptops — ~16 GB RAM handles
+  a ~7B model). Removed the `local` profile, the Ollama embedding backend, the
+  wizard's Ollama step, and every Ollama reference across docs and setup. Existing
+  installs on `PROFILE=local`: switch to `hybrid` (LM Studio) or a cloud profile
+  and re-run setup.
+
 ## [0.3.2] — 2026-06-20
 
 A reliability, security and documentation hardening release following a full
@@ -281,6 +293,7 @@ re-index).
 - Knowledge store (library vs. notebook) and the search MCP server for
   Claude Desktop.
 
+[0.3.3]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.3.3
 [0.3.2]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.3.2
 [0.3.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.3.0
 [0.2.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.2.0

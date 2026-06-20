@@ -1,7 +1,7 @@
-"""OpenAI-compatible LLM backend (Profiles B and C).
+"""OpenAI-compatible LLM backend (the local "hybrid" profile).
 
-One client serves both LM Studio (localhost:1234/v1) and Ollama
-(localhost:11434/v1) — both expose the OpenAI chat completions API.
+Serves LM Studio (localhost:1234/v1), which exposes the OpenAI chat
+completions API.
 Uses urllib only, no extra dependency. Local models run requests
 SEQUENTIALLY by design (parallel local inference can freeze machines).
 """
@@ -87,7 +87,7 @@ class OpenAICompatibleLLM(LLMBackend):
                 if attempt == 0 and not self.server_alive():
                     print(
                         "  local LLM server is not reachable at "
-                        f"{self._url} — is LM Studio / Ollama running on the host?"
+                        f"{self._url} — is LM Studio running on the host?"
                     )
                     return None
                 print(f"  local LLM error (retry {attempt + 1}/3): {str(e)[:100]}")

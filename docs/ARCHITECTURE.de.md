@@ -18,7 +18,7 @@ Claude Desktop als Benutzeroberfläche.
 │  sources/ notes/ │                   │ brag-qdrant (vector DB,          │
 │  passages/ wiki/ │                   │  named volume — no sync risk)   │
 │                  │                   └─────────────────────────────────┘
-│ LM Studio/Ollama ◀── host.docker.internal (nur Profile Hybrid/Lokal)
+│ LM Studio       ◀── host.docker.internal (nur Profil Hybrid)
 └──────────────────┘
 ```
 

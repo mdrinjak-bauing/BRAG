@@ -43,8 +43,8 @@ gespeichert (nur für dich lesbar) und dient ausschließlich dazu, deine eigenen
 Anfragen beim gewählten Anbieter (Gemini / OpenAI / Anthropic) zu
 authentifizieren. Er wird nie an die Macher dieser App oder an Dritte gesendet;
 die Live-Prüfung beim Setup sendet lediglich eine kleine Testanfrage an diesen
-Anbieter, um die Gültigkeit zu bestätigen. Lokale Profile (Ollama / LM Studio)
-brauchen gar keinen Schlüssel.
+Anbieter, um die Gültigkeit zu bestätigen. Das lokale Profil (LM Studio)
+braucht gar keinen Schlüssel.
 
 **macOS: Ein Doppelklick auf `setup.command` bewirkt nichts (kein Fenster).**
 Das ist etwas anderes als die Gatekeeper-Warnung „nicht verifizierter Entwickler"
@@ -89,7 +89,7 @@ die Texterkennung der macOS-Vorschau bettet keine Ebene ein — `ocrmypdf` oder
 **Die Indexierung ist langsam.**
 Das erste Dokument lädt einmalig die Layout-Analyse-Modelle herunter. Ein
 50-seitiges Paper dauert typisch 1–3 Minuten; ein 500-seitiges Buch
-entsprechend länger. Die Profile Hybrid/Lokal sind langsamer als die
+entsprechend länger. Das lokale Profil (LM Studio) ist langsamer als die
 Cloud-Profile.
 
 **„Rate limit"-Meldungen während der Indexierung (Cloud-Profil).**

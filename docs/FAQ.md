@@ -38,8 +38,8 @@ Your API key is stored only in a local `.env` file on your computer
 (owner-readable only) and is used solely to authenticate your own requests to the
 provider you chose (Gemini / OpenAI / Anthropic). It is never sent to the makers
 of this app or any third party; the live check during setup just sends one small
-test request to that provider to confirm the key works. Local profiles (Ollama /
-LM Studio) need no key at all.
+test request to that provider to confirm the key works. The local profile (LM
+Studio) needs no key at all.
 
 **macOS: double-clicking `setup.command` does nothing (no window opens).**
 This is different from the Gatekeeper "unidentified developer" warning (for that,
@@ -82,7 +82,7 @@ built-in text recognition won't embed a layer — use `ocrmypdf` or similar).
 **Indexing is slow.**
 The first document downloads the layout-analysis models once. A 50-page
 paper typically takes 1–3 minutes; a 500-page book proportionally longer.
-The hybrid/local profiles are slower than the cloud profiles.
+The local profile (LM Studio) is slower than the cloud profiles.
 
 **"Rate limit" messages during indexing (Cloud profile).**
 The free Gemini tier has per-minute/per-day limits. The system waits and

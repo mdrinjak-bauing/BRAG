@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.2** ([changes](#versions))
+**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.3** ([changes](#versions))
 
 > **An AI assistant that actually knows your sources.** Drop your documents — PDFs, Word, PowerPoint, your own notes — into a folder. BRAG makes sense of them **on your own machine** and hands the AI the right passages for every question — page-cited, one click from the original. Whether that AI runs locally or in the cloud is your call; at most your question and the matching passages are sent — never the whole corpus.
 
@@ -16,13 +16,13 @@ You keep a folder of files. BRAG turns it into a searchable knowledge store and 
 
 Three things set it apart:
 
-- **Local and yours.** The search index and document analysis run on your own machine. Answering can be **fully local** too: BRAG is a standard MCP service, so you can connect it to a local model (Ollama, LM Studio) — then nothing leaves your computer. If you take the convenient cloud route, only your question and the matching passages go to the model, never the whole corpus.
+- **Local and yours.** The search index and document analysis run on your own machine. Answering can be **fully local** too: BRAG is a standard MCP service, so you can connect it to a local model (LM Studio) — then nothing leaves your computer. If you take the convenient cloud route, only your question and the matching passages go to the model, never the whole corpus.
 - **Cited, not guessed.** A hybrid search (meaning *and* keyword, with reranking) finds the passages that are genuinely relevant, and the answer points you to the page so you can verify it yourself.
 - **No programming required.** A double-click installer and a browser setup wizard do the wiring for the standard route (Claude Desktop); you choose your provider and BRAG handles the rest.
 
 > *The name is a play on my field — civil engineering, where you* ***build*** *things — and on what the tool does: it builds up your knowledge and retrieves it when you need it.*
 
-*Note on scope (v0.3.2): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. (Ollama is a local model backend, not an MCP host, so the tools are used from a chat client, not from Ollama itself.) Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic; capturing your own conclusions as free-form notes is an optional Obsidian add-on (see [docs](docs/OBSIDIAN.md)).*
+*Note on scope (v0.3.3): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic; capturing your own conclusions as free-form notes is an optional Obsidian add-on (see [docs](docs/OBSIDIAN.md)).*
 
 ## Who is it for?
 
@@ -166,8 +166,7 @@ Set up automatically, the **BRAG MCP server** gives your assistant one connectio
 with two sets of tools — over your **library** (search) and your **notebook**
 (read/write); the notebook tools never touch the search index. Setup wires this
 into **Claude Desktop**, and into **LM Studio** as well if it is installed (LM
-Studio's chat is an MCP host). *Ollama is a model backend, not an MCP host — it
-serves the local model, so there is nothing to configure there.* The tools:
+Studio's chat is an MCP host). The tools:
 
 | Tool | What it does | Example question |
 |---|---|---|
@@ -203,8 +202,7 @@ re-indexing.**
 | **Gemini** (default) | Google Gemini (free tier) | gemini-2.5-flash-lite | any laptop | yes (Google) |
 | **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini | any laptop | yes (OpenAI) |
 | **Claude** | Anthropic Claude | claude-haiku-4-5 | any laptop | yes (Anthropic) |
-| **Hybrid** | LM Studio (on your Mac) | your local model | Apple Silicon, 32 GB+ | no |
-| **Local** | Ollama (on your machine) | llama3.1 | decent CPU, 16 GB+ | no |
+| **Hybrid** | LM Studio (on your machine) | your local model | ~16 GB+ RAM (more for bigger models) | no |
 
 **Which hardware unlocks which tier?** Cloud profiles run on any machine; a local
 text AI and a fully cranked-up reranker need more:
@@ -212,9 +210,9 @@ text AI and a fully cranked-up reranker need more:
 | Tier | Hardware | Unlocks | Trade-off |
 |---|---|---|---|
 | **Light** | 8 GB minimum, 16 GB comfortable; any computer, no GPU | Cloud LLM, local index, reranker eco/off | API key needed; document text goes to the provider; the first ingest is RAM-heavy |
-| **Medium** | ~16 GB RAM | + smooth reranker, optionally a first local LLM (Ollama) | local LLM slower/weaker |
-| **Private-local** | M-Mac 32 GB, LM Studio | local LLM (e.g. qwen-14b), reranker full, vision local | nothing leaves the machine; more setup |
-| **Full version** | M-Mac 64 GB+, LM Studio | large local LLM (e.g. gemma-27b) + vision + reranker full | highest quality, highest load |
+| **Medium** | ~16 GB RAM | + smooth reranker, optionally a first local LLM (LM Studio, e.g. qwen2.5-7b-instruct) | local LLM slower/weaker |
+| **Private-local** | M-Mac 32 GB, LM Studio | local LLM (e.g. qwen2.5-14b-instruct), reranker full, vision local | nothing leaves the machine; more setup |
+| **Full version** | M-Mac 64 GB+, LM Studio | large local LLM (e.g. gemma-3-27b-it) + vision + reranker full | highest quality, highest load |
 
 ### Tuning search quality: the reranker
 
@@ -275,8 +273,7 @@ the *text* AI locally (see the profile table above).
 [Claude Desktop](https://claude.com/download) and an API key — easiest is
 [Gemini](https://aistudio.google.com/apikey) (free tier); or
 [OpenAI](https://platform.openai.com/api-keys) / [Anthropic](https://console.anthropic.com/).
-Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai) or
-[Ollama](https://ollama.com).
+Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai).
 
 1. **Download:** green "Code" button → "Download ZIP" → unpack.
 2. **Double-click** `setup.command` (Mac) or `setup.bat` (Windows). The
@@ -413,7 +410,7 @@ that.
 
 Possible directions (open architecture, not yet built in):
 
-- **A fully local answer path** — because BRAG is a standard MCP service, you can point its search tools at a local chat client backed by **Ollama or LM Studio** instead of Claude Desktop. Then the whole chain — index, document analysis and answer — runs on your own machine, ideal for confidential material. **Claude Code** can scaffold the MCP bridge for this in a few steps.
+- **A fully local answer path** — because BRAG is a standard MCP service, you can point its search tools at a local chat client backed by **LM Studio** instead of Claude Desktop. Then the whole chain — index, document analysis and answer — runs on your own machine, ideal for confidential material. **Claude Code** can scaffold the MCP bridge for this in a few steps.
 - **Connect more data sources** — email and calendar, cloud storage, reference
   managers (e.g. Zotero), websites/feeds: as extra sources or as their own MCP
   tools Claude uses in the same conversation.
@@ -470,8 +467,11 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 ## Versions
 
-Current version: **0.3.2** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.3.3** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.3.3** — Dropped Ollama; **LM Studio is now the only local-LLM option**
+  (cross-platform, works on weaker laptops too), and setup auto-connects LM
+  Studio alongside Claude Desktop.
 - **0.3.2** — Reliability, security and documentation hardening after a full
   pre-publication audit. **Fixes:** same-named files in different folders no
   longer overwrite each other's index (data-loss fix); page citations are
@@ -503,7 +503,7 @@ Current version: **0.3.2** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
 ## Status
 
-Early release (0.3.2). The **Gemini profile** is the tested happy path; the
+Early release (0.3.3). The **Gemini profile** is the tested happy path; the
 other profiles work but are less battle-tested. Roadmap: automatic file naming,
 corpus overview modes (coverage/clusters), optional knowledge-graph layer — and
 the integrations sketched above.

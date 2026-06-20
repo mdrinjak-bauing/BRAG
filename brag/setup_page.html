@@ -81,23 +81,9 @@
     <button class="big primary" onclick="show('s2cloud')">
       <span data-i="privacy_cloud"></span><small data-i="privacy_cloud_s"></small>
     </button>
-    <button class="big" onclick="show('s1b')">
+    <button class="big" onclick="setProfile('hybrid')">
       <span data-i="privacy_local"></span><small data-i="privacy_local_s"></small>
     </button>
-  </div>
-
-  <!-- STEP 1b: hardware -->
-  <div class="card step" id="s1b">
-    <span class="pill" data-i="badge_step1"></span>
-    <h2 data-i="hw_h"></h2>
-    <p class="hint" data-i="hw_p"></p>
-    <button class="big" onclick="setProfile('hybrid')">
-      <span data-i="hw_strong"></span><small data-i="hw_strong_s"></small>
-    </button>
-    <button class="big" onclick="setProfile('local')">
-      <span data-i="hw_weak"></span><small data-i="hw_weak_s"></small>
-    </button>
-    <div class="row"><button onclick="show('s1')" data-i="back"></button></div>
   </div>
 
   <!-- STEP 2cloud: choose cloud provider -->
@@ -151,6 +137,7 @@
       <li data-i="lms_2">
         <table>
           <tr><th data-i="lms_mem"></th><th data-i="lms_model"></th></tr>
+          <tr><td>16 GB</td><td><code>qwen2.5-7b-instruct</code></td></tr>
           <tr><td>32 GB</td><td><code>qwen2.5-14b-instruct</code></td></tr>
           <tr><td>64 GB+</td><td><code>gemma-3-27b-it</code></td></tr>
         </table>
@@ -166,34 +153,9 @@
       <p class="hint" data-i="model_min"></p>
     </div>
     <div class="row">
-      <button onclick="show('s1b')" data-i="back"></button><span class="spacer"></span>
+      <button onclick="show('s1')" data-i="back"></button><span class="spacer"></span>
       <button class="linkish" onclick="show('s3')" data-i="skip"></button>
       <button class="primary" id="cont-hybrid" disabled onclick="pickModel('hybrid')" data-i="continue"></button>
-    </div>
-  </div>
-
-  <!-- STEP 2l: Ollama -->
-  <div class="card step" id="s2l">
-    <span class="pill" data-i="badge_step2"></span>
-    <h2 data-i="oll_h"></h2>
-    <ol>
-      <li data-i="oll_1"></li>
-      <li data-i="oll_2">
-        <div class="cmd"><span>ollama pull llama3.1</span><button onclick="copyCmd(this)">copy</button></div>
-      </li>
-    </ol>
-    <div class="row">
-      <button class="primary" onclick="checkLocal('local')" data-i="check_conn"></button>
-      <span id="localmsg-local" class="hint"></span>
-    </div>
-    <div id="modelpick-local" style="display:none; margin-top:14px;">
-      <p data-i="pick_model"></p><select id="modelsel-local"></select>
-      <p class="hint" data-i="model_min"></p>
-    </div>
-    <div class="row">
-      <button onclick="show('s1b')" data-i="back"></button><span class="spacer"></span>
-      <button class="linkish" onclick="show('s3')" data-i="skip"></button>
-      <button class="primary" id="cont-local" disabled onclick="pickModel('local')" data-i="continue"></button>
     </div>
   </div>
 
@@ -323,10 +285,7 @@ const STR = {
     privacy_h:"Do your documents contain confidential data that must not leave your computer?",
     privacy_p:"To make documents searchable, their text is analyzed by an AI — either by a cloud service (fast, works on any computer) or by an AI running on your own machine (private, needs a capable computer and ~10 extra minutes of setup).",
     privacy_cloud:"No, a cloud service is fine", privacy_cloud_s:"→ recommended; works on any computer (you pick the provider next)",
-    privacy_local:"Yes, everything must stay on my computer", privacy_local_s:"→ local AI (one more question)",
-    hw_h:"Is your computer powerful?", hw_p:"Local AI needs muscle. “Powerful” means an Apple Mac with an M-series chip and at least 32 GB of memory.",
-    hw_strong:"Yes — a strong Mac (M-series, 32 GB+)", hw_strong_s:"→ best local quality, via the free LM Studio app",
-    hw_weak:"No / Windows / older machine", hw_weak_s:"→ works too, a bit slower, via the free Ollama app",
+    privacy_local:"Yes, everything must stay on my computer", privacy_local_s:"→ local AI via LM Studio (free app)",
     badge_step2:"Step 2 — AI provider",
     prov_h:"Which cloud provider would you like to use?",
     prov_p:"All three work on any computer and only need a free/paid API key. The cheapest model is preselected for each — you can switch provider later without re-indexing.",
@@ -342,12 +301,9 @@ const STR = {
     key_check:"Check key & continue",
     lms_h:"Install LM Studio and load a model",
     lms_1:"Install LM Studio (free): lmstudio.ai → Download → open it once.",
-    lms_2:"Download a model matching your memory:", lms_mem:"Your Mac", lms_model:"Recommended model",
+    lms_2:"Download a model matching your memory:", lms_mem:"Your memory (RAM)", lms_model:"Recommended model",
     lms_3:"Start the server: Developer tab → turn the server ON (localhost:1234) and load the model.",
     check_conn:"Check connection", pick_model:"Found these models — which should do the document analysis?", model_min:"Tip: pick an instruction model with roughly 7B parameters or more. Small models (3–4B) often return empty or malformed context, and BRAG then falls back to no context (still searchable, just without the extra anchoring sentences). The models recommended above are a safe choice.",
-    oll_h:"Install Ollama and download the text model",
-    oll_1:"Install Ollama (free): ollama.com → Download → install (runs in the background).",
-    oll_2:"Open a terminal and run this line (downloads a few GB). You only need the text model — the meaning-index runs locally on its own, no embedding model to pull:",
     badge_step3:"Step 3 — your documents",
     doclang_h:"Which language are most of your documents in?",
     doclang_p:"This tunes the keyword search and the language of generated notes. Mixed corpora: pick the majority language.",
@@ -408,10 +364,7 @@ const STR = {
     privacy_h:"Enthalten deine Dokumente vertrauliche Daten, die deinen Rechner nicht verlassen dürfen?",
     privacy_p:"Damit Dokumente durchsuchbar werden, wird ihr Text von einer KI analysiert — entweder von einem Cloud-Dienst (schnell, läuft auf jedem Rechner) oder von einer KI auf deinem eigenen Rechner (privat, braucht einen starken Rechner und ~10 Minuten mehr Einrichtung).",
     privacy_cloud:"Nein, ein Cloud-Dienst ist in Ordnung", privacy_cloud_s:"→ empfohlen; läuft auf jedem Rechner (Anbieter wählst du als Nächstes)",
-    privacy_local:"Ja, alles muss auf meinem Rechner bleiben", privacy_local_s:"→ lokale KI (eine Frage mehr)",
-    hw_h:"Ist dein Rechner leistungsstark?", hw_p:"Lokale KI braucht Leistung. „stark“ heißt: ein Apple-Mac mit M-Chip und mindestens 32 GB Arbeitsspeicher.",
-    hw_strong:"Ja — ein starker Mac (M-Chip, 32 GB+)", hw_strong_s:"→ beste lokale Qualität, über die kostenlose App LM Studio",
-    hw_weak:"Nein / Windows / älterer Rechner", hw_weak_s:"→ geht auch, etwas langsamer, über die kostenlose App Ollama",
+    privacy_local:"Ja, alles muss auf meinem Rechner bleiben", privacy_local_s:"→ lokale KI über LM Studio (kostenlose App)",
     badge_step2:"Schritt 2 — KI-Anbieter",
     prov_h:"Welchen Cloud-Anbieter möchtest du nutzen?",
     prov_p:"Alle drei laufen auf jedem Rechner und brauchen nur einen API-Schlüssel. Das jeweils günstigste Modell ist vorausgewählt — du kannst den Anbieter später ohne Neu-Indexierung wechseln.",
@@ -427,12 +380,9 @@ const STR = {
     key_check:"Schlüssel prüfen & weiter",
     lms_h:"LM Studio installieren und ein Modell laden",
     lms_1:"LM Studio installieren (kostenlos): lmstudio.ai → Download → einmal öffnen.",
-    lms_2:"Ein Modell passend zum Arbeitsspeicher laden:", lms_mem:"Dein Mac", lms_model:"Empfohlenes Modell",
+    lms_2:"Ein Modell passend zum Arbeitsspeicher laden:", lms_mem:"Dein RAM", lms_model:"Empfohlenes Modell",
     lms_3:"Server starten: Reiter „Developer“ → Server auf AN (localhost:1234) und Modell laden.",
     check_conn:"Verbindung prüfen", pick_model:"Diese Modelle gefunden — welches soll die Dokumentanalyse machen?", model_min:"Tipp: Wähle ein Instruktionsmodell mit etwa 7B Parametern oder mehr. Kleine Modelle (3–4B) liefern oft leeren oder fehlerhaften Kontext — BRAG fällt dann auf „kein Kontext“ zurück (weiterhin durchsuchbar, nur ohne die zusätzlichen Anker-Sätze). Die oben empfohlenen Modelle sind eine sichere Wahl.",
-    oll_h:"Ollama installieren und das Textmodell laden",
-    oll_1:"Ollama installieren (kostenlos): ollama.com → Download → installieren (läuft im Hintergrund).",
-    oll_2:"Ein Terminal öffnen und diese Zeile ausführen (lädt ein paar GB). Du brauchst nur das Textmodell — der Bedeutungs-Index läuft eigenständig lokal, kein Embedding-Modell nötig:",
     badge_step3:"Schritt 3 — deine Dokumente",
     doclang_h:"In welcher Sprache sind die meisten deiner Dokumente?",
     doclang_p:"Das stellt die Stichwortsuche und die Sprache der erzeugten Notizen ein. Bei gemischten Beständen die Mehrheitssprache wählen.",
@@ -503,7 +453,7 @@ function show(id){
   document.querySelectorAll(".step").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active"); window.scrollTo(0,0);
 }
-function setProfile(p){ state.profile = p; show(p==="hybrid" ? "s2h" : "s2l"); }
+function setProfile(p){ state.profile = p; show("s2h"); }
 function setProvider(p){
   state.provider = p; state.profile = p;
   const link = document.getElementById("keylink");
@@ -512,7 +462,6 @@ function setProvider(p){
 }
 function back3(){
   if (state.profile==="hybrid") show("s2h");
-  else if (state.profile==="local") show("s2l");
   else show("s2key");
 }
 function copyCmd(btn){

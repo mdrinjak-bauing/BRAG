@@ -95,7 +95,7 @@ beantwortest du in einfacher Sprache:
   eigenen Anfragen beim gewählten Anbieter zu authentifizieren — er wird nie an
   die Macher dieser App oder an Dritte gesendet; die Live-Prüfung sendet
   lediglich eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu
-  bestätigen. Lokale Profile (Ollama / LM Studio) brauchen gar keinen Schlüssel.
+  bestätigen. Lokale Profile (LM Studio) brauchen gar keinen Schlüssel.
 - **Sprache deiner Dokumente** und optional ein eigener Wissensspeicher (eigener Pfad).
 
 Am Ende schreibt der Assistent die gesamte Konfiguration selbst — inklusive des
@@ -149,7 +149,7 @@ Stelle Claude jetzt eine Frage:
   Datenbank liegt in Docker, sicher außerhalb jedes Sync-Ordners.
 - **Stoppen/Starten:** Zum Stoppen eine Eingabeaufforderung im Projektordner
   öffnen, `docker compose down`. Zum Starten: `docker compose up -d`.
-- **Profile Hybrid/Lokal:** zuerst [Ollama](https://ollama.com) installieren
+- **Profil Hybrid (lokal):** zuerst [LM Studio](https://lmstudio.ai) installieren
   (unter Windows empfohlen), dann das Setup ausführen. Siehe
   [PROFILES.de.md](PROFILES.de.md).
 - Probleme? Siehe [FAQ.de.md](FAQ.de.md).

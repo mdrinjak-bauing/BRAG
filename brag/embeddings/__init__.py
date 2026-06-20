@@ -24,9 +24,6 @@ def get_embedder() -> EmbeddingBackend:
         elif config.EMBEDDING_BACKEND == "local_st":
             from brag.embeddings.local_st import SentenceTransformerEmbedder
             _embedder = SentenceTransformerEmbedder()
-        elif config.EMBEDDING_BACKEND == "ollama":
-            from brag.embeddings.ollama import OllamaEmbedder
-            _embedder = OllamaEmbedder()
         else:
             raise ValueError(f"Unknown EMBEDDING_BACKEND: {config.EMBEDDING_BACKEND}")
     return _embedder

@@ -22,7 +22,7 @@ verify them against the linked original page before relying on or citing them.
 
 What leaves your machine depends on the chosen **profile**:
 
-- **Local profiles (Hybrid, Local):** **nothing** leaves your machine — neither
+- **Local profile (Hybrid):** **nothing** leaves your machine — neither
   document text nor embeddings. The meaning index is computed locally in every
   standard profile anyway. The one exception is the optional cloud-embedding
   override (`EMBEDDING_BACKEND=gemini`/`openai`, documented in `.env.example`):
@@ -38,8 +38,8 @@ What leaves your machine depends on the chosen **profile**:
 computer (owner-readable only) and is used solely to authenticate your own
 requests to the provider you chose. It is never sent to the makers of this app
 or any third party; the live check during setup just sends one small test
-request to that provider to confirm the key works. Local profiles (Ollama / LM
-Studio) need no key at all.
+request to that provider to confirm the key works. The local profile (LM
+Studio) needs no key at all.
 
 **Important — free Gemini tier (the default):** On the *free* tier of Google AI
 Studio, Google may **use** the submitted inputs and outputs to **improve its
@@ -70,13 +70,13 @@ bodies: your data protection officer, IT security, where applicable the works
 council, and the legal department. This is not red tape; it protects you and
 your organization.
 
-From a data-security standpoint, **local profiles are clearly preferable** here
-(Hybrid/Local): document text and images never leave the machine, there is no
+From a data-security standpoint, the **local profile is clearly preferable** here
+(Hybrid): document text and images never leave the machine, there is no
 third-country transfer and no data processing with external providers. For
 confidential or personal material this is the safe default.
 
 **IT departments** can **harden BRAG for organizational use** — e.g. local
-models only (LM Studio/Ollama or a self-hosted inference backend), centrally
+models only (LM Studio or a self-hosted inference backend), centrally
 managed configuration and keys, access and network restrictions, backup and
 deletion policies for the knowledge store and index, and a documented assessment (such as
 a data-protection impact assessment, where required). The open architecture

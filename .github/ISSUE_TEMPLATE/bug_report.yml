@@ -44,7 +44,6 @@ body:
         - OpenAI
         - Anthropic
         - Hybrid (LM Studio)
-        - Local (Ollama)
         - Not sure
     validations:
       required: true

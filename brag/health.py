@@ -89,14 +89,14 @@ def check_llm() -> bool:
             return _fail(f"AI text model ({backend})", str(e)[:60])
         return (_ok(f"AI text model ({backend})", config.LLM_MODEL)
                 if ok else _fail(f"AI text model ({backend})", msg))
-    # Local profile (LM Studio / Ollama) reached via host.docker.internal
+    # Local profile (LM Studio) reached via host.docker.internal
     try:
         base = (config.LLM_BASE_URL or "").rstrip("/")
         with urllib.request.urlopen(f"{base}/models", timeout=5):
             return _ok("AI text model (local)", config.LLM_MODEL)
     except Exception:  # noqa: BLE001
         return _fail("AI text model (local)",
-                     f"not reachable at {config.LLM_BASE_URL} — is LM Studio/Ollama running?")
+                     f"not reachable at {config.LLM_BASE_URL} — is LM Studio running?")
 
 
 def main() -> int:

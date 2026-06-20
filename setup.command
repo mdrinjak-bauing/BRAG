@@ -99,8 +99,7 @@ docker compose --profile setup rm -sf setup >/dev/null 2>&1
 docker compose up -d >/dev/null 2>&1
 
 # Also connect LM Studio if it is installed (its chat is an MCP host too). The
-# helper no-ops when LM Studio is absent. Ollama is a model backend, not an MCP
-# host, so there is nothing to configure there.
+# helper no-ops when LM Studio is absent.
 if [ -d "$HOME/.lmstudio" ]; then
   echo
   echo "Connecting BRAG to LM Studio..."

@@ -65,20 +65,12 @@ PROFILES = {
         "llm_base_url": None,
         "key_env": "ANTHROPIC_API_KEY",
     },
-    # ── Local LLM via LM Studio (strong Mac) ──
+    # ── Local LLM via LM Studio (the local option — any OS, free app) ──
     "hybrid": {
         **_LOCAL_EMBEDDING,
         "llm_backend": "openai_compatible",
         "llm_model": "google/gemma-3-27b-it",
         "llm_base_url": "http://host.docker.internal:1234/v1",
-        "key_env": None,
-    },
-    # ── Local LLM via Ollama (cross-platform, fully private) ──
-    "local": {
-        **_LOCAL_EMBEDDING,
-        "llm_backend": "openai_compatible",
-        "llm_model": "llama3.1",
-        "llm_base_url": "http://host.docker.internal:11434/v1",
         "key_env": None,
     },
 }
