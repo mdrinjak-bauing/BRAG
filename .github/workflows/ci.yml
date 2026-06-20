@@ -29,6 +29,24 @@ jobs:
           pip install pip-audit
           pip-audit -r requirements.txt
 
+      # Advisory only, mirroring the pip-audit pattern above: surfaces type
+      # errors as a warning without blocking the build. ML deps (docling,
+      # sentence-transformers, fastembed) ship few stubs, hence
+      # --ignore-missing-imports. Drop continue-on-error to make it a gate.
+      - name: Type check (advisory)
+        continue-on-error: true
+        run: |
+          pip install mypy
+          mypy brag --ignore-missing-imports
+
+      # Advisory only: extra lint groups (import-sort + pyupgrade) that would
+      # cause churn if added to the gating select in pyproject.toml. Warns only.
+      - name: Extra lint groups (advisory)
+        continue-on-error: true
+        run: |
+          pip install ruff
+          ruff check --select I,UP brag
+
   unit:
     runs-on: ubuntu-latest
     steps:
@@ -38,8 +56,11 @@ jobs:
           python-version: "3.12"
       - name: Unit tests (light — no heavy runtime deps)
         run: |
-          pip install pytest
-          python -m pytest tests/test_unit.py tests/test_http_bridge.py -q
+          pip install pytest pytest-cov
+          # Coverage is informational, NOT a gate (no --cov-fail-under). Promote
+          # it to a hard threshold later once a baseline is known.
+          python -m pytest tests/test_unit.py tests/test_http_bridge.py -q \
+            --cov=brag --cov-report=term-missing
 
   docker-build:
     runs-on: ubuntu-latest
