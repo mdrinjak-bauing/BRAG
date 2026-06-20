@@ -296,6 +296,12 @@ mit [LM Studio](https://lmstudio.ai) oder [Ollama](https://ollama.com).
 (Windows) prüft mit einem Klick Docker, Qdrant, den Watcher, den Korpus und den
 KI-Anschluss — ✓/✗ pro Punkt.
 
+**BRAG entfernen?** Doppelklick auf `uninstall.command` (Mac) bzw. `uninstall.bat`
+(Windows): entfernt Container, Modell-Cache, App-Image und die
+Claude-Desktop-Verbindung — **deine Dokumente** (`wissensspeicher/`) und der
+Suchindex **bleiben erhalten**, eine Neuinstallation findet sie wieder. Den
+Projektordner danach löschen, wenn du die Dateien nicht mehr brauchst.
+
 **Etwas klemmt?** Schau zuerst in die [FAQ & Fehlerbehebung](docs/FAQ.de.md) —
 sie deckt die häufigen Fälle ab. Sieht es nach einem echten Bug aus, [öffne bitte
 ein GitHub-Issue](../../issues): mit Betriebssystem, genutztem Profil, was du

@@ -282,6 +282,12 @@ Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai) or
 (Windows) for a one-click check of Docker, Qdrant, the watcher, the corpus and
 the AI connection — ✓/✗ per item.
 
+**Want to remove BRAG?** Double-click `uninstall.command` (Mac) / `uninstall.bat`
+(Windows). It removes the containers, the model cache, the app image and the
+Claude Desktop connection — but **keeps your documents** (`wissensspeicher/`) and
+the search index, so a re-install picks them up again. Delete the project folder
+afterwards if you no longer need the files.
+
 **Something off?** Start with the [FAQ & troubleshooting](docs/FAQ.md) — it
 covers the common cases. If it looks like a real bug, please [open a GitHub
 issue](../../issues) with your OS, the profile you use, what you did and what
