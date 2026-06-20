@@ -93,7 +93,7 @@ COLLECTION_NAME = _env(
     "COLLECTION_NAME", f"asb_{EMBEDDING_BACKEND}_{EMBEDDING_DIM}"
 )
 
-# ── Chunking (values empirically validated in the originating system) ─
+# ── Chunking (values empirically validated) ─
 MAX_CHUNK_CHARS = int(_env("MAX_CHUNK_CHARS", 2000))
 OVERLAP_CHARS = int(_env("OVERLAP_CHARS", 200))
 MIN_CHUNK_CHARS = int(_env("MIN_CHUNK_CHARS", 80))

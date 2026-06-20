@@ -166,12 +166,11 @@ Jeder Abschnitt bekommt zwei „Fingerabdrücke": einen für die **Bedeutung**
 Mehr Tiefe (mit Zahlen) in [So funktioniert's](docs/HOW_IT_WORKS.de.md) und
 [Architektur](docs/ARCHITECTURE.de.md); alle Parameter in [`.env.example`](.env.example).
 
-### Die zwei Claude-Anschlüsse (MCP)
+### Der Claude-Anschluss (MCP)
 
-Claude Desktop spricht über zwei MCP-Server mit deinem Second Brain:
-
-**1. Der Such-Anschluss** (dieses Projekt — wird automatisch eingerichtet) gibt
-Claude diese Werkzeuge:
+Automatisch eingerichtet, gibt der **BRAG-MCP-Server** Claude einen Anschluss mit
+zwei Werkzeug-Sätzen — über deine **Bibliothek** (Suche) und dein **Notizbuch**
+(Lesen/Schreiben). Die Notizbuch-Werkzeuge fassen den Suchindex nie an:
 
 | Werkzeug | Was es tut | Beispielfrage |
 |---|---|---|
@@ -180,10 +179,18 @@ Claude diese Werkzeuge:
 | `inspect_chunks` | Zeigt, was zu einer Quelle gespeichert ist (Diagnose) | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |
 | `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema | *„Speichere dieses Zitat fürs Methodenkapitel."* |
 | `list_passages` | Zeigt gesammelte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
+| `remove_source` | Entfernt eine Quelle aus dem Index; verschiebt die Datei nach `sources/_inbox/` (umkehrbar, nicht gelöscht) | *„Entferne den veralteten Entwurf aus meinem Index."* |
+| `rename_source` | Benennt ein indexiertes Dokument um; Metadaten an Ort und Stelle, kein erneutes Embedding | *„Benenne Müller_2023_Entwurf in den finalen Titel um."* |
+| `list_notebook` | Listet dein Notizbuch (Wiki-Seiten + Literaturnotizen) | *„Was steht in meinem Notizbuch?"* |
+| `read_note` | Liest eine Notizbuch-Seite | *„Öffne meine Notiz zur Prozessreife."* |
+| `write_note` | Erstellt/aktualisiert eine Wiki-Seite (nie indexiert) | *„Speichere diese Schlüsse als Wiki-Notiz."* |
 
-**2. Der Notizbuch-Anschluss** (optional, ~5 Minuten) lässt Claude über das
-Plugin **MCP Tools für Obsidian** auch deine Notizen lesen und fortschreiben,
-während der Suchindex unberührt bleibt. Anleitung: [docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
+**Notizen auch in Obsidian bearbeiten (optional).** Claude kann dein Notizbuch
+bereits über die Werkzeuge `list_notebook` / `read_note` / `write_note` oben lesen
+und schreiben. Um Notizen zusätzlich in Obsidians eigener Oberfläche zu
+bearbeiten, richte Obsidian auf denselben Wissensordner; das Plugin **MCP Tools
+für Obsidian** lässt Claude zudem innerhalb von Obsidian agieren. Anleitung:
+[docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
 
 Mit beiden zusammen: *„Such Definitionen von Prozessreife (Bibliothek),
 vergleiche mit meiner Konzeptnotiz (Notizbuch) und ergänze, was fehlt — mit
@@ -345,17 +352,20 @@ wissensspeicher/
 ├── CLAUDE.md      ← bringt Claude dein Fachgebiet bei (hier trägst du es ein)
 ├── AGENTS.md      ← Zusatzregeln für autonome Agenten-Aufgaben
 ├── sources/       ← 📚 Dokumente hier ablegen (PDF, DOCX); Unterordner = Dokumenttypen
-│   └── _inbox/    ← Staging-Bereich, wird vom Indexer ignoriert
+│   └── _inbox/    ← Staging-Bereich, ignoriert (hier parkt auch remove_source entfernte Quellen)
 ├── notes/         ← auto-generierte Literaturnotiz pro Quelle
 ├── passages/      ← über Claude gespeicherte Zitate, nach Themen
 └── wiki/          ← 📓 dein eigenes Denken — wird nie indexiert
 ```
 
-Umbenennen oder Löschen in `sources/` wird automatisch nachgezogen: Benennst du
-eine **bereits indexierte** Datei um, werden nur die Metadaten (Autor, Jahr, Typ,
-PDF-Pfad) im Index aktualisiert — **ohne neu einzulesen** (kein erneutes
-Embedding, keine API-Kosten); löschst du sie, verschwindet sie aus der Datenbank.
-Der **erste** Unterordner-Name wird zum filterbaren Dokumenttyp (`sources/Paper/`,
+Änderungen in `sources/` werden automatisch nachgezogen: Benennst du eine
+**bereits indexierte** Datei um oder **verschiebst** sie (auch zwischen
+Unterordnern), werden nur die Metadaten (Autor, Jahr, Typ, PDF-Pfad) an Ort und
+Stelle aktualisiert — **ohne neu einzulesen** (kein erneutes Embedding, keine
+API-Kosten); **überschreibst** du eine Datei mit einer neuen Version, wird sie neu
+indexiert; **löschst** du sie, verschwindet sie aus der Datenbank (Löschungen,
+während die App aus war, werden beim nächsten Start aufgeräumt). Der **erste**
+Unterordner-Name wird zum filterbaren Dokumenttyp (`sources/Paper/`,
 `sources/Berichte/` …); tiefer verschachteln kannst du für eigene Tags (siehe unten).
 
 **Eigene Metadaten** (Projekt, Kurs, Auftraggeber …) gibst du über eine

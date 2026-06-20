@@ -10,8 +10,8 @@ from brag.embeddings.base import EmbeddingBackend
 
 # Total embedding input is bounded by the shared config.EMBEDDING_INPUT_MAX_CHARS
 # so every backend (local, OpenAI, Ollama, Gemini) truncates identically —
-# asymmetric per-backend truncation silently loses context (lesson from the
-# originating system). Aliased here for the call sites below.
+# asymmetric per-backend truncation silently loses context (a hard-won
+# lesson). Aliased here for the call sites below.
 MAX_INPUT_CHARS = config.EMBEDDING_INPUT_MAX_CHARS
 
 

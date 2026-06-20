@@ -12,6 +12,11 @@ __pycache__/
 *.pyc
 .venv/
 .ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.log
 
 # Model caches
 /models/

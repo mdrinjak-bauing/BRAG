@@ -180,13 +180,17 @@ other folder. The search index can always be rebuilt from the knowledge store (d
 nothing, just let reconciliation re-index after a restore).
 
 **How do I remove a document?**
-Delete the file from `sources/` — its index entries and the auto-note are
-cleaned up automatically.
+Delete the file from `sources/` (or move it out) — its index entries and the
+auto-note are removed automatically. You can also ask Claude to *"remove that
+source from my index"* (the `remove_source` tool): it moves the file into
+`sources/_inbox/` (reversible, not deleted) and clears its chunks. Deletions you
+make while the app is stopped are pruned automatically on the next start.
 
-**I updated/overwrote a file, but search still shows the old content.**
-Overwriting a file under the same name does not trigger a re-ingest. To refresh
-it, rename the file, or briefly move it out of `sources/` and back in (or delete
-it and drop the new version in).
+**I updated/overwrote a file — will search pick up the new content?**
+Yes. Overwriting a file in place is detected automatically: the watcher
+re-indexes it once the change settles (the old chunks are replaced). Allow a few
+seconds; you can watch for the *"document changed … re-indexing"* line in
+`docker compose logs -f app`.
 
 **Can I delete the project folder or the ZIP?**
 You can delete the **ZIP** after unpacking. But **keep the project folder** (the

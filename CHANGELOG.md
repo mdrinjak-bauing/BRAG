@@ -39,6 +39,18 @@ one exception.
 - **Bounded retry waits** — cloud LLM/embedding retries honour an overall
   deadline, so repeated rate-limit backoffs can no longer hang a single call for
   minutes.
+- **Deletions made while the app was stopped are now cleaned up.** On start,
+  index entries whose source file no longer exists are pruned (guarded so an
+  unmounted knowledge folder can never wipe the index) — this also clears stale
+  entries left over from the path-qualified-identity change.
+- **Edited documents are re-indexed automatically.** Overwriting a file in place
+  is detected (file mtime vs. last ingest) and the document is re-indexed — live
+  and on startup — instead of keeping the old content forever.
+- **Chunk-id collisions removed.** The per-chunk id now hashes the full chunk
+  text (not a 120-character prefix), so two chunks that share a long
+  chapter/section prefix can no longer overwrite each other on upsert.
+- **The setup wizard no longer drops hand-set `.env` keys** (e.g. `LLM_MODEL`,
+  `EMBEDDING_*`, rerank overrides) when you re-run it.
 
 ### Performance
 - **Batched local embeddings** — document chunks are embedded in batches (one
@@ -76,6 +88,15 @@ one exception.
 - More **unit tests** (embedding-batch alignment contract, retry classification
   and deadline, config fallbacks) and a **`pyproject.toml`** ruff configuration
   (line length + whitespace) that now drives the CI lint step.
+- **Corpus management from Claude**: `remove_source` (drops a source from the
+  index and moves its file to `sources/_inbox/`, reversible) and `rename_source`
+  (re-files an indexed document, metadata patched in place, no re-embedding).
+- **Notebook tools in the MCP server**: `list_notebook`, `read_note`,
+  `write_note` — Claude reads and extends your notebook (wiki/notes) directly,
+  without a second server; the search index is never touched.
+- **Optional cloud-model picker** in the setup wizard.
+- Startup now **flags leftover Qdrant collections** from a previous embedding
+  setting (never auto-deleted) so unused collections don't silently waste disk.
 
 ### Changed
 - A clear **API-key handling** note (stored only locally in `.env`, only ever
@@ -250,5 +271,5 @@ re-index).
 - Knowledge store (library vs. notebook) and the search MCP server for
   Claude Desktop.
 
-[0.2.0]: https://github.com/mdrinjak-bauing/Academic-RAG-and-Second-Brain
-[0.1.0]: https://github.com/mdrinjak-bauing/Academic-RAG-and-Second-Brain
+[0.2.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.2.0
+[0.1.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.1.0

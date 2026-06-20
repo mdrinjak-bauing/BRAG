@@ -12,8 +12,7 @@ def ensure_collection(client=None):
     """Create the hybrid collection if missing.
 
     Sparse vectors get Modifier.IDF from day one — BM25 without IDF silently
-    degrades to TF-only scoring (a bug that survived four weeks unnoticed in
-    the originating system).
+    degrades to TF-only scoring (a subtle, easy-to-miss bug).
     """
     from qdrant_client.models import (
         Distance, Modifier, SparseIndexParams, SparseVectorParams, VectorParams,

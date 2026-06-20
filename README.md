@@ -160,12 +160,11 @@ gets two "fingerprints": one for **meaning** (semantic search) and one for
 More depth (with numbers) in [How it works](docs/HOW_IT_WORKS.md) and
 [Architecture](docs/ARCHITECTURE.md); every parameter in [`.env.example`](.env.example).
 
-### The two Claude connections (MCP)
+### The Claude connection (MCP)
 
-Claude Desktop talks to your second brain through two MCP servers:
-
-**1. The search connection** (this project — set up automatically) gives Claude
-these tools:
+Set up automatically, the **BRAG MCP server** gives Claude one connection with
+two sets of tools — over your **library** (search) and your **notebook**
+(read/write). The notebook tools never touch the search index:
 
 | Tool | What it does | Example question |
 |---|---|---|
@@ -174,10 +173,17 @@ these tools:
 | `inspect_chunks` | Shows what is stored for a source (diagnostics) | *"Show what was indexed from Smith 2023, p. 14."* |
 | `save_passage` | Saves a quotable hit under a topic | *"Save this quote for my methods chapter."* |
 | `list_passages` | Shows collected passages per topic | *"What have I collected for the methods chapter?"* |
+| `remove_source` | Drops a source from the index; moves the file to `sources/_inbox/` (reversible, not deleted) | *"Remove the outdated draft from my index."* |
+| `rename_source` | Re-files an indexed document; metadata patched in place, no re-embedding | *"Rename Smith_2023_draft to its final title."* |
+| `list_notebook` | Lists your notebook (wiki pages + literature notes) | *"What's in my notebook?"* |
+| `read_note` | Reads a notebook page | *"Open my note on process maturity."* |
+| `write_note` | Creates / updates a wiki page (never indexed) | *"Save these conclusions as a wiki note."* |
 
-**2. The notebook connection** (optional, ~5 minutes) lets Claude also read and
-extend your notes via the **MCP Tools for Obsidian** plugin, while the search
-index stays untouched. Guide: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
+**Edit notes in Obsidian too (optional).** Claude can already read and write your
+notebook through the `list_notebook` / `read_note` / `write_note` tools above. To
+also edit notes in Obsidian's own interface, point Obsidian at the same knowledge
+folder; the **MCP Tools for Obsidian** plugin additionally lets Claude act inside
+Obsidian. Guide: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
 
 With both: *"Search definitions of process maturity (library), compare with my
 concept note (notebook), and fill in what's missing — with citations."*
@@ -328,18 +334,20 @@ wissensspeicher/
 ├── CLAUDE.md      ← teaches Claude about YOUR field (you fill it in)
 ├── AGENTS.md      ← extra rules for autonomous agent tasks
 ├── sources/       ← 📚 drop documents here (PDF, DOCX); subfolders = document types
-│   └── _inbox/    ← staging area, ignored by the indexer
+│   └── _inbox/    ← staging area, ignored (also where remove_source parks dropped sources)
 ├── notes/         ← auto-generated literature note per source
 ├── passages/      ← quotes you saved via Claude, grouped by topic
 └── wiki/          ← 📓 your own thinking — never indexed
 ```
 
-Renaming or deleting in `sources/` is handled automatically: renaming an
-**already-indexed** file just updates its metadata (author, year, type, PDF
-path) in place — **no re-ingest** (no re-embedding, no API cost); deleting it
-removes it from the database. The **first** subfolder name becomes the
-filterable document type (`sources/papers/`, `sources/reports/` …); you can nest
-deeper for your own tags (below).
+Changes in `sources/` are handled automatically: **renaming or moving** an
+**already-indexed** file (including between subfolders) just updates its metadata
+(author, year, type, PDF path) in place — **no re-ingest** (no re-embedding, no
+API cost); **overwriting** a file with a new version re-indexes it; **deleting**
+it removes it from the database (deletions made while the app was stopped are
+pruned on the next start). The **first** subfolder name becomes the filterable
+document type (`sources/papers/`, `sources/reports/` …); you can nest deeper for
+your own tags (below).
 
 **Your own metadata** (project, course, client …) goes into a `_meta.txt` in any
 folder under `sources/` — one `key: value` per line; that way hits from other

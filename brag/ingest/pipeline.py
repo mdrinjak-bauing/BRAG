@@ -3,7 +3,7 @@
 Stages: extract (Docling) → contextualize (LLM) → dense + sparse embedding
 → idempotent upsert into Qdrant → literature note → ingest log.
 
-Failure principles (hard-won lessons from the originating system):
+Failure principles (hard-won over earlier iterations):
 - a chunk whose embedding fails is SKIPPED and logged, never stored as a
   zero vector (zero vectors are undefined in cosine space = silent data loss)
 - on re-ingest the new points are upserted first (deterministic ids overwrite

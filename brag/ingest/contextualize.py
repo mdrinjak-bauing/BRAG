@@ -2,7 +2,7 @@
 context before embedding (Anthropic, 2024 — reduces retrieval failures
 substantially).
 
-Design notes ported from the originating production system:
+Design notes (validated over earlier iterations):
 - hierarchical context (table of contents + current chapter) instead of the
   whole document — better grounding at lower token cost
 - chunks are processed in batches of CR_BATCH_SIZE per LLM call
