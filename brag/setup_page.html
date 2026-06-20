@@ -268,10 +268,39 @@
       <div><h3 data-i="lib_h"></h3><p><code>wissensspeicher/sources/</code></p><p data-i="lib_p"></p></div>
       <div><h3 data-i="note_h"></h3><p><code>wissensspeicher/wiki/</code></p><p data-i="note_p"></p></div>
     </div>
-    <h3 data-i="next_h"></h3>
+    <p class="hint" data-i="restart_note"></p>
+
+    <h3 data-i="walk_h"></h3>
+    <p class="hint" data-i="walk_intro"></p>
     <ol>
-      <li data-i="next_1"></li><li data-i="next_2"></li><li data-i="next_3"></li><li data-i="next_4"></li>
+      <li><b data-i="walk1_h"></b>
+        <p data-i="walk1_p"></p>
+        <div class="cmd"><span data-i="walk1_q1"></span><button onclick="copyCmd(this)">copy</button></div>
+        <div class="cmd"><span data-i="walk1_q2"></span><button onclick="copyCmd(this)">copy</button></div>
+      </li>
+      <li><b data-i="walk2_h"></b>
+        <p data-i="walk2_p"></p>
+        <div class="cmd"><span data-i="walk2_q"></span><button onclick="copyCmd(this)">copy</button></div>
+        <p class="hint" data-i="walk2_obs"></p>
+      </li>
+      <li><b data-i="walk3_h"></b>
+        <p data-i="walk3_p"></p>
+        <div class="cmd"><span data-i="walk3_q"></span><button onclick="copyCmd(this)">copy</button></div>
+      </li>
     </ol>
+    <p class="hint" data-i="walk_done"></p>
+
+    <h3 data-i="more_h"></h3>
+    <ul>
+      <li data-i="more_1"></li><li data-i="more_2"></li><li data-i="more_3"></li><li data-i="more_4"></li>
+    </ul>
+
+    <div class="callout">
+      <p data-i="tip_sysprompt"></p>
+      <p data-i="tip_status"></p>
+      <p data-i="tip_claudecode"></p>
+    </div>
+
     <p class="hint" data-i="done_close"></p>
   </div>
 </div>
@@ -331,11 +360,29 @@ const STR = {
     done_badge:"✓ Setup complete", done_h:"How your second brain works",
     lib_h:"📚 Your library", lib_p:"Drop documents here — they are indexed automatically and cited with page numbers. You only collect; you never edit these.",
     note_h:"📓 Your notebook", note_p:"Your own thinking. Deliberately not in the search index — so you never cite your own notes as “evidence” by accident.",
-    next_h:"Next steps",
-    next_1:"Quit Claude Desktop completely (Cmd+Q / tray → Quit) and reopen it.",
-    next_2:"Drop a PDF into the wissensspeicher/sources/ folder.",
-    next_3:"Ask Claude: “What documents are in my knowledge base?”",
-    next_4:"Open wissensspeicher/CLAUDE.md and fill in the blanks — it teaches Claude your field, citation style and how to search.",
+    restart_note:"First: quit Claude Desktop completely (Cmd+Q / tray → Quit) and reopen it, so the two BRAG connections (search + notebook) load.",
+    walk_h:"Try it now — a 5-minute hands-on tour",
+    walk_intro:"Do these three steps once and you have seen the whole loop: collect → ask → keep → continue later.",
+    walk1_h:"1. First document & question",
+    walk1_p:"Drop any document (PDF, Word, …) into the sources/ folder of your knowledge folder and wait about 5 minutes (the first run downloads the analysis models). Then, in Claude Desktop, make sure the two BRAG tools are enabled and ask:",
+    walk1_q1:"Which documents are in my knowledge base?",
+    walk1_q2:"What do my documents say about [your topic]? Answer with page citations.",
+    walk2_h:"2. Keep a result in your notebook — and view it in Obsidian",
+    walk2_p:"Now let Claude write a result into your notebook (the wiki/ folder, deliberately not indexed):",
+    walk2_q:"Summarize the key points on [your topic] and save them as a dated diary entry in my notebook (wiki).",
+    walk2_obs:"Then open your knowledge folder in Obsidian (free), open the new Markdown file under wiki/, and add a line of your own. Obsidian is just a nicer view of the same files — see the Obsidian guide on GitHub.",
+    walk3_h:"3. New chat — get briefed on where you left off",
+    walk3_p:"Open a NEW chat and let BRAG catch you up. This is the payoff: your knowledge persists across chats, even with a different model.",
+    walk3_q:"Brief me on my latest status: what did I work on last, and what is in my notebook about it?",
+    walk_done:"That is the whole loop in 5 minutes — from here it grows with your documents and notes.",
+    more_h:"More to try",
+    more_1:"Filter by project/topic: put documents in subfolders of sources/ and add a _meta.txt (e.g. project: School Center) — then ask “search only in project School Center”.",
+    more_2:"Find numbers and figures: ask for the tables or figures on a topic.",
+    more_3:"Build evidence: “save this passage for my methods chapter” — it is stored and stays findable in later chats.",
+    more_4:"Teach Claude your field: edit CLAUDE.md in your knowledge folder (your subject, citation style, recurring corrections).",
+    tip_sysprompt:"Make Claude truly yours: add a system prompt for your field. There is a template on GitHub you can adapt — and you can have an AI optimize it for you.",
+    tip_status:"Something not working? Double-click status.command (Mac) / status.bat (Windows) for a one-click check of Docker, the index, the watcher and the Claude connection.",
+    tip_claudecode:"Want more features, or to fix something yourself? Open your BRAG folder with Claude Code (or a similar coding agent) and work right there — BRAG is plain files, Docker and MCP, built to extend.",
     done_close:"You can close this window. The setup window in the Terminal finishes the restart automatically.",
     claude_warn_h:"⚠ Claude Desktop is NOT connected yet — one manual step needed",
     claude_warn_p:"Everything else is set up, but BRAG could not write its entry into Claude Desktop automatically. Until you add it, Claude will NOT show the search tools. Open the file below, paste this entry into it (merge it into an existing \"mcpServers\" block if one is there), save, then fully quit and reopen Claude Desktop.",
@@ -396,11 +443,29 @@ const STR = {
     done_badge:"✓ Einrichtung fertig", done_h:"So funktioniert dein zweites Gehirn",
     lib_h:"📚 Deine Bibliothek", lib_p:"Dokumente hier ablegen — sie werden automatisch indexiert und mit Seitenzahlen zitiert. Du sammelst nur, du bearbeitest sie nie.",
     note_h:"📓 Dein Notizbuch", note_p:"Dein eigenes Denken. Bewusst NICHT im Suchindex — damit du nie versehentlich deine eigenen Notizen als „Beleg“ zitierst.",
-    next_h:"Nächste Schritte",
-    next_1:"Claude Desktop komplett beenden (Cmd+Q / Tray → Beenden) und neu öffnen.",
-    next_2:"Ein PDF in den Ordner wissensspeicher/sources/ legen.",
-    next_3:"Claude fragen: „Welche Dokumente sind in meiner Wissensbasis?“",
-    next_4:"wissensspeicher/CLAUDE.md öffnen und die Platzhalter ausfüllen — das bringt Claude dein Fachgebiet, deine Zitierweise und dein Suchverhalten bei.",
+    restart_note:"Zuerst: Claude Desktop komplett beenden (Cmd+Q / Tray → Beenden) und neu öffnen, damit die zwei BRAG-Verbindungen (Suche + Notizbuch) geladen werden.",
+    walk_h:"Jetzt ausprobieren — ein 5-Minuten-Praxisdurchlauf",
+    walk_intro:"Mach diese drei Schritte einmal, dann hast du den ganzen Kreislauf gesehen: sammeln → fragen → festhalten → später weiterarbeiten.",
+    walk1_h:"1. Erstes Dokument & Frage",
+    walk1_p:"Lege ein beliebiges Dokument (PDF, Word, …) in den Ordner sources/ deines Wissensspeichers und warte ca. 5 Minuten (beim ersten Mal werden die Analyse-Modelle geladen). Stelle dann in Claude Desktop sicher, dass die zwei BRAG-Werkzeuge aktiv sind, und frage:",
+    walk1_q1:"Welche Dokumente sind in meiner Wissensbasis?",
+    walk1_q2:"Was steht in meinen Unterlagen zu [dein Thema]? Antworte mit Seitenzitaten.",
+    walk2_h:"2. Ein Ergebnis ins Notizbuch legen — und in Obsidian ansehen",
+    walk2_p:"Lass Claude jetzt ein Ergebnis in dein Notizbuch schreiben (den Ordner wiki/, bewusst nicht indexiert):",
+    walk2_q:"Fasse die wichtigsten Punkte zu [dein Thema] zusammen und lege sie als datierten Tagebucheintrag in mein Notizbuch (wiki).",
+    walk2_obs:"Öffne dann deinen Wissensspeicher in Obsidian (kostenlos), öffne die neue Markdown-Datei unter wiki/ und ergänze eine eigene Zeile. Obsidian ist nur eine schönere Ansicht derselben Dateien — siehe die Obsidian-Anleitung auf GitHub.",
+    walk3_h:"3. Neuer Chat — lass dich zum letzten Stand briefen",
+    walk3_p:"Öffne einen NEUEN Chat und lass dich von BRAG auf den Stand bringen. Das ist der Clou: dein Wissen bleibt über Chats hinweg erhalten, sogar mit einem anderen Modell.",
+    walk3_q:"Brief mich zu meinem aktuellen Stand: woran habe ich zuletzt gearbeitet, und was steht dazu in meinem Notizbuch?",
+    walk_done:"Das ist der ganze Kreislauf in 5 Minuten — ab hier wächst er mit deinen Dokumenten und Notizen.",
+    more_h:"Mehr zum Ausprobieren",
+    more_1:"Nach Projekt/Thema filtern: Dokumente in Unterordner von sources/ legen und eine _meta.txt ergänzen (z. B. project: School Center) — dann fragen „such nur im Projekt School Center“.",
+    more_2:"Zahlen und Abbildungen finden: nach den Tabellen oder Abbildungen zu einem Thema fragen.",
+    more_3:"Belege sammeln: „speichere diese Passage für mein Methodenkapitel“ — sie wird gespeichert und bleibt in späteren Chats auffindbar.",
+    more_4:"Claude dein Fachgebiet beibringen: CLAUDE.md im Wissensspeicher bearbeiten (dein Fach, Zitierweise, wiederkehrende Korrekturen).",
+    tip_sysprompt:"Mach Claude wirklich zu deinem: ergänze einen Systemprompt für dein Fachgebiet. Auf GitHub gibt es eine Vorlage, die du anpassen — und von einer KI optimieren lassen kannst.",
+    tip_status:"Etwas funktioniert nicht? Doppelklick auf status.command (Mac) / status.bat (Windows) — Ein-Klick-Prüfung von Docker, Index, Watcher und Claude-Verbindung.",
+    tip_claudecode:"Mehr Funktionen, oder selbst etwas beheben? Öffne deinen BRAG-Ordner mit Claude Code (oder einem ähnlichen Coding-Agenten) und arbeite direkt darin — BRAG ist einfache Dateien, Docker und MCP, gebaut zum Erweitern.",
     done_close:"Du kannst dieses Fenster schließen. Das Terminal-Fenster schließt den Neustart automatisch ab.",
     claude_warn_h:"⚠ Claude Desktop ist NOCH NICHT verbunden — ein manueller Schritt nötig",
     claude_warn_p:"Alles andere ist eingerichtet, aber BRAG konnte den Eintrag nicht automatisch in Claude Desktop schreiben. Bis du ihn einträgst, zeigt Claude die Such-Werkzeuge NICHT an. Öffne die untenstehende Datei, füge diesen Eintrag ein (in einen bestehenden \"mcpServers\"-Block einfügen, falls vorhanden), speichere, beende Claude Desktop dann komplett und öffne es neu.",
