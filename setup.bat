@@ -50,12 +50,20 @@ if not exist .env (
 )
 set "CLAUDE_CONFIG_DIR=%APPDATA%\Claude"
 
-echo Building the application (first run downloads ~3 GB, please be patient)...
-docker compose build
+REM Prefer the prebuilt image from GHCR (fast, avoids local "pip install failed"
+REM errors); fall back to building locally if none is published yet or we're
+REM offline. Pull output is hidden so a "not found" message doesn't alarm.
+echo Fetching the prebuilt application image...
+docker compose pull app >nul 2>nul
 if errorlevel 1 (
-  echo Build failed - see message above.
-  pause
-  exit /b 1
+  echo No prebuilt image available - building it locally instead.
+  echo This first run downloads ~3 GB, please be patient.
+  docker compose build
+  if errorlevel 1 (
+    echo Build failed - see message above.
+    pause
+    exit /b 1
+  )
 )
 
 echo Starting the setup assistant...

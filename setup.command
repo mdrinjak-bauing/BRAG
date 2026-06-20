@@ -33,8 +33,13 @@ elif ! grep -q "^CLAUDE_CONFIG_DIR=" .env; then
 fi
 export CLAUDE_CONFIG_DIR="$CLAUDE_DIR"
 
-echo "Building the application (first run downloads ~3 GB, please be patient)..."
-docker compose build || { echo "Build failed — see message above."; read -r -p "Press Enter to close..."; exit 1; }
+# Prefer the prebuilt image from GHCR (fast, avoids local build errors); fall
+# back to building locally if none is published yet or we're offline.
+echo "Fetching the prebuilt application image..."
+if ! docker compose pull app >/dev/null 2>&1; then
+  echo "No prebuilt image available — building it locally (first run downloads ~3 GB)..."
+  docker compose build || { echo "Build failed — see message above."; read -r -p "Press Enter to close..."; exit 1; }
+fi
 
 echo "Starting the setup assistant..."
 rm -f .setup_complete

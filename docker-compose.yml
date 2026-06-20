@@ -20,7 +20,7 @@ services:
 
   app:
     build: .
-    image: brag:latest
+    image: ${BRAG_IMAGE:-ghcr.io/mdrinjak-bauing/brag:latest}
     container_name: brag-app
     restart: unless-stopped
     depends_on:
@@ -58,7 +58,7 @@ services:
   # setup.bat start it, wait for the .setup_complete marker, then tear it down
   # and bring up the persistent `app`.
   setup:
-    image: brag:latest
+    image: ${BRAG_IMAGE:-ghcr.io/mdrinjak-bauing/brag:latest}
     profiles: ["setup"]
     container_name: brag-setup
     env_file:
