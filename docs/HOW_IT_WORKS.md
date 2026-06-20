@@ -148,7 +148,7 @@ the background, and a removed file is cleaned out of the index automatically.
 You ask Claude something. Behind the scenes:
 
 1. **Two searches at once.** Your question is run through *both* the
-   meaning-search and the keyword-search. Each returns its best ~60 candidates.
+   meaning-search and the keyword-search. Each returns its best ~80 candidates.
 
 2. **Merge.** The two candidate lists are fused into one (a step called RRF) —
    passages that both methods liked rise to the top. About 40 survive (the

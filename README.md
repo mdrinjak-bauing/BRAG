@@ -146,7 +146,7 @@ gets two "fingerprints": one for **meaning** (semantic search) and one for
 
 1. **Two searches at once** — meaning search (finds related things, even in
    different words) **and** keyword search (BM25; finds exact terms like
-   abbreviations, section numbers, file references). ~60 candidates each.
+   abbreviations, section numbers, file references). ~80 candidates each.
 2. **Merge (RRF)** — both lists fuse; ~40 remain.
 3. **Reranker** — a cross-encoder reads your question together with each passage
    and sorts by true fit. The difference between "contains the search terms" and
@@ -213,16 +213,16 @@ After the hybrid search, a second step can re-sort the hits by true fit — a
 **cross-encoder** (`bge-reranker-v2-m3`, locally on your CPU — no graphics card needed) that reads your
 question together with each passage. It is the most compute-heavy part of a
 search, so `RERANK_PROFILE` (in the setup wizard or `.env`) lets you choose how
-hard it works. "Loaded" = how many candidates are pulled from search (60 each
-from meaning and keyword search); "re-sorted" = how many of those the
+hard it works. "Loaded" = how many candidates are pulled from search (meaning +
+keyword together, scaling with the profile); "re-sorted" = how many of those the
 cross-encoder actually scores:
 
 | Setting | loaded | re-sorted | Speed / quality | for |
 |---|---|---|---|---|
-| `off` | 120 (60+60) | 0 — pure RRF fusion | fastest, more noise | very weak machines, small corpus |
-| `eco` *(default)* | 120 (60+60) | 40 | gentle, good quality | normal laptops (16 GB comfortable) |
-| `balanced` | 120 (60+60) | 60 | a bit slower, sharper | mid-range |
-| `full` | 120 (60+60) | 120 | slowest, best ordering | strong machines (M-chip, 32 GB+) |
+| `off` | 160 (80+80) | 0 — pure RRF fusion | fastest, more noise | very weak machines, small corpus |
+| `eco` *(default)* | 160 (80+80) | 40 | gentle, good quality | normal laptops (16 GB comfortable) |
+| `balanced` | 240 (120+120) | 60 | a bit slower, sharper | mid-range |
+| `full` | 400 (200+200) | 120 | slowest, best ordering | strong machines (M-chip, 32 GB+) |
 
 **What "off" means in practice:** hits then come straight from the RRF fusion of
 meaning and keyword search — both branches stay populated, so nothing "breaks,"

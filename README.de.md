@@ -151,7 +151,7 @@ Jeder Abschnitt bekommt zwei „Fingerabdrücke": einen für die **Bedeutung**
 
 1. **Zwei Suchen gleichzeitig** — Bedeutungssuche (findet Sinnverwandtes, auch
    mit anderen Worten) **und** Stichwortsuche (BM25; findet exakte Begriffe wie
-   Abkürzungen, Paragraphen, Aktenzeichen). Je ~60 Kandidaten.
+   Abkürzungen, Paragraphen, Aktenzeichen). Je ~80 Kandidaten.
 2. **Zusammenführen (RRF)** — beide Listen verschmelzen; ~40 bleiben übrig.
 3. **Reranker** — ein Cross-Encoder liest deine Frage gemeinsam mit jeder Stelle
    und sortiert nach echter Passung. Der Unterschied zwischen „enthält die
@@ -221,15 +221,16 @@ einmal nach Passgenauigkeit sortieren — ein **Cross-Encoder** (`bge-reranker-v
 lokal auf deiner CPU — keine Grafikkarte nötig), der deine Frage gemeinsam mit jeder Stelle liest. Das ist
 der rechenintensivste Teil einer Suche; deshalb wählst du über `RERANK_PROFILE`
 (im Setup-Wizard oder in `.env`), wie gründlich er arbeitet. „Geladen" = wie
-viele Kandidaten aus der Suche gezogen werden (je 60 aus Bedeutungs- und
-Stichwortsuche), „nachsortiert" = wie viele davon der Cross-Encoder bewertet:
+viele Kandidaten aus der Suche gezogen werden (Bedeutungs- und Stichwortsuche
+zusammen, je nach Profil unterschiedlich), „nachsortiert" = wie viele davon der
+Cross-Encoder bewertet:
 
 | Einstellung | geladen | nachsortiert | Tempo / Qualität | für |
 |---|---|---|---|---|
-| `off` | 120 (60+60) | 0 — reine RRF-Fusion | am schnellsten, mehr Rauschen | sehr schwache Rechner, kleiner Korpus |
-| `eco` *(Standard)* | 120 (60+60) | 40 | schonend, gute Qualität | normale Notebooks (16 GB komfortabel) |
-| `balanced` | 120 (60+60) | 60 | etwas langsamer, schärfer | Mittelklasse |
-| `full` | 120 (60+60) | 120 | am langsamsten, beste Reihenfolge | starke Maschinen (M-Chip, 32 GB+) |
+| `off` | 160 (80+80) | 0 — reine RRF-Fusion | am schnellsten, mehr Rauschen | sehr schwache Rechner, kleiner Korpus |
+| `eco` *(Standard)* | 160 (80+80) | 40 | schonend, gute Qualität | normale Notebooks (16 GB komfortabel) |
+| `balanced` | 240 (120+120) | 60 | etwas langsamer, schärfer | Mittelklasse |
+| `full` | 400 (200+200) | 120 | am langsamsten, beste Reihenfolge | starke Maschinen (M-Chip, 32 GB+) |
 
 **Was „aus" praktisch bedeutet:** Die Treffer kommen dann direkt aus der
 RRF-Fusion von Bedeutungs- und Stichwortsuche — beide Zweige bleiben gefüllt, es

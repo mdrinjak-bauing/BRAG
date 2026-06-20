@@ -159,7 +159,7 @@ entfernt.
 Du fragst Claude etwas. Hinter den Kulissen:
 
 1. **Zwei Suchen gleichzeitig.** Deine Frage läuft durch *beide* Suchen —
-   Bedeutung und Stichwort. Jede liefert ihre besten ~60 Kandidaten.
+   Bedeutung und Stichwort. Jede liefert ihre besten ~80 Kandidaten.
 
 2. **Zusammenführen.** Die zwei Kandidatenlisten werden zu einer verschmolzen
    (ein Schritt namens RRF) — Passagen, die beide Verfahren mochten, steigen
