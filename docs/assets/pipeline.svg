@@ -81,7 +81,7 @@
   <!-- stage 2: prefetch -->
   <rect x="238" y="426" width="164" height="152" rx="10" fill="#eaf0f7" stroke="#b9cde4"/>
   <text x="252" y="450" font-size="13" font-weight="700" fill="#243447">Wide net</text>
-  <text x="252" y="468" font-size="10.5" font-family="ui-monospace,Menlo,monospace" fill="#2c4a6e">prefetch 60 + 60</text>
+  <text x="252" y="468" font-size="10.5" font-family="ui-monospace,Menlo,monospace" fill="#2c4a6e">prefetch 80 + 80</text>
   <text x="252" y="490" font-size="11" fill="#4a5568">best semantic and best</text>
   <text x="252" y="506" font-size="11" fill="#4a5568">keyword matches,</text>
   <text x="252" y="522" font-size="11" fill="#4a5568">fetched in parallel</text>
@@ -124,5 +124,5 @@
   <text x="357" y="632" font-size="11" fill="#4a5568">search machinery</text>
   <rect x="480" y="622" width="11" height="11" rx="2" fill="#efe9f6" stroke="#c9b8e0"/>
   <text x="497" y="632" font-size="11" fill="#4a5568">ranking precision</text>
-  <text x="36" y="664" font-size="11" font-style="italic" fill="#8a8377">Defaults were tuned against a retrieval gold standard; the 60/40 candidate breadth is a speed/quality dial — see RERANK_PROFILE (off/eco/balanced/full).</text>
+  <text x="36" y="664" font-size="11" font-style="italic" fill="#8a8377">Defaults were tuned against a retrieval gold standard; the 80/40 candidate breadth is a speed/quality dial — see RERANK_PROFILE (off/eco/balanced/full).</text>
 </svg>

@@ -138,7 +138,7 @@ den Fall „schwache Hardware + sehr großer Korpus" gibt es die `.env`-Option
 **Die Suche ist langsam / mein Rechner ächzt bei einer Frage.** Der lokale
 Cross-Encoder-Reranker ist der größte CPU-Posten einer Suche. Stell in der
 `.env` `RERANK_PROFILE` ein, um Qualität gegen Tempo zu tauschen: `eco`
-(Standard) lädt 120 Kandidaten und rerankt 40; `off` schaltet das Reranking ganz
+(Standard) lädt 160 Kandidaten und rerankt 40; `off` schaltet das Reranking ganz
 ab (am schnellsten); `balanced` und `full` reranken auf starken Rechnern mehr.
 Nach dem Ändern der `.env` die App neu starten (`docker compose up -d`).
 Vollständige Liste: [Backend-Profile](PROFILES.de.md).

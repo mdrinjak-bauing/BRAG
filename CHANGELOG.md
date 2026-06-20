@@ -49,6 +49,11 @@ one exception.
 - **Reranker warm-up** — the local cross-encoder is loaded in a background
   thread at MCP-server start, so the *first* search is no longer blocked by the
   one-time model load.
+- **Deeper rerank candidate pool** — each `RERANK_PROFILE` now retrieves a
+  larger pool before reranking (prefetch raised, e.g. `eco` 80+80 instead of
+  60+60), so the cross-encoder picks from better recall **without scoring more
+  pairs** — i.e. essentially no extra CPU, since retrieval is cheap and the
+  rerank count is unchanged.
 
 ### Security
 - **Setup is now a separate one-shot service.** The persistent app container no

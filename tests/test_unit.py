@@ -234,7 +234,7 @@ def test_unknown_rerank_profile_falls_back_to_eco(monkeypatch):
     importlib.reload(config)
     try:
         assert config.RERANK_ENABLED is True
-        assert config.RERANK_PREFETCH == 60
+        assert config.RERANK_PREFETCH == 80
         assert config.RERANK_FUSION_LIMIT == 40  # the "eco" preset
     finally:
         monkeypatch.delenv("RERANK_PROFILE", raising=False)

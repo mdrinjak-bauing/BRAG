@@ -106,21 +106,22 @@ RERANKER_MODEL = _env("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
 RERANKER_REVISION = _env("RERANKER_REVISION", "")
 
 # The LOCAL cross-encoder reranker is the main CPU cost of a search — its load
-# scales with the number of candidate passages it scores. RERANK_PROFILE is a
-# single dial that trades search speed against ranking quality. Presets
-# (prefetch is PER vector; "rerank" = passages the cross-encoder scores):
+# scales with the number of passages it SCORES ("rerank" below). The retrieval
+# pool ("load" = prefetch PER vector, dense + sparse) is comparatively cheap, so
+# a larger pool lets the reranker pick from deeper recall WITHOUT scoring more
+# pairs. RERANK_PROFILE is the single dial trading speed against quality:
 #   off       reranking disabled — fastest; results come straight from RRF fusion
-#   eco       load 120 (60+60), rerank 40   ← default, gentle on consumer PCs
-#   balanced  load 120 (60+60), rerank 60
-#   full      load 120 (60+60), rerank 120  ← strong machines, best quality
+#   eco       load 160 (80+80),   rerank 40   ← default, gentle on consumer PCs
+#   balanced  load 240 (120+120), rerank 60
+#   full      load 400 (200+200), rerank 120  ← strong machines, best quality
 # Any single value can still be pinned via RERANK_ENABLED / RERANK_PREFETCH /
 # RERANK_FUSION_LIMIT, which override the preset.
 RERANK_PROFILE = _env("RERANK_PROFILE", "eco").lower()
 _RERANK_PRESETS = {
-    "off":      {"enabled": False, "prefetch": 60, "fusion": 40},
-    "eco":      {"enabled": True,  "prefetch": 60, "fusion": 40},
-    "balanced": {"enabled": True,  "prefetch": 60, "fusion": 60},
-    "full":     {"enabled": True,  "prefetch": 60, "fusion": 120},
+    "off":      {"enabled": False, "prefetch": 80,  "fusion": 40},
+    "eco":      {"enabled": True,  "prefetch": 80,  "fusion": 40},
+    "balanced": {"enabled": True,  "prefetch": 120, "fusion": 60},
+    "full":     {"enabled": True,  "prefetch": 200, "fusion": 120},
 }
 _rerank = _RERANK_PRESETS.get(RERANK_PROFILE, _RERANK_PRESETS["eco"])
 

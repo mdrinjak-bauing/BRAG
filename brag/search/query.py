@@ -3,7 +3,7 @@ reranking → source diversity.
 
 Candidate breadth and how many passages the (local, CPU-bound) cross-encoder
 scores are set by RERANK_PROFILE (config.py): the default "eco" preset loads
-120 candidates (60 + 60) and reranks the top 40 — gentle on consumer CPUs;
+160 candidates (80 + 80) and reranks the top 40 — gentle on consumer CPUs;
 "balanced"/"full" rerank more, "off" skips reranking entirely. The "no hard
 score floor" design stands regardless: cross-encoder sigmoid scores are NOT
 absolutely calibrated — any floor cuts legitimate top hits on factual queries,
