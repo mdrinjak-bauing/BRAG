@@ -38,13 +38,17 @@ def render_override(projects: list[dict]) -> str:
         mounts.append(f'      - "{host_q}:/projects/{slug}"')
 
     header = "# AUTO-GENERATED from projects.json by brag.compose_gen — do not edit.\n"
-    if not mounts and not skips:
-        # No additional projects: a valid no-op override that touches nothing
-        # (single-project install keeps the base /vault mount, registry unused).
+    if not projects:
+        # No registry at all (a truly single-project install that never migrated):
+        # a valid no-op override; the app keeps just the base /vault mount and the
+        # bare 'brag' connector.
         return header + "services: {}\n"
-    # With additional projects, also bind the registry file read-only so the app's
-    # watcher/bridge can see every project (compose appends these to the base
-    # service's volumes; the base /vault mount stays for the default project).
+    # As long as the registry EXISTS, bind it read-only into the app so the app's
+    # claude_sync/watcher/bridge see EXACTLY the registered projects — INCLUDING a
+    # default-only registry, so its connector stays the named 'brag-<folder>' and
+    # never collapses to a phantom bare 'brag'. Additional projects also get their
+    # vault bind-mounts. Compose appends these to the base service's volumes; the
+    # base /vault mount stays for the default project.
     body = ["services:", "  app:", "    volumes:",
             '      - "./projects.json:/registry/projects.json:ro"']
     body.extend(mounts)

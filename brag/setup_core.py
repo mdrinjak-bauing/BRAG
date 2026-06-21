@@ -49,6 +49,20 @@ def _is_brag_key(key: str) -> bool:
     return key == MCP_KEY or key.startswith(f"{MCP_KEY}-")
 
 
+def connector_key_for_project(p) -> str:
+    """The Claude/LM Studio connector key for one registered project — the single
+    source of truth shared by connectors_for_registry (what gets written) and the
+    projects CLI's interactive remover (what gets shown). 'brag-<slug>' for an
+    additional project; 'brag-<folder-slug>' for the default so it is labelled too
+    (never a bare, unlabelled 'brag' once more than one project exists)."""
+    from brag import registry
+    slug = p.get("slug") if isinstance(p, dict) else p
+    if slug in (None, "", "default"):
+        name = (p.get("name") if isinstance(p, dict) else "") or "brag"
+        return f"{MCP_KEY}-{registry.slugify(name)}"
+    return mcp_key_for(slug)
+
+
 def connectors_for_registry() -> dict:
     """{connector key: MCP entry} that Claude/LM Studio should contain — one per
     registered project, or just the bare 'brag' when the registry is empty (the
@@ -60,14 +74,15 @@ def connectors_for_registry() -> dict:
     projects = registry.projects()
     if not projects:
         return {MCP_KEY: entry_for_slug(None)}
-    out = {}
+    out: dict = {}
     for p in projects:
-        slug = p["slug"]
-        if slug in (None, "", "default"):
-            key = f"{MCP_KEY}-{registry.slugify(p.get('name') or 'brag')}"
-        else:
-            key = mcp_key_for(slug)
-        out[key] = entry_for_slug(slug)
+        key = connector_key_for_project(p)
+        if key in out:
+            # Rare: the default folder name slugifies to the same string as an
+            # extra project's slug. Disambiguate with the (always-unique) slug so
+            # NEITHER connector is silently dropped by the dict.
+            key = f"{key}-{p['slug']}"
+        out[key] = entry_for_slug(p["slug"])
     return out
 
 

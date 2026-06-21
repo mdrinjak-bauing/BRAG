@@ -61,6 +61,11 @@ services:
     image: ${BRAG_IMAGE:-ghcr.io/mdrinjak-bauing/brag:latest}
     profiles: ["setup"]
     container_name: brag-setup
+    # Start Qdrant alongside the one-shot service so `projects remove --delete-index`
+    # can reach it even when the rest of the stack is stopped (QDRANT_URL defaults to
+    # http://qdrant:6333). Harmless during the wizard, which does not touch Qdrant.
+    depends_on:
+      - qdrant
     env_file:
       - path: .env
         required: false
