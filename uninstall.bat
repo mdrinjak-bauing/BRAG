@@ -63,9 +63,12 @@ echo Removing the BRAG image...
 for /f "delims=" %%i in ('docker images -q "ghcr.io/mdrinjak-bauing/brag" 2^>nul') do docker rmi -f %%i >nul 2>nul
 for /f "delims=" %%i in ('docker images -q "brag" 2^>nul') do docker rmi -f %%i >nul 2>nul
 
-REM 5. Remove local setup state (the .env holds your API key).
+REM 5. Remove local setup state (the .env holds your API key) + the multi-project
+REM    registry and the generated compose override.
 if exist .env del /q .env
 if exist .setup_complete del /q .setup_complete
+if exist projects.json del /q projects.json
+if exist docker-compose.override.yml del /q docker-compose.override.yml
 
 echo.
 echo Done - BRAG is uninstalled.

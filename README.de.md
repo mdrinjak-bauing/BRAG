@@ -367,6 +367,16 @@ So sieht es auf der Festplatte aus:
 └── RAG Setup/            ← das Programm (setup.bat / setup.command liegen hier)
 ```
 
+**Mehrere Projekte (optional).** Halte getrennte Arbeitsbereiche vollständig
+auseinander — jeder mit eigener Suchdatenbank und eigenem Anschluss in Claude.
+Doppelklick auf **`Projekt hinzufuegen.bat`** (Windows) / **`.command`** (macOS),
+einen Ordner an beliebigem Ort wählen, benennen: BRAG legt darin ein
+`WissensWIKI/` an und ergänzt einen Anschluss `brag · <Name>` neben dem
+bestehenden. Programm und die ~3 GB Modelle bleiben **geteilt** (eine Engine) —
+Zusatzprojekte kosten nur Plattenplatz für ihre Dokumente, keinen Mehr-RAM. In
+Claudes Anschlussliste wählst du, welches Projekt durchsucht wird; nichts aus
+einem Projekt vermischt sich mit einem anderen.
+
 Änderungen in `sources/` werden automatisch nachgezogen: Benennst du eine
 **bereits indexierte** Datei um oder **verschiebst** sie (auch zwischen
 Unterordnern), werden nur die Metadaten (Autor, Jahr, Typ, PDF-Pfad) an Ort und

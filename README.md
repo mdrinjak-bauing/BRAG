@@ -345,6 +345,15 @@ On your disk it looks like this:
 └── RAG Setup/            ← the program (setup.bat / setup.command live here)
 ```
 
+**Multiple projects (optional).** Keep separate bodies of work fully apart — each
+with its own search database and its own connector in Claude. Double-click
+**`Projekt hinzufuegen.bat`** (Windows) / **`.command`** (macOS), pick a folder
+anywhere, give it a name: BRAG creates a `WissensWIKI/` inside it and adds a
+`brag · <name>` connector next to your existing one. The program and the ~3 GB
+models stay **shared** (one engine), so extra projects cost only disk for their
+documents — not more RAM. In Claude's connector list you pick which project to
+search; nothing from one project leaks into another.
+
 Changes in `sources/` are handled automatically: **renaming or moving** an
 **already-indexed** file (including between subfolders) just updates its metadata
 (author, year, type, PDF path) in place — **no re-ingest** (no re-embedding, no

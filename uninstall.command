@@ -65,8 +65,9 @@ for ref in "ghcr.io/mdrinjak-bauing/brag" "brag"; do
   [ -n "$IDS" ] && docker rmi -f $IDS >/dev/null 2>&1
 done
 
-# 5. Remove local setup state (the .env holds your API key).
-rm -f .env .setup_complete
+# 5. Remove local setup state (the .env holds your API key) + the multi-project
+#    registry and the generated compose override.
+rm -f .env .setup_complete projects.json docker-compose.override.yml
 
 echo
 echo "Done - BRAG is uninstalled."
