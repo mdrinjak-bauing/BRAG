@@ -79,11 +79,13 @@ Then open the folder and double-click **`setup.bat`**.
      **SmartScreen** box ("Windows protected your PC") click **"More info"** →
      **"Run anyway"**.
 
-**First, a folder picker opens.** Choose *where* BRAG should live — pick or create
-your **RAG connection folder** (e.g. on your Desktop). BRAG copies the program
-into a `RAG Setup` subfolder, creates your `WissensWIKI` knowledge folder next to
-it, and continues from there in a fresh window. *(Cancel the picker to install in
-place instead.)*
+**Setup asks two things in order.** First a folder picker asks *where the
+`BRAG Assistent` program should live* (e.g. on your Desktop) — pick anywhere you
+like. Then a second picker asks for *your project folder* (your documents). BRAG
+copies the program into a `BRAG Assistent` folder, creates a `WissensWIKI`
+workspace inside your project folder, and continues from there in a fresh window.
+*(If you cancel the first picker, the program just installs in the unpacked
+folder; the project folder in the second step is required.)*
 
 **What you see:** A black Command Prompt window opens and, shortly after, **your
 browser opens automatically** with the setup assistant. There you answer, in
@@ -96,7 +98,7 @@ plain language:
   never sent to the makers of this app or any third party; the live check just
   sends one small test request to that provider to confirm the key works. The
   local profile (LM Studio) needs no key at all.
-- **Your document language.** (Your knowledge folder was already chosen by the
+- **Your document language.** (Your project folder was already chosen by the
   folder picker above.)
 
 At the end the assistant writes the whole configuration itself — including the
@@ -110,8 +112,9 @@ minutes, first time only).
 
 ## 5. First document
 
-**What to do:** Put a PDF into the `WissensWIKI\sources\` folder (in your RAG
-connection folder, next to `RAG Setup`).
+**What to do:** Drop a PDF straight into your project folder (any subfolder works
+too) — everything in the project folder is searched, except the `WissensWIKI`
+workspace.
 
 **What you see:** Nothing visible — processing runs in the background. Note that
 the **very first** document also downloads the Docling layout models, so this one

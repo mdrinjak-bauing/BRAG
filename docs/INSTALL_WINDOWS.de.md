@@ -84,11 +84,14 @@ Dann den Ordner öffnen und **`setup.bat`** doppelklicken.
      in der blauen **SmartScreen**-Box („Der Computer wurde geschützt") auf
      **„Weitere Informationen"** → **„Trotzdem ausführen"**.
 
-**Zuerst öffnet sich ein Ordner-Auswahlfenster.** Wähle, *wo* BRAG liegen soll —
-wähle oder erstelle deinen **RAG-Verbindungsordner** (z. B. auf dem Desktop). BRAG
-kopiert das Programm in einen Unterordner `RAG Setup`, legt daneben deinen
-Wissensordner `WissensWIKI` an und macht von dort in einem neuen Fenster weiter.
-*(Brichst du die Auswahl ab, installiert BRAG einfach an Ort und Stelle.)*
+**Das Setup fragt nacheinander zwei Dinge.** Zuerst fragt ein
+Ordner-Auswahlfenster, *wo das Programm `BRAG Assistent` liegen soll* (z. B. auf
+dem Desktop) — wähle einen beliebigen Ort. Dann fragt ein zweites Fenster nach
+*deinem Projektordner* (deine Dokumente). BRAG kopiert das Programm in einen
+Ordner `BRAG Assistent`, legt in deinem Projektordner einen Arbeitsbereich
+`WissensWIKI` an und macht von dort in einem neuen Fenster weiter. *(Brichst du
+die erste Auswahl ab, installiert sich das Programm einfach im entpackten Ordner;
+der Projektordner im zweiten Schritt ist erforderlich.)*
 
 **Was du siehst:** Ein schwarzes Eingabeaufforderungs-Fenster öffnet sich und
 kurz darauf **automatisch dein Browser** mit dem Einrichtungs-Assistenten. Dort
@@ -102,7 +105,7 @@ beantwortest du in einfacher Sprache:
   die Macher dieser App oder an Dritte gesendet; die Live-Prüfung sendet
   lediglich eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu
   bestätigen. Lokale Profile (LM Studio) brauchen gar keinen Schlüssel.
-- **Sprache deiner Dokumente.** (Dein Wissensordner wurde oben bereits über die
+- **Sprache deiner Dokumente.** (Dein Projektordner wurde oben bereits über die
   Ordnerauswahl festgelegt.)
 
 Am Ende schreibt der Assistent die gesamte Konfiguration selbst — inklusive des
@@ -117,8 +120,9 @@ baut nun im Hintergrund die Docker-Container und lädt einmalig ~3 GB Modelle
 
 ## 5. Erstes Dokument
 
-**Was du tust:** Lege eine PDF-Datei in den Ordner `WissensWIKI\sources\` (in
-deinem RAG-Verbindungsordner, neben `RAG Setup`).
+**Was du tust:** Lege eine PDF-Datei direkt in deinen Projektordner (auch jeder
+Unterordner geht) — alles im Projektordner wird durchsucht, außer dem
+Arbeitsbereich `WissensWIKI`.
 
 **Was du siehst:** Nichts Sichtbares — die Verarbeitung läuft im Hintergrund.
 Beachte: Das **allererste** Dokument lädt zusätzlich die Docling-Layout-Modelle
