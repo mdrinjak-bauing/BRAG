@@ -2,7 +2,7 @@
 # BRAG - add another project: its own knowledge folder, its own search database
 # and its own connector in Claude / LM Studio, alongside the ones you have.
 # Double-click. Pick a folder anywhere; BRAG creates a WissensWIKI inside it and
-# wires it up. Run from your installed "RAG Setup" folder.
+# wires it up. Run from your installed "BRAG Assistent" folder.
 cd "$(dirname "$0")"
 
 echo "=== BRAG - add a project ==="
@@ -69,5 +69,5 @@ fi
 
 echo
 echo "Done! Reopen Claude Desktop - the connector for \"$PROJNAME\" appears next to"
-echo "your other ones. Drop documents into: $PROJDIR/WissensWIKI/sources/"
+echo "your other ones. Drop documents straight into your project folder: $PROJDIR"
 read -r -p "Press Enter to close..."

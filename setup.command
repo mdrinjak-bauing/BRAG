@@ -1,16 +1,16 @@
 #!/bin/bash
 # BRAG — Building Retrieval-Augmented Generation — one-click setup for macOS.
-# Double-click this file. On the FIRST run from the unpacked ZIP it asks where
-# your "RAG connection folder" should live, copies itself in there as
-# "RAG Setup" next to a "WissensWIKI" knowledge folder, and continues from that
-# new location. It then starts the app and opens the setup assistant in your
-# browser; this window finishes the restart afterwards.
+# Double-click this file. On the FIRST run from the unpacked ZIP it asks (1) WHERE
+# the "BRAG Assistent" program should live and (2) your PROJECT folder (your
+# documents). It copies itself into "BRAG Assistent", creates a WissensWIKI
+# workspace inside your project, then continues from the new location, builds the
+# app and opens the setup assistant in your browser.
 cd "$(dirname "$0")"
 
 echo "=== BRAG — Building Retrieval-Augmented Generation ==="
 echo
 
-# ============ FIRST RUN: relocate into the chosen RAG connection folder ============
+# ============ FIRST RUN: install the program + pick a project folder ============
 if [ ! -f ".ragsetup_home" ] && [ ! -f ".setup_complete" ]; then
   if ! command -v docker >/dev/null 2>&1; then
     echo "Docker is not installed."
@@ -27,102 +27,103 @@ if [ ! -f ".ragsetup_home" ] && [ ! -f ".setup_complete" ]; then
     exit 1
   fi
 
-  echo "=== Choose WHERE your BRAG folder should be created ==="
-  echo "A 'RAG connection folder' with your knowledge (WissensWIKI) and the"
-  echo "program (RAG Setup) will be placed inside it. A picker window opens..."
-  RAGDIR="$(osascript -e 'POSIX path of (choose folder with prompt "Choose WHERE your BRAG folder should be created. WissensWIKI (your documents + notes) and RAG Setup (the program) go inside it.")' 2>/dev/null)"
-  RAGDIR="${RAGDIR%/}"
+  # ── Step 1 of 2: where the BRAG Assistent program should live ──────────────
+  echo "=== Step 1 of 2: where should the BRAG Assistent (the program) live? ==="
+  echo "A 'BRAG Assistent' folder is created there — it IS the tool; keep it, don't delete it."
+  ENGINEPARENT="$(osascript -e 'POSIX path of (choose folder with prompt "Step 1/2: choose WHERE the BRAG Assistent program should live. A BRAG Assistent folder is created there — do not delete it later.")' 2>/dev/null)"
+  ENGINEPARENT="${ENGINEPARENT%/}"
 
-  # Reject a literal '$' in the chosen path: Docker Compose interpolates the
-  # bind-mount source, and a '$' there cannot be round-tripped (raw is eaten,
-  # doubled survives as $$), so it would silently mount the WRONG/empty folder.
-  # Fall back to an in-place install (its default ./WissensWIKI has no '$').
-  case "$RAGDIR" in
+  # Reject a literal '$' (Docker Compose interpolates the bind-mount source and a
+  # '$' cannot be round-tripped) — fall back to an in-place program install.
+  case "$ENGINEPARENT" in
     *'$'*)
-      echo "  That folder path contains a '\$', which Docker cannot handle — installing in this folder instead."
-      RAGDIR="" ;;
+      echo "  That path contains a '\$' — installing the program in this folder instead."
+      ENGINEPARENT="" ;;
   esac
 
-  # Never relocate INTO the unpacked folder itself (or a subfolder of it): the
-  # copy source is the current dir, so the destination would sit inside the
-  # source and copy itself. Install in place in that case.
-  if [ -n "$RAGDIR" ]; then
+  # Never relocate INTO the unpacked folder itself (the copy would copy itself).
+  if [ -n "$ENGINEPARENT" ]; then
     SRC_REAL="$(pwd -P)"
-    RAG_REAL="$(cd "$RAGDIR" 2>/dev/null && pwd -P || printf '%s' "$RAGDIR")"
-    case "$RAG_REAL/" in
+    ENG_REAL="$(cd "$ENGINEPARENT" 2>/dev/null && pwd -P || printf '%s' "$ENGINEPARENT")"
+    case "$ENG_REAL/" in
       "$SRC_REAL"/*)
-        echo "  That location is inside the unpacked folder — installing in this folder instead."
-        RAGDIR="" ;;
+        echo "  That location is inside the unpacked folder — installing the program here instead."
+        ENGINEPARENT="" ;;
     esac
   fi
 
-  if [ -z "$RAGDIR" ]; then
-    echo "  Installing in this folder (no separate connection folder)."
-  else
-    TARGET="$RAGDIR/RAG Setup"
-    VAULTDIR="$RAGDIR/WissensWIKI"
+  INPLACE=0
+  if [ -z "$ENGINEPARENT" ]; then INPLACE=1; else ENGINE="$ENGINEPARENT/BRAG Assistent"; fi
 
-    if [ -f "$TARGET/.ragsetup_home" ]; then
-      echo "BRAG is already installed at: $TARGET — continuing there..."
-      open "$TARGET/setup.command"
+  # ── Step 2 of 2: the project folder (the documents to index) ───────────────
+  echo
+  echo "=== Step 2 of 2: choose your PROJECT folder (your documents) ==="
+  echo "Everything in it is indexed, except the WissensWIKI workspace."
+  PROJDIR="$(osascript -e 'POSIX path of (choose folder with prompt "Step 2/2: choose your PROJECT folder — the folder with the documents to index. A WissensWIKI workspace is created inside it.")' 2>/dev/null)"
+  PROJDIR="${PROJDIR%/}"
+  if [ -z "$PROJDIR" ]; then
+    echo "No project folder chosen — cannot continue. Re-run and choose your documents folder."
+    read -r -p "Press Enter to close..."
+    exit 1
+  fi
+  case "$PROJDIR" in
+    *'$'*)
+      echo "That project path contains a '\$', which Docker cannot handle. Choose a folder without it."
+      read -r -p "Press Enter to close..."
+      exit 1 ;;
+  esac
+
+  # Seed the WissensWIKI workspace inside the project (only when new, so a re-run
+  # never overwrites your notes). The app also seeds anything missing on start.
+  if [ ! -d "$PROJDIR/WissensWIKI" ]; then
+    mkdir -p "$PROJDIR/WissensWIKI"
+    cp -R vault_template/. "$PROJDIR/WissensWIKI"/ 2>/dev/null || true
+  fi
+
+  CLAUDE_DIR="$HOME/Library/Application Support/Claude"
+
+  if [ "$INPLACE" = "1" ]; then
+    # Install the program in THIS (unpacked) folder; mark it, then fall through to
+    # REAL SETUP below. VAULT_PATH = the PROJECT ROOT (the whole folder is the
+    # corpus); the app never mounts the engine, so it never sees .env/scripts.
+    bash tools/mark_engine_folder.command "$(pwd -P)" 2>/dev/null || true
+    printf '%s\n' "$(pwd -P)" > ".ragsetup_home"
+    if [ ! -f ".env" ]; then
+      { echo "CLAUDE_CONFIG_DIR=$CLAUDE_DIR"; echo "VAULT_PATH=$PROJDIR"; } > ".env"
+    fi
+  else
+    if [ -f "$ENGINE/.ragsetup_home" ]; then
+      echo "BRAG Assistent already installed at: $ENGINE — continuing there..."
+      open "$ENGINE/setup.command"
       exit 0
     fi
-
     echo
-    echo "Setting up your RAG connection folder:"
-    echo "  $RAGDIR"
-    echo "      /WissensWIKI   (your documents and notes)"
-    echo "      /RAG Setup     (the program)"
-
-    # Create + seed the knowledge folder right away (only when new, so a re-run
-    # never overwrites your documents or edited CLAUDE.md). The app also seeds
-    # anything still missing on first start.
-    if [ ! -d "$VAULTDIR" ]; then
-      mkdir -p "$VAULTDIR"
-      cp -R vault_template/. "$VAULTDIR"/ 2>/dev/null || true
-    fi
-    mkdir -p "$TARGET"
-
-    # Copy the program into <RAGDIR>/RAG Setup. Anchored excludes (leading slash)
-    # skip ONLY a top-level destination/knowledge folder, plus VCS/caches and
-    # per-install files written fresh in the new copy. No cp fallback: the
-    # containment guard above already ruled out a self-copy, a bare cp could
-    # recurse, and a failed rsync is caught by the check below.
+    echo "Installing the program into: $ENGINE"
+    mkdir -p "$ENGINE"
+    # Anchored excludes skip a top-level engine/workspace folder, plus VCS/caches
+    # and per-install files written fresh in the new copy.
     rsync -a \
-      --exclude='/RAG Setup/' --exclude='/WissensWIKI/' \
-      --exclude='/RAG-Verbindungsordner/' --exclude='/wissensspeicher/' --exclude='/vault/' \
+      --exclude='/BRAG Assistent/' --exclude='/WissensWIKI/' \
       --exclude='.git' --exclude='.env' --exclude='.ragpick' \
       --exclude='.ragsetup_home' --exclude='.setup_complete' \
       --exclude='__pycache__' --exclude='.pytest_cache' --exclude='.ruff_cache' \
-      ./ "$TARGET"/
-    if [ ! -f "$TARGET/setup.command" ]; then
+      ./ "$ENGINE"/
+    if [ ! -f "$ENGINE/setup.command" ]; then
       echo "The copy did not include setup.command — cannot continue safely."
-      echo "Please move this folder into your RAG connection folder by hand."
+      echo "Please move this folder into place by hand."
       read -r -p "Press Enter to close..."
       exit 1
     fi
-
-    # Marker (records the RAG connection folder) + a fresh bootstrap .env that the
-    # wizard rewrites later. The chosen path has no '$' (rejected above), so the
-    # values are written raw. Don't clobber an existing .env (keeps an API key if
-    # the marker was removed by hand). The compose project name is left to default
-    # (the stable "RAG Setup" folder), so the search-index volume stays attached.
-    CLAUDE_DIR="$HOME/Library/Application Support/Claude"
-    printf '%s\n' "$RAGDIR" > "$TARGET/.ragsetup_home"
-    if [ ! -f "$TARGET/.env" ]; then
-      {
-        echo "CLAUDE_CONFIG_DIR=$CLAUDE_DIR"
-        echo "VAULT_PATH=$VAULTDIR"
-      } > "$TARGET/.env"
+    bash "$ENGINE/tools/mark_engine_folder.command" "$ENGINE" 2>/dev/null || true
+    printf '%s\n' "$ENGINE" > "$ENGINE/.ragsetup_home"
+    if [ ! -f "$ENGINE/.env" ]; then
+      { echo "CLAUDE_CONFIG_DIR=$CLAUDE_DIR"; echo "VAULT_PATH=$PROJDIR"; } > "$ENGINE/.env"
     fi
-    chmod +x "$TARGET/setup.command" "$TARGET/status.command" 2>/dev/null || true
-
+    chmod +x "$ENGINE/setup.command" "$ENGINE/status.command" 2>/dev/null || true
     echo
-    echo "Organized. Continuing setup from the new location (a new window opens)..."
-    open "$TARGET/setup.command"
-    echo
-    echo "You can close this window and delete this original unpacked folder now —"
-    echo "everything lives in your RAG connection folder from here on."
+    echo "Organized. Continuing setup from the BRAG Assistent folder (a new window opens)..."
+    open "$ENGINE/setup.command"
+    echo "You can close this window and delete this unpacked folder now."
     read -r -p "Press Enter to close..."
     exit 0
   fi
@@ -227,7 +228,9 @@ echo
 # Confirm the container actually wrote the Claude Desktop entry (reliable on a
 # macOS bind mount, but verify rather than claim success blindly).
 if grep -q '"brag"' "$CLAUDE_DIR/claude_desktop_config.json" 2>/dev/null; then
-  echo "All done! Your knowledge lives in the WissensWIKI folder next to this one."
+  echo "All done! Your documents stay in your project folder; this 'BRAG Assistent'"
+  echo "folder is the program (don't delete it). Drop more documents into your"
+  echo "project folder anytime — they are indexed automatically."
   echo "Quit Claude Desktop completely (Cmd+Q) and reopen it."
 else
   echo "Almost done — but the Claude Desktop connection could not be confirmed."

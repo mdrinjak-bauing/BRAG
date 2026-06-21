@@ -2,7 +2,7 @@
 REM BRAG - add another project: its own knowledge folder, its own search
 REM database and its own connector in Claude / LM Studio, alongside the ones you
 REM already have. Double-click. Pick a folder anywhere; BRAG creates a WissensWIKI
-REM inside it and wires it up. Run this from your installed "RAG Setup" folder.
+REM inside it and wires it up. Run this from your installed "BRAG Assistent" folder.
 setlocal EnableExtensions
 cd /d "%~dp0"
 chcp 65001 >nul 2>nul
@@ -25,10 +25,10 @@ if errorlevel 1 (
 )
 
 echo === Choose the folder for this project (a picker opens) ===
-echo A "WissensWIKI" with your documents will be created inside it.
+echo Everything in it is indexed, except the WissensWIKI workspace created inside it.
 echo.
 del ".ragpick" >nul 2>nul
-powershell -NoProfile -STA -ExecutionPolicy Bypass -File "%~dp0tools\pick_folder.ps1"
+powershell -NoProfile -STA -ExecutionPolicy Bypass -File "%~dp0tools\pick_folder.ps1" "Choose this project's folder - the folder with the documents to index. A 'WissensWIKI' workspace is created inside it."
 if not exist ".ragpick" (
   echo No folder chosen ^(or it contained an unsupported character^).
   pause
@@ -76,6 +76,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_lmstudio_c
 
 echo.
 echo Done! Reopen Claude Desktop - the connector for "%PROJNAME%" appears next to
-echo your other ones. Drop documents into the sources folder here:
-echo   %PROJDIR%\WissensWIKI\sources
+echo your other ones. Drop documents straight into your project folder:
+echo   %PROJDIR%
 pause

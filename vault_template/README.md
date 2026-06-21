@@ -1,20 +1,16 @@
-# Your knowledge store
+# WissensWIKI — your workspace
 
-This folder is your knowledge base. It is a normal folder of files — you can
-open it with [Obsidian](https://obsidian.md) as a vault, back it up, or sync
-it however you like.
+This folder is **your** space inside the project — and the one folder here that is
+**not** bulk-indexed (so your own notes never echo back into search):
 
-| Folder | What it is | Who writes here |
-|---|---|---|
-| `sources/` | Your documents (PDF, DOCX, ...). Drop files in — they are indexed automatically within seconds. Subfolders become document types. | You |
-| `notes/` | One literature note per indexed document. Add your own thoughts under "My notes" — that section is never overwritten. | The system + you |
-| `passages/` | Quotable passages you save while researching with Claude, grouped by topic. | Claude (on your request) |
-| `wiki/` | Your own thinking: concepts, drafts, decisions. Deliberately **not** part of the search index — your notes should never come back disguised as evidence. | You |
+- **`Passagen/`** — verified passages you save with `/beleg` (save_passage). These
+  **are** indexed, so you can search your curated evidence.
+- **`Notizen/`** and any other subfolders you create — your own writing and notes.
+  **Not indexed.** Claude can read and write here (read_note / write_note); name
+  the subfolders however you like.
+- **`CLAUDE.md`** — teach Claude about your field (fill it in).
+- **`AGENTS.md`** — extra rules for autonomous agent tasks.
 
-`CLAUDE.md` tells Claude how to work with your research — fill in the
-placeholders, it makes a real difference. `sources/_inbox/` (create it if
-you want) is a staging area the indexer ignores.
-
-**Own metadata:** put a `_meta.txt` (one `key: value` per line, e.g.
-`project: School Center`) into any folder under `sources/` — all documents
-in it carry those fields, and Claude can filter searches by them.
+**Your documents do NOT go in here.** Drop them straight into the **project folder**
+(the folder that contains this one) — everything there, in any subfolder, is the
+searchable corpus.

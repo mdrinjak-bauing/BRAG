@@ -1,7 +1,7 @@
 """CLI to manage BRAG projects — the single orchestration point shared by the
 "add project" launchers and the wizard's Projects page.
 
-Run inside the one-shot setup container, which mounts the RAG Setup folder at
+Run inside the one-shot setup container, which mounts the BRAG Assistent folder at
 /workspace (read-write) and sets BRAG_REGISTRY=/workspace/projects.json:
 
   docker compose run --rm setup python -m brag.projects add "My Thesis" "D:/Arbeit/Thesis"
@@ -21,7 +21,7 @@ from brag import compose_gen, config, registry
 
 
 def _regen_override() -> None:
-    # Write the override next to the registry file (the RAG Setup folder, mounted
+    # Write the override next to the registry file (the BRAG Assistent folder, mounted
     # at /workspace in the setup container).
     compose_gen.write_override(workspace=registry.registry_path().parent)
 

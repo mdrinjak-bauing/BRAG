@@ -36,12 +36,12 @@ services:
     environment:
       - QDRANT_URL=http://qdrant:6333
     volumes:
-      # The persistent app holds ONLY the knowledge store and the model cache —
-      # NOT the project dir or the Claude Desktop config. Those are mounted
-      # solely on the one-shot `setup` service below, so the long-running
-      # ingest/bridge process cannot read .env or rewrite the host's Claude
-      # Desktop config (defence in depth against a parser/RCE in this container).
-      - ${VAULT_PATH:-./WissensWIKI}:/vault
+      # The persistent app mounts ONLY your project folder (the corpus, at /vault)
+      # and the model cache — NOT the BRAG Assistent program dir and NOT the Claude
+      # Desktop config. Those are mounted solely on the one-shot `setup` service
+      # below, so the long-running ingest/bridge process cannot read .env or rewrite
+      # the host's Claude config (defence in depth against a parser/RCE here).
+      - ${VAULT_PATH:-./project}:/vault
       - models_cache:/models
     ports:
       # localhost only — the bridge serves your documents (PDF deep-links); it
@@ -73,7 +73,7 @@ services:
       # "1" only when the launcher exported CLAUDE_CONFIG_DIR; lets the wizard
       # tell a real Claude config mount from the throwaway sentinel.
       - CLAUDE_CONFIG_MOUNTED=${CLAUDE_CONFIG_DIR:+1}
-      # The project registry + generated override live in the RAG Setup folder,
+      # The project registry + generated override live in the BRAG Assistent folder,
       # mounted here at /workspace; the projects CLI writes them there.
       - BRAG_REGISTRY=/workspace/projects.json
     command: ["python", "-m", "brag.setup_server"]

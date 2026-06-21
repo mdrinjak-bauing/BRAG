@@ -154,22 +154,28 @@ def write_env(profile: str, api_key: str, language: str,
 
 
 def create_vault() -> bool:
-    """Copy the template to ./WissensWIKI. Returns False if it already existed."""
-    vault = WORKSPACE / "WissensWIKI"
-    if vault.exists():
+    """Create the FALLBACK in-engine project root (./project) with its WissensWIKI
+    workspace — used only when the user picked no project folder. Returns False if
+    it already existed. The normal path mounts the user's project at /vault and
+    never calls this. The project root is the corpus; only WissensWIKI is seeded."""
+    project = WORKSPACE / "project"
+    if (project / "WissensWIKI").exists():
         return False
-    shutil.copytree(VAULT_TEMPLATE, vault)
+    shutil.copytree(VAULT_TEMPLATE, project / "WissensWIKI")
     return True
 
 
 def seed_vault_if_empty(vault: Path) -> None:
-    """Seed a custom (possibly empty) knowledge-store folder with the template files
-    without overwriting anything that exists. Called at app startup."""
+    """Seed the project's WissensWIKI workspace from the template without
+    overwriting anything that exists. Called at app startup. The project root holds
+    the user's documents (the searchable corpus); only the WissensWIKI workspace
+    (Passagen/, Notizen/, guides) is seeded — never the root itself."""
     if not VAULT_TEMPLATE.exists():
         return
-    vault.mkdir(parents=True, exist_ok=True)
+    wiki = vault / "WissensWIKI"
+    wiki.mkdir(parents=True, exist_ok=True)
     for item in VAULT_TEMPLATE.iterdir():
-        target = vault / item.name
+        target = wiki / item.name
         if target.exists():
             continue
         if item.is_dir():

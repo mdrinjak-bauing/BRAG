@@ -1,10 +1,10 @@
-# Native folder picker, run on the HOST by setup.bat: choose WHERE the BRAG
-# "RAG connection folder" should be created. A 'WissensWIKI' folder (your
-# documents + notes) and a 'RAG Setup' folder (the program) are placed inside it.
+# Native folder picker, run on the HOST by setup.bat / "Projekt hinzufuegen.bat".
+# The caller passes the dialog prompt as the first argument (which folder to pick:
+# the BRAG Assistent program location, or a project folder). On cancel/error it
+# writes NOTHING, so the caller can fall back or abort.
 #
 # Writes the chosen ABSOLUTE path to <program dir>\.ragpick (one line, UTF-8, no
-# BOM). On cancel or any error it writes NOTHING, so setup.bat falls back to an
-# in-place install and is never blocked.
+# BOM).
 #
 # The program dir is derived from THIS script's own location ($PSScriptRoot is
 # ...\tools, its parent is the program dir) so it never depends on a passed
@@ -15,11 +15,15 @@
 # a stray non-ASCII char (e.g. an em-dash) breaks the parser.
 
 $proj = Split-Path -Parent $PSScriptRoot
+$desc = "Choose a folder."
+if ($args.Count -ge 1 -and -not [string]::IsNullOrWhiteSpace([string]$args[0])) {
+    $desc = [string]$args[0]
+}
 
 try {
     Add-Type -AssemblyName System.Windows.Forms
     $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
-    $dlg.Description = "Choose WHERE your BRAG folder should be created. Inside it you get 'WissensWIKI' (your documents + notes) and 'RAG Setup' (the program). Tip: use 'Make New Folder' for a dedicated folder."
+    $dlg.Description = $desc
     try { $dlg.UseDescriptionForTitle = $true } catch {}
     try { $dlg.SelectedPath = [Environment]::GetFolderPath('MyDocuments') } catch {}
 

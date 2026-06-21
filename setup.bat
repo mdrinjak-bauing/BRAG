@@ -1,25 +1,25 @@
 @echo off
 REM BRAG - Building Retrieval-Augmented Generation - one-click setup for Windows.
-REM Double-click this file. On the FIRST run from the unpacked ZIP it asks where
-REM your "RAG connection folder" should live, copies itself in there as
-REM "RAG Setup" next to a "WissensWIKI" knowledge folder, and continues from
-REM that new location. It then starts the app and opens the setup assistant in
-REM your browser; this window finishes the restart afterwards.
+REM Double-click this file. On the FIRST run from the unpacked ZIP it asks (1)
+REM WHERE the "BRAG Assistent" program should live and (2) your PROJECT folder
+REM (your documents). It copies itself into "BRAG Assistent", creates a WissensWIKI
+REM workspace inside your project, then continues from the new location, builds the
+REM app and opens the setup assistant in your browser.
 setlocal EnableExtensions
 cd /d "%~dp0"
-REM UTF-8 so a knowledge-folder path with non-ASCII characters (e.g. German
-REM umlauts) round-trips correctly through .ragpick and into .env.
+REM UTF-8 so a folder path with non-ASCII characters (e.g. German umlauts)
+REM round-trips correctly through .ragpick and into .env.
 chcp 65001 >nul 2>nul
 
 echo === BRAG - Building Retrieval-Augmented Generation ===
 echo.
 
-REM If this copy already lives inside a RAG connection folder (marker present),
-REM or a previous run already finished setup here (in-place), skip relocation.
+REM If this copy is already the installed BRAG Assistent (marker present), or a
+REM previous run already finished setup here, skip relocation and run the wizard.
 if exist ".ragsetup_home" goto real_setup
 if exist ".setup_complete" goto real_setup
 
-REM ============ FIRST RUN: relocate into the chosen RAG connection folder ============
+REM ============ FIRST RUN: install the program + pick a project folder ============
 
 where docker >nul 2>nul
 if errorlevel 1 (
@@ -53,87 +53,94 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo === Choose WHERE your BRAG folder should be created ===
-echo A "RAG connection folder" with your knowledge ^(WissensWIKI^) and the
-echo program ^(RAG Setup^) will be placed inside it. A picker window opens...
+REM ── Step 1 of 2: where the BRAG Assistent program should live ────────────────
+echo === Step 1 of 2: where should the BRAG Assistent (the program) live? ===
+echo A "BRAG Assistent" folder is created there - it IS the tool; keep it, don't
+echo delete it. A picker window opens...
 echo.
 del ".ragpick" >nul 2>nul
-powershell -NoProfile -STA -ExecutionPolicy Bypass -File "%~dp0tools\pick_folder.ps1"
+powershell -NoProfile -STA -ExecutionPolicy Bypass -File "%~dp0tools\pick_folder.ps1" "Step 1/2: choose WHERE the BRAG Assistent program should live. A 'BRAG Assistent' folder is created there - please do not delete it later."
+set "INPLACE="
+set "ENGINEPARENT="
+if not exist ".ragpick" goto step1_done
+set /p ENGINEPARENT=<".ragpick"
+del ".ragpick" >nul 2>nul
+:step1_done
+if not defined ENGINEPARENT set "INPLACE=1"
+if not defined INPLACE set "ENGINE=%ENGINEPARENT%\BRAG Assistent"
+
+REM ── Step 2 of 2: the project folder (the documents to index) ─────────────────
+echo.
+echo === Step 2 of 2: choose your PROJECT folder (your documents) ===
+echo Everything in it is indexed, except the WissensWIKI workspace. A picker opens...
+echo.
+del ".ragpick" >nul 2>nul
+powershell -NoProfile -STA -ExecutionPolicy Bypass -File "%~dp0tools\pick_folder.ps1" "Step 2/2: choose your PROJECT folder - the folder with the documents to index. A 'WissensWIKI' workspace is created inside it."
 if not exist ".ragpick" (
-  echo No location chosen - installing in this folder instead.
-  goto real_setup
+  echo No project folder chosen - cannot continue. Re-run and choose your documents folder.
+  pause
+  exit /b 1
 )
-set "RAGDIR="
-set /p RAGDIR=<".ragpick"
+set "PROJDIR="
+set /p PROJDIR=<".ragpick"
 del ".ragpick" >nul 2>nul
-if not defined RAGDIR goto real_setup
-
-set "TARGET=%RAGDIR%\RAG Setup"
-set "VAULTDIR=%RAGDIR%\WissensWIKI"
-
-REM Already installed there? Just continue in the existing copy.
-if exist "%TARGET%\.ragsetup_home" (
-  echo BRAG is already installed at: %TARGET%
-  echo Continuing there...
-  start "" "%TARGET%\setup.bat"
-  exit /b 0
-)
-
-echo.
-echo Setting up your RAG connection folder:
-echo   "%RAGDIR%"
-echo       \WissensWIKI   ^(your documents and notes^)
-echo       \RAG Setup     ^(the program^)
-REM Create + seed the knowledge folder (sources, notes, wiki, passages + guides)
-REM right away, so you see the full structure immediately. Only when it is new,
-REM so a re-run never overwrites your documents or edited CLAUDE.md. The app also
-REM seeds anything still missing on first start.
-if not exist "%VAULTDIR%" (
-  mkdir "%VAULTDIR%"
-  robocopy "%~dp0vault_template" "%VAULTDIR%" /E /NFL /NDL /NJH /NJS /NP >nul
-)
-if not exist "%TARGET%" mkdir "%TARGET%"
-
-REM Copy the program into <RAGDIR>\RAG Setup. Exclude VCS, any nested target
-REM names, and per-install files that must be written fresh in the new copy.
-robocopy "%~dp0." "%TARGET%" /E /NFL /NDL /NJH /NJS /NP /XD ".git" "%TARGET%" "%VAULTDIR%" /XF ".ragpick" ".env" ".setup_complete" .ragsetup_home >nul
-if errorlevel 8 (
-  echo.
-  echo Could not copy the program to "%TARGET%".
-  echo Please move this folder there by hand, or re-run setup.
-  pause
-  exit /b 1
-)
-if not exist "%TARGET%\setup.bat" (
-  echo.
-  echo The copy did not include setup.bat - cannot continue safely.
-  echo Please move this folder into your RAG connection folder by hand.
+if not defined PROJDIR (
+  echo No project folder chosen.
   pause
   exit /b 1
 )
 
-REM Write the installed-copy marker and a fresh .env. Each value is written on
-REM its OWN line (not inside a parenthesized block) so a folder path containing
-REM parentheses cannot terminate the block early. The compose project name is
-REM left to default (the stable "RAG Setup" folder name), so the search-index
-REM volume stays attached without a machine-global pin.
->"%TARGET%\.ragsetup_home" echo %RAGDIR%
-REM Only write a fresh .env if none exists (keeps an API key if the marker was
-REM removed by hand). Done with goto, NOT a parenthesized block, so a folder path
-REM containing parentheses cannot close the block early.
-if exist "%TARGET%\.env" goto env_ready
->"%TARGET%\.env" echo CLAUDE_CONFIG_DIR=%APPDATA%\Claude
->>"%TARGET%\.env" echo VAULT_PATH=%VAULTDIR%
-:env_ready
+REM Seed the WissensWIKI workspace inside the project (Passagen + guides), only
+REM when new, so a re-run never overwrites your notes. Flat (no parenthesized
+REM block) so a project path containing parentheses cannot break it.
+if exist "%PROJDIR%\WissensWIKI" goto seeded
+mkdir "%PROJDIR%\WissensWIKI"
+robocopy "%~dp0vault_template" "%PROJDIR%\WissensWIKI" /E /NFL /NDL /NJH /NJS /NP >nul
+:seeded
 
+if defined INPLACE goto engine_inplace
+
+REM ── Relocate the program into the BRAG Assistent folder ──────────────────────
+if not exist "%ENGINE%\.ragsetup_home" goto do_relocate
+echo BRAG Assistent already installed at: %ENGINE% - continuing there...
+start "" "%ENGINE%\setup.bat"
+exit /b 0
+:do_relocate
+if not exist "%ENGINE%" mkdir "%ENGINE%"
+robocopy "%~dp0." "%ENGINE%" /E /NFL /NDL /NJH /NJS /NP /XD ".git" "%ENGINE%" /XF ".ragpick" ".env" ".setup_complete" .ragsetup_home >nul
+if errorlevel 8 goto relocate_failed
+if not exist "%ENGINE%\setup.bat" goto relocate_failed
+call "%~dp0tools\mark_engine_folder.bat" "%ENGINE%"
+REM Marker + fresh .env in the ENGINE. VAULT_PATH = the PROJECT ROOT (not the
+REM WissensWIKI): the whole project folder is the corpus, and the app never mounts
+REM the engine, so it never sees .env/scripts. Written flat (parens-safe).
+>"%ENGINE%\.ragsetup_home" echo %ENGINE%
+if exist "%ENGINE%\.env" goto relaunch
+>"%ENGINE%\.env" echo CLAUDE_CONFIG_DIR=%APPDATA%\Claude
+>>"%ENGINE%\.env" echo VAULT_PATH=%PROJDIR%
+:relaunch
 echo.
-echo Organized. Continuing setup from the new location ^(a new window opens^)...
-start "" "%TARGET%\setup.bat"
-echo.
-echo You can CLOSE this window and DELETE this original unpacked folder now -
-echo everything lives in your RAG connection folder from here on.
+echo Organized. Continuing setup from the BRAG Assistent folder (a new window opens)...
+start "" "%ENGINE%\setup.bat"
+echo You can close this window and delete this unpacked folder now.
 pause
 exit /b 0
+:relocate_failed
+echo.
+echo Could not copy the program to the BRAG Assistent folder.
+echo Please move this folder into place by hand, or re-run setup.
+pause
+exit /b 1
+
+:engine_inplace
+REM Install the program in THIS (unpacked) folder; mark it as the BRAG Assistent.
+call "%~dp0tools\mark_engine_folder.bat" "%~dp0."
+>".ragsetup_home" echo %~dp0
+if exist ".env" goto inplace_env_ready
+>".env" echo CLAUDE_CONFIG_DIR=%APPDATA%\Claude
+>>".env" echo VAULT_PATH=%PROJDIR%
+:inplace_env_ready
+goto real_setup
 
 REM ====================== REAL SETUP (runs in the installed copy) ======================
 :real_setup
@@ -210,13 +217,10 @@ docker compose --profile setup rm -sf setup >nul 2>nul
 docker compose up -d >nul 2>nul
 
 REM Connect BRAG to Claude Desktop from the HOST (a container write does not
-REM reliably reach the host on Windows), then LM Studio if it is installed.
-REM Claude Desktop REWRITES this config while running and would drop an entry
-REM added underneath it, so wait until Claude is fully closed before writing -
-REM that is what makes the connection persist.
+REM reliably reach the host on Windows), then LM Studio if it is installed. Claude
+REM rewrites its config while running and would drop the entry, so the helper makes
+REM sure Claude is fully closed first (it offers to close it).
 echo.
-REM Make sure Claude is fully closed first, so the entry persists (Claude rewrites
-REM its config while running and would drop it). The helper offers to close Claude.
 call "%~dp0tools\ensure_claude_closed.bat"
 echo Connecting BRAG to Claude Desktop...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_claude_config.ps1"
@@ -226,7 +230,9 @@ echo Connecting BRAG to LM Studio (if installed)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_lmstudio_config.ps1"
 
 echo.
-echo All done! Your knowledge lives in the WissensWIKI folder next to this one.
+echo All done! Your documents stay in your project folder; this "BRAG Assistent"
+echo folder is the program (don't delete it). Drop more documents into your project
+echo folder anytime - they are indexed automatically.
 echo Quit Claude Desktop completely ^(tray ^> Quit^) and reopen it.
 echo (If you use LM Studio, also fully restart it so the new connection loads.)
 pause
