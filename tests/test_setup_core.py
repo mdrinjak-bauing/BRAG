@@ -68,6 +68,25 @@ def test_seed_vault_seeds_only_wissenswiki(tmp_path):
     assert not (tmp_path / "CLAUDE.md").exists()
 
 
+def test_write_env_drops_stale_model_on_profile_switch(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup_core, "WORKSPACE", tmp_path)
+    (tmp_path / ".env").write_text(
+        "PROFILE=hybrid\nLLM_MODEL=gemma-4-12b-it\nVAULT_PATH=/vault\n", encoding="utf-8")
+    setup_core.write_env("gemini", "KEY", "german")   # provider switch, no model passed
+    out = (tmp_path / ".env").read_text(encoding="utf-8")
+    assert "gemma-4-12b-it" not in out                # stale local model dropped
+    assert "PROFILE=gemini" in out
+
+
+def test_write_env_keeps_model_on_same_profile_rerun(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup_core, "WORKSPACE", tmp_path)
+    (tmp_path / ".env").write_text(
+        "PROFILE=hybrid\nLLM_MODEL=gemma-4-12b-it\nVAULT_PATH=/vault\n", encoding="utf-8")
+    setup_core.write_env("hybrid", "", "german")      # same-profile re-run keeps it
+    out = (tmp_path / ".env").read_text(encoding="utf-8")
+    assert "LLM_MODEL=gemma-4-12b-it" in out
+
+
 def test_seed_vault_is_idempotent_and_nondestructive(tmp_path):
     wiki = tmp_path / "WissensWIKI"
     wiki.mkdir()

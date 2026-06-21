@@ -121,23 +121,24 @@ def write_env(profile: str, api_key: str, language: str,
         lines.append(f"{key_env}={api_key}")
     if llm_model:
         lines.append(f"LLM_MODEL={llm_model}")
-    # Preserve keys the wizard itself does NOT manage but the user may have set
-    # by hand — a re-run (e.g. to switch provider) must never silently drop them:
-    #  - the Claude config dir (set by setup.bat/.command) and a custom bridge
-    #    port / public URL (used when 8765 is already taken);
-    #  - a hand-picked cloud model (LLM_MODEL — only when the wizard did not just
-    #    write one, i.e. cloud profiles), the LLM base URL, and any embedding /
-    #    retrieval overrides, which are advanced .env-only dials. Without this a
-    #    wizard re-run reverted the user to profile defaults.
+    # Preserve keys the wizard itself does NOT manage but the user may have set by
+    # hand — a re-run must never silently drop them: the Claude config dir, a custom
+    # bridge port / public URL, and the advanced embedding / retrieval .env dials.
     preserved = [
         "CLAUDE_CONFIG_DIR", "BRIDGE_HOST_PORT", "BRIDGE_PUBLIC_URL",
-        "COMPOSE_PROJECT_NAME", "LLM_BASE_URL", "EMBEDDING_BACKEND",
+        "COMPOSE_PROJECT_NAME", "EMBEDDING_BACKEND",
         "EMBEDDING_MODEL", "EMBEDDING_DIM", "EMBEDDING_REVISION",
         "COLLECTION_NAME", "RERANK_PREFETCH", "RERANK_FUSION_LIMIT",
         "RERANK_BATCH_SIZE", "DEFAULT_TOP_K", "MAX_CHUNKS_PER_SOURCE",
     ]
-    if not llm_model:
-        preserved.append("LLM_MODEL")
+    # LLM_MODEL + LLM_BASE_URL are provider-specific: carry them over ONLY when the
+    # profile is UNCHANGED. Switching providers (e.g. local hybrid -> gemini) must
+    # NOT keep the old model name / base URL, or the new provider is handed an
+    # invalid model and every contextualization call fails.
+    if existing.get("PROFILE") == profile:
+        preserved.append("LLM_BASE_URL")
+        if not llm_model:
+            preserved.append("LLM_MODEL")
     for key in preserved:
         if existing.get(key):
             lines.append(f"{key}={existing[key]}")
