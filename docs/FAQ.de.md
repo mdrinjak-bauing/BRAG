@@ -212,3 +212,20 @@ die Steuerung (`docker-compose.yml`) und standardmäßig deinen Wissensspeicher
 das Starten/Stoppen unmöglich machen. Verschieben ist in Ordnung. Die ~3 GB
 Modelle liegen ohnehin in Dockers Speicher, nicht im Ordner — Löschen gibt
 diesen Platz also nicht frei.
+
+**Mein PC friert ein oder startet neu beim Indexieren (lokales Profil).**
+Lokale KI (LM Studio) erzeugt dauerhafte GPU-Last. Bei knappem Netzteil oder
+schwacher Kühlung kann das den PC mitten im Indexieren hart neu starten. BRAG
+versucht ein wiederholt abgebrochenes Dokument **nicht endlos** erneut — nach
+einigen Versuchen überspringt es die Datei und schreibt eine Notiz
+`INDEXIERUNG-GESTOPPT.md`, statt die Maschine erneut zu überlasten. Die echte
+Lösung ist, die Last zu senken:
+- **Am einfachsten & sichersten:** auf ein **Cloud-Profil** wechseln (Setup neu →
+  Cloud). Dann rechnet die schwere KI außerhalb deines Rechners — deine GPU wird
+  gar nicht belastet.
+- **Lokal bleiben:** GPU-**Power-Limit** kappen (z. B. ~80 % in MSI Afterburner)
+  oder Undervolt; **andere GPU-Programme schließen** (Spiele / Launcher / Browser)
+  für freien VRAM; ein **kleineres Modell (Q4, ~7 GB)** laden, damit es mit Puffer
+  passt; und ein **ausreichendes Netzteil** sicherstellen. Du kannst außerdem
+  `LOCAL_LLM_PACING_SECONDS=1` in der `.env` setzen, damit die GPU zwischen den
+  Aufrufen Luft bekommt.

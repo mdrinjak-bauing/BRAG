@@ -250,6 +250,18 @@ MARKDOWN_FULL_MAX_CHARS = int(_env("MARKDOWN_FULL_MAX_CHARS", 2_000_000))
 VISION_ENABLED = _env("VISION_ENABLED", "true").lower() == "true"
 VISION_IMAGE_SCALE = float(_env("VISION_IMAGE_SCALE", 2.0))
 
+# ── Ingest safety on consumer hardware ──────────────────────────
+# Local LLM inference (LM Studio) puts sustained load on the user's GPU; on a
+# marginal PSU / cooling that can hard-reset the PC mid-ingest. Docker then
+# auto-restarts the app and would re-ingest the SAME document -> a crash loop. The
+# pipeline skips a document after this many interrupted (never-completed) attempts
+# and surfaces a visible marker instead of hammering the machine again.
+INGEST_MAX_ATTEMPTS = int(_env("INGEST_MAX_ATTEMPTS", "2"))
+# Optional pause (seconds) between local LLM calls so the GPU is not pegged at
+# 100% continuously. Default 0 (off). Raise it (e.g. 0.5-2) if your PC overheats
+# or resets during local indexing. Ignored for cloud providers.
+LOCAL_LLM_PACING_SECONDS = float(_env("LOCAL_LLM_PACING_SECONDS", "0"))
+
 # ── Retrieval / reranking ───────────────────────────────────────
 RERANKER_MODEL = _env("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
 # Optional HF revision to pin the reranker weights (see EMBEDDING_REVISION).

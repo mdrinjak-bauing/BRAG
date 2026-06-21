@@ -200,3 +200,17 @@ unpacked ZIP) — it holds your configuration (`.env`), the controls
 documents. Deleting it would remove your knowledge base and make starting/
 stopping impossible. Moving it is fine. The ~3 GB of models live in Docker's
 storage, not in the folder, so deleting it won't free that space.
+
+**My PC freezes or restarts while indexing (local profile).**
+Local AI (LM Studio) puts sustained load on your GPU. On a marginal power supply
+or with limited cooling that can hard-reset the PC mid-indexing. BRAG won't keep
+re-trying a document that was interrupted repeatedly — after a couple of attempts
+it skips it and writes an `INDEXING-STOPPED.md` note instead of crashing the
+machine again — but the real fix is to lower the load:
+- **Easiest & safest:** switch to a **Cloud** profile (re-run setup → Cloud). The
+  heavy AI then runs off your machine, so your GPU isn't stressed at all.
+- **Staying local:** cap the GPU **power limit** (e.g. ~80% in MSI Afterburner) or
+  undervolt; **close other GPU apps** (games / launchers / browsers) to free VRAM;
+  load a **smaller (Q4, ~7 GB) model** so it fits with headroom; and make sure your
+  **PSU** is adequate for the GPU under sustained load. You can also set
+  `LOCAL_LLM_PACING_SECONDS=1` in `.env` to give the GPU a breather between calls.

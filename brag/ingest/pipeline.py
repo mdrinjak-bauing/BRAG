@@ -32,6 +32,88 @@ UPSERT_BATCH = 100
 PARTIAL_RETRY_LIMIT = 3
 
 
+def _attempts_path() -> Path:
+    return config.DATA_DIR / "ingest_attempts.json"
+
+
+def _load_attempts() -> dict:
+    try:
+        return json.loads(_attempts_path().read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        return {}
+
+
+def _save_attempts(counts: dict) -> None:
+    config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+    _attempts_path().write_text(json.dumps(counts), encoding="utf-8")
+
+
+def _clear_attempts(source_key: str) -> None:
+    """Reset a source's interrupted-attempt counter. Called on any CLEAN ingest
+    return and when a source is removed, so the count only climbs across hard
+    crashes (a PC reset kills us before the clean return runs)."""
+    counts = _load_attempts()
+    if counts.pop(source_key, None) is not None:
+        _save_attempts(counts)
+
+
+def _mark_ingest_blocked(path: Path, attempts: int) -> None:
+    """Make a crash-loop skip VISIBLE to the user (best-effort; never raises)."""
+    try:
+        german = config.VAULT_LANGUAGE.strip().lower().startswith("german")
+        name = "INDEXIERUNG-GESTOPPT.md" if german else "INDEXING-STOPPED.md"
+        marker = config.VAULT / name
+        key = config.normalize_source_key(path.name)
+        existing = marker.read_text(encoding="utf-8") if marker.exists() else ""
+        if key in existing:
+            return
+        if german:
+            header = (
+                "# Indexierung gestoppt (Schutz vor Absturz-Schleife)\n\n"
+                "Diese Dateien wurden nach mehreren **unerwarteten Abbrüchen** "
+                "nicht weiter indexiert — dein PC könnte unter der lokalen KI-Last "
+                "neu starten. GPU-Last senken (Power-Limit / andere GPU-Programme "
+                "schließen) oder ein Cloud-Profil nutzen, dann die Datei neu "
+                "ablegen.\n\n"
+            )
+            line = f"- `{key}` — nach {attempts} Abbrüchen gestoppt\n"
+        else:
+            header = (
+                "# Indexing stopped (crash-loop protection)\n\n"
+                "These files were not re-indexed after several **unexpected "
+                "interruptions** — your PC may be resetting under the local-AI "
+                "load. Lower the GPU load (power limit / close other GPU apps) or "
+                "use a cloud profile, then drop the file in again.\n\n"
+            )
+            line = f"- `{key}` — stopped after {attempts} interruptions\n"
+        config.VAULT.mkdir(parents=True, exist_ok=True)
+        with open(marker, "a", encoding="utf-8") as f:
+            if not existing:
+                f.write(header)
+            f.write(line)
+    except Exception as e:  # noqa: BLE001 — marking must never fail the ingest
+        print(f"  could not write the indexing-stopped marker (non-fatal): {e}")
+
+
+def _crash_loop_skip(source_key: str, path: Path) -> bool:
+    """Crash-loop guard. A document interrupted (e.g. a mid-ingest PC reset under
+    local-LLM load) more than INGEST_MAX_ATTEMPTS times is SKIPPED instead of
+    re-hammering the machine on every auto-restart. Returns True to skip; otherwise
+    records this attempt and returns False."""
+    counts = _load_attempts()
+    n = counts.get(source_key, 0) + 1
+    if n > config.INGEST_MAX_ATTEMPTS:
+        print(f"  SKIPPED: '{path.name}' was interrupted {n - 1}x without finishing "
+              f"- your PC may be resetting under the local-AI load. Lower the GPU "
+              f"load (power limit / close other GPU apps) or use a cloud profile, "
+              f"then re-drop the file to retry.")
+        _mark_ingest_blocked(path, n - 1)
+        return True
+    counts[source_key] = n
+    _save_attempts(counts)
+    return False
+
+
 def _log_failed_chunk(chunk, reason: str) -> None:
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     entry = {
@@ -139,12 +221,27 @@ def sources_needing_retry() -> set[str]:
 
 
 def ingest(path: Path) -> bool:
-    """Full ingest of one document. Returns True on success."""
+    """Full ingest of one document. Returns True on success.
+
+    Wraps the real work in a crash-loop guard: each attempt is counted BEFORE the
+    heavy (GPU-/LLM-heavy) work and cleared on any CLEAN return. A hard PC reset
+    mid-ingest kills the process before the clean return, so the count survives —
+    and after INGEST_MAX_ATTEMPTS the document is skipped (with a visible marker)
+    instead of crashing the machine again on the next auto-restart."""
     print(f"\n=== Ingest: {path.name} ===")
     if not path.exists():
         print("  file not found")
         return False
+    source_key = config.source_key_from_path(path)
+    if _crash_loop_skip(source_key, path):
+        return False
+    try:
+        return _ingest_inner(path)
+    finally:
+        _clear_attempts(source_key)
 
+
+def _ingest_inner(path: Path) -> bool:
     print("  [1/4] extracting (Docling — first run downloads models)...")
     chunks, full_markdown = extract(path)
     n_text = sum(1 for c in chunks if c.chunk_type == "text")
@@ -297,6 +394,8 @@ def remove_source(source_file: str) -> int:
     finally:
         client.close()
     delete_note(source_file)
+    # Reset the crash-loop counter so re-dropping a previously-blocked file retries.
+    _clear_attempts(source_file)
     return n
 
 
