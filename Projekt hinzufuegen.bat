@@ -1,0 +1,93 @@
+@echo off
+REM BRAG - add another project: its own knowledge folder, its own search
+REM database and its own connector in Claude / LM Studio, alongside the ones you
+REM already have. Double-click. Pick a folder anywhere; BRAG creates a WissensWIKI
+REM inside it and wires it up. Run this from your installed "RAG Setup" folder.
+setlocal EnableExtensions
+cd /d "%~dp0"
+chcp 65001 >nul 2>nul
+
+echo === BRAG - add a project ===
+echo.
+
+if not exist ".ragsetup_home" if not exist ".setup_complete" (
+  echo Please run setup.bat first - this adds a project to an existing BRAG install.
+  pause
+  exit /b 1
+)
+
+docker info >nul 2>nul
+if errorlevel 1 (
+  echo Docker is not running - open Docker Desktop, wait until it says "running",
+  echo then double-click this again.
+  pause
+  exit /b 1
+)
+
+echo === Choose the folder for this project (a picker opens) ===
+echo A "WissensWIKI" with your documents will be created inside it.
+echo.
+del ".ragpick" >nul 2>nul
+powershell -NoProfile -STA -ExecutionPolicy Bypass -File "%~dp0tools\pick_folder.ps1"
+if not exist ".ragpick" (
+  echo No folder chosen ^(or it contained an unsupported character^).
+  pause
+  exit /b 1
+)
+set "PROJDIR="
+set /p PROJDIR=<".ragpick"
+del ".ragpick" >nul 2>nul
+if not defined PROJDIR ( echo No folder chosen. & pause & exit /b 1 )
+
+set "PROJNAME="
+set /p PROJNAME="Project name (e.g. Dissertation): "
+if not defined PROJNAME ( echo No name given. & pause & exit /b 1 )
+
+REM Create + seed the project's WissensWIKI (only when new).
+if not exist "%PROJDIR%\WissensWIKI" (
+  mkdir "%PROJDIR%\WissensWIKI"
+  robocopy "%~dp0vault_template" "%PROJDIR%\WissensWIKI" /E /NFL /NDL /NJH /NJS /NP >nul
+)
+
+REM Register the project (migrate the existing install to 'default' first, so its
+REM original 'brag' connector survives the first add), then the CLI regenerates
+REM docker-compose.override.yml.
+echo Registering "%PROJNAME%"...
+docker compose run --rm setup python -m brag.projects migrate >nul 2>nul
+docker compose run --rm setup python -m brag.projects add "%PROJNAME%" "%PROJDIR%"
+if errorlevel 1 (
+  echo Could not register the project ^(unsupported folder path?^).
+  pause
+  exit /b 1
+)
+
+REM Recreate the app so the new folder is mounted and watched.
+echo Applying...
+docker compose up -d
+
+REM Connect the new project to Claude + LM Studio, alongside the existing ones.
+REM Quit Claude first so the entry persists (Claude rewrites its config while up).
+echo.
+tasklist /fi "imagename eq Claude.exe" 2>nul | find /i "Claude.exe" >nul
+if errorlevel 1 goto add_write
+echo To save the connection, please FULLY QUIT Claude Desktop now: tray icon
+echo ^(bottom-right^) -^> Quit. Closing the window is not enough.
+echo.
+echo Waiting for Claude Desktop to close...
+set /a cwait=0
+:add_wait
+tasklist /fi "imagename eq Claude.exe" 2>nul | find /i "Claude.exe" >nul
+if errorlevel 1 goto add_write
+timeout /t 2 /nobreak >nul
+set /a cwait+=2
+if %cwait% lss 120 goto add_wait
+echo Still running after 2 minutes - continuing anyway.
+:add_write
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_claude_config.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_lmstudio_config.ps1"
+
+echo.
+echo Done! Reopen Claude Desktop - the connector for "%PROJNAME%" appears next to
+echo your other ones. Drop documents into the sources folder here:
+echo   %PROJDIR%\WissensWIKI\sources
+pause
