@@ -172,9 +172,13 @@ def synthesize_default(host_path: str, collection: str, *,
     existing = get("default")
     if existing:
         return existing
+    # Name the default after its folder (e.g. "Test Projekt 1"), so once a second
+    # project is added its connector is "brag-<folder>" too — symmetric with the
+    # extra projects instead of a bare, unlabelled "brag".
+    name = Path(normalize_host_path(host_path or "")).name or "BRAG"
     record = {
         "slug": "default",
-        "name": "BRAG",
+        "name": name,
         "host_path": normalize_host_path(host_path or ""),
         "vault": vault,
         "collection": collection,

@@ -51,13 +51,24 @@ def _is_brag_key(key: str) -> bool:
 
 def connectors_for_registry() -> dict:
     """{connector key: MCP entry} that Claude/LM Studio should contain — one per
-    registered project, or just the default 'brag' when the registry is empty
-    (the single-project install)."""
+    registered project, or just the bare 'brag' when the registry is empty (the
+    single-project install). Once projects ARE registered, EVERY connector carries
+    its project name — including the default, which keeps the battle-tested
+    mcp_server but is keyed 'brag-<folder>' so no connector is an unlabelled
+    'brag'."""
     from brag import registry
     projects = registry.projects()
     if not projects:
         return {MCP_KEY: entry_for_slug(None)}
-    return {mcp_key_for(p["slug"]): entry_for_slug(p["slug"]) for p in projects}
+    out = {}
+    for p in projects:
+        slug = p["slug"]
+        if slug in (None, "", "default"):
+            key = f"{MCP_KEY}-{registry.slugify(p.get('name') or 'brag')}"
+        else:
+            key = mcp_key_for(slug)
+        out[key] = entry_for_slug(slug)
+    return out
 
 
 def _env_safe(value: str) -> str:
