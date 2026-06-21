@@ -10,13 +10,13 @@ ideale Weg, ihn zu lesen und zu beschreiben.
 1. [Obsidian](https://obsidian.md) installieren (kostenlos).
 2. „Ordner als Vault öffnen" → den Ordner `WissensWIKI/` innerhalb deines
    BRAG-Verzeichnisses wählen.
-3. Fertig. Literaturnotizen erscheinen in `notes/`, deine gespeicherten
-   Passagen in `passages/`, dein eigenes Denken kommt nach `wiki/`.
+3. Fertig. Literaturnotizen erscheinen in `Notizen/`, deine gespeicherten
+   Passagen in `Passagen/`, dein eigenes Denken kommt in freie Unterordner dort.
 
 ## Teil 2 (optional): Claude deine Notizen lesen und schreiben lassen
 
 Der Suchindex umfasst deine **Quellen**. Wenn Claude Desktop zusätzlich deine
-**Notizen und Wiki-Seiten** lesen und bearbeiten soll, ergänze das
+**Notizen** lesen und bearbeiten soll, ergänze das
 Community-Plugin „MCP Tools":
 
 1. In Obsidian: Einstellungen → Community-Plugins → Durchsuchen → **Local REST

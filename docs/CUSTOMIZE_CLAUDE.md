@@ -19,7 +19,7 @@ or work in practice.**
 | Section | Why it matters |
 |---|---|
 | Who I am / what I work on | Claude tailors depth and terminology to your field **or your project** |
-| Knowledge-store layout | Claude knows what is evidence (`sources/`) vs. your own thinking (`wiki/`) |
+| Knowledge-store layout | Claude knows what is evidence (the corpus: your project folder except `WissensWIKI/`) vs. your own thinking (`WissensWIKI/Notizen/`, your notebook — not indexed) |
 | How to search | "Always search before answering, try multiple phrasings" is what makes answers grounded instead of made up |
 | Reference / citation style | Claude cites the way your context expects — a discipline citation *or* **standard + clause**, **contract + section**, **document + date** |
 | Project / matter context (practice) | If your corpus mixes several projects/clients, tell Claude to always scope to the current project via `meta_filter` so unrelated matters don't leak in |
@@ -32,9 +32,10 @@ that correction belongs in CLAUDE.md.
 
 `WissensWIKI/AGENTS.md` holds **extra rules for autonomous work** — when Claude
 operates on its own (long tasks, scheduled jobs, agent sessions) rather than
-in a conversation with you. Typical content: "never delete files in
-sources/", "propose changes instead of bulk-editing", "summarize what you
-changed". Keep it short; it inherits everything from CLAUDE.md.
+in a conversation with you. Typical content: "never delete files from the
+corpus (the project folder except `WissensWIKI/`)", "propose changes instead of
+bulk-editing", "summarize what you changed". Keep it short; it inherits
+everything from CLAUDE.md.
 
 ## Example openings
 

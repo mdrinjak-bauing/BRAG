@@ -14,10 +14,10 @@ Claude Desktop als Benutzeroberfläche.
 │ Browser ◀────────┼── localhost:8765 ─┤  ├─ http bridge (PDF links)    │
 │  (PDF at page N) │                   │  └─ search (hybrid + rerank)   │
 │                  │                   │            │                    │
-│ WissensWIKI/  ◀────────┼─── bind mount ───▶│            ▼                    │
-│  sources/ notes/ │                   │ brag-qdrant (vector DB,          │
-│  passages/ wiki/ │                   │  named volume — no sync risk)   │
-│                  │                   └─────────────────────────────────┘
+│ Projektordner/  ◀┼─── bind mount ───▶│            ▼                    │
+│  (der Korpus)    │                   │ brag-qdrant (vector DB,          │
+│  WissensWIKI/    │                   │  named volume — no sync risk)   │
+│  (nicht idx.)    │                   └─────────────────────────────────┘
 │ LM Studio       ◀── host.docker.internal (nur Profil Hybrid)
 └──────────────────┘
 ```

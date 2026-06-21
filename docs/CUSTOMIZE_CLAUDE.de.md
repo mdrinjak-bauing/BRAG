@@ -19,7 +19,7 @@ deinen Korpus kennt — **egal ob du forschst oder in der Praxis arbeitest.**
 | Abschnitt | Warum es zählt |
 |---|---|
 | Wer ich bin / woran ich arbeite | Claude passt Tiefe und Terminologie an dein Fach **oder dein Projekt** an |
-| Ordner-Aufbau | Claude weiß, was Beleg ist (`sources/`) und was dein eigenes Denken (`wiki/`) |
+| Ordner-Aufbau | Claude weiß, was Beleg ist (der Korpus: dein Projektordner außer `WissensWIKI/`) und was dein eigenes Denken (`WissensWIKI/Notizen/` — dein Notizbuch, nicht indexiert) |
 | Wie gesucht wird | „Immer vor dem Antworten suchen, mehrere Formulierungen probieren" sorgt dafür, dass Antworten belegt sind statt erfunden |
 | Beleg-/Zitierstil | Claude verweist so, wie es dein Umfeld erwartet — Disziplin-Zitat *oder* **Norm + Abschnitt**, **Vertrag + Paragraf**, **Dokument + Datum** |
 | Projekt-/Mandatskontext (Praxis) | Mischt dein Korpus mehrere Projekte/Kunden? Sag Claude, immer per `meta_filter` auf das aktuelle Projekt einzugrenzen, damit keine fremden Vorgänge hineinrutschen |
@@ -32,9 +32,10 @@ Korrektur in die CLAUDE.md.
 
 `WissensWIKI/AGENTS.md` enthält **Zusatzregeln für autonomes Arbeiten** — wenn
 Claude eigenständig agiert (lange Aufgaben, geplante Jobs, Agenten-Sitzungen)
-statt im Gespräch mit dir. Typischer Inhalt: „nie Dateien in sources/ löschen",
-„Änderungen vorschlagen statt massenhaft zu editieren", „zusammenfassen, was
-geändert wurde". Kurz halten; alles aus der CLAUDE.md wird übernommen.
+statt im Gespräch mit dir. Typischer Inhalt: „nie Dateien aus dem Korpus löschen
+(Projektordner außer `WissensWIKI/`)", „Änderungen vorschlagen statt massenhaft
+zu editieren", „zusammenfassen, was geändert wurde". Kurz halten; alles aus der
+CLAUDE.md wird übernommen.
 
 ## Beispiel-Einstiege
 

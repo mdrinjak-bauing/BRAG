@@ -152,9 +152,9 @@ Stelle Claude jetzt eine Frage:
 - **Stoppen/Starten:** Docker Desktop startet die App nach dem Hochfahren
   automatisch. Zum manuellen Stoppen: Terminal im Projektordner öffnen,
   `docker compose down`. Zum Starten: `docker compose up -d`.
-- **Profil Hybrid (lokal):** zuerst [LM Studio](https://lmstudio.ai)
+- **Hybrid-Profil (LM Studio):** zuerst [LM Studio](https://lmstudio.ai)
   installieren, ein Modell laden, dann das Setup ausführen. Das Setup verbindet
-  die `brag`-Werkzeuge automatisch auch mit dem LM-Studio-Chat (nicht nur Claude);
+  die BRAG-Werkzeuge (Name `brag-<Ordner>`) automatisch auch mit dem LM-Studio-Chat (nicht nur Claude);
   installierst du LM Studio *nach* dem Setup, einfach `setup.command` erneut
   ausführen, um die Verbindung zu ergänzen. Siehe [PROFILES.de.md](PROFILES.de.md).
 - Probleme? Siehe [FAQ.de.md](FAQ.de.md).

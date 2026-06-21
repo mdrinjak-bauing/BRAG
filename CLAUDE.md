@@ -35,7 +35,7 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   model service (flat RAM with many projects open). Projects live at arbitrary host
   paths, registered in `projects.json` → bind mounts generated into
   `docker-compose.override.yml` (`brag/compose_gen.py`, `brag/projects.py`,
-  `brag/registry.py`). Each project = a `brag · <name>` MCP connector.
+  `brag/registry.py`). Each project = a `brag-<name>` MCP connector.
 
 ## The vault layout (current model)
 - The **project folder** the user picks **IS** the searchable corpus — every
@@ -50,13 +50,12 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   where the engine goes, then the project folder. `VAULT_PATH` = the project root.
 
 ## Status (update me as it changes — June 2026)
-- The multi-project feature + the project-as-corpus layout rework + the install rework
-  are on branch **`feat/multi-project`** → **PR #42** (draft) against `main`.
-  (`origin/main` still lacks even the local `0.3.4` release commit; this PR carries it.)
-- **Before merge:** full Windows acceptance test (download → 2 projects → switch to a
-  cloud model → change reranker → uninstall); then bump to **0.4.0** + CHANGELOG, mark
-  the PR ready, merge, make the repo + the GHCR `brag` package public. No data
-  migration — fresh installs only.
+- **0.4.0 shipped:** multi-project + the project-folder-as-corpus layout rework + the
+  install rework — all merged to `main`.
+- **0.4.1 shipped:** per-connector uninstall now removes the connector (incl. the
+  default project) plus a full Docker clean — also merged to `main`.
+- **Current version: 0.4.1.** The repo + the GHCR `brag` package are kept **PRIVATE**
+  for now. No data migration — fresh installs only.
 
 ## Dev workflow — run before every commit
 ```

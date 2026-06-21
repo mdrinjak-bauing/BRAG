@@ -22,7 +22,7 @@ In dieser Box laufen zwei „Geräte" nebeneinander:
 ihn nie von Hand; in ihm stecken mehrere kleine Teilsysteme:
 
 - **Der Watcher** — die Wache. Er schaut alle ~10 Sekunden in deinen
-  `sources/`-Ordner: Ist etwas Neues dazugekommen? Wurde etwas umbenannt oder
+  Projektordner: Ist etwas Neues dazugekommen? Wurde etwas umbenannt oder
   gelöscht? Je nachdem stößt er das Einlesen an oder räumt den Index auf. Du
   musst also nie etwas „importieren" — Datei hineinlegen genügt, der Watcher
   bemerkt es von selbst.
@@ -84,22 +84,23 @@ auftauchen.
 
 | Was | Wo | Hinweis |
 |---|---|---|
-| Deine Dokumente & Notizen | der Ordner `WissensWIKI/` auf deinem Rechner | einfache PDF-/Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
+| Deine Dokumente | irgendwo im Projektordner (außerhalb von `WissensWIKI/`) | einfache PDF- und andere Dateien — gehören dir, sichern wie jeden Ordner |
+| Deine Notizen & Passagen | `WissensWIKI/Notizen/` und `WissensWIKI/Passagen/` | Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
 | Der Suchindex (Qdrant) | in Docker, in einem verwalteten Speicherbereich | jederzeit aus deinem Wissensspeicher neu aufbaubar; nie in iCloud/OneDrive legen |
 | Programmcode & KI-Modelle | im Docker-Image | einmal beim ersten Build geladen (~3 GB); fasst du nie an |
 | Einstellungen & API-Schlüssel | die Datei `.env` im Projektordner | vom Setup-Assistenten geschrieben; der Schlüssel bleibt hier (nur für dich lesbar), dient nur der Authentifizierung deiner eigenen Anfragen beim gewählten Anbieter und wird nie an die Macher der App oder an Dritte gesendet |
 
-Der wichtige Punkt: **deine Bibliothek (`sources/`) und dein Notizbuch (`wiki/`,
-`notes/`) sind ganz normale Dateien, die dir gehören.** Die Datenbank ist nur
-ein abgeleiteter Index — ginge er verloren, baut ihn das System aus deinen
-Dateien neu auf.
+Der wichtige Punkt: **deine Dokumente (im Projektordner, außerhalb von
+`WissensWIKI/`) und dein Notizbuch (`WissensWIKI/Notizen/`) sind ganz normale
+Dateien, die dir gehören.** Die Datenbank ist nur ein abgeleiteter Index — ginge
+er verloren, baut ihn das System aus deinen Dateien neu auf.
 
 ---
 
 ## Was beim Ablegen eines Dokuments passiert (Einlesen)
 
-Du legst ein PDF in `WissensWIKI/sources/`. Binnen Sekunden bemerkt die App es und
-durchläuft fünf Schritte:
+Du legst ein PDF in deinen Projektordner (außerhalb von `WissensWIKI/`). Binnen
+Sekunden bemerkt die App es und durchläuft fünf Schritte:
 
 1. **Das Layout lesen — „Docling".** Docling ist das Werkzeug, das *die Seite
    versteht*: es trennt Überschriften, Absätze, Tabellen und Abbildungen und
@@ -124,7 +125,7 @@ durchläuft fünf Schritte:
    haben ist der Grund, warum das System Dinge findet — egal ob du das genaue
    Wort erinnerst oder nur die Idee.
 
-5. **In Qdrant ablegen** + eine kurze Literaturnotiz in `notes/` schreiben.
+5. **In Qdrant ablegen** + eine kurze Literaturnotiz in `WissensWIKI/Notizen/` schreiben.
 
 ### Und was ist mit Abbildungen?
 

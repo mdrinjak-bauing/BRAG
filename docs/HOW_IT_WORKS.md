@@ -20,7 +20,7 @@ Two "appliances" run side by side inside that box:
 **1. The app container** (`brag-app`) — the actual worker. You never start it by
 hand; it bundles several small subsystems:
 
-- **The watcher** — the lookout. Every ~10 seconds it checks your `sources/`
+- **The watcher** — the lookout. Every ~10 seconds it checks your project
   folder: anything new? renamed or deleted? Accordingly it triggers ingest or
   cleans up the index. So you never "import" anything — dropping in a file is
   enough, the watcher notices on its own.
@@ -78,21 +78,23 @@ To check everything is running, open a terminal in the project folder and type
 
 | What | Where | Notes |
 |---|---|---|
-| Your documents & notes | the `WissensWIKI/` folder on your computer | plain PDF and Markdown files — yours, back them up like any folder |
+| Your documents | anywhere in the project folder (outside `WissensWIKI/`) | plain PDF and other files — yours, back them up like any folder |
+| Your notes & passages | `WissensWIKI/Notizen/` and `WissensWIKI/Passagen/` | Markdown files — yours, back them up like any folder |
 | The search index (Qdrant) | inside Docker, in a managed storage area | rebuildable anytime from your knowledge store; never put it in iCloud/OneDrive |
 | The program code & AI models | inside the Docker image | downloaded once at first build (~3 GB); you never touch it |
 | Your settings & API key | the `.env` file in the project folder | written by the setup assistant; the key stays here (owner-readable), is used only to authenticate your own requests to your chosen provider, and is never sent to the app's makers or any third party |
 
-The important point: **your library (`sources/`) and your notebook (`wiki/`,
-`notes/`) are normal files you own.** The database is just a derived index — if
-it were ever lost, the system rebuilds it from your files.
+The important point: **your documents (in the project folder, outside
+`WissensWIKI/`) and your notebook (`WissensWIKI/Notizen/`) are normal files you
+own.** The database is just a derived index — if it were ever lost, the system
+rebuilds it from your files.
 
 ---
 
 ## What happens when you drop in a document (ingest)
 
-You drop a PDF into `WissensWIKI/sources/`. Within seconds the app notices it and
-runs five steps:
+You drop a PDF into your project folder (any subfolder, outside `WissensWIKI/`).
+Within seconds the app notices it and runs five steps:
 
 1. **Read the layout — "Docling".** Docling is the tool that *understands the
    page*: it separates headings, paragraphs, tables and figures, and remembers
@@ -115,7 +117,7 @@ runs five steps:
    GEG or § 71). Having both is why the system finds things whether you remember
    the exact word or only the idea.
 
-5. **File it in Qdrant** + write a short literature note in `notes/`.
+5. **File it in Qdrant** + write a short literature note in `WissensWIKI/Notizen/`.
 
 ### What about figures?
 

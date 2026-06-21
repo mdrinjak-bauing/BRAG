@@ -63,8 +63,10 @@ Dann erneut einen Doppelklick auf `setup.command` machen.
    öffnen — ein Schließen des Fensters genügt nicht.
 2. Prüfen, ob der Container läuft: `docker ps` sollte `brag-app` auflisten.
 3. Prüfen, ob die Konfigurationsdatei (Pfad siehe [OBSIDIAN.de.md](OBSIDIAN.de.md))
-   den Eintrag `brag` enthält (ältere Installationen zeigen ggf. noch den langen
-   Alt-Namen, bis du das Setup erneut ausführst).
+   den Eintrag `brag-<Ordner>` enthält (ein bloßes `brag` erscheint nur bei einer
+   frischen Installation, in der noch kein Projekt registriert ist; ältere
+   Installationen zeigen ggf. noch den langen Alt-Namen, bis du das Setup erneut
+   ausführst).
 
 ## Indexierung
 
@@ -141,7 +143,7 @@ Cross-Encoder-Reranker ist der größte CPU-Posten einer Suche. Stell in der
 `.env` `RERANK_PROFILE` ein, um Qualität gegen Tempo zu tauschen: `eco`
 (Standard) lädt 160 Kandidaten und rerankt 40; `off` schaltet das Reranking ganz
 ab (am schnellsten); `balanced` und `full` reranken auf starken Rechnern mehr.
-Nach dem Ändern der `.env` die App neu starten (`docker compose up -d`).
+Nach dem Ändern der `.env` die App neu starten (`docker compose up -d --force-recreate`).
 Vollständige Liste: [Backend-Profile](PROFILES.de.md).
 
 **Claude sagt, es habe nichts gefunden, aber das Dokument ist da.**

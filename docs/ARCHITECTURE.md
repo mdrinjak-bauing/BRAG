@@ -14,10 +14,10 @@ folder, Claude Desktop as the user interface.
 │ Browser ◀────────┼── localhost:8765 ─┤  ├─ http bridge (PDF links)    │
 │  (PDF at page N) │                   │  └─ search (hybrid + rerank)   │
 │                  │                   │            │                    │
-│ WissensWIKI/  ◀────────┼─── bind mount ───▶│            ▼                    │
-│  sources/ notes/ │                   │ brag-qdrant (vector DB,          │
-│  passages/ wiki/ │                   │  named volume — no sync risk)   │
-│                  │                   └─────────────────────────────────┘
+│ project folder/ ◀┼─── bind mount ───▶│            ▼                    │
+│  (the corpus)    │                   │ brag-qdrant (vector DB,          │
+│  WissensWIKI/    │                   │  named volume — no sync risk)   │
+│  (not indexed)   │                   └─────────────────────────────────┘
 │ LM Studio        ◀── host.docker.internal (hybrid profile only)
 └──────────────────┘
 ```

@@ -10,13 +10,13 @@ perfect way to read and write it.
 1. Install [Obsidian](https://obsidian.md) (free).
 2. "Open folder as vault" → choose the `WissensWIKI/` folder inside your
    BRAG directory.
-3. Done. Literature notes appear in `notes/`, your saved passages in
-   `passages/`, your own thinking goes into `wiki/`.
+3. Done. Literature notes appear in `Notizen/`, your saved passages in
+   `Passagen/`, your own thinking goes into free subfolders there.
 
 ## Part 2 (optional): Let Claude read and write your notes
 
 The search index covers your **sources**. If you also want Claude Desktop to
-read and edit your **notes and wiki pages**, add the community plugin
+read and edit your **notes**, add the community plugin
 "MCP Tools":
 
 1. In Obsidian: Settings → Community plugins → Browse → install and enable
