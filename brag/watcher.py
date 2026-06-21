@@ -116,6 +116,18 @@ def _changed_since_ingest(path: Path, states: dict) -> bool:
 
 
 class DocumentHandler(FileSystemEventHandler):
+    def __init__(self, slug=None):
+        super().__init__()
+        # The project this observer watches; None = the single-project default.
+        self.slug = slug
+
+    def dispatch(self, event):
+        # Run EVERY on_* callback inside this project's context (per-callback,
+        # per-thread) so config's paths + collection resolve to THIS project —
+        # one project's file events can never land in another's collection/vault.
+        with config.project_context(self.slug):
+            super().dispatch(event)
+
     def on_created(self, event):
         if event.is_directory:
             return
@@ -303,15 +315,28 @@ def reconcile_on_startup():
 
 
 def run_watcher():
-    config.SOURCES_DIR.mkdir(parents=True, exist_ok=True)
-    reconcile_on_startup()
-    observer = PollingObserver(timeout=config.WATCH_POLL_SECONDS)
-    observer.schedule(DocumentHandler(), str(config.SOURCES_DIR), recursive=True)
-    observer.start()
-    print(f"watching {config.SOURCES_DIR} (poll every {config.WATCH_POLL_SECONDS}s)")
+    # One observer per registered project (each over its own sources/, scoped to
+    # its collection + vault via project_context). With no registry yet — the
+    # single-project install — watch the one default vault, exactly as before.
+    from brag import registry
+    slugs = [p["slug"] for p in registry.projects()] or [None]
+    observers = []
+    for slug in slugs:
+        with config.project_context(slug):
+            config.SOURCES_DIR.mkdir(parents=True, exist_ok=True)
+            sources_dir = str(config.SOURCES_DIR)
+            reconcile_on_startup()  # runs inside this project's context
+        observer = PollingObserver(timeout=config.WATCH_POLL_SECONDS)
+        observer.schedule(DocumentHandler(slug), sources_dir, recursive=True)
+        observer.start()
+        observers.append(observer)
+        print(f"watching {sources_dir} "
+              f"(project={slug or 'default'}, poll every {config.WATCH_POLL_SECONDS}s)")
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+        for observer in observers:
+            observer.stop()
+    for observer in observers:
+        observer.join()
