@@ -97,11 +97,17 @@ def _is_near_duplicate(text: str, accepted_tokens: list) -> bool:
 
 
 def search(query: str, top_k: int | None = None, reranking: bool | None = None,
-           max_chunks_per_source: int | None = None, **filters) -> list[dict]:
-    """Run hybrid search, return ranked hits as plain dicts."""
+           max_chunks_per_source: int | None = None,
+           collection_name: str | None = None, **filters) -> list[dict]:
+    """Run hybrid search, return ranked hits as plain dicts.
+
+    collection_name defaults to the single-project config.COLLECTION_NAME; the
+    multi-project bridge passes a per-project collection so each project searches
+    only its own data."""
     from qdrant_client.models import FusionQuery, Prefetch
     from brag import storage
 
+    collection_name = collection_name or config.COLLECTION_NAME
     top_k = top_k or config.DEFAULT_TOP_K
     if top_k <= 0:
         top_k = config.DEFAULT_TOP_K
@@ -126,7 +132,7 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
     client = storage.get_client()
     try:
         result = client.query_points(
-            collection_name=config.COLLECTION_NAME,
+            collection_name=collection_name,
             prefetch=[
                 Prefetch(query=dense_q, using=config.DENSE_VECTOR,
                          limit=prefetch_limit, filter=qfilter),

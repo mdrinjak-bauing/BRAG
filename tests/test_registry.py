@@ -92,3 +92,36 @@ def test_save_is_atomic_and_readable():
     raw = json.loads((registry.registry_path()).read_text(encoding="utf-8"))
     assert raw["version"] == registry.SCHEMA_VERSION
     assert raw["projects"][0]["name"] == "P"
+
+
+class _FakeColl:
+    def __init__(self, name):
+        self.name = name
+
+
+class _FakeCollections:
+    def __init__(self, names):
+        self.collections = [_FakeColl(n) for n in names]
+
+
+class _FakeClient:
+    def __init__(self, names):
+        self._names = names
+
+    def get_collections(self):
+        return _FakeCollections(self._names)
+
+
+def test_orphaned_collections_is_registry_aware(monkeypatch):
+    from brag import config, storage
+    monkeypatch.setattr(config, "COLLECTION_NAME", "asb_local_st_1024", raising=False)
+    # a registered sibling project must NOT be flagged as a droppable orphan
+    registry.register("ProjektA", "D:/A", "asb_local_st_1024")  # -> ...__projekta
+    client = _FakeClient([
+        "asb_local_st_1024",            # active default
+        "asb_local_st_1024__projekta",  # sibling project
+        "asb_old_768",                  # genuine leftover from an old embedding
+        "some_other_collection",        # non-asb, ignored
+    ])
+    orphans = storage.orphaned_collections(client)
+    assert orphans == ["asb_old_768"]
