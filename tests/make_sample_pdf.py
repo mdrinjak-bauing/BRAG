@@ -15,15 +15,19 @@ both retrieval and page-citation behaviour:
                                    multi-page section must cite real per-chunk
                                    pages, not collapse everything to page 1).
 
-Runs on the CI runner (needs ``fpdf2``), writing into the
-``WissensWIKI/sources/`` folder that docker-compose bind-mounts into /vault.
+Runs on the CI runner (needs ``fpdf2``), writing into the ``project/`` folder
+that docker-compose bind-mounts into /vault as the corpus root — every file
+under it is indexed (there is no separate ``sources/`` subfolder any more; the
+project folder itself IS the corpus).
 """
 
 from pathlib import Path
 
 from fpdf import FPDF
 
-SOURCES = Path("WissensWIKI/sources")
+# The corpus root = the host folder docker-compose mounts at /vault by default
+# (``${VAULT_PATH:-./project}``). Files dropped here are the searchable corpus.
+SOURCES = Path("project")
 
 # ~2 KB of ordinary body text so a page is dense enough to form its own chunk
 # (MAX_CHUNK_CHARS defaults to 2000), which is what makes the H2 fixture force
