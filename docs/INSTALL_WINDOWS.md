@@ -79,6 +79,14 @@ Then open the folder and double-click **`setup.bat`**.
      **SmartScreen** box ("Windows protected your PC") click **"More info"** →
      **"Run anyway"**.
 
+**Setup asks two things in order.** First a folder picker asks *where the
+`BRAG Assistent` program should live* (e.g. on your Desktop) — pick anywhere you
+like. Then a second picker asks for *your project folder* (your documents). BRAG
+copies the program into a `BRAG Assistent` folder, creates a `WissensWIKI`
+workspace inside your project folder, and continues from there in a fresh window.
+*(If you cancel the first picker, the program just installs in the unpacked
+folder; the project folder in the second step is required.)*
+
 **What you see:** A black Command Prompt window opens and, shortly after, **your
 browser opens automatically** with the setup assistant. There you answer, in
 plain language:
@@ -90,7 +98,8 @@ plain language:
   never sent to the makers of this app or any third party; the live check just
   sends one small test request to that provider to confirm the key works. The
   local profile (LM Studio) needs no key at all.
-- **Your document language** and, optionally, a custom knowledge store folder.
+- **Your document language.** (Your project folder was already chosen by the
+  folder picker above.)
 
 At the end the assistant writes the whole configuration itself — including the
 Claude Desktop entry. **You never edit a single file.** The window then builds
@@ -103,8 +112,9 @@ minutes, first time only).
 
 ## 5. First document
 
-**What to do:** Put a PDF into the `RAG-Verbindungsordner\sources\` folder (inside the project
-folder).
+**What to do:** Drop a PDF straight into your project folder (any subfolder works
+too) — everything in the project folder is searched, except the `WissensWIKI`
+workspace.
 
 **What you see:** Nothing visible — processing runs in the background. Note that
 the **very first** document also downloads the Docling layout models, so this one
@@ -141,5 +151,7 @@ Now ask Claude:
 - **Stopping/starting:** To stop, open a Command Prompt in the project folder and
   run `docker compose down`. To start: `docker compose up -d`.
 - **Local profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first, then
-  run setup. See [PROFILES.md](PROFILES.md).
+  run setup. Setup auto-connects the `brag` tools to LM Studio's chat too (not just
+  Claude); if you install LM Studio *after* setup, just double-click `setup.bat`
+  again to add the connection. See [PROFILES.md](PROFILES.md).
 - Trouble? See [FAQ.md](FAQ.md).

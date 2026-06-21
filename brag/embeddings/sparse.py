@@ -1,17 +1,22 @@
 """BM25 sparse vectors via fastembed, with language-aware Snowball stemming."""
 
+import threading
+
 from brag import config
 
 _model = None
+_LOCK = threading.Lock()  # double-checked init across concurrent bridge threads
 
 
 def get_sparse_model():
     global _model
     if _model is None:
-        from fastembed import SparseTextEmbedding
-        _model = SparseTextEmbedding(
-            model_name="Qdrant/bm25", language=config.VAULT_LANGUAGE
-        )
+        with _LOCK:
+            if _model is None:
+                from fastembed import SparseTextEmbedding
+                _model = SparseTextEmbedding(
+                    model_name="Qdrant/bm25", language=config.VAULT_LANGUAGE
+                )
     return _model
 
 

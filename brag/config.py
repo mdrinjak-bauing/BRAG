@@ -6,6 +6,8 @@ live in code. Component-level overrides allow mixing profiles, e.g. cloud
 embeddings with a local LLM.
 """
 
+import contextlib
+import contextvars
 import os
 from pathlib import Path
 
@@ -28,14 +30,24 @@ PROFILE_NAME = _env("PROFILE", "gemini")
 _profile = PROFILES.get(PROFILE_NAME, PROFILES["cloud"])
 
 # ── Paths (container view; host paths are mapped in docker-compose) ─
-VAULT = Path(_env("VAULT_DIR", "/vault"))
-SOURCES_DIR = VAULT / "sources"
-NOTES_DIR = VAULT / "notes"
-PASSAGES_DIR = VAULT / "passages"
-WIKI_DIR = VAULT / "wiki"            # your own thinking — read/write, NOT indexed
-DATA_DIR = VAULT / ".brag"            # ingest log, failed-chunk log
-INGEST_LOG = DATA_DIR / "ingest_log.jsonl"
-FAILED_CHUNKS_LOG = DATA_DIR / "failed_chunks.jsonl"
+# Multi-project: the vault (and its derived paths + the Qdrant collection) is
+# resolved DYNAMICALLY from the active project — a ContextVar set per watcher
+# callback / per bridge request via project_context(). With no active project
+# (the single-project install and every existing caller) it falls back to these
+# env-derived defaults, so behaviour is unchanged. The public names VAULT,
+# SOURCES_DIR, …, COLLECTION_NAME are served by module __getattr__ (below) so a
+# plain `config.SOURCES_DIR` is always the CURRENT project's path, never a value
+# captured at import time.
+_DEFAULT_VAULT = Path(_env("VAULT_DIR", "/vault"))
+_active_project: "contextvars.ContextVar[dict | None]" = contextvars.ContextVar(
+    "brag_active_project", default=None)
+
+
+def _vault() -> Path:
+    rec = _active_project.get()
+    if rec and rec.get("vault"):
+        return Path(rec["vault"])
+    return _DEFAULT_VAULT
 
 # Subfolders of sources/ that the watcher ignores (staging area)
 WATCH_IGNORE_DIRS = {"_inbox"}
@@ -89,9 +101,91 @@ ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY", "")
 # NOTE: the "asb_" prefix is deliberately kept (not renamed to "brag_") so
 # that installations created before the BRAG rename keep finding their
 # existing Qdrant data. It is an internal identifier and never user-visible.
-COLLECTION_NAME = _env(
+_DEFAULT_COLLECTION = _env(
     "COLLECTION_NAME", f"asb_{EMBEDDING_BACKEND}_{EMBEDDING_DIM}"
 )
+
+
+def _active_collection() -> str:
+    rec = _active_project.get()
+    if rec and rec.get("collection"):
+        return rec["collection"]
+    return _DEFAULT_COLLECTION
+
+
+# ── Vault layout ────────────────────────────────────────────────
+# NEW model: the chosen PROJECT folder is the vault root, and EVERYTHING under it
+# is the searchable corpus EXCEPT the WissensWIKI/ workspace (and hidden dirs).
+# WissensWIKI is the user's space: Passagen/ (verified passages, indexed via
+# save_passage), the user's own .md + free subfolders (the notebook — read/write,
+# NOT indexed, so notes don't echo the corpus), and a hidden .brag/ for logs.
+WISSENSWIKI_NAME = "WissensWIKI"
+PASSAGES_NAME = "Passagen"
+NOTES_NAME = "Notizen"          # auto literature notes (notebook, not indexed)
+DATA_NAME = ".brag"
+
+# Names whose value depends on the active project. Served via module __getattr__
+# so every `config.<NAME>` read is resolved live (never frozen at import).
+_SCOPED_ATTRS = {
+    "VAULT": lambda: _vault(),
+    # Corpus scan root = the project root itself (filtered by is_corpus_path).
+    "SOURCES_DIR": lambda: _vault(),
+    "WISSENSWIKI_DIR": lambda: _vault() / WISSENSWIKI_NAME,
+    "PASSAGES_DIR": lambda: _vault() / WISSENSWIKI_NAME / PASSAGES_NAME,
+    "NOTES_DIR": lambda: _vault() / WISSENSWIKI_NAME / NOTES_NAME,
+    "NOTEBOOK_DIR": lambda: _vault() / WISSENSWIKI_NAME,
+    "DATA_DIR": lambda: _vault() / WISSENSWIKI_NAME / DATA_NAME,
+    "INGEST_LOG": lambda: _vault() / WISSENSWIKI_NAME / DATA_NAME / "ingest_log.jsonl",
+    "FAILED_CHUNKS_LOG":
+        lambda: _vault() / WISSENSWIKI_NAME / DATA_NAME / "failed_chunks.jsonl",
+    "COLLECTION_NAME": lambda: _active_collection(),
+}
+
+
+def is_corpus_path(path) -> bool:
+    """True if `path` is part of the active project's searchable corpus: anywhere
+    under the project root EXCEPT the WissensWIKI/ workspace and any hidden /
+    staging (_inbox) dir. The watcher never indexes WissensWIKI (the notebook
+    would echo the corpus); Passagen is indexed via save_passage instead."""
+    try:
+        rel = Path(path).resolve().relative_to(_vault().resolve())
+    except (ValueError, OSError):
+        return False
+    parts = rel.parts
+    if any(p in WATCH_IGNORE_DIRS or p.startswith(".") for p in parts):
+        return False
+    return not (parts and parts[0] == WISSENSWIKI_NAME)
+
+
+def __getattr__(name: str):
+    resolver = _SCOPED_ATTRS.get(name)
+    if resolver is not None:
+        return resolver()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    # Make the PEP 562 scoped names discoverable (they live only in __getattr__,
+    # so without this they'd be missing from dir()/enumeration).
+    return sorted(list(globals()) + list(_SCOPED_ATTRS))
+
+
+@contextlib.contextmanager
+def project_context(slug_or_record):
+    """Scope the vault paths + COLLECTION_NAME to a project for the duration of
+    the block, in the CURRENT thread/context ONLY (safe across the watcher's and
+    the bridge's worker threads — a new thread does not inherit it). Accepts a
+    registry record dict or a slug; None / unknown slug -> the env defaults, i.e.
+    the single-project behaviour."""
+    rec = slug_or_record
+    if isinstance(slug_or_record, str):
+        from brag import registry
+        rec = registry.get(slug_or_record) if slug_or_record else None
+    token = _active_project.set(rec)
+    try:
+        yield
+    finally:
+        _active_project.reset(token)
 
 # ── Chunking (values empirically validated) ─
 MAX_CHUNK_CHARS = int(_env("MAX_CHUNK_CHARS", 2000))
@@ -155,6 +249,18 @@ MARKDOWN_FULL_MAX_CHARS = int(_env("MARKDOWN_FULL_MAX_CHARS", 2_000_000))
 # Disabling it also skips rendering figure images during extraction.
 VISION_ENABLED = _env("VISION_ENABLED", "true").lower() == "true"
 VISION_IMAGE_SCALE = float(_env("VISION_IMAGE_SCALE", 2.0))
+
+# ── Ingest safety on consumer hardware ──────────────────────────
+# Local LLM inference (LM Studio) puts sustained load on the user's GPU; on a
+# marginal PSU / cooling that can hard-reset the PC mid-ingest. Docker then
+# auto-restarts the app and would re-ingest the SAME document -> a crash loop. The
+# pipeline skips a document after this many interrupted (never-completed) attempts
+# and surfaces a visible marker instead of hammering the machine again.
+INGEST_MAX_ATTEMPTS = int(_env("INGEST_MAX_ATTEMPTS", "2"))
+# Optional pause (seconds) between local LLM calls so the GPU is not pegged at
+# 100% continuously. Default 0 (off). Raise it (e.g. 0.5-2) if your PC overheats
+# or resets during local indexing. Ignored for cloud providers.
+LOCAL_LLM_PACING_SECONDS = float(_env("LOCAL_LLM_PACING_SECONDS", "0"))
 
 # ── Retrieval / reranking ───────────────────────────────────────
 RERANKER_MODEL = _env("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
@@ -244,7 +350,9 @@ def source_key_from_path(path) -> str:
     """
     p = Path(path)
     try:
-        rel = p.resolve().relative_to(SOURCES_DIR.resolve())
+        # Identity is the path relative to the ACTIVE project's ROOT (the corpus
+        # is the whole project folder now, not a sources/ subfolder).
+        rel = p.resolve().relative_to(_vault().resolve())
     except ValueError:
         rel = Path(p.name)
     return normalize_source_key(rel.with_suffix("").as_posix())

@@ -71,18 +71,18 @@ alike — has two halves, and keeping them strictly apart is the heart of the de
 
 |  | 📚 **Your library** | 📓 **Your notebook** |
 |---|---|---|
-| Folder | `RAG-Verbindungsordner/sources/` | `RAG-Verbindungsordner/wiki/`, `RAG-Verbindungsordner/notes/` |
+| Folder | your whole **project folder** | `WissensWIKI/Notizen/` (and any subfolders you create) |
 | Contains | external sources: papers, books, reports | **your own thinking**: concepts, drafts, reading notes |
 | Searchable by Claude? | yes — hybrid search with page-precise citations | deliberately **no** |
-| Claude can read/write it? | read-only (via search) | yes — via the optional Obsidian connection |
+| Claude can read/write it? | read-only (via search) | yes — via the `read_note` / `write_note` tools (and optionally Obsidian) |
 
 **Plus a third, in-between layer — saved passages.** When you tell Claude (in
 Claude Desktop) *"save this passage,"* it writes the quote (with its source and
-page) into `RAG-Verbindungsordner/passages/` **and indexes it** — so any later chat,
+page) into `WissensWIKI/Passagen/` **and indexes it** — so any later chat,
 even with a different AI provider, finds it again via `search`, clearly marked as
 *your saved passage*. This is curated evidence you chose to keep (a real quote
 from a real source), not the AI's own output — which is exactly why it is
-searchable while the rest of the notebook is not.
+searchable while the rest of the workspace is not.
 
 **Why is the rest of the notebook excluded from the index?** The echo effect:
 if your own concept notes and auto-summaries were indexed, you'd one day "find"
@@ -93,9 +93,9 @@ the other.
 
 ### Your notebook — and why plain Markdown files
 
-The notebook (`wiki/`) is the part that turns search into a *second brain*: this
-is **your** thinking — concept pages, lines of argument, open questions,
-decisions. Not what the sources say, but what *you* make of it.
+The notebook (`WissensWIKI/Notizen/`) is the part that turns search into a *second
+brain*: this is **your** thinking — concept pages, lines of argument, open
+questions, decisions. Not what the sources say, but what *you* make of it.
 
 **Why plain Markdown (`.md`) files?** Markdown is just text with a few
 characters for headings, lists and links. Sounds unremarkable — but it's the
@@ -130,7 +130,7 @@ your computer. A thorough, jargon-free explanation lives in
 hand (and fighting version conflicts), Docker runs a ready-made box that is
 identical on every machine. You install Docker Desktop once; the project starts
 the rest. The ~3 GB of models live in Docker's managed storage — **not** in your
-project folder; your `RAG-Verbindungsordner/` holds only your own files.
+project folder; your project folder holds only your own files.
 
 ![Pipeline: ingest and query](docs/assets/pipeline.svg)
 
@@ -175,11 +175,11 @@ Studio's chat is an MCP host). The tools:
 | `inspect_chunks` | Shows what is stored for a source (diagnostics) | *"Show what was indexed from Smith 2023, p. 14."* |
 | `save_passage` | Saves a quotable hit under a topic | *"Save this quote for my methods chapter."* |
 | `list_passages` | Shows collected passages per topic | *"What have I collected for the methods chapter?"* |
-| `remove_source` | Drops a source from the index; moves the file to `sources/_inbox/` (reversible, not deleted) | *"Remove the outdated draft from my index."* |
+| `remove_source` | Drops a source from the index; moves the file to an `_inbox/` (reversible, not deleted) | *"Remove the outdated draft from my index."* |
 | `rename_source` | Re-files an indexed document; metadata patched in place, no re-embedding | *"Rename Smith_2023_draft to its final title."* |
-| `list_notebook` | Lists your notebook (wiki pages + literature notes) | *"What's in my notebook?"* |
+| `list_notebook` | Lists your notebook (notes in `Notizen/`) | *"What's in my notebook?"* |
 | `read_note` | Reads a notebook page | *"Open my note on process maturity."* |
-| `write_note` | Creates / updates a wiki page (never indexed) | *"Save these conclusions as a wiki note."* |
+| `write_note` | Creates / updates a note in `Notizen/` (never indexed) | *"Save these conclusions as a note."* |
 
 **Edit notes in Obsidian too (optional).** Claude can already read and write your
 notebook through the `list_notebook` / `read_note` / `write_note` tools above. To
@@ -276,12 +276,14 @@ the *text* AI locally (see the profile table above).
 Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai).
 
 1. **Download:** green "Code" button → "Download ZIP" → unpack.
-2. **Double-click** `setup.command` (Mac) or `setup.bat` (Windows). The
-   assistant opens **in your browser** and asks, in plain language: where the AI
-   should run, your key (with a live check), your document language. It writes
-   the whole configuration itself — **you never edit a file.**
+2. **Double-click** `setup.command` (Mac) or `setup.bat` (Windows). It asks two
+   things in order — *where the "BRAG Assistent" program should live*, then *your
+   project folder* (your documents) — and then the assistant opens **in your
+   browser** and asks, in plain language: where the AI should run, your key (with
+   a live check), your document language. It writes the whole configuration
+   itself — **you never edit a file.**
 3. **Quit Claude Desktop completely** (Cmd+Q / tray → Quit) and reopen it.
-4. **Drop a PDF into `RAG-Verbindungsordner/sources/`** — indexed automatically within seconds.
+4. **Drop a PDF into your project folder** — indexed automatically within seconds.
 5. Ask Claude: *"What documents are in my knowledge base?"*
 
 **Everything working?** Double-click `status.command` (Mac) / `status.bat`
@@ -290,9 +292,9 @@ the AI connection — ✓/✗ per item.
 
 **Want to remove BRAG?** Double-click `uninstall.command` (Mac) / `uninstall.bat`
 (Windows). It removes the containers, the model cache, the app image and the
-Claude Desktop connection — but **keeps your documents** (`RAG-Verbindungsordner/`) and
-the search index, so a re-install picks them up again. Delete the project folder
-afterwards if you no longer need the files.
+Claude Desktop connection — but **keeps your documents** (your project folder)
+and the search index, so a re-install picks them up again. Delete the project
+folder afterwards if you no longer need the files.
 
 **Something off?** Start with the [FAQ & troubleshooting](docs/FAQ.md) — it
 covers the common cases. If it looks like a real bug, please [open a GitHub
@@ -312,82 +314,110 @@ see": [Install macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md)
 
 ## Your knowledge store
 
-Here's the most important distinction — **two folders, two roles:**
+Here's the most important distinction — **two separate locations you choose during setup:**
 
-- **The project folder** = the **program** (the unpacked ZIP). You need it to
-  start/stop the app; **don't delete it.** *Where* it lives doesn't matter
-  (your work/project directory, OneDrive …) — just keep it.
-- **Your knowledge store** = your **content**. By default that's the
-  `RAG-Verbindungsordner/` subfolder *inside* the project folder. During setup you can
-  instead point it at an **existing folder** — e.g. your current "Project XY"
-  folder — and grant access to it.
+- **`BRAG Assistent`** = the **program** (the engine; the unpacked ZIP lands
+  here). You pick *where* it lives — anywhere you like. You need it to start/stop
+  the app; **don't delete it**, but you never have to open it. *(On Windows it
+  even gets a custom folder icon and a "do not delete" note.)*
+- **Your project folder** = your **documents** — chosen independently. The
+  **whole folder is the searchable corpus**: drop documents straight in, any
+  subfolder, any depth. It's yours, so back it up.
 
-**The one rule that explains everything:** exactly **this one folder** is
-searched. Anything you put in `sources/` is automatically added to the search
+*(If you cancel the first picker, the program just installs in the unpacked
+folder; the project folder in step 2 is required.)*
+
+Inside the project folder, **one special subfolder `WissensWIKI/` is your
+workspace** and is deliberately **not** bulk-indexed — so your own notes never
+echo back into search results. It holds:
+
+- **`Passagen/`** — verified passages you save via Claude. These **are** indexed
+  and searchable.
+- **`Notizen/`** (plus any subfolders you create) — your own notes and writing.
+  Claude can read and write here (`read_note` / `write_note`); **not** indexed.
+- **`CLAUDE.md`** (teaches Claude about your field — you fill it in) and
+  **`AGENTS.md`** (extra rules for autonomous agent tasks). Not indexed.
+
+**The one rule that explains everything:** the **whole project folder** is
+searched, **except** the `WissensWIKI/` workspace — and within `WissensWIKI/`,
+only `Passagen/` is searched. Hidden folders and any `_inbox/` are ignored.
+Anything you add to the project folder is automatically put into the search
 database (the index); take a file back out or delete it and it disappears from
 the database too. Nothing else on your computer is touched.
 
-This is how the knowledge store is laid out:
+On your disk it looks like this:
 
 ```
-RAG-Verbindungsordner/
-├── CLAUDE.md      ← teaches Claude about YOUR field (you fill it in)
-├── AGENTS.md      ← extra rules for autonomous agent tasks
-├── sources/       ← 📚 drop documents here (PDF, DOCX); subfolders = document types
-│   └── _inbox/    ← staging area, ignored (also where remove_source parks dropped sources)
-├── notes/         ← auto-generated literature note per source
-├── passages/      ← quotes you saved via Claude, grouped by topic
-└── wiki/          ← 📓 your own thinking — never indexed
+<your project folder>/              ← your documents (the whole folder is searched)
+├── Report.pdf                      ← drop documents straight in (PDF, DOCX, …)
+├── Interviews/                     ← any subfolders; the FIRST level = document type
+│   └── Person_A.pdf
+└── WissensWIKI/                    ← 📓 your workspace — NOT bulk-indexed
+    ├── Passagen/                   ← verified passages saved via Claude (these ARE searched)
+    ├── Notizen/                    ← your notes & subfolders (Claude reads/writes; NOT searched)
+    ├── CLAUDE.md                   ← teaches Claude about YOUR field
+    └── AGENTS.md                   ← rules for autonomous agent tasks
+
+…elsewhere…/BRAG Assistent/         ← the program (don't delete; you never open it)
 ```
 
-Changes in `sources/` are handled automatically: **renaming or moving** an
-**already-indexed** file (including between subfolders) just updates its metadata
-(author, year, type, PDF path) in place — **no re-ingest** (no re-embedding, no
-API cost); **overwriting** a file with a new version re-indexes it; **deleting**
-it removes it from the database (deletions made while the app was stopped are
-pruned on the next start). The **first** subfolder name becomes the filterable
-document type (`sources/papers/`, `sources/reports/` …); you can nest deeper for
-your own tags (below).
+**Multiple projects (optional).** Keep separate bodies of work fully apart — each
+with its own search database and its own connector in Claude. Double-click
+**`Projekt hinzufuegen.bat`** (Windows) / **`.command`** (macOS), pick a project
+folder anywhere, give it a name: BRAG creates a `WissensWIKI/` workspace inside it
+and adds a `brag · <name>` connector next to your existing one. The program and
+the ~3 GB models stay **shared** (one engine), so extra projects cost only disk
+for their documents — not more RAM. In Claude's connector list you pick which
+project to search; nothing from one project leaks into another.
+
+Changes in your project folder are handled automatically: **renaming or moving**
+an **already-indexed** file (including between subfolders) just updates its
+metadata (author, year, type, PDF path) in place — **no re-ingest** (no
+re-embedding, no API cost); **overwriting** a file with a new version re-indexes
+it; **deleting** it removes it from the database (deletions made while the app was
+stopped are pruned on the next start). The **first** subfolder name becomes the
+filterable document type (`<project>/papers/`, `<project>/reports/` …); you can
+nest deeper for your own tags (below).
 
 **Your own metadata** (project, course, client …) goes into a `_meta.txt` in any
-folder under `sources/` — one `key: value` per line; that way hits from other
-projects don't bleed into your results. If a document's printed page numbers
-don't match the PDF's physical pages, a `page_offset` in the same file makes
-citations show the *printed* page. Both fields in detail (with examples):
-[docs/FAQ.md](docs/FAQ.md).
+folder — one `key: value` per line; that way hits from other projects don't bleed
+into your results. If a document's printed page numbers don't match the PDF's
+physical pages, a `page_offset` in the same file makes citations show the
+*printed* page. Both fields in detail (with examples): [docs/FAQ.md](docs/FAQ.md).
 
 ```
-# sources/projects/School_Center/_meta.txt
+# <project>/projects/School_Center/_meta.txt
 project: School Center
 client: City of Hamm
 page_offset: 14
 ```
 
 You can **nest folders as deep as you like**, and `_meta.txt` files **stack from
-`sources/` down to the document's own folder — deeper folders win**. So set
-broad tags high up and refine them further down:
+the project-folder root down to the document's own folder — deeper folders win**.
+So set broad tags high up and refine them further down:
 
 ```
-sources/projects/_meta.txt                     →  client: City of Hamm
-sources/projects/School_Center/_meta.txt       →  project: School Center
-sources/projects/School_Center/2024/_meta.txt  →  phase: execution
+<project>/projects/_meta.txt                     →  client: City of Hamm
+<project>/projects/School_Center/_meta.txt       →  project: School Center
+<project>/projects/School_Center/2024/_meta.txt  →  phase: execution
 ```
 
 A document in `…/School_Center/2024/` then carries `client`, `project` **and**
 `phase` — all filterable in search (*"search only in project School Center"*).
-The one rule: only the **first** subfolder under `sources/` sets the document
-**type**; everything deeper is purely for your `_meta.txt` tags.
+The one rule: only the **first** subfolder under the project folder sets the
+document **type**; everything deeper is purely for your `_meta.txt` tags.
 
 **Editing takes effect at once:** when you add or change a `_meta.txt`, BRAG
 refreshes the metadata of that folder's already-indexed documents — and every
 nested document that inherits from it — automatically, without re-ingesting.
 
-**Day to day** you just drop new literature into `sources/` (indexed in minutes)
-and ask Claude what it adds to your existing material or whether it contradicts
-it — answer with page-linked citations. And whenever you correct Claude twice
-about the same thing, that correction belongs in **`RAG-Verbindungsordner/CLAUDE.md`**,
-not in the next chat — a well-kept instruction file turns a generic assistant
-into *yours* (examples: [docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md)).
+**Day to day** you just drop new literature into your project folder (indexed in
+minutes) and ask Claude what it adds to your existing material or whether it
+contradicts it — answer with page-linked citations. And whenever you correct
+Claude twice about the same thing, that correction belongs in
+**`WissensWIKI/CLAUDE.md`**, not in the next chat — a well-kept instruction file
+turns a generic assistant into *yours* (examples:
+[docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md)).
 
 ### Obsidian: a nicer view of the same folder
 
@@ -419,7 +449,7 @@ Possible directions (open architecture, not yet built in):
   so Claude can look things up there or prepare entries.
 - **Automations** — automatic file naming, periodic summaries of new sources,
   watcher-triggered reports, scheduled tasks via agent sessions (rules in
-  `RAG-Verbindungsordner/AGENTS.md`).
+  `WissensWIKI/AGENTS.md`).
 
 A coding agent can implement exactly these extensions step by step — a new MCP
 tool here, an extra pipeline stage there. If you build in this direction,
@@ -492,7 +522,7 @@ Current version: **0.3.3** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
   is now a lightweight metadata update instead of a full re-ingest. Security
   hardening of the setup bridge (Host-header allowlist, download-only static
   files, atomic config writes). Knowledge-store folder renamed `vault/` →
-  `RAG-Verbindungsordner/`. New doc: which Claude surface to use (Chat / Cowork / Code).
+  `WissensWIKI/`. New doc: which Claude surface to use (Chat / Cowork / Code).
 - **0.2.0** — Added **OpenAI/ChatGPT** and **Anthropic/Claude** alongside Google
   Gemini. Bilingual setup wizard. The meaning index (arctic) runs locally in
   **every** profile (switch provider without re-indexing). Reworked guide (query

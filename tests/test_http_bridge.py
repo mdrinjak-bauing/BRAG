@@ -22,7 +22,7 @@ captured `_send` / `_send_json`.
 
 import json
 
-from brag import config, http_bridge
+from brag import config, http_bridge, registry
 from brag.http_bridge import (
     LOOPBACK_NAMES,
     MAX_BODY_BYTES,
@@ -127,8 +127,8 @@ def test_origin_ok_rejects_malformed_origin():
 
 # ── Path-traversal guard (_serve_vault_file) ────────────────────
 def _vault(tmp_path, monkeypatch):
-    """Point config.VAULT at a fresh tmp dir holding one real file."""
-    monkeypatch.setattr(config, "VAULT", tmp_path)
+    """Point the vault at a fresh tmp dir holding one real file."""
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
     (tmp_path / "doc.pdf").write_bytes(b"%PDF-1.4 fake")
     (tmp_path / "note.html").write_text("<script>alert(1)</script>", encoding="utf-8")
     # A secret living OUTSIDE the vault, the target of traversal attempts.
@@ -237,6 +237,109 @@ def test_setup_csp_is_strict():
     assert "base-uri 'none'" in SETUP_CSP
     assert "form-action 'none'" in SETUP_CSP
     assert "http://" not in SETUP_CSP and "https://" not in SETUP_CSP
+
+
+# ── Shared search service (/api/search) ──────────────────────────
+def test_api_search_unknown_project_returns_404(tmp_path, monkeypatch):
+    # /api/search must work on the PERSISTENT app (SETUP_MODE off) and 404 a
+    # project that is not in the registry.
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))  # empty
+    data = json.dumps({"project": "ghost", "query": "x"}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/search"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 404
+    assert h.captured.json["ok"] is False
+    assert "ghost" in h.captured.json["message"]
+
+
+def test_api_search_runs_when_setup_off(tmp_path, monkeypatch):
+    # With SETUP_MODE off and no project, /api/search runs against the default
+    # collection and returns hits as plain dicts. search() is stubbed so the test
+    # needs no Qdrant / models.
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    seen = {}
+
+    def fake_search(query, **kw):
+        seen["query"] = query
+        seen["collection_name"] = kw.get("collection_name")
+        return [{"text": "hi", "source_file": "a.pdf", "score": 1.0}]
+
+    monkeypatch.setattr("brag.search.query.search", fake_search)
+    data = json.dumps({"query": "hello", "top_k": 5}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/search"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 200
+    assert h.captured.json["ok"] is True
+    assert h.captured.json["hits"][0]["text"] == "hi"
+    assert seen["query"] == "hello"
+    assert seen["collection_name"] is None  # single-project default
+
+
+# ── Tool dispatcher (/api/index-op) ──────────────────────────────
+def test_api_index_op_unknown_op_returns_404(monkeypatch):
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    data = json.dumps({"op": "frobnicate"}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/index-op"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 404
+    assert "frobnicate" in h.captured.json["message"]
+
+
+def test_api_index_op_unknown_project_returns_404(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    data = json.dumps({"op": "list_notebook", "project": "ghost"}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/index-op"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 404
+    assert "ghost" in h.captured.json["message"]
+
+
+def test_api_index_op_runs_file_tool(tmp_path, monkeypatch):
+    # A file-based tool (list_notebook) runs in-process and returns text, with
+    # SETUP_MODE off — no Qdrant / models needed.
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)  # WissensWIKI derives
+    (tmp_path / "WissensWIKI").mkdir()
+    (tmp_path / "WissensWIKI" / "a.md").write_text("x", encoding="utf-8")
+    data = json.dumps({"op": "list_notebook"}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/index-op"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 200
+    assert h.captured.json["ok"] is True
+    assert "a.md" in h.captured.json["text"]
+
+
+def test_serve_vault_file_scopes_to_project(tmp_path, monkeypatch):
+    # A /file/ request with ?project=<slug> resolves against THAT project's vault,
+    # not the default — the deep-link cross-project fix.
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path / "default")
+    (tmp_path / "default").mkdir()
+    (tmp_path / "default" / "doc.pdf").write_bytes(b"%PDF default")
+    pvault = tmp_path / "proj" / "WissensWIKI"
+    pvault.mkdir(parents=True)
+    (pvault / "doc.pdf").write_bytes(b"%PDF project")
+    registry.register("ProjektA", str(tmp_path / "proj"), "asb_x", vault=str(pvault))
+    h = _make_handler()
+    h._serve_vault_file("doc.pdf", "projekta")
+    assert h.captured.code == 200
+    assert h.captured.body == b"%PDF project"   # served the PROJECT's file
+    h2 = _make_handler()
+    h2._serve_vault_file("doc.pdf")
+    assert h2.captured.body == b"%PDF default"   # no project -> default vault
 
 
 # Keep a reference to http_bridge so the import is obviously load-bearing

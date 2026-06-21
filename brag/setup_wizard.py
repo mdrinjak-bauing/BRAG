@@ -76,7 +76,7 @@ def main():
                          rerank_profile="eco", vision_enabled=True)
     print("  configuration saved")
     created = setup_core.create_vault()
-    print(f"  RAG-Verbindungsordner/ {'created' if created else 'already exists — kept'}")
+    print(f"  WissensWIKI/ {'created' if created else 'already exists — kept'}")
     claude_ok, claude_msg = setup_core.write_claude_config()
     print(f"  {claude_msg}")
     if not claude_ok:
@@ -87,7 +87,7 @@ def main():
 
     print("\n=== Setup complete ===")
     print("1. Quit Claude Desktop completely and reopen it.")
-    print("2. Drop a PDF into RAG-Verbindungsordner/sources/.")
+    print("2. Drop a PDF into your project folder.")
     print("3. Ask Claude: 'What documents are in my knowledge base?'")
     if profile == "hybrid":
         print("\nRemember: LM Studio must be running whenever documents are indexed.")

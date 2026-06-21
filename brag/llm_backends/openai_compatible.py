@@ -49,6 +49,10 @@ class OpenAICompatibleLLM(LLMBackend):
                 })
         else:
             content = prompt
+        # Optional pacing: give the GPU a breather between local calls so it is
+        # not pegged continuously (gentler on thermals/power on consumer rigs).
+        if config.LOCAL_LLM_PACING_SECONDS > 0:
+            time.sleep(config.LOCAL_LLM_PACING_SECONDS)
         payload = {
             "model": config.LLM_MODEL,
             "messages": [{"role": "user", "content": content}],

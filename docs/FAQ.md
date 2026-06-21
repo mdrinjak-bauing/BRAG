@@ -64,15 +64,15 @@ Then double-click `setup.command` again.
 
 **Which file types can I add?**
 PDF, Word (`.docx`), PowerPoint (`.pptx`), Markdown (`.md`) and HTML — just drop
-them into `RAG-Verbindungsordner/sources/`. Page-precise deep-links work for PDFs; the
-other formats are indexed and searchable but cited without a page link.
-**Excel (`.xlsx`) is not supported yet.**
+them into your project folder (any subfolder, any depth). Page-precise deep-links
+work for PDFs; the other formats are indexed and searchable but cited without a
+page link. **Excel (`.xlsx`) is not supported yet.**
 
 **I dropped a PDF and nothing happens.**
 - Wait ~30 seconds (the folder is checked every 10 seconds, files must
   finish copying first).
 - Check the logs: `docker compose logs -f app`.
-- Files inside `sources/_inbox/` are deliberately ignored (staging area).
+- Files inside any `_inbox/` are deliberately ignored (staging area).
 
 **"Scanned PDF without text layer."**
 The PDF contains only images of text. OCR support is on the roadmap; for
@@ -87,7 +87,7 @@ The local profile (LM Studio) is slower than the cloud profiles.
 **"Rate limit" messages during indexing (Cloud profile).**
 The free Gemini tier has per-minute/per-day limits. The system waits and
 retries automatically — let it run; nothing is lost. Failed chunks are
-recorded in `RAG-Verbindungsordner/.brag/failed_chunks.jsonl`.
+recorded in `WissensWIKI/.brag/failed_chunks.jsonl`.
 
 **Are figures/images analyzed?**
 Yes. The **vision pass** is on by default: on ingest each figure image is sent
@@ -172,20 +172,23 @@ Desktop wired up. Each ✗ tells you what to do.
 Docker Desktop's autostart brings it back after a reboot.
 
 **How do I update to a new version?**
-Download the new release, replace the folder contents (keep your `.env` and
-`RAG-Verbindungsordner/`), then `docker compose build && docker compose up -d`.
+Download the new release and replace the contents of the **BRAG Assistent**
+program folder (keep your `.env`), then `docker compose build && docker compose
+up -d`. Your project folder with your documents and the WissensWIKI workspace
+stays untouched.
 
 **How do I back up?**
-Your documents and notes are in `RAG-Verbindungsordner/` — back that folder up like any
-other folder. The search index can always be rebuilt from the knowledge store (delete
+Your documents live in your project folder, with your notes and verified passages
+in the WissensWIKI workspace inside it — back that folder up like any other
+folder. The search index can always be rebuilt from your documents (delete
 nothing, just let reconciliation re-index after a restore).
 
 **How do I remove a document?**
-Delete the file from `sources/` (or move it out) — its index entries and the
-auto-note are removed automatically. You can also ask Claude to *"remove that
-source from my index"* (the `remove_source` tool): it moves the file into
-`sources/_inbox/` (reversible, not deleted) and clears its chunks. Deletions you
-make while the app is stopped are pruned automatically on the next start.
+Delete the file from your project folder (or move it out) — its index entries and
+the auto-note are removed automatically. You can also ask Claude to *"remove that
+source from my index"* (the `remove_source` tool): it moves the file into an
+`_inbox/` (reversible, not deleted) and clears its chunks. Deletions you make
+while the app is stopped are pruned automatically on the next start.
 
 **I updated/overwrote a file — will search pick up the new content?**
 Yes. Overwriting a file in place is detected automatically: the watcher
@@ -194,9 +197,24 @@ seconds; you can watch for the *"document changed … re-indexing"* line in
 `docker compose logs -f app`.
 
 **Can I delete the project folder or the ZIP?**
-You can delete the **ZIP** after unpacking. But **keep the project folder** (the
-unpacked ZIP) — it holds your configuration (`.env`), the controls
-(`docker-compose.yml`) and, by default, your knowledge store (`RAG-Verbindungsordner/`) with all your
-documents. Deleting it would remove your knowledge base and make starting/
-stopping impossible. Moving it is fine. The ~3 GB of models live in Docker's
-storage, not in the folder, so deleting it won't free that space.
+You can delete the **ZIP** after unpacking. But **keep two things.** First, the
+**BRAG Assistent** program folder — it holds your configuration (`.env`) and the
+controls (`docker-compose.yml`), so deleting it would make starting/stopping
+impossible. Second, your **project folder** — it holds your documents and the
+WissensWIKI workspace (your notes and verified passages). Moving either is fine.
+The ~3 GB of models live in Docker's storage, not in these folders, so deleting
+them won't free that space.
+
+**My PC freezes or restarts while indexing (local profile).**
+Local AI (LM Studio) puts sustained load on your GPU. On a marginal power supply
+or with limited cooling that can hard-reset the PC mid-indexing. BRAG won't keep
+re-trying a document that was interrupted repeatedly — after a couple of attempts
+it skips it and writes an `INDEXING-STOPPED.md` note instead of crashing the
+machine again — but the real fix is to lower the load:
+- **Easiest & safest:** switch to a **Cloud** profile (re-run setup → Cloud). The
+  heavy AI then runs off your machine, so your GPU isn't stressed at all.
+- **Staying local:** cap the GPU **power limit** (e.g. ~80% in MSI Afterburner) or
+  undervolt; **close other GPU apps** (games / launchers / browsers) to free VRAM;
+  load a **smaller (Q4, ~7 GB) model** so it fits with headroom; and make sure your
+  **PSU** is adequate for the GPU under sustained load. You can also set
+  `LOCAL_LLM_PACING_SECONDS=1` in `.env` to give the GPU a breather between calls.

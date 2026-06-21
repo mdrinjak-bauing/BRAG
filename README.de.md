@@ -72,19 +72,19 @@ Praxis — hat zwei Hälften, und ihre strikte Trennung ist der Kern dieses Desi
 
 |  | 📚 **Deine Bibliothek** | 📓 **Dein Notizbuch** |
 |---|---|---|
-| Ordner | `RAG-Verbindungsordner/sources/` | `RAG-Verbindungsordner/wiki/`, `RAG-Verbindungsordner/notes/` |
+| Ordner | dein ganzer **Projektordner** | `WissensWIKI/Notizen/` (und beliebige eigene Unterordner) |
 | Enthält | externe Quellen: Paper, Bücher, Berichte | **dein eigenes Denken**: Konzepte, Entwürfe, Lesenotizen |
 | Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | bewusst **nein** |
-| Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die optionale Obsidian-Anbindung |
+| Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die Werkzeuge `read_note` / `write_note` (und optional Obsidian) |
 
 **Dazu eine dritte Ebene dazwischen — gespeicherte Passagen.** Wenn du Claude
 (in Claude Desktop) sagst *„speichere diese Passage"*, schreibt es das Zitat
-(mit Quelle und Seite) nach `RAG-Verbindungsordner/passages/` **und indexiert es** —
+(mit Quelle und Seite) nach `WissensWIKI/Passagen/` **und indexiert es** —
 sodass jeder spätere Chat, sogar bei einem anderen KI-Anbieter, es über `search`
 wiederfindet, klar als *deine gespeicherte Passage* markiert. Das ist kuratierte
 Evidenz, die du behalten wolltest (ein echtes Zitat aus einer echten Quelle),
 nicht der eigene Output der KI — genau deshalb ist sie durchsuchbar, der Rest des
-Notizbuchs hingegen nicht.
+Arbeitsbereichs hingegen nicht.
 
 **Warum ist der Rest des Notizbuchs vom Suchindex ausgeschlossen?** Wegen des
 Echo-Effekts: Wären deine eigenen Konzeptnotizen und Auto-Zusammenfassungen
@@ -95,10 +95,10 @@ Die Bibliothek beantwortet *„Was sagen meine Quellen?"*; das Notizbuch enthäl
 
 ### Dein Notizbuch — und warum einfache Markdown-Dateien
 
-Das Notizbuch (`wiki/`) ist der Teil, der aus der Suche ein *zweites Gehirn*
-macht: Hier steht **dein** Denken — Konzeptseiten, Argumentationslinien, offene
-Fragen, Entscheidungen. Nicht, was die Quellen sagen, sondern was *du* daraus
-machst.
+Das Notizbuch (`WissensWIKI/Notizen/`) ist der Teil, der aus der Suche ein
+*zweites Gehirn* macht: Hier steht **dein** Denken — Konzeptseiten,
+Argumentationslinien, offene Fragen, Entscheidungen. Nicht, was die Quellen
+sagen, sondern was *du* daraus machst.
 
 **Warum als einfache Markdown-Dateien (`.md`)?** Markdown ist nur Text mit ein
 paar Zeichen für Überschriften, Listen und Links. Klingt unspektakulär — ist
@@ -134,8 +134,8 @@ in **[So funktioniert's](docs/HOW_IT_WORKS.de.md)** — hier das Wichtigste.
 installieren (und mit Versionskonflikten zu kämpfen), startet Docker eine fertig
 geschnürte Box, die auf jedem Rechner identisch ist. Du installierst einmal
 Docker Desktop; den Rest startet das Projekt. Die ~3 GB Modelle liegen in Dockers
-verwaltetem Speicher — **nicht** in deinem Projektordner; dein `RAG-Verbindungsordner/` enthält
-nur deine eigenen Dateien.
+verwaltetem Speicher — **nicht** in deinem Projektordner; dein Projektordner
+enthält nur deine eigenen Dateien.
 
 ![Pipeline: Einlesen und Abfrage](docs/assets/pipeline.svg)
 
@@ -182,11 +182,11 @@ Die Werkzeuge:
 | `inspect_chunks` | Zeigt, was zu einer Quelle gespeichert ist (Diagnose) | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |
 | `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema | *„Speichere dieses Zitat fürs Methodenkapitel."* |
 | `list_passages` | Zeigt gesammelte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
-| `remove_source` | Entfernt eine Quelle aus dem Index; verschiebt die Datei nach `sources/_inbox/` (umkehrbar, nicht gelöscht) | *„Entferne den veralteten Entwurf aus meinem Index."* |
+| `remove_source` | Entfernt eine Quelle aus dem Index; verschiebt die Datei in einen `_inbox/` (umkehrbar, nicht gelöscht) | *„Entferne den veralteten Entwurf aus meinem Index."* |
 | `rename_source` | Benennt ein indexiertes Dokument um; Metadaten an Ort und Stelle, kein erneutes Embedding | *„Benenne Müller_2023_Entwurf in den finalen Titel um."* |
-| `list_notebook` | Listet dein Notizbuch (Wiki-Seiten + Literaturnotizen) | *„Was steht in meinem Notizbuch?"* |
+| `list_notebook` | Listet dein Notizbuch (Notizen in `Notizen/`) | *„Was steht in meinem Notizbuch?"* |
 | `read_note` | Liest eine Notizbuch-Seite | *„Öffne meine Notiz zur Prozessreife."* |
-| `write_note` | Erstellt/aktualisiert eine Wiki-Seite (nie indexiert) | *„Speichere diese Schlüsse als Wiki-Notiz."* |
+| `write_note` | Erstellt/aktualisiert eine Notiz in `Notizen/` (nie indexiert) | *„Speichere diese Schlüsse als Notiz."* |
 
 **Notizen auch in Obsidian bearbeiten (optional).** Claude kann dein Notizbuch
 bereits über die Werkzeuge `list_notebook` / `read_note` / `write_note` oben lesen
@@ -290,15 +290,15 @@ mit [LM Studio](https://lmstudio.ai).
 1. **Herunterladen & ablegen:** grüner „Code"-Knopf → „Download ZIP". Leg die
    ZIP an einen festen, gut erreichbaren Ort — z. B. in dein Projekt- oder
    Arbeitsverzeichnis oder einen übergeordneten Ordner (gern auch in OneDrive) —
-   und **entpacke sie dort**. Dieser Projektordner bleibt dauerhaft liegen (er
-   enthält die Steuerung, deine Konfiguration und standardmäßig deinen
-   Wissensspeicher) — verschieben ist ok, löschen nicht.
-2. **Doppelklick** auf `setup.command` (Mac) bzw. `setup.bat` (Windows). Der
-   Assistent öffnet sich **im Browser** und fragt in einfacher Sprache: wo die
-   KI rechnen soll, deinen Schlüssel (mit Live-Prüfung), die Dokumentsprache.
-   Er schreibt die ganze Konfiguration selbst — **du editierst nie eine Datei.**
+   und **entpacke sie dort**.
+2. **Doppelklick** auf `setup.command` (Mac) bzw. `setup.bat` (Windows). Er fragt
+   nacheinander zwei Dinge — *wo das Programm „BRAG Assistent" liegen soll*, dann
+   *deinen Projektordner* (deine Dokumente) — und danach öffnet sich der Assistent
+   **im Browser** und fragt in einfacher Sprache: wo die KI rechnen soll, deinen
+   Schlüssel (mit Live-Prüfung), die Dokumentsprache. Er schreibt die ganze
+   Konfiguration selbst — **du editierst nie eine Datei.**
 3. **Claude Desktop komplett beenden** (Cmd+Q / Tray → Beenden) und neu öffnen.
-4. **Ein PDF in `RAG-Verbindungsordner/sources/` legen** — binnen Sekunden automatisch indexiert.
+4. **Ein PDF in deinen Projektordner legen** — binnen Sekunden automatisch indexiert.
 5. Claude fragen: *„Welche Dokumente sind in meiner Wissensbasis?"*
 
 **Läuft alles?** Doppelklick auf `status.command` (Mac) bzw. `status.bat`
@@ -307,7 +307,7 @@ KI-Anschluss — ✓/✗ pro Punkt.
 
 **BRAG entfernen?** Doppelklick auf `uninstall.command` (Mac) bzw. `uninstall.bat`
 (Windows): entfernt Container, Modell-Cache, App-Image und die
-Claude-Desktop-Verbindung — **deine Dokumente** (`RAG-Verbindungsordner/`) und der
+Claude-Desktop-Verbindung — **deine Dokumente** (dein Projektordner) und der
 Suchindex **bleiben erhalten**, eine Neuinstallation findet sie wieder. Den
 Projektordner danach löschen, wenn du die Dateien nicht mehr brauchst.
 
@@ -331,73 +331,103 @@ siehst": [Installation macOS](docs/INSTALL_MAC.de.md) ·
 
 ## Dein Wissensspeicher
 
-Hier die wichtigste Unterscheidung — **zwei Ordner, zwei Rollen:**
+Hier die wichtigste Unterscheidung — **zwei getrennte Orte, die du beim Setup wählst:**
 
-- **Der Projektordner** = das **Programm** (die entpackte ZIP). Den brauchst du
-  zum Starten/Stoppen; **nicht löschen.** *Wo* er liegt, ist egal
-  (Arbeits-/Projektverzeichnis, OneDrive …) — Hauptsache, er bleibt liegen.
-- **Dein Wissensspeicher** = deine **Inhalte**. Standardmäßig ist das der
-  Unterordner `RAG-Verbindungsordner/` *im* Projektordner. Beim Setup kannst du
-  stattdessen einen **bestehenden Ordner** angeben — z. B. deinen vorhandenen
-  „Projekt XY"-Ordner — und ihm beim Einrichten Zugriff geben.
+- **`BRAG Assistent`** = das **Programm** (die Engine; hier landet die entpackte
+  ZIP). Du wählst, *wo* es liegt — an beliebigem Ort. Das brauchst du zum
+  Starten/Stoppen; **nicht löschen** — öffnen musst du es nie. *(Unter Windows
+  bekommt es sogar ein eigenes Ordnersymbol und einen „nicht löschen"-Hinweis.)*
+- **Dein Projektordner** = deine **Dokumente** — unabhängig davon gewählt. Der
+  **ganze Ordner ist der durchsuchbare Korpus**: Dokumente einfach hineinlegen,
+  beliebiger Unterordner, beliebige Tiefe. Er gehört dir, also sichere ihn.
 
-**Die eine Regel, die alles erklärt:** Durchsucht wird genau **dieser eine
-Ordner**. Alles, was du in `sources/` legst, wandert automatisch in die
+*(Brichst du die erste Auswahl ab, installiert sich das Programm einfach im
+entpackten Ordner; der Projektordner in Schritt 2 ist erforderlich.)*
+
+Im Projektordner ist **ein besonderer Unterordner `WissensWIKI/` dein
+Arbeitsbereich** und wird bewusst **nicht** mit-indexiert — so hallen deine
+eigenen Notizen nie in den Suchergebnissen wider. Er enthält:
+
+- **`Passagen/`** — belegte Passagen, die du über Claude speicherst. Diese
+  **werden** indexiert und sind durchsuchbar.
+- **`Notizen/`** (plus beliebige eigene Unterordner) — deine eigenen Notizen und
+  Texte. Claude kann hier lesen und schreiben (`read_note` / `write_note`);
+  **nicht** indexiert.
+- **`CLAUDE.md`** (bringt Claude dein Fachgebiet bei — hier trägst du es ein) und
+  **`AGENTS.md`** (Zusatzregeln für autonome Agenten-Aufgaben). Nicht indexiert.
+
+**Die eine Regel, die alles erklärt:** Durchsucht wird der **ganze
+Projektordner**, **außer** dem Arbeitsbereich `WissensWIKI/` — und innerhalb von
+`WissensWIKI/` nur `Passagen/`. Versteckte Ordner und jeder `_inbox/` werden
+ignoriert. Alles, was du in den Projektordner legst, wandert automatisch in die
 Suchdatenbank (den Index); nimmst du eine Datei wieder heraus oder löschst sie,
-verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem
-Rechner angefasst.
+verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem Rechner
+angefasst.
 
-So ist der Wissensspeicher aufgebaut:
+So sieht es auf der Festplatte aus:
 
 ```
-RAG-Verbindungsordner/
-├── CLAUDE.md      ← bringt Claude dein Fachgebiet bei (hier trägst du es ein)
-├── AGENTS.md      ← Zusatzregeln für autonome Agenten-Aufgaben
-├── sources/       ← 📚 Dokumente hier ablegen (PDF, DOCX); Unterordner = Dokumenttypen
-│   └── _inbox/    ← Staging-Bereich, ignoriert (hier parkt auch remove_source entfernte Quellen)
-├── notes/         ← auto-generierte Literaturnotiz pro Quelle
-├── passages/      ← über Claude gespeicherte Zitate, nach Themen
-└── wiki/          ← 📓 dein eigenes Denken — wird nie indexiert
+<dein Projektordner>/                ← deine Dokumente (der ganze Ordner wird durchsucht)
+├── Bericht.pdf                      ← Dokumente einfach hineinlegen (PDF, DOCX, …)
+├── Interviews/                      ← beliebige Unterordner; die ERSTE Ebene = Dokumenttyp
+│   └── Person_A.pdf
+└── WissensWIKI/                     ← 📓 dein Arbeitsbereich — NICHT mit-indexiert
+    ├── Passagen/                    ← über Claude gespeicherte belegte Passagen (DIESE werden durchsucht)
+    ├── Notizen/                     ← deine Notizen & Unterordner (Claude liest/schreibt; NICHT durchsucht)
+    ├── CLAUDE.md                    ← bringt Claude DEIN Fachgebiet bei
+    └── AGENTS.md                    ← Regeln für autonome Agenten-Aufgaben
+
+…anderswo…/BRAG Assistent/           ← das Programm (nicht löschen; öffnen musst du es nie)
 ```
 
-Änderungen in `sources/` werden automatisch nachgezogen: Benennst du eine
-**bereits indexierte** Datei um oder **verschiebst** sie (auch zwischen
+**Mehrere Projekte (optional).** Halte getrennte Arbeitsbereiche vollständig
+auseinander — jeder mit eigener Suchdatenbank und eigenem Anschluss in Claude.
+Doppelklick auf **`Projekt hinzufuegen.bat`** (Windows) / **`.command`** (macOS),
+einen Projektordner an beliebigem Ort wählen, benennen: BRAG legt darin einen
+`WissensWIKI/`-Arbeitsbereich an und ergänzt einen Anschluss `brag · <Name>` neben
+dem bestehenden. Programm und die ~3 GB Modelle bleiben **geteilt** (eine Engine)
+— Zusatzprojekte kosten nur Plattenplatz für ihre Dokumente, keinen Mehr-RAM. In
+Claudes Anschlussliste wählst du, welches Projekt durchsucht wird; nichts aus
+einem Projekt vermischt sich mit einem anderen.
+
+Änderungen in deinem Projektordner werden automatisch nachgezogen: Benennst du
+eine **bereits indexierte** Datei um oder **verschiebst** sie (auch zwischen
 Unterordnern), werden nur die Metadaten (Autor, Jahr, Typ, PDF-Pfad) an Ort und
 Stelle aktualisiert — **ohne neu einzulesen** (kein erneutes Embedding, keine
 API-Kosten); **überschreibst** du eine Datei mit einer neuen Version, wird sie neu
 indexiert; **löschst** du sie, verschwindet sie aus der Datenbank (Löschungen,
 während die App aus war, werden beim nächsten Start aufgeräumt). Der **erste**
-Unterordner-Name wird zum filterbaren Dokumenttyp (`sources/Paper/`,
-`sources/Berichte/` …); tiefer verschachteln kannst du für eigene Tags (siehe unten).
+Unterordner-Name wird zum filterbaren Dokumenttyp (`<Projekt>/Paper/`,
+`<Projekt>/Berichte/` …); tiefer verschachteln kannst du für eigene Tags (siehe unten).
 
 **Eigene Metadaten** (Projekt, Kurs, Auftraggeber …) gibst du über eine
-`_meta.txt` in einem Ordner unter `sources/` an — eine Zeile pro `schlüssel: wert`;
+`_meta.txt` in einem beliebigen Ordner an — eine Zeile pro `schlüssel: wert`;
 so mischen sich keine Treffer aus anderen Projekten in deine Ergebnisse. Stimmen
 die gedruckten Seitenzahlen nicht mit den physischen PDF-Seiten überein, regelt
 ein `page_offset` in derselben Datei, dass der Beleg die *gedruckte* Seite zeigt.
 Beide Felder im Detail (mit Beispielen): [docs/FAQ.de.md](docs/FAQ.de.md).
 
 ```
-# sources/Projekte/Schulzentrum/_meta.txt
+# <Projekt>/Projekte/Schulzentrum/_meta.txt
 projekt: Schulzentrum
 auftraggeber: Stadt Hamm
 page_offset: 14
 ```
 
 Du kannst **beliebig tief verschachteln**, und `_meta.txt`-Dateien **stapeln sich
-von `sources/` hinab bis zum Ordner des Dokuments — tiefer überschreibt**. Setz
-also grobe Tags weit oben und verfeinere sie weiter unten:
+von der Projektordner-Wurzel hinab bis zum Ordner des Dokuments — tiefer
+überschreibt**. Setz also grobe Tags weit oben und verfeinere sie weiter unten:
 
 ```
-sources/Projekte/_meta.txt                     →  auftraggeber: Stadt Hamm
-sources/Projekte/Schulzentrum/_meta.txt        →  projekt: Schulzentrum
-sources/Projekte/Schulzentrum/2024/_meta.txt   →  phase: Ausführung
+<Projekt>/Projekte/_meta.txt                     →  auftraggeber: Stadt Hamm
+<Projekt>/Projekte/Schulzentrum/_meta.txt        →  projekt: Schulzentrum
+<Projekt>/Projekte/Schulzentrum/2024/_meta.txt   →  phase: Ausführung
 ```
 
 Ein Dokument in `…/Schulzentrum/2024/` trägt dann `auftraggeber`, `projekt`
 **und** `phase` — alles in der Suche filterbar (*„such nur im Projekt
-Schulzentrum"*). Die einzige Regel: nur der **erste** Unterordner unter
-`sources/` bestimmt den **Dokumenttyp**; alles Tiefere dient allein deinen
+Schulzentrum"*). Die einzige Regel: nur der **erste** Unterordner unter dem
+Projektordner bestimmt den **Dokumenttyp**; alles Tiefere dient allein deinen
 `_meta.txt`-Tags.
 
 **Ändern wirkt sofort:** Legst du eine `_meta.txt` an oder bearbeitest sie
@@ -405,10 +435,10 @@ nachträglich, frischt BRAG die Metadaten der bereits indexierten Dokumente
 dieses Ordners — und aller geschachtelten Dokumente, die davon erben —
 automatisch auf, ohne neu einzulesen.
 
-**Im Alltag** legst du neue Literatur einfach in `sources/` ab (in Minuten
+**Im Alltag** legst du neue Literatur einfach in deinen Projektordner (in Minuten
 indexiert) und fragst Claude, was sie zu deinem Bestand ergänzt oder ob sie ihm
 widerspricht — Antwort mit seitenverlinkten Belegen. Korrigierst du Claude
-zweimal dieselbe Sache, gehört die Korrektur in **`RAG-Verbindungsordner/CLAUDE.md`**,
+zweimal dieselbe Sache, gehört die Korrektur in **`WissensWIKI/CLAUDE.md`**,
 nicht in den nächsten Chat — eine gepflegte Instruktionsdatei macht aus einem
 generischen Assistenten *deinen* (Beispiele:
 [docs/CUSTOMIZE_CLAUDE.de.md](docs/CUSTOMIZE_CLAUDE.de.md)).
@@ -445,7 +475,7 @@ Mögliche Ausbaurichtungen (offene Architektur, noch nicht fertig eingebaut):
   Claude auch dort nachschlagen oder Einträge vorbereiten kann.
 - **Automatisierungen** — automatische Datei-Benennung, regelmäßige
   Zusammenfassungen neuer Quellen, watcher-getriggerte Reports, geplante
-  Aufgaben über Agenten-Sitzungen (Regeln dafür in `RAG-Verbindungsordner/AGENTS.md`).
+  Aufgaben über Agenten-Sitzungen (Regeln dafür in `WissensWIKI/AGENTS.md`).
 
 Ein Coding-Agent kann genau solche Erweiterungen Schritt für Schritt umsetzen —
 ein neues MCP-Werkzeug hier, ein zusätzlicher Pipeline-Schritt dort. Wenn du in
@@ -524,7 +554,7 @@ Aktuelle Version: **0.3.3** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHA
   leichtgewichtiges Metadaten-Update statt einer vollen Neu-Indexierung.
   Sicherheits-Härtung der Setup-Bridge (Host-Header-Allowlist, statische Dateien
   nur als Download, atomare Config-Schreibvorgänge). Wissensspeicher-Ordner
-  umbenannt `vault/` → `RAG-Verbindungsordner/`. Neues Dokument: welche Claude-Oberfläche
+  umbenannt `vault/` → `WissensWIKI/`. Neues Dokument: welche Claude-Oberfläche
   wann (Chat / Cowork / Code).
 - **0.2.0** — Neben Google Gemini jetzt auch **OpenAI/ChatGPT** und
   **Anthropic/Claude** als Cloud-Anbieter. Zweisprachiger Einrichtungs-Assistent.

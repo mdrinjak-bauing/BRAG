@@ -66,7 +66,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
                        extra={"Content-Security-Policy": SETUP_CSP})
         elif parsed.path.startswith("/file/"):
             rel = urllib.parse.unquote(parsed.path[len("/file/"):])
-            self._serve_vault_file(rel)
+            params = urllib.parse.parse_qs(parsed.query)
+            project = (params.get("project", [""])[0] or "").strip()
+            self._serve_vault_file(rel, project)
         else:
             self._send(404, b"not found", "text/plain")
 
@@ -74,10 +76,6 @@ class BridgeHandler(BaseHTTPRequestHandler):
     def do_POST(self):  # noqa: N802
         if not self._host_ok() or not self._origin_ok():
             self._send_json(403, {"ok": False, "message": "forbidden"})
-            return
-        # The config-writing setup API exists only in the one-shot setup service.
-        if not config.SETUP_MODE:
-            self._send_json(404, {"ok": False, "message": "setup not active"})
             return
         parsed = urllib.parse.urlparse(self.path)
         try:
@@ -90,6 +88,21 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send_json(400, {"ok": False, "message": "invalid request"})
             return
 
+        # Shared model service — available on the PERSISTENT app (SETUP_MODE off):
+        # the per-project MCP clients are thin (load no models) and call this, so
+        # the heavy embed/retrieve/rerank runs exactly once, in this process.
+        if parsed.path == "/api/search":
+            self._api_search(body)
+            return
+        if parsed.path == "/api/index-op":
+            self._api_index_op(body)
+            return
+
+        # The config-writing setup API exists only in the one-shot setup service.
+        if not config.SETUP_MODE:
+            self._send_json(404, {"ok": False, "message": "setup not active"})
+            return
+
         if parsed.path == "/api/validate-key":
             from brag.setup_core import validate_api_key
             ok, message = validate_api_key(
@@ -99,8 +112,28 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._check_local(body)
         elif parsed.path == "/api/setup":
             self._apply_setup(body)
+        elif parsed.path == "/api/current-settings":
+            self._current_settings()
         else:
             self._send_json(404, {"ok": False, "message": "unknown endpoint"})
+
+    def _current_settings(self):
+        """Current .env-derived settings for the wizard's 'change a setting' view,
+        so a user can tweak one thing (e.g. the reranker) without re-walking the
+        whole wizard. Never returns the API key itself — only whether one is set."""
+        from brag import setup_core
+        env = setup_core.read_existing_env()
+        profile = env.get("PROFILE", "")
+        key_env = setup_core.PROFILES.get(profile, {}).get("key_env")
+        self._send_json(200, {
+            "configured": bool(profile),
+            "profile": profile,
+            "language": env.get("VAULT_LANGUAGE", ""),
+            "rerank_profile": env.get("RERANK_PROFILE", "eco"),
+            "vision_enabled": env.get("VISION_ENABLED", "true").lower() != "false",
+            "llm_model": env.get("LLM_MODEL", ""),
+            "has_key": bool(key_env and env.get(key_env)),
+        })
 
     def _check_local(self, body: dict):
         """Probe LM Studio on the host and list its loaded models."""
@@ -140,7 +173,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 profile=str(body.get("profile", "cloud")),
                 api_key=str(body.get("api_key", "")),
                 language=str(body.get("language", "english")),
-                vault_path=str(body.get("vault_path", "")).strip() or "./RAG-Verbindungsordner",
+                vault_path=str(body.get("vault_path", "")).strip(),
                 llm_model=str(body.get("llm_model", "")).strip(),
                 rerank_profile=str(body.get("rerank_profile", "eco")).strip() or "eco",
                 vision_enabled=bool(body.get("vision_enabled", True)),
@@ -151,14 +184,19 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send_json(200, {"ok": False, "steps": steps})
             return
 
-        custom_vault = bool(str(body.get("vault_path", "")).strip())
-        if custom_vault:
-            steps.append({"ok": True, "message":
-                          "Custom knowledge folder noted — it will be prepared on first start"})
+        # Only fabricate the default in-project vault when NO vault is chosen yet
+        # — neither a wizard field nor an existing VAULT_PATH in .env (which the
+        # host launcher's picker/relocation sets, e.g. <RAG folder>\WissensWIKI).
+        # Otherwise create_vault() would make the wrong folder and the mount of
+        # the real vault would be defeated.
+        has_vault = (bool(str(body.get("vault_path", "")).strip())
+                     or bool(setup_core.read_existing_env().get("VAULT_PATH")))
+        if has_vault:
+            steps.append({"ok": True, "message": "Using your chosen knowledge folder"})
         else:
             created = setup_core.create_vault()
             steps.append({"ok": True, "message":
-                          "Knowledge folder created (RAG-Verbindungsordner/)" if created
+                          "Knowledge folder created" if created
                           else "Knowledge folder already exists — kept untouched"})
 
         claude_ok, claude_msg = setup_core.write_claude_config()
@@ -184,6 +222,107 @@ class BridgeHandler(BaseHTTPRequestHandler):
             )
         self._send_json(200, response)
 
+    def _api_search(self, body: dict):
+        """Shared search service: a thin per-project MCP client POSTs here and the
+        heavy embed/retrieve/rerank runs in this one persistent process — so the
+        models live in RAM exactly once no matter how many connectors are open.
+        `project` selects the per-project collection via the registry; omit it for
+        the single-project default."""
+        from brag import registry
+        from brag.search.query import search as run_search
+
+        project = str(body.get("project", "")).strip()
+        collection = None
+        if project:
+            collection = registry.get_collection(project)
+            if collection is None:
+                self._send_json(404, {"ok": False, "message":
+                    f"unknown project '{project}' — re-run setup for this project"})
+                return
+        raw_top = body.get("top_k")
+        top_k = raw_top if isinstance(raw_top, int) and raw_top > 0 else None
+        meta = body.get("meta")
+        try:
+            hits = run_search(
+                str(body.get("query", "")),
+                top_k=top_k,
+                reranking=body.get("reranking"),
+                collection_name=collection,
+                doc_type=str(body.get("doc_type", "")) or None,
+                chunk_type=str(body.get("chunk_type", "")) or None,
+                year_min=body.get("year_min") or None,
+                year_max=body.get("year_max") or None,
+                source_file=str(body.get("source_file", "")) or None,
+                meta=meta if isinstance(meta, dict) else None,
+            )
+        except Exception as e:  # noqa: BLE001 — a search error must not kill the thread
+            self._send_json(500, {"ok": False,
+                                  "message": f"search failed: {str(e)[:200]}"})
+            return
+        self._send_json(200, {"ok": True, "hits": hits})
+
+    def _api_index_op(self, body: dict):
+        """Tool dispatcher for the thin MCP client: runs an index/file tool in
+        this persistent process (which holds the models + the vault) and returns
+        its text. `project` scopes the index reads to that project's collection;
+        the file-side ops use the vault paths (per-project scoping arrives with
+        config.project_context in a later phase — today there is one vault)."""
+        from brag import registry, tools
+
+        project = str(body.get("project", "")).strip()
+        rec = None
+        if project:
+            rec = registry.get(project)
+            if rec is None:
+                self._send_json(404, {"ok": False, "message":
+                    f"unknown project '{project}' — re-run setup for this project"})
+                return
+        collection = rec.get("collection") if rec else None
+        op = str(body.get("op", "")).strip()
+        a = body.get("args") if isinstance(body.get("args"), dict) else {}
+
+        def _int(value, default=0):
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return default
+
+        ops = {
+            "list_sources": lambda: tools.list_sources(
+                doc_type=str(a.get("doc_type", "")), collection_name=collection),
+            "inspect_chunks": lambda: tools.inspect_chunks(
+                str(a.get("source_file", "")), page=_int(a.get("page")),
+                limit=_int(a.get("limit", 10), 10), collection_name=collection),
+            "remove_source": lambda: tools.remove_source(str(a.get("source_file", ""))),
+            "rename_source": lambda: tools.rename_source(
+                str(a.get("source_file", "")), str(a.get("new_name", ""))),
+            "save_passage": lambda: tools.save_passage(
+                str(a.get("topic", "")), str(a.get("text", "")),
+                str(a.get("source", "")), page=str(a.get("page", "")),
+                note=str(a.get("note", ""))),
+            "list_passages": lambda: tools.list_passages(topic=str(a.get("topic", ""))),
+            "list_notebook": tools.list_notebook,
+            "read_note": lambda: tools.read_note(str(a.get("path", ""))),
+            "write_note": lambda: tools.write_note(
+                str(a.get("path", "")), str(a.get("content", ""))),
+        }
+        handler = ops.get(op)
+        if handler is None:
+            self._send_json(404, {"ok": False, "message": f"unknown op '{op}'"})
+            return
+        try:
+            # Scope the vault paths + collection to this project for the call so
+            # the file-side ops (remove/rename/save_passage/notebook) and the
+            # index mutations target the right project. The ContextVar is
+            # per-thread, so concurrent requests never cross over. A None record
+            # is the single-project default.
+            with config.project_context(rec):
+                text = handler()
+        except Exception as e:  # noqa: BLE001 — a tool error must not kill the thread
+            self._send_json(500, {"ok": False, "message": f"{op} failed: {str(e)[:200]}"})
+            return
+        self._send_json(200, {"ok": True, "text": text})
+
     # ── helpers ─────────────────────────────────────────────────
     def _host_ok(self) -> bool:
         """Accept only requests addressed to localhost (anti DNS-rebinding)."""
@@ -202,24 +341,33 @@ class BridgeHandler(BaseHTTPRequestHandler):
             return False
         return name in LOOPBACK_NAMES
 
-    def _serve_vault_file(self, rel: str):
-        target = (config.VAULT / rel).resolve()
-        try:
-            target.relative_to(config.VAULT.resolve())
-        except ValueError:
-            self._send(403, b"forbidden", "text/plain")
-            return
-        if not target.is_file():
-            self._send(404, b"file not found", "text/plain")
-            return
-        if target.suffix.lower() == ".pdf":
-            # PDFs render inline so the browser can jump to #page=N.
-            self._send(200, target.read_bytes(), "application/pdf")
-        else:
-            # Never serve knowledge-store content (.html/.md/…) as active, same-origin
-            # HTML — hand it back as a download (stored-XSS hardening).
-            self._send(200, target.read_bytes(), "application/octet-stream",
-                       extra={"Content-Disposition": "attachment"})
+    def _serve_vault_file(self, rel: str, project: str = ""):
+        # A deep link from a non-default project carries ?project=<slug>; resolve
+        # the path against THAT project's vault (not the default one), reusing the
+        # same per-request context as the tool dispatcher. The traversal guard
+        # runs INSIDE the context so it validates against the correct vault.
+        rec = None
+        if project:
+            from brag import registry
+            rec = registry.get(project)
+        with config.project_context(rec):
+            target = (config.VAULT / rel).resolve()
+            try:
+                target.relative_to(config.VAULT.resolve())
+            except ValueError:
+                self._send(403, b"forbidden", "text/plain")
+                return
+            if not target.is_file():
+                self._send(404, b"file not found", "text/plain")
+                return
+            if target.suffix.lower() == ".pdf":
+                # PDFs render inline so the browser can jump to #page=N.
+                self._send(200, target.read_bytes(), "application/pdf")
+            else:
+                # Never serve knowledge-store content (.html/.md/…) as active,
+                # same-origin HTML — hand it back as a download (stored-XSS hardening).
+                self._send(200, target.read_bytes(), "application/octet-stream",
+                           extra={"Content-Disposition": "attachment"})
 
     def _send(self, code: int, body: bytes, mime: str, extra: dict | None = None):
         self.send_response(code)
@@ -236,11 +384,14 @@ class BridgeHandler(BaseHTTPRequestHandler):
         self._send(code, json.dumps(payload).encode(), "application/json")
 
 
-def pdf_link(rel_path: str, page: int | None = None) -> str:
-    """Public link that opens the document in the host browser at a page."""
+def pdf_link(rel_path: str, page: int | None = None, project: str = "") -> str:
+    """Public link that opens the document in the host browser at a page. For a
+    non-default project it carries ?project=<slug> so the file server resolves
+    the path against that project's vault, not the default one."""
     quoted = urllib.parse.quote(rel_path)
+    query = f"?project={urllib.parse.quote(project)}" if project else ""
     anchor = f"#page={page}" if page else ""
-    return f"{config.BRIDGE_PUBLIC_URL}/file/{quoted}{anchor}"
+    return f"{config.BRIDGE_PUBLIC_URL}/file/{quoted}{query}{anchor}"
 
 
 def start_bridge_in_background() -> ThreadingHTTPServer:

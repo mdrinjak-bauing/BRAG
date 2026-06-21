@@ -18,11 +18,57 @@ MCP_ENTRY = {
     "args": ["exec", "-i", "brag-app", "python", "-m", "brag.mcp_server"],
 }
 
-# The key under which the entry is registered in claude_desktop_config.json — this
-# is the name Claude Desktop shows the user. Older installs used a longer legacy
-# name; setup migrates them by removing it when it writes MCP_KEY.
+# The key under which the DEFAULT connector is registered in
+# claude_desktop_config.json — the name Claude Desktop shows the user. Older
+# installs used a longer legacy name; setup migrates them by removing it.
 MCP_KEY = "brag"
 LEGACY_MCP_KEYS = ("academic-rag-and-second-brain",)
+
+
+def mcp_key_for(slug) -> str:
+    """Connector key shown in Claude/LM Studio: the plain 'brag' for the default
+    (single) project, 'brag-<slug>' for each additional project."""
+    return MCP_KEY if slug in (None, "", "default") else f"{MCP_KEY}-{slug}"
+
+
+def entry_for_slug(slug) -> dict:
+    """MCP entry for a project. The DEFAULT keeps the battle-tested single-project
+    server (brag.mcp_server, no project env) so existing installs are unchanged;
+    each ADDITIONAL project runs the thin client (brag.mcp_client) scoped by
+    -e BRAG_PROJECT, so many open project connectors share ONE model set."""
+    args = ["exec", "-i"]
+    module = "brag.mcp_server"
+    if slug not in (None, "", "default"):
+        args += ["-e", f"BRAG_PROJECT={slug}"]
+        module = "brag.mcp_client"
+    args += ["brag-app", "python", "-m", module]
+    return {"command": "docker", "args": args}
+
+
+def _is_brag_key(key: str) -> bool:
+    return key == MCP_KEY or key.startswith(f"{MCP_KEY}-")
+
+
+def connectors_for_registry() -> dict:
+    """{connector key: MCP entry} that Claude/LM Studio should contain — one per
+    registered project, or just the bare 'brag' when the registry is empty (the
+    single-project install). Once projects ARE registered, EVERY connector carries
+    its project name — including the default, which keeps the battle-tested
+    mcp_server but is keyed 'brag-<folder>' so no connector is an unlabelled
+    'brag'."""
+    from brag import registry
+    projects = registry.projects()
+    if not projects:
+        return {MCP_KEY: entry_for_slug(None)}
+    out = {}
+    for p in projects:
+        slug = p["slug"]
+        if slug in (None, "", "default"):
+            key = f"{MCP_KEY}-{registry.slugify(p.get('name') or 'brag')}"
+        else:
+            key = mcp_key_for(slug)
+        out[key] = entry_for_slug(slug)
+    return out
 
 
 def _env_safe(value: str) -> str:
@@ -44,8 +90,12 @@ def read_existing_env() -> dict:
 
 
 def write_env(profile: str, api_key: str, language: str,
-              vault_path: str = "./RAG-Verbindungsordner", llm_model: str = "",
+              vault_path: str = "", llm_model: str = "",
               rerank_profile: str = "eco", vision_enabled: bool = True) -> None:
+    # vault_path defaults to "" (NOT a folder) so an empty wizard field falls
+    # through to the existing VAULT_PATH in .env — the absolute path the host
+    # launcher's folder picker / relocation wrote (e.g. <RAG folder>\WissensWIKI).
+    # Coercing it to a relative default here would silently repoint the vault.
     existing = read_existing_env()
     # Sanitize every value that gets interpolated into a KEY=value line so a
     # newline in (untrusted) wizard input cannot inject extra .env entries.
@@ -69,7 +119,7 @@ def write_env(profile: str, api_key: str, language: str,
         f"PROFILE={profile}",
         f"VAULT_LANGUAGE={language}",
         f"ANSWER_LANGUAGE={answer_lang}",
-        f"VAULT_PATH={vault_path or existing.get('VAULT_PATH') or './RAG-Verbindungsordner'}",
+        f"VAULT_PATH={vault_path or existing.get('VAULT_PATH') or './WissensWIKI'}",
         # Search-quality vs. CPU cost (off/eco/balanced/full) and whether figures
         # are sent to a cloud provider for description. Written explicitly so a
         # later re-run always reflects the wizard's choice, even at the default.
@@ -80,25 +130,31 @@ def write_env(profile: str, api_key: str, language: str,
     key_env = PROFILES.get(profile, {}).get("key_env")
     if key_env and api_key:
         lines.append(f"{key_env}={api_key}")
+    elif key_env and existing.get("PROFILE") == profile and existing.get(key_env):
+        # Same provider, no new key entered -> keep the existing key, so re-running
+        # setup to change another setting (e.g. the reranker) never forces the user
+        # to re-type their API key.
+        lines.append(f"{key_env}={existing[key_env]}")
     if llm_model:
         lines.append(f"LLM_MODEL={llm_model}")
-    # Preserve keys the wizard itself does NOT manage but the user may have set
-    # by hand — a re-run (e.g. to switch provider) must never silently drop them:
-    #  - the Claude config dir (set by setup.bat/.command) and a custom bridge
-    #    port / public URL (used when 8765 is already taken);
-    #  - a hand-picked cloud model (LLM_MODEL — only when the wizard did not just
-    #    write one, i.e. cloud profiles), the LLM base URL, and any embedding /
-    #    retrieval overrides, which are advanced .env-only dials. Without this a
-    #    wizard re-run reverted the user to profile defaults.
+    # Preserve keys the wizard itself does NOT manage but the user may have set by
+    # hand — a re-run must never silently drop them: the Claude config dir, a custom
+    # bridge port / public URL, and the advanced embedding / retrieval .env dials.
     preserved = [
         "CLAUDE_CONFIG_DIR", "BRIDGE_HOST_PORT", "BRIDGE_PUBLIC_URL",
-        "LLM_BASE_URL", "EMBEDDING_BACKEND", "EMBEDDING_MODEL",
-        "EMBEDDING_DIM", "EMBEDDING_REVISION", "COLLECTION_NAME",
-        "RERANK_PREFETCH", "RERANK_FUSION_LIMIT", "RERANK_BATCH_SIZE",
-        "DEFAULT_TOP_K", "MAX_CHUNKS_PER_SOURCE",
+        "COMPOSE_PROJECT_NAME", "EMBEDDING_BACKEND",
+        "EMBEDDING_MODEL", "EMBEDDING_DIM", "EMBEDDING_REVISION",
+        "COLLECTION_NAME", "RERANK_PREFETCH", "RERANK_FUSION_LIMIT",
+        "RERANK_BATCH_SIZE", "DEFAULT_TOP_K", "MAX_CHUNKS_PER_SOURCE",
     ]
-    if not llm_model:
-        preserved.append("LLM_MODEL")
+    # LLM_MODEL + LLM_BASE_URL are provider-specific: carry them over ONLY when the
+    # profile is UNCHANGED. Switching providers (e.g. local hybrid -> gemini) must
+    # NOT keep the old model name / base URL, or the new provider is handed an
+    # invalid model and every contextualization call fails.
+    if existing.get("PROFILE") == profile:
+        preserved.append("LLM_BASE_URL")
+        if not llm_model:
+            preserved.append("LLM_MODEL")
     for key in preserved:
         if existing.get(key):
             lines.append(f"{key}={existing[key]}")
@@ -115,22 +171,28 @@ def write_env(profile: str, api_key: str, language: str,
 
 
 def create_vault() -> bool:
-    """Copy the template to ./RAG-Verbindungsordner. Returns False if it already existed."""
-    vault = WORKSPACE / "RAG-Verbindungsordner"
-    if vault.exists():
+    """Create the FALLBACK in-engine project root (./project) with its WissensWIKI
+    workspace — used only when the user picked no project folder. Returns False if
+    it already existed. The normal path mounts the user's project at /vault and
+    never calls this. The project root is the corpus; only WissensWIKI is seeded."""
+    project = WORKSPACE / "project"
+    if (project / "WissensWIKI").exists():
         return False
-    shutil.copytree(VAULT_TEMPLATE, vault)
+    shutil.copytree(VAULT_TEMPLATE, project / "WissensWIKI")
     return True
 
 
 def seed_vault_if_empty(vault: Path) -> None:
-    """Seed a custom (possibly empty) knowledge-store folder with the template files
-    without overwriting anything that exists. Called at app startup."""
+    """Seed the project's WissensWIKI workspace from the template without
+    overwriting anything that exists. Called at app startup. The project root holds
+    the user's documents (the searchable corpus); only the WissensWIKI workspace
+    (Passagen/, Notizen/, guides) is seeded — never the root itself."""
     if not VAULT_TEMPLATE.exists():
         return
-    vault.mkdir(parents=True, exist_ok=True)
+    wiki = vault / "WissensWIKI"
+    wiki.mkdir(parents=True, exist_ok=True)
     for item in VAULT_TEMPLATE.iterdir():
-        target = vault / item.name
+        target = wiki / item.name
         if target.exists():
             continue
         if item.is_dir():
@@ -185,25 +247,25 @@ def write_claude_config() -> tuple[bool, str]:
     # the host launcher (tools/merge_claude_config.ps1, called by setup.bat);
     # this container write is best-effort and works directly on macOS/Linux.
     try:
-        existing: dict = {}
+        raw = ""
         if config_path.exists():
             try:
                 # utf-8-sig tolerates a BOM that some editors add.
-                existing = json.loads(config_path.read_text(encoding="utf-8-sig"))
+                raw = config_path.read_text(encoding="utf-8-sig")
+                if raw.strip():
+                    json.loads(raw)  # validate only — refuse to clobber bad JSON
             except json.JSONDecodeError:
                 _backup(config_path)
                 return False, ("Existing Claude config is not valid JSON — backed it "
                                "up; add the MCP entry manually (see below).")
             _backup(config_path)
-        servers = existing.setdefault("mcpServers", {})
-        for _old in LEGACY_MCP_KEYS:
-            servers.pop(_old, None)  # migrate older installs to the new key
-        servers[MCP_KEY] = MCP_ENTRY
-        # Direct write (no temp+os.replace): the atomic-rename dance does not
-        # reliably reach the host on a Windows bind mount, and chmod is forbidden
-        # there. A direct write works on macOS/Linux; on Windows the host
-        # launcher writes the real entry afterwards.
-        config_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+        # Single source of truth for the connector merge (drop removed brag-*,
+        # keep the user's other servers, migrate the legacy key, one entry per
+        # project). Direct write (no temp+os.replace): the atomic-rename dance does
+        # not reliably reach the host on a Windows bind mount, and chmod is
+        # forbidden there; on Windows the host launcher writes the real entry after.
+        from brag import claude_sync
+        config_path.write_text(claude_sync.sync(raw), encoding="utf-8")
     except OSError as e:
         return False, (
             f"Could not write the Claude config from the container "

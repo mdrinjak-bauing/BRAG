@@ -1,4 +1,4 @@
-"""File watcher: auto-ingest documents dropped into RAG-Verbindungsordner/sources/.
+"""File watcher: auto-ingest documents dropped into the project folder.
 
 Uses a PollingObserver — file system events do not propagate across the
 Docker bind-mount boundary, polling does (and it behaves identically on
@@ -51,20 +51,18 @@ def _is_relevant(path: Path) -> bool:
         return False
     if path.name.startswith("."):
         return False
-    return not any(part in config.WATCH_IGNORE_DIRS for part in path.parts)
+    # Corpus = the project root EXCEPT the WissensWIKI workspace + hidden/_inbox.
+    return config.is_corpus_path(path)
 
 
 def _is_meta_file(path: Path) -> bool:
-    """A `_meta.txt` under sources/ (outside ignored dirs). Editing it must
-    refresh the folder's already-indexed documents — unlike a document file,
-    `_meta.txt` is not a SUPPORTED_SUFFIX, so the normal ingest path skips it."""
+    """A `_meta.txt` in a corpus (document) folder. Editing it must refresh that
+    folder's already-indexed documents — and `_meta.txt` is not a SUPPORTED_SUFFIX,
+    so the normal ingest path skips it. It must live in the corpus (not in
+    WissensWIKI or a hidden/staging dir)."""
     if path.name != "_meta.txt":
         return False
-    try:
-        path.resolve().relative_to(config.SOURCES_DIR.resolve())
-    except (ValueError, OSError):
-        return False
-    return not any(part in config.WATCH_IGNORE_DIRS for part in path.parts)
+    return config.is_corpus_path(path)
 
 
 def _refresh_folder_meta(path: Path, verb: str) -> None:
@@ -116,6 +114,18 @@ def _changed_since_ingest(path: Path, states: dict) -> bool:
 
 
 class DocumentHandler(FileSystemEventHandler):
+    def __init__(self, slug=None):
+        super().__init__()
+        # The project this observer watches; None = the single-project default.
+        self.slug = slug
+
+    def dispatch(self, event):
+        # Run EVERY on_* callback inside this project's context (per-callback,
+        # per-thread) so config's paths + collection resolve to THIS project —
+        # one project's file events can never land in another's collection/vault.
+        with config.project_context(self.slug):
+            super().dispatch(event)
+
     def on_created(self, event):
         if event.is_directory:
             return
@@ -302,16 +312,45 @@ def reconcile_on_startup():
         time.sleep(2)
 
 
+def _reconcile_project(slug) -> None:
+    """One project's startup reconcile, inside its own context. Runs in its own
+    thread so a slow project (e.g. a big first ingest through a local LLM) cannot
+    block the OTHER projects from being watched + reconciled."""
+    try:
+        with config.project_context(slug):
+            reconcile_on_startup()
+    except Exception as e:  # noqa: BLE001 — a reconcile failure must not kill the watcher
+        print(f"reconcile error (project={slug or 'default'}): {e}")
+
+
 def run_watcher():
-    config.SOURCES_DIR.mkdir(parents=True, exist_ok=True)
-    reconcile_on_startup()
-    observer = PollingObserver(timeout=config.WATCH_POLL_SECONDS)
-    observer.schedule(DocumentHandler(), str(config.SOURCES_DIR), recursive=True)
-    observer.start()
-    print(f"watching {config.SOURCES_DIR} (poll every {config.WATCH_POLL_SECONDS}s)")
+    # One observer per registered project (each over its own sources/, scoped to
+    # its collection + vault via project_context). With no registry yet — the
+    # single-project install — watch the one default vault, exactly as before.
+    from brag import registry
+    slugs = [p["slug"] for p in registry.projects()] or [None]
+    observers = []
+    # Start ALL observers first, so a document dropped right now is caught
+    # immediately on any project (not only after some other project's backlog).
+    for slug in slugs:
+        with config.project_context(slug):
+            config.SOURCES_DIR.mkdir(parents=True, exist_ok=True)
+            sources_dir = str(config.SOURCES_DIR)
+        observer = PollingObserver(timeout=config.WATCH_POLL_SECONDS)
+        observer.schedule(DocumentHandler(slug), sources_dir, recursive=True)
+        observer.start()
+        observers.append(observer)
+        print(f"watching {sources_dir} "
+              f"(project={slug or 'default'}, poll every {config.WATCH_POLL_SECONDS}s)")
+    # Reconcile the projects CONCURRENTLY (one thread each) so a slow project's
+    # backlog does not delay watching/ingesting the others.
+    for slug in slugs:
+        threading.Thread(target=_reconcile_project, args=(slug,), daemon=True).start()
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+        for observer in observers:
+            observer.stop()
+    for observer in observers:
+        observer.join()

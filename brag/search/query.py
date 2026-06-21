@@ -12,6 +12,7 @@ so scores are reported transparently instead of filtered.
 
 from __future__ import annotations
 
+import threading
 from typing import TYPE_CHECKING
 
 from brag import config
@@ -22,14 +23,23 @@ if TYPE_CHECKING:
     from qdrant_client.models import Filter
 
 _reranker = None
+# The bridge serves searches on multiple threads (one per concurrent project
+# connector). Build the reranker once under a double-checked lock so concurrent
+# first-calls don't construct N copies, and serialize the CPU forward pass so
+# parallel searches queue instead of thrashing the CPU / multiplying RAM.
+_INIT_LOCK = threading.Lock()
+_RERANK_LOCK = threading.Lock()
 
 
 def _get_reranker():
     global _reranker
     if _reranker is None:
-        from sentence_transformers import CrossEncoder
-        kwargs = {"revision": config.RERANKER_REVISION} if config.RERANKER_REVISION else {}
-        _reranker = CrossEncoder(config.RERANKER_MODEL, **kwargs)
+        with _INIT_LOCK:
+            if _reranker is None:
+                from sentence_transformers import CrossEncoder
+                kwargs = ({"revision": config.RERANKER_REVISION}
+                          if config.RERANKER_REVISION else {})
+                _reranker = CrossEncoder(config.RERANKER_MODEL, **kwargs)
     return _reranker
 
 
@@ -97,11 +107,17 @@ def _is_near_duplicate(text: str, accepted_tokens: list) -> bool:
 
 
 def search(query: str, top_k: int | None = None, reranking: bool | None = None,
-           max_chunks_per_source: int | None = None, **filters) -> list[dict]:
-    """Run hybrid search, return ranked hits as plain dicts."""
+           max_chunks_per_source: int | None = None,
+           collection_name: str | None = None, **filters) -> list[dict]:
+    """Run hybrid search, return ranked hits as plain dicts.
+
+    collection_name defaults to the single-project config.COLLECTION_NAME; the
+    multi-project bridge passes a per-project collection so each project searches
+    only its own data."""
     from qdrant_client.models import FusionQuery, Prefetch
     from brag import storage
 
+    collection_name = collection_name or config.COLLECTION_NAME
     top_k = top_k or config.DEFAULT_TOP_K
     if top_k <= 0:
         top_k = config.DEFAULT_TOP_K
@@ -126,7 +142,7 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
     client = storage.get_client()
     try:
         result = client.query_points(
-            collection_name=config.COLLECTION_NAME,
+            collection_name=collection_name,
             prefetch=[
                 Prefetch(query=dense_q, using=config.DENSE_VECTOR,
                          limit=prefetch_limit, filter=qfilter),
@@ -148,7 +164,8 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
     if reranking and candidates:
         pairs = [(query, c.get("context", "") + "\n" + c.get("text", ""))
                  for c in candidates]
-        scores = _get_reranker().predict(pairs, batch_size=config.RERANK_BATCH_SIZE)
+        with _RERANK_LOCK:
+            scores = _get_reranker().predict(pairs, batch_size=config.RERANK_BATCH_SIZE)
         for c, s in zip(candidates, scores):
             c["rerank_score"] = float(s)
         candidates.sort(key=lambda c: c["rerank_score"], reverse=True)

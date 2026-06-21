@@ -67,6 +67,14 @@ set up automatically in step 4 — nothing to do here yet.
      **Open** → **Open** again in the dialog. (This is normal for any unsigned
      downloaded script — you only confirm it once.)
 
+**Setup asks two things in order.** First a folder picker asks *where the
+`BRAG Assistent` program should live* (e.g. on your Desktop) — pick anywhere you
+like. Then a second picker asks for *your project folder* (your documents). BRAG
+copies the program into a `BRAG Assistent` folder, creates a `WissensWIKI`
+workspace inside your project folder, and continues from there in a fresh window.
+*(If you cancel the first picker, the program just installs in the unpacked
+folder; the project folder in the second step is required.)*
+
 **What you see:** A small black Terminal window opens and, shortly after, **your
 browser opens automatically** with the setup assistant. There you answer, in
 plain language:
@@ -78,7 +86,8 @@ plain language:
   never sent to the makers of this app or any third party; the live check just
   sends one small test request to that provider to confirm the key works. The
   local profile (LM Studio) needs no key at all.
-- **Your document language** and, optionally, a custom knowledge store folder.
+- **Your document language.** (Your project folder was already chosen by the
+  folder picker above.)
 
 At the end the assistant writes the whole configuration itself — including the
 Claude Desktop entry. **You never edit a single file.** The Terminal then builds
@@ -90,8 +99,9 @@ minutes, first time only).
 
 ## 5. First document
 
-**What to do:** Put a PDF into the `RAG-Verbindungsordner/sources/` folder (inside the project
-folder).
+**What to do:** Drop a PDF straight into your project folder (any subfolder works
+too) — everything in the project folder is searched, except the `WissensWIKI`
+workspace.
 
 **What you see:** Nothing visible — processing runs in the background. Note that
 the **very first** document also downloads the Docling layout models, so this one
@@ -131,5 +141,7 @@ Now ask Claude:
   To stop manually: open Terminal in the project folder, `docker compose down`.
   To start: `docker compose up -d`.
 - **Local profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first,
-  load a model, then run setup. See [PROFILES.md](PROFILES.md).
+  load a model, then run setup. Setup auto-connects the `brag` tools to LM Studio's
+  chat too (not just Claude); if you install LM Studio *after* setup, just run
+  `setup.command` again to add the connection. See [PROFILES.md](PROFILES.md).
 - Trouble? See [FAQ.md](FAQ.md).

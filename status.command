@@ -49,5 +49,16 @@ else
   echo "          reopen it."
 fi
 
+# LM Studio wired up (only if LM Studio is installed)?
+LMS="$HOME/.lmstudio/mcp.json"
+if [ -f "$LMS" ]; then
+  if grep -q "brag.mcp_server" "$LMS"; then
+    echo "  [ OK ]  LM Studio is connected to the BRAG tools"
+  else
+    echo "  [note]  LM Studio is installed but not connected - re-run setup.command,"
+    echo "          then fully restart LM Studio."
+  fi
+fi
+
 echo
 read -n1 -r -p "Press any key to close..."

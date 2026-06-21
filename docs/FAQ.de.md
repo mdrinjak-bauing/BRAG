@@ -70,15 +70,15 @@ Dann erneut einen Doppelklick auf `setup.command` machen.
 
 **Welche Dateitypen kann ich ablegen?**
 PDF, Word (`.docx`), PowerPoint (`.pptx`), Markdown (`.md`) und HTML — einfach in
-`RAG-Verbindungsordner/sources/` legen. Seitengenaue Deep-Links gibt es bei PDFs; die
-anderen Formate werden indexiert und durchsucht, aber ohne Seiten-Link zitiert.
-**Excel (`.xlsx`) wird noch nicht unterstützt.**
+deinen Projektordner legen (beliebiger Unterordner, beliebige Tiefe). Seitengenaue
+Deep-Links gibt es bei PDFs; die anderen Formate werden indexiert und durchsucht,
+aber ohne Seiten-Link zitiert. **Excel (`.xlsx`) wird noch nicht unterstützt.**
 
 **Ich habe ein PDF abgelegt und es passiert nichts.**
 - ~30 Sekunden warten (der Ordner wird alle 10 Sekunden geprüft, Dateien müssen
   erst fertig kopiert sein).
 - Die Logs prüfen: `docker compose logs -f app`.
-- Dateien in `sources/_inbox/` werden absichtlich ignoriert (Staging-Bereich).
+- Dateien in einem `_inbox/` werden absichtlich ignoriert (Staging-Bereich).
 
 **„Gescanntes PDF ohne Textebene."**
 Das PDF enthält nur Bilder von Text. OCR-Unterstützung ist auf der Roadmap;
@@ -95,7 +95,7 @@ Cloud-Profile.
 **„Rate limit"-Meldungen während der Indexierung (Cloud-Profil).**
 Der kostenlose Gemini-Tarif hat Limits pro Minute/Tag. Das System wartet und
 versucht es automatisch erneut — einfach laufen lassen; nichts geht verloren.
-Fehlgeschlagene Abschnitte werden in `RAG-Verbindungsordner/.brag/failed_chunks.jsonl` vermerkt.
+Fehlgeschlagene Abschnitte werden in `WissensWIKI/.brag/failed_chunks.jsonl` vermerkt.
 
 **Werden Abbildungen/Bilder ausgewertet?**
 Ja. Standardmäßig ist der **Vision-Pass** aktiv: Jedes Abbildungsbild wird beim
@@ -186,29 +186,55 @@ Claude Desktop ist angebunden. Bei einem ✗ steht direkt dabei, was zu tun ist.
 von Docker Desktop bringt es nach einem Neustart zurück.
 
 **Wie aktualisiere ich auf eine neue Version?**
-Die neue Version herunterladen, den Ordnerinhalt ersetzen (deine `.env` und
-`RAG-Verbindungsordner/` behalten), dann `docker compose build && docker compose up -d`.
+Die neue Version herunterladen und den Inhalt des **BRAG Assistent**-
+Programmordners ersetzen (deine `.env` behalten), dann `docker compose build &&
+docker compose up -d`. Dein Projektordner mit deinen Dokumenten und dem
+WissensWIKI-Arbeitsbereich bleibt unangetastet.
 
 **Wie sichere ich meine Daten?**
-Deine Dokumente und Notizen liegen in `RAG-Verbindungsordner/` — sichere diesen Ordner wie jeden
-anderen. Der Suchindex lässt sich jederzeit aus deinem Wissensspeicher neu aufbauen (nichts
-löschen; nach einer Wiederherstellung gleicht das System nach einem Neustart neu
-ab).
+Deine Dokumente liegen in deinem Projektordner, deine Notizen und belegten
+Passagen im WissensWIKI-Arbeitsbereich darin — sichere diesen Ordner wie jeden
+anderen. Der Suchindex lässt sich jederzeit aus deinen Dokumenten neu aufbauen
+(nichts löschen; nach einer Wiederherstellung gleicht das System nach einem
+Neustart neu ab).
 
 **Wie entferne ich ein Dokument?**
-Die Datei aus `sources/` löschen — ihre Indexeinträge und die automatische Notiz
-werden automatisch bereinigt.
+Die Datei aus deinem Projektordner löschen (oder herausbewegen) — ihre
+Indexeinträge und die automatische Notiz werden automatisch bereinigt. Du kannst
+Claude auch bitten, *„entferne diese Quelle aus meinem Index"* (das Werkzeug
+`remove_source`): es verschiebt die Datei in ein `_inbox/` (umkehrbar, nicht
+gelöscht) und räumt ihre Chunks ab. Löschungen, die du bei gestoppter App machst,
+werden beim nächsten Start automatisch bereinigt.
 
 **Ich habe eine Datei aktualisiert/überschrieben, die Suche zeigt aber noch den alten Inhalt.**
-Ein gleichnamiges Überschreiben löst kein Neu-Einlesen aus. Zum Aktualisieren die
-Datei umbenennen oder kurz aus `sources/` heraus- und wieder hineinbewegen (oder
-löschen und die neue Fassung neu ablegen).
+Ja, ein gleichnamiges Überschreiben wird automatisch erkannt: Der Watcher
+indexiert die Datei neu, sobald sich die Änderung beruhigt hat (die alten Chunks
+werden ersetzt). Gib ihm ein paar Sekunden; im Log siehst du die Zeile
+*„document changed … re-indexing"* in `docker compose logs -f app`.
 
 **Kann ich den Projektordner oder die ZIP-Datei löschen?**
-Die **ZIP-Datei** kannst du nach dem Entpacken löschen. Den **Projektordner**
-(die entpackte ZIP) aber **behalten** — er enthält deine Konfiguration (`.env`),
-die Steuerung (`docker-compose.yml`) und standardmäßig deinen Wissensspeicher
-(`RAG-Verbindungsordner/`) mit allen Dokumenten. Löschen würde deine Wissensbasis entfernen und
-das Starten/Stoppen unmöglich machen. Verschieben ist in Ordnung. Die ~3 GB
-Modelle liegen ohnehin in Dockers Speicher, nicht im Ordner — Löschen gibt
-diesen Platz also nicht frei.
+Die **ZIP-Datei** kannst du nach dem Entpacken löschen. Aber **behalte zwei
+Dinge.** Erstens den **BRAG Assistent**-Programmordner — er enthält deine
+Konfiguration (`.env`) und die Steuerung (`docker-compose.yml`), sein Löschen
+würde das Starten/Stoppen unmöglich machen. Zweitens deinen **Projektordner** —
+er enthält deine Dokumente und den WissensWIKI-Arbeitsbereich (deine Notizen und
+belegten Passagen). Beide zu verschieben ist in Ordnung. Die ~3 GB Modelle liegen
+ohnehin in Dockers Speicher, nicht in diesen Ordnern — Löschen gibt diesen Platz
+also nicht frei.
+
+**Mein PC friert ein oder startet neu beim Indexieren (lokales Profil).**
+Lokale KI (LM Studio) erzeugt dauerhafte GPU-Last. Bei knappem Netzteil oder
+schwacher Kühlung kann das den PC mitten im Indexieren hart neu starten. BRAG
+versucht ein wiederholt abgebrochenes Dokument **nicht endlos** erneut — nach
+einigen Versuchen überspringt es die Datei und schreibt eine Notiz
+`INDEXIERUNG-GESTOPPT.md`, statt die Maschine erneut zu überlasten. Die echte
+Lösung ist, die Last zu senken:
+- **Am einfachsten & sichersten:** auf ein **Cloud-Profil** wechseln (Setup neu →
+  Cloud). Dann rechnet die schwere KI außerhalb deines Rechners — deine GPU wird
+  gar nicht belastet.
+- **Lokal bleiben:** GPU-**Power-Limit** kappen (z. B. ~80 % in MSI Afterburner)
+  oder Undervolt; **andere GPU-Programme schließen** (Spiele / Launcher / Browser)
+  für freien VRAM; ein **kleineres Modell (Q4, ~7 GB)** laden, damit es mit Puffer
+  passt; und ein **ausreichendes Netzteil** sicherstellen. Du kannst außerdem
+  `LOCAL_LLM_PACING_SECONDS=1` in der `.env` setzen, damit die GPU zwischen den
+  Aufrufen Luft bekommt.
