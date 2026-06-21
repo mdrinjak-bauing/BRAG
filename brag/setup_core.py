@@ -18,11 +18,46 @@ MCP_ENTRY = {
     "args": ["exec", "-i", "brag-app", "python", "-m", "brag.mcp_server"],
 }
 
-# The key under which the entry is registered in claude_desktop_config.json — this
-# is the name Claude Desktop shows the user. Older installs used a longer legacy
-# name; setup migrates them by removing it when it writes MCP_KEY.
+# The key under which the DEFAULT connector is registered in
+# claude_desktop_config.json — the name Claude Desktop shows the user. Older
+# installs used a longer legacy name; setup migrates them by removing it.
 MCP_KEY = "brag"
 LEGACY_MCP_KEYS = ("academic-rag-and-second-brain",)
+
+
+def mcp_key_for(slug) -> str:
+    """Connector key shown in Claude/LM Studio: the plain 'brag' for the default
+    (single) project, 'brag-<slug>' for each additional project."""
+    return MCP_KEY if slug in (None, "", "default") else f"{MCP_KEY}-{slug}"
+
+
+def entry_for_slug(slug) -> dict:
+    """MCP entry for a project. The DEFAULT keeps the battle-tested single-project
+    server (brag.mcp_server, no project env) so existing installs are unchanged;
+    each ADDITIONAL project runs the thin client (brag.mcp_client) scoped by
+    -e BRAG_PROJECT, so many open project connectors share ONE model set."""
+    args = ["exec", "-i"]
+    module = "brag.mcp_server"
+    if slug not in (None, "", "default"):
+        args += ["-e", f"BRAG_PROJECT={slug}"]
+        module = "brag.mcp_client"
+    args += ["brag-app", "python", "-m", module]
+    return {"command": "docker", "args": args}
+
+
+def _is_brag_key(key: str) -> bool:
+    return key == MCP_KEY or key.startswith(f"{MCP_KEY}-")
+
+
+def connectors_for_registry() -> dict:
+    """{connector key: MCP entry} that Claude/LM Studio should contain — one per
+    registered project, or just the default 'brag' when the registry is empty
+    (the single-project install)."""
+    from brag import registry
+    projects = registry.projects()
+    if not projects:
+        return {MCP_KEY: entry_for_slug(None)}
+    return {mcp_key_for(p["slug"]): entry_for_slug(p["slug"]) for p in projects}
 
 
 def _env_safe(value: str) -> str:
@@ -201,8 +236,14 @@ def write_claude_config() -> tuple[bool, str]:
             _backup(config_path)
         servers = existing.setdefault("mcpServers", {})
         for _old in LEGACY_MCP_KEYS:
-            servers.pop(_old, None)  # migrate older installs to the new key
-        servers[MCP_KEY] = MCP_ENTRY
+            servers.pop(_old, None)  # migrate older installs off the legacy name
+        # Sync the brag connectors to exactly the registered projects: drop brag
+        # connectors whose project was removed, add/update the current ones, and
+        # never touch the user's OTHER (non-brag) MCP servers.
+        desired = connectors_for_registry()
+        for key in [k for k in list(servers) if _is_brag_key(k) and k not in desired]:
+            servers.pop(key, None)
+        servers.update(desired)
         # Direct write (no temp+os.replace): the atomic-rename dance does not
         # reliably reach the host on a Windows bind mount, and chmod is forbidden
         # there. A direct write works on macOS/Linux; on Windows the host
