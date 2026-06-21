@@ -281,6 +281,49 @@ def test_api_search_runs_when_setup_off(tmp_path, monkeypatch):
     assert seen["collection_name"] is None  # single-project default
 
 
+# ── Tool dispatcher (/api/index-op) ──────────────────────────────
+def test_api_index_op_unknown_op_returns_404(monkeypatch):
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    data = json.dumps({"op": "frobnicate"}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/index-op"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 404
+    assert "frobnicate" in h.captured.json["message"]
+
+
+def test_api_index_op_unknown_project_returns_404(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    data = json.dumps({"op": "list_notebook", "project": "ghost"}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/index-op"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 404
+    assert "ghost" in h.captured.json["message"]
+
+
+def test_api_index_op_runs_file_tool(tmp_path, monkeypatch):
+    # A file-based tool (list_notebook) runs in-process and returns text, with
+    # SETUP_MODE off — no Qdrant / models needed.
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setattr(config, "VAULT", tmp_path)
+    monkeypatch.setattr(config, "WIKI_DIR", tmp_path / "wiki")
+    monkeypatch.setattr(config, "NOTES_DIR", tmp_path / "notes")
+    (tmp_path / "wiki").mkdir()
+    (tmp_path / "wiki" / "a.md").write_text("x", encoding="utf-8")
+    data = json.dumps({"op": "list_notebook"}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/index-op"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 200
+    assert h.captured.json["ok"] is True
+    assert "wiki/ (1)" in h.captured.json["text"]
+
+
 # Keep a reference to http_bridge so the import is obviously load-bearing
 # (the module must import cleanly with no heavy deps).
 assert http_bridge.BridgeHandler is BridgeHandler

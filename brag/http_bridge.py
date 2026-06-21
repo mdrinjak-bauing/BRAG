@@ -92,6 +92,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/search":
             self._api_search(body)
             return
+        if parsed.path == "/api/index-op":
+            self._api_index_op(body)
+            return
 
         # The config-writing setup API exists only in the one-shot setup service.
         if not config.SETUP_MODE:
@@ -235,6 +238,61 @@ class BridgeHandler(BaseHTTPRequestHandler):
                                   "message": f"search failed: {str(e)[:200]}"})
             return
         self._send_json(200, {"ok": True, "hits": hits})
+
+    def _api_index_op(self, body: dict):
+        """Tool dispatcher for the thin MCP client: runs an index/file tool in
+        this persistent process (which holds the models + the vault) and returns
+        its text. `project` scopes the index reads to that project's collection;
+        the file-side ops use the vault paths (per-project scoping arrives with
+        config.project_context in a later phase — today there is one vault)."""
+        from brag import registry, tools
+
+        project = str(body.get("project", "")).strip()
+        collection = None
+        if project:
+            collection = registry.get_collection(project)
+            if collection is None:
+                self._send_json(404, {"ok": False, "message":
+                    f"unknown project '{project}' — re-run setup for this project"})
+                return
+        op = str(body.get("op", "")).strip()
+        a = body.get("args") if isinstance(body.get("args"), dict) else {}
+
+        def _int(value, default=0):
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return default
+
+        ops = {
+            "list_sources": lambda: tools.list_sources(
+                doc_type=str(a.get("doc_type", "")), collection_name=collection),
+            "inspect_chunks": lambda: tools.inspect_chunks(
+                str(a.get("source_file", "")), page=_int(a.get("page")),
+                limit=_int(a.get("limit", 10), 10), collection_name=collection),
+            "remove_source": lambda: tools.remove_source(str(a.get("source_file", ""))),
+            "rename_source": lambda: tools.rename_source(
+                str(a.get("source_file", "")), str(a.get("new_name", ""))),
+            "save_passage": lambda: tools.save_passage(
+                str(a.get("topic", "")), str(a.get("text", "")),
+                str(a.get("source", "")), page=str(a.get("page", "")),
+                note=str(a.get("note", ""))),
+            "list_passages": lambda: tools.list_passages(topic=str(a.get("topic", ""))),
+            "list_notebook": tools.list_notebook,
+            "read_note": lambda: tools.read_note(str(a.get("path", ""))),
+            "write_note": lambda: tools.write_note(
+                str(a.get("path", "")), str(a.get("content", ""))),
+        }
+        handler = ops.get(op)
+        if handler is None:
+            self._send_json(404, {"ok": False, "message": f"unknown op '{op}'"})
+            return
+        try:
+            text = handler()
+        except Exception as e:  # noqa: BLE001 — a tool error must not kill the thread
+            self._send_json(500, {"ok": False, "message": f"{op} failed: {str(e)[:200]}"})
+            return
+        self._send_json(200, {"ok": True, "text": text})
 
     # ── helpers ─────────────────────────────────────────────────
     def _host_ok(self) -> bool:
