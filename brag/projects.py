@@ -40,11 +40,28 @@ def cmd_add(name: str, host_path: str) -> int:
     return 0
 
 
-def cmd_remove(slug: str) -> int:
-    if not registry.remove(slug.strip()):
+def cmd_remove(slug: str, delete_index: bool = False) -> int:
+    slug = slug.strip()
+    rec = registry.get(slug)  # capture the collection BEFORE removing the record
+    if not registry.remove(slug):
         print(f"no such project: {slug}", file=sys.stderr)
         return 1
     _regen_override()
+    # The connector + mount go always (registry + override above); the Qdrant
+    # collection only when explicitly requested. The project's documents on disk
+    # are never touched here.
+    if delete_index and rec and rec.get("collection"):
+        try:
+            from brag import storage
+            client = storage.get_client()
+            try:
+                client.delete_collection(rec["collection"])
+            finally:
+                client.close()
+            print(f"deleted index: {rec['collection']}")
+        except Exception as e:  # noqa: BLE001 — index delete is best-effort
+            print(f"warning: could not delete index {rec.get('collection')}: {e}",
+                  file=sys.stderr)
     return 0
 
 
@@ -82,7 +99,7 @@ def main(argv: list[str]) -> int:
     if cmd == "add" and len(rest) >= 2:
         return cmd_add(rest[0], rest[1])
     if cmd == "remove" and len(rest) >= 1:
-        return cmd_remove(rest[0])
+        return cmd_remove(rest[0], delete_index="--delete-index" in rest)
     if cmd == "list":
         return cmd_list()
     if cmd == "migrate":
