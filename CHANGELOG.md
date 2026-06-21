@@ -4,6 +4,52 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-06-21
+
+Multiple projects from one engine, and a clearer "your folder IS the corpus"
+layout — plus a friendlier install, a quick settings page and a granular
+uninstall. Fresh installs only (no published predecessor to migrate); supersedes
+the unreleased 0.3.4 install/layout below.
+
+### Added
+- **Multiple projects from one engine.** Connect several knowledge bases, each at
+  any location, each with its own search index and its own `brag-<folder>`
+  connector in Claude / LM Studio — while the program, the ~3 GB models and Qdrant
+  are shared exactly once. Add one with **`Projekt hinzufuegen`**; remove one (or
+  everything) via the new **uninstall menu**. Many open project connectors share a
+  single in-container model set, so RAM stays flat.
+- **Your project folder is the corpus.** Drop documents straight into the folder
+  you pick — every subfolder is searched — EXCEPT the **`WissensWIKI/`** workspace.
+  WissensWIKI holds `Passagen/` (verified passages you save via Claude — indexed),
+  `Notizen/` and your own subfolders (a notebook Claude reads/writes but that is
+  NOT indexed, so notes never echo into search), and the CLAUDE.md / AGENTS.md
+  guides.
+- **"Change a setting" page** in the setup wizard — adjust the model, reranker,
+  vision or language on one screen without re-walking setup; the provider and API
+  key are kept.
+- **`Verbindung reparieren`** — a one-click tool that re-writes the Claude / LM
+  Studio connectors if one ever goes missing.
+- **Crash-loop guard.** A document whose indexing is interrupted repeatedly (e.g.
+  a PC reset under heavy local-LLM GPU load) is skipped with a visible note instead
+  of re-crashing the machine on every auto-restart; optional
+  `LOCAL_LLM_PACING_SECONDS` paces local LLM calls.
+
+### Changed
+- **The program is now "BRAG Assistent"** (renamed from "RAG Setup"), installed in
+  its own location with a do-not-delete note and a Windows folder icon. Setup asks
+  two things: where the program goes, and your project folder. The app mounts ONLY
+  your project folder — never the engine dir — so `.env` and scripts stay out of
+  the long-running container.
+- Volumes are pinned to a stable compose project name (`brag_qdrant_data`,
+  `brag_models_cache`), independent of the engine folder name.
+
+### Fixed
+- Switching from a local to a cloud profile no longer carries the stale local model
+  name (which made every contextualization call fail), and the API key is kept on a
+  same-provider re-run — so changing one setting needs no re-typing.
+- A `.gitattributes` enforces CRLF for Windows scripts (`.bat`/`.cmd`/`.ps1`) so a
+  `git clone` or a GitHub source ZIP runs on Windows (LF made `cmd.exe` fail).
+
 ## [0.3.4] — 2026-06-21
 
 A plug-and-play install and a clearer on-disk layout. No re-indexing needed.
