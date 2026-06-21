@@ -87,7 +87,7 @@ def main():
 
     print("\n=== Setup complete ===")
     print("1. Quit Claude Desktop completely and reopen it.")
-    print("2. Drop a PDF into WissensWIKI/sources/.")
+    print("2. Drop a PDF into your project folder.")
     print("3. Ask Claude: 'What documents are in my knowledge base?'")
     if profile == "hybrid":
         print("\nRemember: LM Studio must be running whenever documents are indexed.")

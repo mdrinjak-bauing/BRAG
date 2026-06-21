@@ -21,7 +21,7 @@ def format_hit(i: int, hit: dict, project: str = "") -> str:
             if frm_page and frm_page not in ("", "None"):
                 origin += f", p. {frm_page}"
         header = f"### [{i}] 💡 Your saved passage — {topic}"
-        meta = f"source: your notebook (passages/){origin}"
+        meta = f"source: your notebook (WissensWIKI/Passagen/){origin}"
         score = hit.get("rerank_score")
         if score is not None:
             meta += f" | rerank: {score:.3f}"

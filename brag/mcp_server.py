@@ -59,19 +59,18 @@ def remove_source(source_file: str) -> str:
     """Remove a document from the SEARCH INDEX — use it to drop a wrong,
     duplicate or outdated source the user no longer wants in results.
 
-    Safe and reversible: the file is NOT deleted, it is moved into
-    sources/_inbox/ (a staging area the watcher ignores) so it can't be
-    re-indexed, and its chunks + literature note are removed from the index.
-    `source_file` is the key shown by list_sources (e.g. 'projects/Bericht').
-    Call once per source."""
+    Safe and reversible: the file is NOT deleted, it is moved into an
+    _inbox/ (a staging area the watcher ignores) so it can't be re-indexed, and
+    its chunks + literature note are removed from the index. `source_file` is the
+    key shown by list_sources (e.g. 'projects/Bericht'). Call once per source."""
     return tools.remove_source(source_file)
 
 
 @mcp.tool()
 def rename_source(source_file: str, new_name: str) -> str:
     """Rename / re-file an indexed document and update its index metadata IN
-    PLACE (no re-embedding). Renames the FILE under sources/; `new_name` may
-    include a relative folder to also move it (e.g.
+    PLACE (no re-embedding). Renames/moves the FILE in your project folder;
+    `new_name` may include a relative folder to also move it (e.g.
     'projects/School_Center/Final_Report'). The original file suffix is kept if
     you omit it. `source_file` is the current key from list_sources."""
     return tools.rename_source(source_file, new_name)
@@ -82,7 +81,7 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
                  note: str = "") -> str:
     """Save a quotable passage under a topic (e.g. a chapter or theme).
 
-    Builds your evidence base in WissensWIKI/passages/<topic>.md AND indexes
+    Builds your evidence base in WissensWIKI/Passagen/<topic>.md AND indexes
     the passage for semantic search, so a later chat (even with a different
     provider) finds it again via `search` — it appears as a clearly marked
     "saved passage", distinct from primary sources. Use this to persist the
@@ -97,36 +96,37 @@ def list_passages(topic: str = "") -> str:
     return tools.list_passages(topic=topic)
 
 
-# ── Notebook (wiki/ + notes/) — your own thinking, NOT search-indexed ──────────
+# ── Notebook (WissensWIKI/) — your own thinking, NOT search-indexed ────────────
 # A second "connection" without a second MCP server: instead of a separate
 # filesystem MCP (extra dependency + its own Claude-config entry), the notebook
-# read/write tools live in THIS server. The source library stays read-only via
-# search(); the search index is never touched by these.
+# read/write tools live in THIS server. The corpus stays read-only via search();
+# the search index is never touched by these. The notebook is WissensWIKI/ minus
+# the indexed Passagen/ — any .md files and subfolders you like.
 @mcp.tool()
 def list_notebook() -> str:
-    """List your NOTEBOOK — your own wiki pages and the auto-generated literature
-    notes. This is the part of the knowledge store deliberately NOT search-indexed
-    (use search() for the source library). Open one with read_note, create or
-    update a wiki page with write_note."""
+    """List your NOTEBOOK — your own .md notes and subfolders in WissensWIKI/.
+    Deliberately NOT search-indexed (use search() for the corpus, list_passages()
+    for verified passages). Open one with read_note, create or update with
+    write_note."""
     return tools.list_notebook()
 
 
 @mcp.tool()
 def read_note(path: str) -> str:
-    """Read a NOTEBOOK markdown file. `path` is relative to the knowledge store,
-    e.g. 'wiki/process-maturity.md' or 'notes/Mueller_2023.md'. Only the notebook
-    (wiki/, notes/) is reachable here — the source library and the search index
-    are not (use search() for those)."""
+    """Read a NOTEBOOK markdown file. `path` is relative to WissensWIKI/, e.g.
+    'process-maturity.md' or 'Notizen/Mueller_2023.md'. Only the notebook
+    (WissensWIKI/, excluding the indexed Passagen/) is reachable here — the corpus
+    and the search index are not (use search() for those)."""
     return tools.read_note(path)
 
 
 @mcp.tool()
 def write_note(path: str, content: str) -> str:
-    """Create or overwrite a WIKI note — YOUR own thinking (concepts, drafts,
-    conclusions, intermediate results). Saved as plain Markdown under wiki/ and
-    deliberately NEVER added to the search index. `path` is relative to wiki/,
-    e.g. 'process-maturity.md' or 'methods/maturity-models.md'. The source
-    library (sources/) and the search index are never touched."""
+    """Create or overwrite a NOTEBOOK note — YOUR own thinking (concepts, drafts,
+    conclusions). Saved as plain Markdown under WissensWIKI/ and deliberately
+    NEVER added to the search index. `path` is relative to WissensWIKI/, e.g.
+    'process-maturity.md' or 'Kapitel/2.md' (any subfolder you like). The corpus
+    and the search index are never touched."""
     return tools.write_note(path, content)
 
 

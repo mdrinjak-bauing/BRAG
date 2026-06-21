@@ -1,4 +1,4 @@
-"""File watcher: auto-ingest documents dropped into WissensWIKI/sources/.
+"""File watcher: auto-ingest documents dropped into the project folder.
 
 Uses a PollingObserver — file system events do not propagate across the
 Docker bind-mount boundary, polling does (and it behaves identically on
