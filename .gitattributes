@@ -1,18 +1,20 @@
-# Normalize text in the repo (LF), but force platform-correct line endings on
-# checkout/archive so clones AND GitHub source ZIPs run on every OS.
+# Normalize text to LF in the repo by default.
 * text=auto
 
-# Windows scripts MUST be CRLF or cmd.exe / PowerShell mis-parse them
-# (a goto-based .bat with LF line endings simply "won't start").
-*.bat   text eol=crlf
-*.cmd   text eol=crlf
-*.ps1   text eol=crlf
+# Windows scripts MUST be CRLF on EVERY delivery path (git clone, checkout, AND
+# `git archive` / GitHub "Download ZIP"). `git archive` does NOT apply the `eol`
+# attribute and checkout-time conversion proved unreliable, so we store the bytes
+# verbatim (-text) with CRLF committed. (-text still diffs as text.)
+*.bat   -text
+*.cmd   -text
+*.ps1   -text
 
-# Unix shell + macOS double-click launchers MUST stay LF.
+# Unix shell + macOS double-click launchers MUST be LF (their LF blob is already
+# correct on every path, including archive).
 *.command text eol=lf
 *.sh      text eol=lf
 
-# Binary assets — never apply line-ending conversion.
+# Binary assets — never apply any conversion.
 *.ico   binary
 *.png   binary
 *.jpg   binary
