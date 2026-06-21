@@ -73,6 +73,9 @@ services:
       # "1" only when the launcher exported CLAUDE_CONFIG_DIR; lets the wizard
       # tell a real Claude config mount from the throwaway sentinel.
       - CLAUDE_CONFIG_MOUNTED=${CLAUDE_CONFIG_DIR:+1}
+      # The project registry + generated override live in the RAG Setup folder,
+      # mounted here at /workspace; the projects CLI writes them there.
+      - BRAG_REGISTRY=/workspace/projects.json
     command: ["python", "-m", "brag.setup_server"]
     volumes:
       - ./:/workspace

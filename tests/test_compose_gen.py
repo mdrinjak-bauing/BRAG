@@ -20,6 +20,8 @@ def test_render_mounts_additional_project():
     # backslashes -> forward slashes, quoted (handles the space), mounted at /projects/<slug>
     assert '"D:/Arbeit/Projekt A:/projects/projekta"' in out
     assert "services:" in out and "app:" in out and "volumes:" in out
+    # with additional projects, the registry file is bound read-only too
+    assert "/registry/projects.json:ro" in out
 
 
 def test_render_rejects_dollar_in_path():
