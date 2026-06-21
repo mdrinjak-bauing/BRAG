@@ -67,7 +67,8 @@ def list_sources(doc_type: str = "", collection_name: str | None = None) -> str:
     finally:
         client.close()
     if not counts:
-        return "The index is empty — drop documents into WissensWIKI/sources/."
+        return ("The index is empty — drop documents (and subfolders) straight "
+                "into your project folder.")
     by_type: dict[str, list] = {}
     for (dtype, src), n in sorted(counts.items()):
         if doc_type and dtype != doc_type:
@@ -134,12 +135,12 @@ def inspect_chunks(source_file: str, page: int = 0, limit: int = 10,
 
 
 def _find_source_file(key: str):
-    """Locate the on-disk document under sources/ whose identity key matches
-    `key` (any supported suffix), skipping the ignored _inbox staging area."""
+    """Locate the on-disk corpus document whose identity key matches `key` (any
+    supported suffix), skipping WissensWIKI + the ignored _inbox staging area."""
     for p in config.SOURCES_DIR.rglob("*"):
         if (p.is_file()
                 and p.suffix.lower() in config.SUPPORTED_SUFFIXES
-                and "_inbox" not in p.parts
+                and config.is_corpus_path(p)
                 and config.source_key_from_path(p) == key):
             return p
     return None
@@ -172,7 +173,7 @@ def remove_source(source_file: str) -> str:
                 f"'{source_file}'. Check the exact key via list_sources().")
     msg = f"Removed `{key}` from the index ({n} chunks)"
     if moved_to:
-        msg += f"; the file was moved to sources/_inbox/{moved_to} (not deleted)"
+        msg += f"; the file was moved to _inbox/{moved_to} (not deleted)"
     return msg + "."
 
 
@@ -184,7 +185,7 @@ def rename_source(source_file: str, new_name: str) -> str:
         return "Provide a document source_file from list_sources() (not a saved passage)."
     current = _find_source_file(key)
     if current is None:
-        return (f"No file found for '{source_file}' under sources/. "
+        return (f"No file found for '{source_file}' in the project folder. "
                 "Check the exact key via list_sources().")
     rel = new_name.strip().replace("\\", "/").lstrip("/")
     if not rel:
@@ -195,7 +196,9 @@ def rename_source(source_file: str, new_name: str) -> str:
     try:
         new_path.resolve().relative_to(config.SOURCES_DIR.resolve())
     except ValueError:
-        return "Refused: the new name escapes sources/."
+        return "Refused: the new name escapes the project folder."
+    if not config.is_corpus_path(new_path):
+        return "Refused: the new name must stay in the corpus (not WissensWIKI/)."
     if new_path.resolve() == current.resolve():
         return "The new name is the same as the current one."
     if new_path.exists():
@@ -236,7 +239,7 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
     indexed = index_passage(topic, text, source, page, note)
     suffix = (" and indexed for search" if indexed
               else " (saved to file; search index unavailable)")
-    return f"Saved to `passages/{slug}.md`{suffix}."
+    return f"Saved to `WissensWIKI/Passagen/{slug}.md`{suffix}."
 
 
 def list_passages(topic: str = "") -> str:
@@ -277,37 +280,44 @@ def _is_within(target, base) -> bool:
         return False
 
 
+def _is_notebook_path(target) -> bool:
+    """A path inside the WissensWIKI notebook — under WissensWIKI/ but NOT the
+    indexed Passagen/ nor the hidden .brag/. The user may use any subfolders."""
+    return (_is_within(target, config.NOTEBOOK_DIR)
+            and not _is_within(target, config.PASSAGES_DIR)
+            and not _is_within(target, config.DATA_DIR))
+
+
 def list_notebook() -> str:
-    out = []
-    for label, d in (("wiki", config.WIKI_DIR), ("notes", config.NOTES_DIR)):
-        files = sorted(d.rglob("*.md")) if d.exists() else []
-        out.append(f"## {label}/ ({len(files)})")
-        out += [f"- {p.relative_to(config.VAULT).as_posix()}" for p in files]
-    joined = "\n".join(out).strip()
-    return joined or "Notebook is empty — no wiki/ or notes/ files yet."
+    nb = config.NOTEBOOK_DIR
+    files = (sorted(p for p in nb.rglob("*.md") if _is_notebook_path(p))
+             if nb.exists() else [])
+    if not files:
+        return ("Notebook is empty. Write into WissensWIKI/ (any .md, any subfolder "
+                "you like — Notizen/, Kapitel/, …) with write_note; it is NOT indexed.")
+    out = [f"**Notebook — {len(files)} note(s) in WissensWIKI/**\n"]
+    out += [f"- {p.relative_to(config.WISSENSWIKI_DIR).as_posix()}" for p in files]
+    return "\n".join(out)
 
 
 def read_note(path: str) -> str:
-    target = _resolve_under(path, config.VAULT)
-    if target is None:
-        return "Refused: path escapes the knowledge store."
-    if not (_is_within(target, config.WIKI_DIR) or _is_within(target, config.NOTES_DIR)):
-        return "read_note only reads the notebook (wiki/, notes/). Use search() for sources."
+    target = _resolve_under(path, config.WISSENSWIKI_DIR)
+    if target is None or not _is_notebook_path(target):
+        return ("read_note reads your WissensWIKI notebook only — not Passagen/ or "
+                "the corpus (use search() for documents, list_passages() for passages).")
     if not target.is_file():
         return f"No such note: {path}"
     return target.read_text(encoding="utf-8")
 
 
 def write_note(path: str, content: str) -> str:
-    rel = path.strip().replace("\\", "/").lstrip("/")
-    if rel.startswith("wiki/"):
-        rel = rel[len("wiki/"):]
-    target = _resolve_under(rel, config.WIKI_DIR)
-    if target is None:
-        return "Refused: path escapes wiki/."
+    target = _resolve_under(path, config.WISSENSWIKI_DIR)
+    if target is None or not _is_notebook_path(target):
+        return ("Refused: write_note only writes inside WissensWIKI/ "
+                "(not Passagen/ or .brag/).")
     if target.suffix.lower() != ".md":
         target = target.with_suffix(".md")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
-    rel_out = target.relative_to(config.WIKI_DIR).as_posix()
-    return f"Saved to wiki/{rel_out} — your notebook (not indexed)."
+    rel_out = target.relative_to(config.WISSENSWIKI_DIR).as_posix()
+    return f"Saved to WissensWIKI/{rel_out} — your notebook (not indexed)."

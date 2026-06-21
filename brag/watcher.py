@@ -51,20 +51,18 @@ def _is_relevant(path: Path) -> bool:
         return False
     if path.name.startswith("."):
         return False
-    return not any(part in config.WATCH_IGNORE_DIRS for part in path.parts)
+    # Corpus = the project root EXCEPT the WissensWIKI workspace + hidden/_inbox.
+    return config.is_corpus_path(path)
 
 
 def _is_meta_file(path: Path) -> bool:
-    """A `_meta.txt` under sources/ (outside ignored dirs). Editing it must
-    refresh the folder's already-indexed documents — unlike a document file,
-    `_meta.txt` is not a SUPPORTED_SUFFIX, so the normal ingest path skips it."""
+    """A `_meta.txt` in a corpus (document) folder. Editing it must refresh that
+    folder's already-indexed documents — and `_meta.txt` is not a SUPPORTED_SUFFIX,
+    so the normal ingest path skips it. It must live in the corpus (not in
+    WissensWIKI or a hidden/staging dir)."""
     if path.name != "_meta.txt":
         return False
-    try:
-        path.resolve().relative_to(config.SOURCES_DIR.resolve())
-    except (ValueError, OSError):
-        return False
-    return not any(part in config.WATCH_IGNORE_DIRS for part in path.parts)
+    return config.is_corpus_path(path)
 
 
 def _refresh_folder_meta(path: Path, verb: str) -> None:

@@ -113,19 +113,48 @@ def _active_collection() -> str:
     return _DEFAULT_COLLECTION
 
 
+# ── Vault layout ────────────────────────────────────────────────
+# NEW model: the chosen PROJECT folder is the vault root, and EVERYTHING under it
+# is the searchable corpus EXCEPT the WissensWIKI/ workspace (and hidden dirs).
+# WissensWIKI is the user's space: Passagen/ (verified passages, indexed via
+# save_passage), the user's own .md + free subfolders (the notebook — read/write,
+# NOT indexed, so notes don't echo the corpus), and a hidden .brag/ for logs.
+WISSENSWIKI_NAME = "WissensWIKI"
+PASSAGES_NAME = "Passagen"
+NOTES_NAME = "Notizen"          # auto literature notes (notebook, not indexed)
+DATA_NAME = ".brag"
+
 # Names whose value depends on the active project. Served via module __getattr__
 # so every `config.<NAME>` read is resolved live (never frozen at import).
 _SCOPED_ATTRS = {
     "VAULT": lambda: _vault(),
-    "SOURCES_DIR": lambda: _vault() / "sources",
-    "NOTES_DIR": lambda: _vault() / "notes",
-    "PASSAGES_DIR": lambda: _vault() / "passages",
-    "WIKI_DIR": lambda: _vault() / "wiki",
-    "DATA_DIR": lambda: _vault() / ".brag",
-    "INGEST_LOG": lambda: _vault() / ".brag" / "ingest_log.jsonl",
-    "FAILED_CHUNKS_LOG": lambda: _vault() / ".brag" / "failed_chunks.jsonl",
+    # Corpus scan root = the project root itself (filtered by is_corpus_path).
+    "SOURCES_DIR": lambda: _vault(),
+    "WISSENSWIKI_DIR": lambda: _vault() / WISSENSWIKI_NAME,
+    "PASSAGES_DIR": lambda: _vault() / WISSENSWIKI_NAME / PASSAGES_NAME,
+    "NOTES_DIR": lambda: _vault() / WISSENSWIKI_NAME / NOTES_NAME,
+    "NOTEBOOK_DIR": lambda: _vault() / WISSENSWIKI_NAME,
+    "DATA_DIR": lambda: _vault() / WISSENSWIKI_NAME / DATA_NAME,
+    "INGEST_LOG": lambda: _vault() / WISSENSWIKI_NAME / DATA_NAME / "ingest_log.jsonl",
+    "FAILED_CHUNKS_LOG":
+        lambda: _vault() / WISSENSWIKI_NAME / DATA_NAME / "failed_chunks.jsonl",
     "COLLECTION_NAME": lambda: _active_collection(),
 }
+
+
+def is_corpus_path(path) -> bool:
+    """True if `path` is part of the active project's searchable corpus: anywhere
+    under the project root EXCEPT the WissensWIKI/ workspace and any hidden /
+    staging (_inbox) dir. The watcher never indexes WissensWIKI (the notebook
+    would echo the corpus); Passagen is indexed via save_passage instead."""
+    try:
+        rel = Path(path).resolve().relative_to(_vault().resolve())
+    except (ValueError, OSError):
+        return False
+    parts = rel.parts
+    if any(p in WATCH_IGNORE_DIRS or p.startswith(".") for p in parts):
+        return False
+    return not (parts and parts[0] == WISSENSWIKI_NAME)
 
 
 def __getattr__(name: str):
@@ -309,9 +338,9 @@ def source_key_from_path(path) -> str:
     """
     p = Path(path)
     try:
-        # Use the ACTIVE project's sources dir (dynamic), so a key computed in a
-        # watcher callback is relative to the right project.
-        rel = p.resolve().relative_to((_vault() / "sources").resolve())
+        # Identity is the path relative to the ACTIVE project's ROOT (the corpus
+        # is the whole project folder now, not a sources/ subfolder).
+        rel = p.resolve().relative_to(_vault().resolve())
     except ValueError:
         rel = Path(p.name)
     return normalize_source_key(rel.with_suffix("").as_posix())

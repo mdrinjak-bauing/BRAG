@@ -56,40 +56,41 @@ def _vault(tmp_path, monkeypatch):
 def test_write_then_read_note(tmp_path, monkeypatch):
     _vault(tmp_path, monkeypatch)
     msg = tools.write_note("methods/maturity.md", "# Maturity\nbody")
-    assert "wiki/methods/maturity.md" in msg
-    assert tools.read_note("wiki/methods/maturity.md").startswith("# Maturity")
+    assert "WissensWIKI/methods/maturity.md" in msg  # path is relative to WissensWIKI
+    assert tools.read_note("methods/maturity.md").startswith("# Maturity")
 
 
 def test_read_note_rejects_escape_and_non_notebook(tmp_path, monkeypatch):
     _vault(tmp_path, monkeypatch)
-    (tmp_path / "sources").mkdir()
-    (tmp_path / "sources" / "x.md").write_text("secret", encoding="utf-8")
-    assert "Refused" in tools.read_note("../outside.md")
-    assert "only reads the notebook" in tools.read_note("sources/x.md")
+    config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
+    (config.PASSAGES_DIR / "p.md").write_text("quote", encoding="utf-8")
+    assert "notebook" in tools.read_note("../outside.md")    # escape -> refused
+    assert "notebook" in tools.read_note("Passagen/p.md")    # Passagen is indexed, not notebook
 
 
 def test_write_note_rejects_escape(tmp_path, monkeypatch):
     _vault(tmp_path, monkeypatch)
     assert "Refused" in tools.write_note("../../evil.md", "x")
+    assert "Refused" in tools.write_note("Passagen/sneak.md", "x")  # can't write the indexed area
 
 
-def test_list_notebook_counts_wiki_and_notes(tmp_path, monkeypatch):
+def test_list_notebook_lists_wissenswiki(tmp_path, monkeypatch):
     _vault(tmp_path, monkeypatch)
-    tools.write_note("a.md", "x")
-    (tmp_path / "notes").mkdir(exist_ok=True)
-    (tmp_path / "notes" / "Smith_2020.md").write_text("note", encoding="utf-8")
+    tools.write_note("a.md", "x")                          # -> WissensWIKI/a.md
+    tools.write_note("Notizen/Smith_2020.md", "note")      # -> WissensWIKI/Notizen/...
+    config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
+    (config.PASSAGES_DIR / "topic.md").write_text("p", encoding="utf-8")
     out = tools.list_notebook()
-    assert "wiki/ (1)" in out
-    assert "notes/ (1)" in out
     assert "a.md" in out
+    assert "Notizen/Smith_2020.md" in out
+    assert "Passagen" not in out                           # indexed, not part of the notebook
 
 
 def test_list_passages_empty_and_listing(tmp_path, monkeypatch):
     _vault(tmp_path, monkeypatch)
     assert "No passages" in tools.list_passages()
-    pdir = tmp_path / "passages"
-    pdir.mkdir()
-    (pdir / "method.md").write_text(
+    config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
+    (config.PASSAGES_DIR / "method.md").write_text(
         "# Passages: Method\n\n### Smith\n> quote\n", encoding="utf-8")
     out = tools.list_passages()
     assert "method" in out

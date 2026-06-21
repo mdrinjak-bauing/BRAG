@@ -309,9 +309,9 @@ def test_api_index_op_runs_file_tool(tmp_path, monkeypatch):
     # A file-based tool (list_notebook) runs in-process and returns text, with
     # SETUP_MODE off — no Qdrant / models needed.
     monkeypatch.setattr(config, "SETUP_MODE", False)
-    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)  # WIKI_DIR/NOTES_DIR derive
-    (tmp_path / "wiki").mkdir()
-    (tmp_path / "wiki" / "a.md").write_text("x", encoding="utf-8")
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)  # WissensWIKI derives
+    (tmp_path / "WissensWIKI").mkdir()
+    (tmp_path / "WissensWIKI" / "a.md").write_text("x", encoding="utf-8")
     data = json.dumps({"op": "list_notebook"}).encode()
     h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
     h.path = "/api/index-op"
@@ -319,7 +319,7 @@ def test_api_index_op_runs_file_tool(tmp_path, monkeypatch):
     h.do_POST()
     assert h.captured.code == 200
     assert h.captured.json["ok"] is True
-    assert "wiki/ (1)" in h.captured.json["text"]
+    assert "a.md" in h.captured.json["text"]
 
 
 def test_serve_vault_file_scopes_to_project(tmp_path, monkeypatch):

@@ -55,7 +55,7 @@ def test_register_builds_record_and_dedups_slug():
     assert a["slug"] == "projekta"
     assert a["host_path"] == "D:/Arbeit/ProjektA"
     assert a["collection"] == "asb_local_st_1024__projekta"
-    assert a["vault"] == "/projects/projekta/WissensWIKI"
+    assert a["vault"] == "/projects/projekta"
     # same display name -> a unique slug, not a collision
     b = registry.register("ProjektA", "C:/Else/ProjektA", "asb_local_st_1024")
     assert b["slug"] == "projekta_2"
@@ -70,7 +70,7 @@ def test_register_rejects_bad_path():
 def test_get_and_remove():
     registry.register("ProjektA", "D:/A", "asb_local_st_1024")
     assert registry.get_collection("projekta") == "asb_local_st_1024__projekta"
-    assert registry.get_vault("projekta") == "/projects/projekta/WissensWIKI"
+    assert registry.get_vault("projekta") == "/projects/projekta"
     assert registry.remove("projekta") is True
     assert registry.get("projekta") is None
     assert registry.remove("projekta") is False  # already gone
