@@ -39,10 +39,9 @@ def test_format_hit_passage(monkeypatch):
 
 
 def _vault(tmp_path, monkeypatch):
-    monkeypatch.setattr(config, "VAULT", tmp_path)
-    monkeypatch.setattr(config, "WIKI_DIR", tmp_path / "wiki")
-    monkeypatch.setattr(config, "NOTES_DIR", tmp_path / "notes")
-    monkeypatch.setattr(config, "PASSAGES_DIR", tmp_path / "passages")
+    # Set the default vault root; VAULT / SOURCES_DIR / NOTES_DIR / WIKI_DIR /
+    # PASSAGES_DIR all derive from it via config.__getattr__.
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
 
 
 def test_write_then_read_note(tmp_path, monkeypatch):

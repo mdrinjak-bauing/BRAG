@@ -127,8 +127,8 @@ def test_origin_ok_rejects_malformed_origin():
 
 # ── Path-traversal guard (_serve_vault_file) ────────────────────
 def _vault(tmp_path, monkeypatch):
-    """Point config.VAULT at a fresh tmp dir holding one real file."""
-    monkeypatch.setattr(config, "VAULT", tmp_path)
+    """Point the vault at a fresh tmp dir holding one real file."""
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
     (tmp_path / "doc.pdf").write_bytes(b"%PDF-1.4 fake")
     (tmp_path / "note.html").write_text("<script>alert(1)</script>", encoding="utf-8")
     # A secret living OUTSIDE the vault, the target of traversal attempts.
@@ -309,9 +309,7 @@ def test_api_index_op_runs_file_tool(tmp_path, monkeypatch):
     # A file-based tool (list_notebook) runs in-process and returns text, with
     # SETUP_MODE off — no Qdrant / models needed.
     monkeypatch.setattr(config, "SETUP_MODE", False)
-    monkeypatch.setattr(config, "VAULT", tmp_path)
-    monkeypatch.setattr(config, "WIKI_DIR", tmp_path / "wiki")
-    monkeypatch.setattr(config, "NOTES_DIR", tmp_path / "notes")
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)  # WIKI_DIR/NOTES_DIR derive
     (tmp_path / "wiki").mkdir()
     (tmp_path / "wiki" / "a.md").write_text("x", encoding="utf-8")
     data = json.dumps({"op": "list_notebook"}).encode()

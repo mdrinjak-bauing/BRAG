@@ -6,6 +6,8 @@ live in code. Component-level overrides allow mixing profiles, e.g. cloud
 embeddings with a local LLM.
 """
 
+import contextlib
+import contextvars
 import os
 from pathlib import Path
 
@@ -28,14 +30,24 @@ PROFILE_NAME = _env("PROFILE", "gemini")
 _profile = PROFILES.get(PROFILE_NAME, PROFILES["cloud"])
 
 # ── Paths (container view; host paths are mapped in docker-compose) ─
-VAULT = Path(_env("VAULT_DIR", "/vault"))
-SOURCES_DIR = VAULT / "sources"
-NOTES_DIR = VAULT / "notes"
-PASSAGES_DIR = VAULT / "passages"
-WIKI_DIR = VAULT / "wiki"            # your own thinking — read/write, NOT indexed
-DATA_DIR = VAULT / ".brag"            # ingest log, failed-chunk log
-INGEST_LOG = DATA_DIR / "ingest_log.jsonl"
-FAILED_CHUNKS_LOG = DATA_DIR / "failed_chunks.jsonl"
+# Multi-project: the vault (and its derived paths + the Qdrant collection) is
+# resolved DYNAMICALLY from the active project — a ContextVar set per watcher
+# callback / per bridge request via project_context(). With no active project
+# (the single-project install and every existing caller) it falls back to these
+# env-derived defaults, so behaviour is unchanged. The public names VAULT,
+# SOURCES_DIR, …, COLLECTION_NAME are served by module __getattr__ (below) so a
+# plain `config.SOURCES_DIR` is always the CURRENT project's path, never a value
+# captured at import time.
+_DEFAULT_VAULT = Path(_env("VAULT_DIR", "/vault"))
+_active_project: "contextvars.ContextVar[dict | None]" = contextvars.ContextVar(
+    "brag_active_project", default=None)
+
+
+def _vault() -> Path:
+    rec = _active_project.get()
+    if rec and rec.get("vault"):
+        return Path(rec["vault"])
+    return _DEFAULT_VAULT
 
 # Subfolders of sources/ that the watcher ignores (staging area)
 WATCH_IGNORE_DIRS = {"_inbox"}
@@ -89,9 +101,56 @@ ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY", "")
 # NOTE: the "asb_" prefix is deliberately kept (not renamed to "brag_") so
 # that installations created before the BRAG rename keep finding their
 # existing Qdrant data. It is an internal identifier and never user-visible.
-COLLECTION_NAME = _env(
+_DEFAULT_COLLECTION = _env(
     "COLLECTION_NAME", f"asb_{EMBEDDING_BACKEND}_{EMBEDDING_DIM}"
 )
+
+
+def _active_collection() -> str:
+    rec = _active_project.get()
+    if rec and rec.get("collection"):
+        return rec["collection"]
+    return _DEFAULT_COLLECTION
+
+
+# Names whose value depends on the active project. Served via module __getattr__
+# so every `config.<NAME>` read is resolved live (never frozen at import).
+_SCOPED_ATTRS = {
+    "VAULT": lambda: _vault(),
+    "SOURCES_DIR": lambda: _vault() / "sources",
+    "NOTES_DIR": lambda: _vault() / "notes",
+    "PASSAGES_DIR": lambda: _vault() / "passages",
+    "WIKI_DIR": lambda: _vault() / "wiki",
+    "DATA_DIR": lambda: _vault() / ".brag",
+    "INGEST_LOG": lambda: _vault() / ".brag" / "ingest_log.jsonl",
+    "FAILED_CHUNKS_LOG": lambda: _vault() / ".brag" / "failed_chunks.jsonl",
+    "COLLECTION_NAME": lambda: _active_collection(),
+}
+
+
+def __getattr__(name: str):
+    resolver = _SCOPED_ATTRS.get(name)
+    if resolver is not None:
+        return resolver()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+@contextlib.contextmanager
+def project_context(slug_or_record):
+    """Scope the vault paths + COLLECTION_NAME to a project for the duration of
+    the block, in the CURRENT thread/context ONLY (safe across the watcher's and
+    the bridge's worker threads — a new thread does not inherit it). Accepts a
+    registry record dict or a slug; None / unknown slug -> the env defaults, i.e.
+    the single-project behaviour."""
+    rec = slug_or_record
+    if isinstance(slug_or_record, str):
+        from brag import registry
+        rec = registry.get(slug_or_record) if slug_or_record else None
+    token = _active_project.set(rec)
+    try:
+        yield
+    finally:
+        _active_project.reset(token)
 
 # ── Chunking (values empirically validated) ─
 MAX_CHUNK_CHARS = int(_env("MAX_CHUNK_CHARS", 2000))
@@ -244,7 +303,9 @@ def source_key_from_path(path) -> str:
     """
     p = Path(path)
     try:
-        rel = p.resolve().relative_to(SOURCES_DIR.resolve())
+        # Use the ACTIVE project's sources dir (dynamic), so a key computed in a
+        # watcher callback is relative to the right project.
+        rel = p.resolve().relative_to((_vault() / "sources").resolve())
     except ValueError:
         rel = Path(p.name)
     return normalize_source_key(rel.with_suffix("").as_posix())

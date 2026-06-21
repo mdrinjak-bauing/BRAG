@@ -248,13 +248,14 @@ class BridgeHandler(BaseHTTPRequestHandler):
         from brag import registry, tools
 
         project = str(body.get("project", "")).strip()
-        collection = None
+        rec = None
         if project:
-            collection = registry.get_collection(project)
-            if collection is None:
+            rec = registry.get(project)
+            if rec is None:
                 self._send_json(404, {"ok": False, "message":
                     f"unknown project '{project}' — re-run setup for this project"})
                 return
+        collection = rec.get("collection") if rec else None
         op = str(body.get("op", "")).strip()
         a = body.get("args") if isinstance(body.get("args"), dict) else {}
 
@@ -288,7 +289,13 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send_json(404, {"ok": False, "message": f"unknown op '{op}'"})
             return
         try:
-            text = handler()
+            # Scope the vault paths + collection to this project for the call so
+            # the file-side ops (remove/rename/save_passage/notebook) and the
+            # index mutations target the right project. The ContextVar is
+            # per-thread, so concurrent requests never cross over. A None record
+            # is the single-project default.
+            with config.project_context(rec):
+                text = handler()
         except Exception as e:  # noqa: BLE001 — a tool error must not kill the thread
             self._send_json(500, {"ok": False, "message": f"{op} failed: {str(e)[:200]}"})
             return
