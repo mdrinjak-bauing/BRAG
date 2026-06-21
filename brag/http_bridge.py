@@ -112,8 +112,28 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._check_local(body)
         elif parsed.path == "/api/setup":
             self._apply_setup(body)
+        elif parsed.path == "/api/current-settings":
+            self._current_settings()
         else:
             self._send_json(404, {"ok": False, "message": "unknown endpoint"})
+
+    def _current_settings(self):
+        """Current .env-derived settings for the wizard's 'change a setting' view,
+        so a user can tweak one thing (e.g. the reranker) without re-walking the
+        whole wizard. Never returns the API key itself — only whether one is set."""
+        from brag import setup_core
+        env = setup_core.read_existing_env()
+        profile = env.get("PROFILE", "")
+        key_env = setup_core.PROFILES.get(profile, {}).get("key_env")
+        self._send_json(200, {
+            "configured": bool(profile),
+            "profile": profile,
+            "language": env.get("VAULT_LANGUAGE", ""),
+            "rerank_profile": env.get("RERANK_PROFILE", "eco"),
+            "vision_enabled": env.get("VISION_ENABLED", "true").lower() != "false",
+            "llm_model": env.get("LLM_MODEL", ""),
+            "has_key": bool(key_env and env.get(key_env)),
+        })
 
     def _check_local(self, body: dict):
         """Probe LM Studio on the host and list its loaded models."""

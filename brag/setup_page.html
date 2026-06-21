@@ -71,6 +71,46 @@
     <p class="hint" data-i="intro_hint"></p>
     <div class="row"><span class="spacer"></span>
       <button class="big primary" onclick="show('s1')" data-i="start"></button></div>
+    <!-- Shown only when an install already exists: jump straight to a one-page
+         settings view instead of re-walking the whole wizard. -->
+    <button class="big" id="changebtn" style="display:none" onclick="openSettings()" data-i="change_settings"></button>
+  </div>
+
+  <!-- STEP settings: change a single setting without re-walking the wizard -->
+  <div class="card step" id="ssettings">
+    <span class="pill" data-i="badge_settings"></span>
+    <h2 data-i="settings_h"></h2>
+    <p class="hint" data-i="settings_p"></p>
+    <p class="hint"><span data-i="settings_cur"></span> <b id="cur_ai"></b></p>
+    <h3 data-i="doclang_h"></h3>
+    <select id="set_language">
+      <option value="english">English</option>
+      <option value="german">German / Deutsch</option>
+      <option value="french">French / Français</option>
+      <option value="spanish">Spanish / Español</option>
+      <option value="italian">Italian / Italiano</option>
+      <option value="dutch">Dutch / Nederlands</option>
+      <option value="portuguese">Portuguese / Português</option>
+    </select>
+    <h3 data-i="rerank_h" style="margin-top:18px;"></h3>
+    <label class="check" style="display:block; margin:8px 0;">
+      <input type="radio" name="set_rerank" value="off"><span data-i="rerank_off"></span></label>
+    <label class="check" style="display:block; margin:8px 0;">
+      <input type="radio" name="set_rerank" value="eco"><span data-i="rerank_eco"></span></label>
+    <label class="check" style="display:block; margin:8px 0;">
+      <input type="radio" name="set_rerank" value="full"><span data-i="rerank_full"></span></label>
+    <h3 data-i="vision_h" style="margin-top:18px;"></h3>
+    <label class="check" style="display:block; margin:8px 0;">
+      <input type="checkbox" id="set_vision"><span data-i="vision_label"></span></label>
+    <details>
+      <summary data-i="settings_model_adv"></summary>
+      <p class="hint" data-i="cloud_model_p"></p>
+      <input id="set_model" placeholder="" autocomplete="off">
+    </details>
+    <div class="row">
+      <button onclick="show('s0')" data-i="back"></button><span class="spacer"></span>
+      <button class="primary" onclick="saveSettings()" data-i="settings_save"></button>
+    </div>
   </div>
 
   <!-- STEP 1: where AI runs -->
@@ -281,6 +321,11 @@ const STR = {
     quick_start:"Quick start (recommended)", quick_start_s:"→ Gemini cloud with the economical search — fewest questions",
     quick_hint:"Not sure? Quick start picks Gemini (cloud) with the economical search — you can change everything later by running setup again, without re-indexing.",
     start:"Start", back:"← Back", continue:"Continue", skip:"skip check, continue anyway",
+    change_settings:"⚙ Change a setting (model · reranker · vision · language)",
+    badge_settings:"Quick settings", settings_h:"Change a setting",
+    settings_p:"Your provider and API key stay as they are — change what you like and save, no need to re-walk the whole setup.",
+    settings_cur:"Current AI:", settings_model_adv:"Change the model (optional)",
+    settings_save:"Save settings",
     badge_step1:"Step 1 — where the AI runs",
     privacy_h:"Do your documents contain confidential data that must not leave your computer?",
     privacy_p:"To make documents searchable, their text is analyzed by an AI — either by a cloud service (fast, works on any computer) or by an AI running on your own machine (private, needs a capable computer and ~10 extra minutes of setup).",
@@ -360,6 +405,11 @@ const STR = {
     quick_start:"Schnellstart mit Empfehlung", quick_start_s:"→ Gemini-Cloud mit sparsamer Suche — die wenigsten Fragen",
     quick_hint:"Unsicher? Schnellstart nimmt Gemini (Cloud) mit sparsamer Suche — du kannst später alles per erneutem Setup ändern, ohne neu zu indexieren.",
     start:"Start", back:"← Zurück", continue:"Weiter", skip:"Prüfung überspringen, trotzdem weiter",
+    change_settings:"⚙ Einstellung ändern (Modell · Reranker · Vision · Sprache)",
+    badge_settings:"Schnelle Einstellungen", settings_h:"Einstellung ändern",
+    settings_p:"Anbieter und API-Key bleiben, wie sie sind — ändere, was du willst, und speichern, ohne den ganzen Assistenten erneut zu durchlaufen.",
+    settings_cur:"Aktuelle KI:", settings_model_adv:"Modell ändern (optional)",
+    settings_save:"Speichern",
     badge_step1:"Schritt 1 — wo die KI läuft",
     privacy_h:"Enthalten deine Dokumente vertrauliche Daten, die deinen Rechner nicht verlassen dürfen?",
     privacy_p:"Damit Dokumente durchsuchbar werden, wird ihr Text von einer KI analysiert — entweder von einem Cloud-Dienst (schnell, läuft auf jedem Rechner) oder von einer KI auf deinem eigenen Rechner (privat, braucht einen starken Rechner und ~10 Minuten mehr Einrichtung).",
@@ -500,29 +550,13 @@ function pickModel(profile){
   const sel=document.getElementById("modelsel-"+profile);
   state.localModel = sel && sel.value ? sel.value : ""; show("s3");
 }
-async function apply(){
+async function _submitSetup(body){
   show("s4");
-  const log=document.getElementById("applylog");
+  const log=document.getElementById("applylog"); log.replaceChildren();
   const add=(txt,cls)=>{const p=document.createElement("p");p.className="check "+(cls||"");p.textContent=txt;log.appendChild(p);};
-  const cloud = ["gemini","openai","anthropic"].includes(state.profile);
-  // Reranker + vision: read the sperf controls if they were touched, otherwise
-  // fall back to the express-path defaults on state (eco / true). The optional
-  // chaining keeps this robust even when the express path skipped sperf entirely.
-  const rerankEl = document.querySelector('input[name="rerank"]:checked');
-  const rerank_profile = (rerankEl && rerankEl.value) || state.rerank || "eco";
-  const visionEl = document.getElementById("vision");
-  const vision_enabled = visionEl ? visionEl.checked : (state.vision !== false);
   try{
     const r = await fetch("/api/setup",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        profile: state.profile,
-        api_key: cloud ? state.apikey : "",
-        language: document.getElementById("language").value,
-        vault_path: "",
-        llm_model: cloud ? document.getElementById("cloudmodel").value.trim() : state.localModel,
-        rerank_profile,
-        vision_enabled,
-      })});
+      body:JSON.stringify(body)});
     const d = await r.json();
     (d.steps||[]).forEach(s=>add((s.ok?"✓ ":"⚠ ")+s.message, s.ok?"ok":"warn"));
     // Claude Desktop not auto-configured → surface a LOUD, unmissable warning at
@@ -538,8 +572,6 @@ async function apply(){
       document.getElementById("claude_warn_code").textContent = snippet;
       const cp=document.getElementById("claude_warn_copy");
       cp.onclick=()=>{ navigator.clipboard.writeText(snippet); cp.textContent="copied ✓"; setTimeout(()=>cp.textContent="copy",1500); };
-      // Downgrade the badge: setup did NOT fully complete. Drop data-i so a
-      // later language toggle (applyLang) cannot restore the green "complete".
       const badge=document.getElementById("done_badge");
       badge.removeAttribute("data-i");
       badge.className="pill warn";
@@ -548,7 +580,61 @@ async function apply(){
     setTimeout(()=>show("s5"),900);
   }catch(e){ add("Something went wrong: "+e,"warn"); }
 }
+async function apply(){
+  const cloud = ["gemini","openai","anthropic"].includes(state.profile);
+  // Reranker + vision: read the sperf controls if they were touched, otherwise
+  // fall back to the express-path defaults on state (eco / true).
+  const rerankEl = document.querySelector('input[name="rerank"]:checked');
+  const rerank_profile = (rerankEl && rerankEl.value) || state.rerank || "eco";
+  const visionEl = document.getElementById("vision");
+  const vision_enabled = visionEl ? visionEl.checked : (state.vision !== false);
+  await _submitSetup({
+    profile: state.profile,
+    api_key: cloud ? state.apikey : "",
+    language: document.getElementById("language").value,
+    vault_path: "",
+    llm_model: cloud ? document.getElementById("cloudmodel").value.trim() : state.localModel,
+    rerank_profile, vision_enabled,
+  });
+}
+// ── "Change a setting" quick path (existing install only) ──────────────────
+let CURRENT = null;
+async function loadCurrent(){
+  try{
+    const r = await fetch("/api/current-settings",{method:"POST",
+      headers:{"Content-Type":"application/json"}, body:"{}"});
+    CURRENT = await r.json();
+    if(CURRENT && CURRENT.configured){
+      document.getElementById("changebtn").style.display="block";
+    }
+  }catch(e){ /* fresh install / setup not active: just hide the button */ }
+}
+function openSettings(){
+  if(!CURRENT || !CURRENT.configured) return;
+  document.getElementById("cur_ai").textContent =
+    CURRENT.profile + (CURRENT.llm_model ? " · "+CURRENT.llm_model : "")
+    + (CURRENT.has_key ? (lang==="de" ? " · API-Key bleibt" : " · API key kept") : "");
+  if(CURRENT.language){ document.getElementById("set_language").value = CURRENT.language; }
+  document.querySelectorAll('input[name="set_rerank"]').forEach(el=>{
+    el.checked = (el.value === (CURRENT.rerank_profile || "eco")); });
+  document.getElementById("set_vision").checked = CURRENT.vision_enabled !== false;
+  document.getElementById("set_model").value = CURRENT.llm_model || "";
+  show("ssettings");
+}
+async function saveSettings(){
+  const rr = document.querySelector('input[name="set_rerank"]:checked');
+  await _submitSetup({
+    profile: (CURRENT && CURRENT.profile) || "gemini",
+    api_key: "",                 // empty -> server keeps the existing key (same provider)
+    language: document.getElementById("set_language").value,
+    vault_path: "",
+    llm_model: document.getElementById("set_model").value.trim(),
+    rerank_profile: (rr && rr.value) || "eco",
+    vision_enabled: document.getElementById("set_vision").checked,
+  });
+}
 applyLang();
+loadCurrent();
 </script>
 </body>
 </html>
