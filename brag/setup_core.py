@@ -119,6 +119,11 @@ def write_env(profile: str, api_key: str, language: str,
     key_env = PROFILES.get(profile, {}).get("key_env")
     if key_env and api_key:
         lines.append(f"{key_env}={api_key}")
+    elif key_env and existing.get("PROFILE") == profile and existing.get(key_env):
+        # Same provider, no new key entered -> keep the existing key, so re-running
+        # setup to change another setting (e.g. the reranker) never forces the user
+        # to re-type their API key.
+        lines.append(f"{key_env}={existing[key_env]}")
     if llm_model:
         lines.append(f"LLM_MODEL={llm_model}")
     # Preserve keys the wizard itself does NOT manage but the user may have set by

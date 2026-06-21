@@ -78,6 +78,15 @@ def test_write_env_drops_stale_model_on_profile_switch(tmp_path, monkeypatch):
     assert "PROFILE=gemini" in out
 
 
+def test_write_env_keeps_api_key_on_same_profile_rerun(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup_core, "WORKSPACE", tmp_path)
+    (tmp_path / ".env").write_text(
+        "PROFILE=gemini\nGEMINI_API_KEY=SECRET123\nVAULT_PATH=/vault\n", encoding="utf-8")
+    setup_core.write_env("gemini", "", "german")   # same profile, NO new key entered
+    out = (tmp_path / ".env").read_text(encoding="utf-8")
+    assert "GEMINI_API_KEY=SECRET123" in out       # kept -> no re-typing the key
+
+
 def test_write_env_keeps_model_on_same_profile_rerun(tmp_path, monkeypatch):
     monkeypatch.setattr(setup_core, "WORKSPACE", tmp_path)
     (tmp_path / ".env").write_text(
