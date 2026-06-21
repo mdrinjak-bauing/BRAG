@@ -314,6 +314,17 @@ def reconcile_on_startup():
         time.sleep(2)
 
 
+def _reconcile_project(slug) -> None:
+    """One project's startup reconcile, inside its own context. Runs in its own
+    thread so a slow project (e.g. a big first ingest through a local LLM) cannot
+    block the OTHER projects from being watched + reconciled."""
+    try:
+        with config.project_context(slug):
+            reconcile_on_startup()
+    except Exception as e:  # noqa: BLE001 — a reconcile failure must not kill the watcher
+        print(f"reconcile error (project={slug or 'default'}): {e}")
+
+
 def run_watcher():
     # One observer per registered project (each over its own sources/, scoped to
     # its collection + vault via project_context). With no registry yet — the
@@ -321,17 +332,22 @@ def run_watcher():
     from brag import registry
     slugs = [p["slug"] for p in registry.projects()] or [None]
     observers = []
+    # Start ALL observers first, so a document dropped right now is caught
+    # immediately on any project (not only after some other project's backlog).
     for slug in slugs:
         with config.project_context(slug):
             config.SOURCES_DIR.mkdir(parents=True, exist_ok=True)
             sources_dir = str(config.SOURCES_DIR)
-            reconcile_on_startup()  # runs inside this project's context
         observer = PollingObserver(timeout=config.WATCH_POLL_SECONDS)
         observer.schedule(DocumentHandler(slug), sources_dir, recursive=True)
         observer.start()
         observers.append(observer)
         print(f"watching {sources_dir} "
               f"(project={slug or 'default'}, poll every {config.WATCH_POLL_SECONDS}s)")
+    # Reconcile the projects CONCURRENTLY (one thread each) so a slow project's
+    # backlog does not delay watching/ingesting the others.
+    for slug in slugs:
+        threading.Thread(target=_reconcile_project, args=(slug,), daemon=True).start()
     try:
         while True:
             time.sleep(1)
