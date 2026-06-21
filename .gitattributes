@@ -1,0 +1,23 @@
+# Normalize text in the repo (LF), but force platform-correct line endings on
+# checkout/archive so clones AND GitHub source ZIPs run on every OS.
+* text=auto
+
+# Windows scripts MUST be CRLF or cmd.exe / PowerShell mis-parse them
+# (a goto-based .bat with LF line endings simply "won't start").
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+
+# Unix shell + macOS double-click launchers MUST stay LF.
+*.command text eol=lf
+*.sh      text eol=lf
+
+# Binary assets — never apply line-ending conversion.
+*.ico   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
