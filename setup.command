@@ -89,7 +89,8 @@ if [ ! -f ".ragsetup_home" ] && [ ! -f ".setup_complete" ]; then
     bash tools/mark_engine_folder.command "$(pwd -P)" 2>/dev/null || true
     printf '%s\n' "$(pwd -P)" > ".ragsetup_home"
     if [ ! -f ".env" ]; then
-      { echo "CLAUDE_CONFIG_DIR=$CLAUDE_DIR"; echo "VAULT_PATH=$PROJDIR"; } > ".env"
+      { echo "CLAUDE_CONFIG_DIR=$CLAUDE_DIR"; echo "VAULT_PATH=$PROJDIR"
+        echo "COMPOSE_PROJECT_NAME=brag"; } > ".env"
     fi
   else
     if [ -f "$ENGINE/.ragsetup_home" ]; then
@@ -117,7 +118,10 @@ if [ ! -f ".ragsetup_home" ] && [ ! -f ".setup_complete" ]; then
     bash "$ENGINE/tools/mark_engine_folder.command" "$ENGINE" 2>/dev/null || true
     printf '%s\n' "$ENGINE" > "$ENGINE/.ragsetup_home"
     if [ ! -f "$ENGINE/.env" ]; then
-      { echo "CLAUDE_CONFIG_DIR=$CLAUDE_DIR"; echo "VAULT_PATH=$PROJDIR"; } > "$ENGINE/.env"
+      # Pin COMPOSE_PROJECT_NAME so the index + model-cache volumes have stable
+      # names regardless of the engine folder name.
+      { echo "CLAUDE_CONFIG_DIR=$CLAUDE_DIR"; echo "VAULT_PATH=$PROJDIR"
+        echo "COMPOSE_PROJECT_NAME=brag"; } > "$ENGINE/.env"
     fi
     chmod +x "$ENGINE/setup.command" "$ENGINE/status.command" 2>/dev/null || true
     echo

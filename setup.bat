@@ -118,6 +118,10 @@ REM the engine, so it never sees .env/scripts. Written flat (parens-safe).
 if exist "%ENGINE%\.env" goto relaunch
 >"%ENGINE%\.env" echo CLAUDE_CONFIG_DIR=%APPDATA%\Claude
 >>"%ENGINE%\.env" echo VAULT_PATH=%PROJDIR%
+REM Pin the compose project name so the index + model-cache volumes have stable
+REM names regardless of the engine folder (a space in "BRAG Assistent" would
+REM otherwise make the auto-derived project name unpredictable).
+>>"%ENGINE%\.env" echo COMPOSE_PROJECT_NAME=brag
 :relaunch
 echo.
 echo Organized. Continuing setup from the BRAG Assistent folder (a new window opens)...
@@ -139,6 +143,7 @@ call "%~dp0tools\mark_engine_folder.bat" "%~dp0."
 if exist ".env" goto inplace_env_ready
 >".env" echo CLAUDE_CONFIG_DIR=%APPDATA%\Claude
 >>".env" echo VAULT_PATH=%PROJDIR%
+>>".env" echo COMPOSE_PROJECT_NAME=brag
 :inplace_env_ready
 goto real_setup
 
