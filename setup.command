@@ -193,15 +193,20 @@ docker compose up -d >/dev/null 2>&1
 # quit, then write — that makes the connection stick (the in-container write
 # during the wizard is best-effort and a running Claude can clobber it).
 if command -v python3 >/dev/null 2>&1; then
-  if pgrep -x Claude >/dev/null 2>&1; then
+  # Claude rewrites its config while running and would drop the entry, so loop
+  # until it is fully quit (it keeps running after the window is closed); offer to
+  # quit it. No timeout-write — the entry must never be written while Claude runs.
+  while pgrep -x Claude >/dev/null 2>&1; do
     echo
-    echo "Claude Desktop is running. To save the BRAG connection permanently, quit"
-    echo "it completely now (Claude menu -> Quit Claude, or Cmd+Q). Waiting..."
-    cwait=0
-    while pgrep -x Claude >/dev/null 2>&1 && [ "$cwait" -lt 120 ]; do
-      sleep 2; cwait=$((cwait + 2))
-    done
-  fi
+    echo "Claude Desktop is still running - to save the BRAG connection it must be"
+    echo "fully quit (it keeps running after you close the window)."
+    printf "  Type Q to let BRAG quit Claude, or quit it yourself then press Enter: "
+    read -r ans
+    if [ "$ans" = "Q" ] || [ "$ans" = "q" ]; then
+      osascript -e 'quit app "Claude"' >/dev/null 2>&1 || pkill -x Claude 2>/dev/null || true
+    fi
+    sleep 2
+  done
   echo "Connecting BRAG to Claude Desktop..."
   python3 tools/merge_claude_config.py || true
 fi

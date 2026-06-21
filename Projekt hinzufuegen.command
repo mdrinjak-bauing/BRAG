@@ -52,15 +52,17 @@ docker compose up -d >/dev/null 2>&1
 
 # Connect to Claude (after it is fully quit, so it persists) + LM Studio.
 if command -v python3 >/dev/null 2>&1; then
-  if pgrep -x Claude >/dev/null 2>&1; then
+  while pgrep -x Claude >/dev/null 2>&1; do
     echo
-    echo "To save the connection, quit Claude Desktop completely now (Cmd+Q). Waiting..."
-    cwait=0
-    while pgrep -x Claude >/dev/null 2>&1 && [ "$cwait" -lt 120 ]; do
-      sleep 2
-      cwait=$((cwait + 2))
-    done
-  fi
+    echo "Claude Desktop is still running - quit it fully so the connector persists"
+    echo "(it keeps running after you close the window)."
+    printf "  Type Q to let BRAG quit Claude, or quit it yourself then press Enter: "
+    read -r ans
+    if [ "$ans" = "Q" ] || [ "$ans" = "q" ]; then
+      osascript -e 'quit app "Claude"' >/dev/null 2>&1 || pkill -x Claude 2>/dev/null || true
+    fi
+    sleep 2
+  done
   python3 tools/merge_claude_config.py || true
   python3 tools/merge_lmstudio_config.py || true
 fi

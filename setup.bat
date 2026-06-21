@@ -215,23 +215,9 @@ REM Claude Desktop REWRITES this config while running and would drop an entry
 REM added underneath it, so wait until Claude is fully closed before writing -
 REM that is what makes the connection persist.
 echo.
-tasklist /fi "imagename eq Claude.exe" 2>nul | find /i "Claude.exe" >nul
-if errorlevel 1 goto claude_write
-echo Claude Desktop is running. To save the BRAG connection PERMANENTLY, quit it
-echo completely now: click the Claude icon in the system tray ^(bottom-right, near
-echo the clock^) and choose Quit. Closing the window is NOT enough.
-echo.
-echo Waiting for Claude Desktop to close...
-set /a cwait=0
-:wait_claude
-tasklist /fi "imagename eq Claude.exe" 2>nul | find /i "Claude.exe" >nul
-if errorlevel 1 goto claude_write
-timeout /t 2 /nobreak >nul
-set /a cwait+=2
-if %cwait% lss 120 goto wait_claude
-echo Claude is still running after 2 minutes - writing anyway. If the connection
-echo is missing later, quit Claude completely and run status.bat.
-:claude_write
+REM Make sure Claude is fully closed first, so the entry persists (Claude rewrites
+REM its config while running and would drop it). The helper offers to close Claude.
+call "%~dp0tools\ensure_claude_closed.bat"
 echo Connecting BRAG to Claude Desktop...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_claude_config.ps1"
 

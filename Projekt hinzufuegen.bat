@@ -68,21 +68,9 @@ docker compose up -d
 REM Connect the new project to Claude + LM Studio, alongside the existing ones.
 REM Quit Claude first so the entry persists (Claude rewrites its config while up).
 echo.
-tasklist /fi "imagename eq Claude.exe" 2>nul | find /i "Claude.exe" >nul
-if errorlevel 1 goto add_write
-echo To save the connection, please FULLY QUIT Claude Desktop now: tray icon
-echo ^(bottom-right^) -^> Quit. Closing the window is not enough.
-echo.
-echo Waiting for Claude Desktop to close...
-set /a cwait=0
-:add_wait
-tasklist /fi "imagename eq Claude.exe" 2>nul | find /i "Claude.exe" >nul
-if errorlevel 1 goto add_write
-timeout /t 2 /nobreak >nul
-set /a cwait+=2
-if %cwait% lss 120 goto add_wait
-echo Still running after 2 minutes - continuing anyway.
-:add_write
+REM Ensure Claude is fully closed so the new connector persists (the helper
+REM offers to close Claude for you), then write the connectors.
+call "%~dp0tools\ensure_claude_closed.bat"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_claude_config.ps1"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_lmstudio_config.ps1"
 
