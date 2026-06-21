@@ -224,31 +224,25 @@ def write_claude_config() -> tuple[bool, str]:
     # the host launcher (tools/merge_claude_config.ps1, called by setup.bat);
     # this container write is best-effort and works directly on macOS/Linux.
     try:
-        existing: dict = {}
+        raw = ""
         if config_path.exists():
             try:
                 # utf-8-sig tolerates a BOM that some editors add.
-                existing = json.loads(config_path.read_text(encoding="utf-8-sig"))
+                raw = config_path.read_text(encoding="utf-8-sig")
+                if raw.strip():
+                    json.loads(raw)  # validate only — refuse to clobber bad JSON
             except json.JSONDecodeError:
                 _backup(config_path)
                 return False, ("Existing Claude config is not valid JSON — backed it "
                                "up; add the MCP entry manually (see below).")
             _backup(config_path)
-        servers = existing.setdefault("mcpServers", {})
-        for _old in LEGACY_MCP_KEYS:
-            servers.pop(_old, None)  # migrate older installs off the legacy name
-        # Sync the brag connectors to exactly the registered projects: drop brag
-        # connectors whose project was removed, add/update the current ones, and
-        # never touch the user's OTHER (non-brag) MCP servers.
-        desired = connectors_for_registry()
-        for key in [k for k in list(servers) if _is_brag_key(k) and k not in desired]:
-            servers.pop(key, None)
-        servers.update(desired)
-        # Direct write (no temp+os.replace): the atomic-rename dance does not
-        # reliably reach the host on a Windows bind mount, and chmod is forbidden
-        # there. A direct write works on macOS/Linux; on Windows the host
-        # launcher writes the real entry afterwards.
-        config_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+        # Single source of truth for the connector merge (drop removed brag-*,
+        # keep the user's other servers, migrate the legacy key, one entry per
+        # project). Direct write (no temp+os.replace): the atomic-rename dance does
+        # not reliably reach the host on a Windows bind mount, and chmod is
+        # forbidden there; on Windows the host launcher writes the real entry after.
+        from brag import claude_sync
+        config_path.write_text(claude_sync.sync(raw), encoding="utf-8")
     except OSError as e:
         return False, (
             f"Could not write the Claude config from the container "
