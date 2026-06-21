@@ -160,9 +160,9 @@ Stelle Claude jetzt eine Frage:
   Datenbank liegt in Docker, sicher außerhalb jedes Sync-Ordners.
 - **Stoppen/Starten:** Zum Stoppen eine Eingabeaufforderung im Projektordner
   öffnen, `docker compose down`. Zum Starten: `docker compose up -d`.
-- **Profil Hybrid (lokal):** zuerst [LM Studio](https://lmstudio.ai) installieren
+- **Hybrid-Profil (LM Studio):** zuerst [LM Studio](https://lmstudio.ai) installieren
   (unter Windows empfohlen), dann das Setup ausführen. Das Setup verbindet die
-  `brag`-Werkzeuge automatisch auch mit dem LM-Studio-Chat (nicht nur Claude);
+  BRAG-Werkzeuge (Name `brag-<Ordner>`) automatisch auch mit dem LM-Studio-Chat (nicht nur Claude);
   installierst du LM Studio *nach* dem Setup, einfach `setup.bat` erneut
   doppelklicken, um die Verbindung zu ergänzen. Siehe
   [PROFILES.de.md](PROFILES.de.md).

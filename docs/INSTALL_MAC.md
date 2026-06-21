@@ -140,8 +140,8 @@ Now ask Claude:
 - **Stopping/starting:** Docker Desktop starts the app automatically after boot.
   To stop manually: open Terminal in the project folder, `docker compose down`.
   To start: `docker compose up -d`.
-- **Local profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first,
-  load a model, then run setup. Setup auto-connects the `brag` tools to LM Studio's
-  chat too (not just Claude); if you install LM Studio *after* setup, just run
+- **Hybrid profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first,
+  load a model, then run setup. Setup auto-connects the BRAG tools (named `brag-<folder>`)
+  to LM Studio's chat too (not just Claude); if you install LM Studio *after* setup, just run
   `setup.command` again to add the connection. See [PROFILES.md](PROFILES.md).
 - Trouble? See [FAQ.md](FAQ.md).

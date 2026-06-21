@@ -23,7 +23,7 @@ sie zitierst.
 
 Was deinen Rechner verlässt, hängt vom gewählten **Profil** ab:
 
-- **Lokale Profile (Hybrid, Lokal):** Es verlässt **nichts** deinen Rechner —
+- **Lokales Profil (Hybrid):** Es verlässt **nichts** deinen Rechner —
   weder Dokumenttext noch Embeddings. Der Bedeutungs-Index wird ohnehin in jedem
   Standard-Profil lokal erzeugt. Die einzige Ausnahme ist der optionale
   Cloud-Embedding-Override (`EMBEDDING_BACKEND=gemini`/`openai`, dokumentiert in

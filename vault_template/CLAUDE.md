@@ -15,10 +15,11 @@ students and teach two courses." -->
 
 ## My knowledge-store layout
 
-- `sources/` — my document corpus (PDFs, DOCX). **Read-only — never edit or move files here.** Subfolder names become the document type (e.g. `sources/papers/`, `sources/books/`).
-- `notes/` — auto-generated literature notes, one per source. The section "My notes" is mine; everything above it is regenerated.
-- `passages/` — quotable passages I saved via `save_passage`, grouped by topic.
-- `wiki/` — my own thinking (concepts, drafts, decisions). **Never treat wiki content as external evidence** — these are my notes, not sources.
+- The **project folder itself is my searchable corpus** — I drop documents (PDFs, DOCX) straight into it, in any subfolder at any depth, and everything gets indexed. **Read-only — never edit or move files in the corpus.** The first subfolder level names the document type (e.g. `papers/`, `books/`).
+- `WissensWIKI/` is my workspace, and **nothing under it is indexed** (so my notes never echo back into search):
+  - `Passagen/` — quotable passages I saved via `/beleg` → `save_passage`. These ARE indexed.
+  - `Notizen/` + any free subfolders I make — my notebook (concepts, drafts, decisions, thinking). Claude reads and writes here via `read_note`/`write_note`. **Never treat notebook content as external evidence** — these are my notes, not sources.
+  - `CLAUDE.md`/`AGENTS.md` — these guides.
 
 ## How to search my corpus
 
@@ -38,4 +39,4 @@ students and teach two courses." -->
 ## Conventions
 
 - Language for answers and notes: (your language)
-- New concept notes go to `wiki/`, named `Topic_Name.md`, with `[[wikilinks]]` to related notes.
+- New concept notes go to `WissensWIKI/Notizen/`, named `Topic_Name.md`, with `[[wikilinks]]` to related notes.

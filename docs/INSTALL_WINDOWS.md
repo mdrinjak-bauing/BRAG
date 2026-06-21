@@ -150,8 +150,8 @@ Now ask Claude:
   lives inside Docker, safely outside any sync folder.
 - **Stopping/starting:** To stop, open a Command Prompt in the project folder and
   run `docker compose down`. To start: `docker compose up -d`.
-- **Local profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first, then
-  run setup. Setup auto-connects the `brag` tools to LM Studio's chat too (not just
+- **Hybrid profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first, then
+  run setup. Setup auto-connects the BRAG tools (named `brag-<folder>`) to LM Studio's chat too (not just
   Claude); if you install LM Studio *after* setup, just double-click `setup.bat`
   again to add the connection. See [PROFILES.md](PROFILES.md).
 - Trouble? See [FAQ.md](FAQ.md).

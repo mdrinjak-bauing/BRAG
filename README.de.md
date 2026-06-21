@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.3.3** ([Änderungen](#versionen))
+**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.4.1** ([Änderungen](#versionen))
 
 > **Ein KI-Assistent, der deine eigenen Quellen wirklich kennt.** Leg deine Dokumente — PDFs, Word, PowerPoint, deine eigenen Notizen — in einen Ordner. BRAG erschließt sie **auf deinem Rechner** und reicht der KI bei jeder Frage genau die passenden Stellen — seitengenau belegt, ein Klick führt aufs Original. Ob die KI dabei lokal oder in der Cloud rechnet, entscheidest du; gesendet werden höchstens deine Frage und die passenden Stellen — nie der ganze Korpus.
 
@@ -22,7 +22,7 @@ Drei Dinge machen den Unterschied:
 
 > *Der Name ist ein Wortspiel — mit meinem Fach, dem Bauingenieurwesen, in dem man Dinge* ***baut***, *und mit dem, was das Werkzeug tut: Es baut dein Wissen auf und ruft es bei Bedarf wieder ab.*
 
-*Zum Funktionsumfang (v0.3.3): Das Fragen läuft standardmäßig über Claude Desktop; das Setup trägt die Such- und Notizbuch-Werkzeuge zusätzlich automatisch in **LM Studio** ein, falls installiert — für einen vollständig lokalen Pfad. Weitere MCP-fähige Clients lassen sich ebenfalls anbinden — Claude Code baut dir die Brücke; siehe [Ausbau](#ausbau--automatisierung-mit-claude-code--co). ChatGPT ist als Frage-Oberfläche noch nicht vorkonfiguriert. Zitate werden automatisch in den Ordner zurückgeschrieben; eigene Schlussfolgerungen als freie Notizen festzuhalten ist eine optionale Obsidian-Erweiterung (siehe [Doku](docs/OBSIDIAN.de.md)).*
+*Zum Funktionsumfang (v0.4.1): Das Fragen läuft standardmäßig über Claude Desktop; das Setup trägt die Such- und Notizbuch-Werkzeuge zusätzlich automatisch in **LM Studio** ein, falls installiert — für einen vollständig lokalen Pfad. Weitere MCP-fähige Clients lassen sich ebenfalls anbinden — Claude Code baut dir die Brücke; siehe [Ausbau](#ausbau--automatisierung-mit-claude-code--co). ChatGPT ist als Frage-Oberfläche noch nicht vorkonfiguriert. Zitate werden automatisch in den Ordner zurückgeschrieben; eigene Schlussfolgerungen als freie Notizen festzuhalten ist eine optionale Obsidian-Erweiterung (siehe [Doku](docs/OBSIDIAN.de.md)).*
 
 ## Für wen?
 
@@ -269,6 +269,12 @@ voreingestellt; für einen typischen Korpus bleiben die Kosten im **Cent-Bereich
 Embeddings laufen überall auf der CPU. Details, Modell-Empfehlungen und das
 Cloud-Embedding-Opt-in: [docs/PROFILES.de.md](docs/PROFILES.de.md).
 
+**Absturzschutz (lokale Profile).** Wenn das Indexieren eines Dokuments deinen PC
+wiederholt hart neu startet, gibt BRAG nach ein paar Versuchen auf und legt statt
+eines erneuten Absturzes einen sichtbaren Marker `INDEXIERUNG-GESTOPPT.md` im
+Projektordner ab. Senke die GPU-Last oder wechsle auf ein Cloud-Profil und leg die
+Datei dann erneut hinein.
+
 ## Einrichten — realistisch etwa 1 Stunde
 
 Aktiv zu tun ist nur etwa **15 Minuten**; der Rest sind **Downloads** (Docker
@@ -306,10 +312,14 @@ mit [LM Studio](https://lmstudio.ai).
 KI-Anschluss — ✓/✗ pro Punkt.
 
 **BRAG entfernen?** Doppelklick auf `uninstall.command` (Mac) bzw. `uninstall.bat`
-(Windows): entfernt Container, Modell-Cache, App-Image und die
-Claude-Desktop-Verbindung — **deine Dokumente** (dein Projektordner) und der
-Suchindex **bleiben erhalten**, eine Neuinstallation findet sie wieder. Den
-Projektordner danach löschen, wenn du die Dateien nicht mehr brauchst.
+(Windows) öffnet ein kleines Menü: **[1]** **die Verbindung eines Projekts**
+entfernen — koppelt dieses Projekt von Claude / LM Studio ab, lässt aber BRAG und
+deine übrigen Projekte laufen; **[2]** das **ganze System** entfernen — ein
+vollständiges Docker-Aufräumen, das Container, Modell-Cache, den Suchindex und die
+Claude-/LM-Studio-Verbindung abbaut; **[C]** abbrechen. In jedem Fall werden
+**deine Dokumente auf der Festplatte nie gelöscht** (deine Projektordner bleiben
+liegen), eine Neuinstallation findet sie wieder. Einen Projektordner löschst du
+selbst, wenn du seine Dateien nicht mehr brauchst.
 
 **Etwas klemmt?** Schau zuerst in die [FAQ & Fehlerbehebung](docs/FAQ.de.md) —
 sie deckt die häufigen Fälle ab. Sieht es nach einem echten Bug aus, [öffne bitte
@@ -384,7 +394,7 @@ So sieht es auf der Festplatte aus:
 auseinander — jeder mit eigener Suchdatenbank und eigenem Anschluss in Claude.
 Doppelklick auf **`Projekt hinzufuegen.bat`** (Windows) / **`.command`** (macOS),
 einen Projektordner an beliebigem Ort wählen, benennen: BRAG legt darin einen
-`WissensWIKI/`-Arbeitsbereich an und ergänzt einen Anschluss `brag · <Name>` neben
+`WissensWIKI/`-Arbeitsbereich an und ergänzt einen Anschluss `brag-<Name>` neben
 dem bestehenden. Programm und die ~3 GB Modelle bleiben **geteilt** (eine Engine)
 — Zusatzprojekte kosten nur Plattenplatz für ihre Dokumente, keinen Mehr-RAM. In
 Claudes Anschlussliste wählst du, welches Projekt durchsucht wird; nichts aus
@@ -527,8 +537,12 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 
 ## Versionen
 
-Aktuelle Version: **0.3.3** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
+Aktuelle Version: **0.4.1** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.4.x** — **Mehrere Projekte aus einer Engine**, der **Projektordner selbst ist
+  der Korpus** (kein `sources/`-Unterordner mehr), eine freundlichere Installation
+  und ein feinkörnigeres Deinstallieren (ein einzelnes Projekt oder das ganze
+  System entfernen).
 - **0.3.3** — Ollama entfernt; **LM Studio ist jetzt die einzige lokale
   LLM-Option** (plattformübergreifend, auch für schwächere Laptops), und das
   Setup verbindet LM Studio automatisch zusätzlich zu Claude Desktop.
@@ -567,7 +581,7 @@ Aktuelle Version: **0.3.3** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHA
 
 ## Status
 
-Frühe Version (0.3.3). Das **Gemini-Profil** ist der getestete Hauptweg; die
+Frühe Version (0.4.1). Das **Gemini-Profil** ist der getestete Hauptweg; die
 übrigen Profile funktionieren, sind aber weniger erprobt. Roadmap: automatische
 Dateibenennung, Korpus-Überblicksmodi (Coverage/Cluster), optionale
 Wissensgraph-Ebene — und die oben skizzierten Anbindungen.

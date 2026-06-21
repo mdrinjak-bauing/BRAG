@@ -63,12 +63,16 @@ wenigen Cent.
 |---|---|
 | Text-LLM | dein Modell in [LM Studio](https://lmstudio.ai) |
 | Voraussetzung | LM Studio läuft auf dem Host mit geladenem Modell |
-| Hardware | ~16 GB RAM für ein ~7B-Modell (`qwen2.5-7b-instruct`), 32 GB für ein 14B (`qwen2.5-14b-instruct`), 64 GB+ für ein 27B (`gemma-3-27b-it`); eine GPU hilft sehr |
+| Hardware | ~16 GB RAM für ein ~7B-Modell (`qwen2.5-7b-instruct`), 32 GB für ein 14B (`qwen2.5-14b-instruct`), 64 GB+ für ein 27B (`gemma-3-27b-it`) — gib LM Studio den vollständigen Modellpfad aus seinem Modell-Browser (z. B. die Hugging-Face-ID); eine GPU hilft sehr |
 | Datenschutz | nichts verlässt den Rechner |
 
 Du lädst **kein** Embedding-Modell — arctic läuft eigenständig im Container. Die
 App läuft in Docker und erreicht LM Studio auf dem Host über
-`host.docker.internal` (Port 1234).
+`host.docker.internal` (Port 1234). Das lokale Profil heißt in LM Studio
+**Hybrid**. Jedes registrierte Projekt bekommt einen eigenen Connector namens
+`brag-<Ordner>` (in Claude / LM Studio) — auch das Standard- bzw. erste Projekt;
+ein bloßes `brag` erscheint nur bei einer frischen Installation, bevor ein
+Projekt hinzugefügt wurde.
 
 ## Mischen (für Fortgeschrittene)
 

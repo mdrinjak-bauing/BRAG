@@ -57,8 +57,9 @@ Then double-click `setup.command` again.
    a window close is not enough.
 2. Check the container is running: `docker ps` should list `brag-app`.
 3. Check the config file (see [OBSIDIAN.md](OBSIDIAN.md) for the path)
-   contains the `brag` entry (older installs may show the longer legacy name
-   until you re-run setup).
+   contains the `brag-<folder>` entry (a bare `brag` appears only on a fresh
+   install with no project registered yet; older installs may show the longer
+   legacy name until you re-run setup).
 
 ## Indexing
 

@@ -4,6 +4,32 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] — 2026-06-21
+
+A focused fix release for the uninstall flow and the connector sync.
+
+### Fixed
+- **Remove any project connection from the uninstall menu — including the first
+  one.** Option **[1]** now lists your projects by number; pick `1`/`2` to remove
+  **any** of them (the default included), instead of only being able to type the
+  slug of a non-default project. Removing the last/only project is refused and
+  points you to the full uninstall, so [1] always means "keep BRAG and the others".
+- **The full uninstall now leaves Docker clean.** It removes the search-index
+  volume too (not just the model cache), sweeps the containers, the network and any
+  one-shot containers, and verifies nothing BRAG-related remains — so "uninstall"
+  really frees the space. Your documents on disk are still never touched.
+- **No more phantom bare `brag` connector.** A registry holding only the default
+  project is now bound into the app, so its connector keeps the named
+  `brag-<folder>` key instead of silently collapsing to an unlabelled `brag` after
+  a re-sync or after removing the last extra project.
+- **The full uninstall closes Claude before editing its config**, so the deleted
+  connectors are not resurrected by a still-running Claude (which rewrites its
+  config from memory) — no dead connectors pointing at containers that are gone.
+- Removing a project now force-recreates the app so it re-reads the updated
+  registry immediately; a connector-name collision between the default folder and
+  an added project no longer drops a connector; and on macOS the per-project remove
+  warns instead of silently skipping when host `python3` is missing.
+
 ## [0.4.0] — 2026-06-21
 
 Multiple projects from one engine, and a clearer "your folder IS the corpus"
@@ -379,6 +405,9 @@ re-index).
 - Knowledge store (library vs. notebook) and the search MCP server for
   Claude Desktop.
 
+[0.4.1]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.4.1
+[0.4.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.4.0
+[0.3.4]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.3.4
 [0.3.3]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.3.3
 [0.3.2]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.3.2
 [0.3.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.3.0

@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.3.3** ([changes](#versions))
+**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.4.1** ([changes](#versions))
 
 > **An AI assistant that actually knows your sources.** Drop your documents — PDFs, Word, PowerPoint, your own notes — into a folder. BRAG makes sense of them **on your own machine** and hands the AI the right passages for every question — page-cited, one click from the original. Whether that AI runs locally or in the cloud is your call; at most your question and the matching passages are sent — never the whole corpus.
 
@@ -22,7 +22,7 @@ Three things set it apart:
 
 > *The name is a play on my field — civil engineering, where you* ***build*** *things — and on what the tool does: it builds up your knowledge and retrieves it when you need it.*
 
-*Note on scope (v0.3.3): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic; capturing your own conclusions as free-form notes is an optional Obsidian add-on (see [docs](docs/OBSIDIAN.md)).*
+*Note on scope (v0.4.1): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic; capturing your own conclusions as free-form notes is an optional Obsidian add-on (see [docs](docs/OBSIDIAN.md)).*
 
 ## Who is it for?
 
@@ -258,6 +258,12 @@ strong hardware for a *local* text AI — embeddings run on CPU everywhere.
 Details, model recommendations and the cloud-embedding opt-in:
 [docs/PROFILES.md](docs/PROFILES.md).
 
+**Crash guard (local profiles).** If indexing one document keeps hard-resetting
+your PC, BRAG stops retrying it after a couple of attempts and drops a visible
+`INDEXING-STOPPED.md` marker in the project folder instead of crashing the
+machine again. Lower the GPU load or switch to a cloud profile, then re-drop the
+file.
+
 ## Setup — realistically about an hour
 
 Only about **15 minutes of active work**; the rest is **downloads** (Docker
@@ -291,10 +297,13 @@ Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai).
 the AI connection — ✓/✗ per item.
 
 **Want to remove BRAG?** Double-click `uninstall.command` (Mac) / `uninstall.bat`
-(Windows). It removes the containers, the model cache, the app image and the
-Claude Desktop connection — but **keeps your documents** (your project folder)
-and the search index, so a re-install picks them up again. Delete the project
-folder afterwards if you no longer need the files.
+(Windows). It opens a small menu: **[1]** remove **one project's connection** —
+unhooks that project from Claude / LM Studio but keeps BRAG and your other
+projects running; **[2]** remove the **whole system** — a full Docker clean that
+tears down the containers, the model cache, the search index and the Claude / LM
+Studio connection; **[C]** cancel. Either way **your documents on disk are never
+deleted** (your project folders stay put), so a re-install picks them up again.
+Delete a project folder yourself if you no longer need its files.
 
 **Something off?** Start with the [FAQ & troubleshooting](docs/FAQ.md) — it
 covers the common cases. If it looks like a real bug, please [open a GitHub
@@ -365,7 +374,7 @@ On your disk it looks like this:
 with its own search database and its own connector in Claude. Double-click
 **`Projekt hinzufuegen.bat`** (Windows) / **`.command`** (macOS), pick a project
 folder anywhere, give it a name: BRAG creates a `WissensWIKI/` workspace inside it
-and adds a `brag · <name>` connector next to your existing one. The program and
+and adds a `brag-<name>` connector next to your existing one. The program and
 the ~3 GB models stay **shared** (one engine), so extra projects cost only disk
 for their documents — not more RAM. In Claude's connector list you pick which
 project to search; nothing from one project leaks into another.
@@ -497,8 +506,11 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 ## Versions
 
-Current version: **0.3.3** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.4.1** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.4.x** — **Multiple projects from one engine**, the **project folder itself is
+  the corpus** (no more `sources/` subfolder), a friendlier install and a more
+  granular uninstall (remove one project or the whole system).
 - **0.3.3** — Dropped Ollama; **LM Studio is now the only local-LLM option**
   (cross-platform, works on weaker laptops too), and setup auto-connects LM
   Studio alongside Claude Desktop.
@@ -533,7 +545,7 @@ Current version: **0.3.3** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
 ## Status
 
-Early release (0.3.3). The **Gemini profile** is the tested happy path; the
+Early release (0.4.1). The **Gemini profile** is the tested happy path; the
 other profiles work but are less battle-tested. Roadmap: automatic file naming,
 corpus overview modes (coverage/clusters), optional knowledge-graph layer — and
 the integrations sketched above.
