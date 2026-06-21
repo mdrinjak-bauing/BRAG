@@ -22,7 +22,7 @@ captured `_send` / `_send_json`.
 
 import json
 
-from brag import config, http_bridge
+from brag import config, http_bridge, registry
 from brag.http_bridge import (
     LOOPBACK_NAMES,
     MAX_BODY_BYTES,
@@ -320,6 +320,26 @@ def test_api_index_op_runs_file_tool(tmp_path, monkeypatch):
     assert h.captured.code == 200
     assert h.captured.json["ok"] is True
     assert "wiki/ (1)" in h.captured.json["text"]
+
+
+def test_serve_vault_file_scopes_to_project(tmp_path, monkeypatch):
+    # A /file/ request with ?project=<slug> resolves against THAT project's vault,
+    # not the default — the deep-link cross-project fix.
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path / "default")
+    (tmp_path / "default").mkdir()
+    (tmp_path / "default" / "doc.pdf").write_bytes(b"%PDF default")
+    pvault = tmp_path / "proj" / "WissensWIKI"
+    pvault.mkdir(parents=True)
+    (pvault / "doc.pdf").write_bytes(b"%PDF project")
+    registry.register("ProjektA", str(tmp_path / "proj"), "asb_x", vault=str(pvault))
+    h = _make_handler()
+    h._serve_vault_file("doc.pdf", "projekta")
+    assert h.captured.code == 200
+    assert h.captured.body == b"%PDF project"   # served the PROJECT's file
+    h2 = _make_handler()
+    h2._serve_vault_file("doc.pdf")
+    assert h2.captured.body == b"%PDF default"   # no project -> default vault
 
 
 # Keep a reference to http_bridge so the import is obviously load-bearing

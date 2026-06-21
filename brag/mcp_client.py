@@ -101,7 +101,7 @@ def search(query: str, top_k: int = 15, doc_type: str = "",
         return ("No hits. Try different phrasing, fewer filters, or check "
                 "list_sources() whether the document is indexed at all.")
     out = [f"**{len(hits)} hits** for: {query}\n"]
-    out += [format_hit(i + 1, h) for i, h in enumerate(hits)]
+    out += [format_hit(i + 1, h, project=PROJECT) for i, h in enumerate(hits)]
     return "\n".join(out)
 
 

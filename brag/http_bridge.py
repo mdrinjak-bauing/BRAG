@@ -66,7 +66,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
                        extra={"Content-Security-Policy": SETUP_CSP})
         elif parsed.path.startswith("/file/"):
             rel = urllib.parse.unquote(parsed.path[len("/file/"):])
-            self._serve_vault_file(rel)
+            params = urllib.parse.parse_qs(parsed.query)
+            project = (params.get("project", [""])[0] or "").strip()
+            self._serve_vault_file(rel, project)
         else:
             self._send(404, b"not found", "text/plain")
 
@@ -319,24 +321,33 @@ class BridgeHandler(BaseHTTPRequestHandler):
             return False
         return name in LOOPBACK_NAMES
 
-    def _serve_vault_file(self, rel: str):
-        target = (config.VAULT / rel).resolve()
-        try:
-            target.relative_to(config.VAULT.resolve())
-        except ValueError:
-            self._send(403, b"forbidden", "text/plain")
-            return
-        if not target.is_file():
-            self._send(404, b"file not found", "text/plain")
-            return
-        if target.suffix.lower() == ".pdf":
-            # PDFs render inline so the browser can jump to #page=N.
-            self._send(200, target.read_bytes(), "application/pdf")
-        else:
-            # Never serve knowledge-store content (.html/.md/…) as active, same-origin
-            # HTML — hand it back as a download (stored-XSS hardening).
-            self._send(200, target.read_bytes(), "application/octet-stream",
-                       extra={"Content-Disposition": "attachment"})
+    def _serve_vault_file(self, rel: str, project: str = ""):
+        # A deep link from a non-default project carries ?project=<slug>; resolve
+        # the path against THAT project's vault (not the default one), reusing the
+        # same per-request context as the tool dispatcher. The traversal guard
+        # runs INSIDE the context so it validates against the correct vault.
+        rec = None
+        if project:
+            from brag import registry
+            rec = registry.get(project)
+        with config.project_context(rec):
+            target = (config.VAULT / rel).resolve()
+            try:
+                target.relative_to(config.VAULT.resolve())
+            except ValueError:
+                self._send(403, b"forbidden", "text/plain")
+                return
+            if not target.is_file():
+                self._send(404, b"file not found", "text/plain")
+                return
+            if target.suffix.lower() == ".pdf":
+                # PDFs render inline so the browser can jump to #page=N.
+                self._send(200, target.read_bytes(), "application/pdf")
+            else:
+                # Never serve knowledge-store content (.html/.md/…) as active,
+                # same-origin HTML — hand it back as a download (stored-XSS hardening).
+                self._send(200, target.read_bytes(), "application/octet-stream",
+                           extra={"Content-Disposition": "attachment"})
 
     def _send(self, code: int, body: bytes, mime: str, extra: dict | None = None):
         self.send_response(code)
@@ -353,11 +364,14 @@ class BridgeHandler(BaseHTTPRequestHandler):
         self._send(code, json.dumps(payload).encode(), "application/json")
 
 
-def pdf_link(rel_path: str, page: int | None = None) -> str:
-    """Public link that opens the document in the host browser at a page."""
+def pdf_link(rel_path: str, page: int | None = None, project: str = "") -> str:
+    """Public link that opens the document in the host browser at a page. For a
+    non-default project it carries ?project=<slug> so the file server resolves
+    the path against that project's vault, not the default one."""
     quoted = urllib.parse.quote(rel_path)
+    query = f"?project={urllib.parse.quote(project)}" if project else ""
     anchor = f"#page={page}" if page else ""
-    return f"{config.BRIDGE_PUBLIC_URL}/file/{quoted}{anchor}"
+    return f"{config.BRIDGE_PUBLIC_URL}/file/{quoted}{query}{anchor}"
 
 
 def start_bridge_in_background() -> ThreadingHTTPServer:

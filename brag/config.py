@@ -135,6 +135,12 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
+def __dir__():
+    # Make the PEP 562 scoped names discoverable (they live only in __getattr__,
+    # so without this they'd be missing from dir()/enumeration).
+    return sorted(list(globals()) + list(_SCOPED_ATTRS))
+
+
 @contextlib.contextmanager
 def project_context(slug_or_record):
     """Scope the vault paths + COLLECTION_NAME to a project for the duration of

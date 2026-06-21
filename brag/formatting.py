@@ -10,7 +10,7 @@ from brag.http_bridge import pdf_link
 PREVIEW_CHARS = 1000  # tables are never truncated; long text gets a preview
 
 
-def format_hit(i: int, hit: dict) -> str:
+def format_hit(i: int, hit: dict, project: str = "") -> str:
     if hit.get("chunk_type") == "passage":
         topic = hit.get("topic", "") or hit.get("source_file", "").replace("passage:", "")
         frm = hit.get("from_source", "")
@@ -41,7 +41,7 @@ def format_hit(i: int, hit: dict) -> str:
     book_page = phys_page
     if isinstance(phys_page, int) and offset and phys_page - offset >= 1:
         book_page = phys_page - offset  # printed page; guard against a bad offset
-    link = pdf_link(hit.get("rel_path", ""), phys_page)
+    link = pdf_link(hit.get("rel_path", ""), phys_page, project)
     cite = f"{author} ({year})" if author and author != "Unknown" else src
     header = f"### [{i}] [{cite} — p. {book_page}](<{link}>)"
     meta = (

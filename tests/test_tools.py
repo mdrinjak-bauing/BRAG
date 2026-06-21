@@ -27,6 +27,15 @@ def test_format_hit_page_offset_shows_printed_page(monkeypatch):
     assert "p. 12" in format_hit(1, hit)
 
 
+def test_format_hit_carries_project_in_link(monkeypatch):
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    hit = {"source_file": "a.pdf", "rel_path": "sources/a.pdf", "page_start": 3,
+           "text": "x"}
+    assert "project=projekta" in format_hit(1, hit, project="projekta")
+    assert "project=" not in format_hit(1, hit)  # single-project: no query param
+
+
 def test_format_hit_passage(monkeypatch):
     monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
                         raising=False)
