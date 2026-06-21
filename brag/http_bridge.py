@@ -75,10 +75,6 @@ class BridgeHandler(BaseHTTPRequestHandler):
         if not self._host_ok() or not self._origin_ok():
             self._send_json(403, {"ok": False, "message": "forbidden"})
             return
-        # The config-writing setup API exists only in the one-shot setup service.
-        if not config.SETUP_MODE:
-            self._send_json(404, {"ok": False, "message": "setup not active"})
-            return
         parsed = urllib.parse.urlparse(self.path)
         try:
             length = int(self.headers.get("Content-Length", 0))
@@ -88,6 +84,18 @@ class BridgeHandler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length) or b"{}")
         except (ValueError, json.JSONDecodeError):
             self._send_json(400, {"ok": False, "message": "invalid request"})
+            return
+
+        # Shared model service — available on the PERSISTENT app (SETUP_MODE off):
+        # the per-project MCP clients are thin (load no models) and call this, so
+        # the heavy embed/retrieve/rerank runs exactly once, in this process.
+        if parsed.path == "/api/search":
+            self._api_search(body)
+            return
+
+        # The config-writing setup API exists only in the one-shot setup service.
+        if not config.SETUP_MODE:
+            self._send_json(404, {"ok": False, "message": "setup not active"})
             return
 
         if parsed.path == "/api/validate-key":
@@ -188,6 +196,45 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 "on Windows at %APPDATA%\\Claude\\claude_desktop_config.json"
             )
         self._send_json(200, response)
+
+    def _api_search(self, body: dict):
+        """Shared search service: a thin per-project MCP client POSTs here and the
+        heavy embed/retrieve/rerank runs in this one persistent process — so the
+        models live in RAM exactly once no matter how many connectors are open.
+        `project` selects the per-project collection via the registry; omit it for
+        the single-project default."""
+        from brag import registry
+        from brag.search.query import search as run_search
+
+        project = str(body.get("project", "")).strip()
+        collection = None
+        if project:
+            collection = registry.get_collection(project)
+            if collection is None:
+                self._send_json(404, {"ok": False, "message":
+                    f"unknown project '{project}' — re-run setup for this project"})
+                return
+        raw_top = body.get("top_k")
+        top_k = raw_top if isinstance(raw_top, int) and raw_top > 0 else None
+        meta = body.get("meta")
+        try:
+            hits = run_search(
+                str(body.get("query", "")),
+                top_k=top_k,
+                reranking=body.get("reranking"),
+                collection_name=collection,
+                doc_type=str(body.get("doc_type", "")) or None,
+                chunk_type=str(body.get("chunk_type", "")) or None,
+                year_min=body.get("year_min") or None,
+                year_max=body.get("year_max") or None,
+                source_file=str(body.get("source_file", "")) or None,
+                meta=meta if isinstance(meta, dict) else None,
+            )
+        except Exception as e:  # noqa: BLE001 — a search error must not kill the thread
+            self._send_json(500, {"ok": False,
+                                  "message": f"search failed: {str(e)[:200]}"})
+            return
+        self._send_json(200, {"ok": True, "hits": hits})
 
     # ── helpers ─────────────────────────────────────────────────
     def _host_ok(self) -> bool:

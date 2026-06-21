@@ -12,6 +12,7 @@ so scores are reported transparently instead of filtered.
 
 from __future__ import annotations
 
+import threading
 from typing import TYPE_CHECKING
 
 from brag import config
@@ -22,14 +23,23 @@ if TYPE_CHECKING:
     from qdrant_client.models import Filter
 
 _reranker = None
+# The bridge serves searches on multiple threads (one per concurrent project
+# connector). Build the reranker once under a double-checked lock so concurrent
+# first-calls don't construct N copies, and serialize the CPU forward pass so
+# parallel searches queue instead of thrashing the CPU / multiplying RAM.
+_INIT_LOCK = threading.Lock()
+_RERANK_LOCK = threading.Lock()
 
 
 def _get_reranker():
     global _reranker
     if _reranker is None:
-        from sentence_transformers import CrossEncoder
-        kwargs = {"revision": config.RERANKER_REVISION} if config.RERANKER_REVISION else {}
-        _reranker = CrossEncoder(config.RERANKER_MODEL, **kwargs)
+        with _INIT_LOCK:
+            if _reranker is None:
+                from sentence_transformers import CrossEncoder
+                kwargs = ({"revision": config.RERANKER_REVISION}
+                          if config.RERANKER_REVISION else {})
+                _reranker = CrossEncoder(config.RERANKER_MODEL, **kwargs)
     return _reranker
 
 
@@ -154,7 +164,8 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
     if reranking and candidates:
         pairs = [(query, c.get("context", "") + "\n" + c.get("text", ""))
                  for c in candidates]
-        scores = _get_reranker().predict(pairs, batch_size=config.RERANK_BATCH_SIZE)
+        with _RERANK_LOCK:
+            scores = _get_reranker().predict(pairs, batch_size=config.RERANK_BATCH_SIZE)
         for c, s in zip(candidates, scores):
             c["rerank_score"] = float(s)
         candidates.sort(key=lambda c: c["rerank_score"], reverse=True)

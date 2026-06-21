@@ -239,6 +239,48 @@ def test_setup_csp_is_strict():
     assert "http://" not in SETUP_CSP and "https://" not in SETUP_CSP
 
 
+# ── Shared search service (/api/search) ──────────────────────────
+def test_api_search_unknown_project_returns_404(tmp_path, monkeypatch):
+    # /api/search must work on the PERSISTENT app (SETUP_MODE off) and 404 a
+    # project that is not in the registry.
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))  # empty
+    data = json.dumps({"project": "ghost", "query": "x"}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/search"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 404
+    assert h.captured.json["ok"] is False
+    assert "ghost" in h.captured.json["message"]
+
+
+def test_api_search_runs_when_setup_off(tmp_path, monkeypatch):
+    # With SETUP_MODE off and no project, /api/search runs against the default
+    # collection and returns hits as plain dicts. search() is stubbed so the test
+    # needs no Qdrant / models.
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    seen = {}
+
+    def fake_search(query, **kw):
+        seen["query"] = query
+        seen["collection_name"] = kw.get("collection_name")
+        return [{"text": "hi", "source_file": "a.pdf", "score": 1.0}]
+
+    monkeypatch.setattr("brag.search.query.search", fake_search)
+    data = json.dumps({"query": "hello", "top_k": 5}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/search"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 200
+    assert h.captured.json["ok"] is True
+    assert h.captured.json["hits"][0]["text"] == "hi"
+    assert seen["query"] == "hello"
+    assert seen["collection_name"] is None  # single-project default
+
+
 # Keep a reference to http_bridge so the import is obviously load-bearing
 # (the module must import cleanly with no heavy deps).
 assert http_bridge.BridgeHandler is BridgeHandler
