@@ -1,0 +1,94 @@
+"""Unit tests for the multi-project registry (brag.registry)."""
+
+import json
+
+import pytest
+
+from brag import registry
+
+
+@pytest.fixture(autouse=True)
+def _isolated_registry(tmp_path, monkeypatch):
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    yield
+
+
+def test_slugify_rules():
+    assert registry.slugify("ProjektA") == "projekta"
+    assert registry.slugify("My Project 2024!") == "my_project_2024"
+    assert registry.slugify("  Über/Acht  ") == "ueber_acht"  # umlauts -> ASCII
+    assert registry.slugify("Forschung & Lehre") == "forschung_lehre"
+    assert registry.slugify("---") == "project"  # never empty
+
+
+def test_collection_keeps_base_prefix():
+    base = "asb_local_st_1024"
+    assert registry.collection_for(base, "projekta") == "asb_local_st_1024__projekta"
+    # the asb_ prefix must survive so orphan detection still recognizes it
+    assert registry.collection_for(base, "x").startswith("asb_")
+
+
+def test_validate_and_normalize_host_path():
+    for bad in ["D:/a$b", "C:/x&y", "C:/p%q", "C:/p^q", "C:/p!q", "", "   "]:
+        ok, _ = registry.validate_host_path(bad)
+        assert ok is False
+    ok, _ = registry.validate_host_path("D:/Arbeit/Projekt A")  # spaces are fine
+    assert ok is True
+    assert registry.normalize_host_path("D:\\Arbeit\\ProjektA\\") == "D:/Arbeit/ProjektA"
+
+
+def test_load_missing_returns_empty():
+    data = registry.load()
+    assert data["projects"] == []
+    assert data["version"] == registry.SCHEMA_VERSION
+
+
+def test_load_corrupt_degrades(tmp_path, monkeypatch):
+    p = tmp_path / "projects.json"
+    p.write_text("{ not json", encoding="utf-8")
+    monkeypatch.setenv("BRAG_REGISTRY", str(p))
+    assert registry.load()["projects"] == []  # never raises
+
+
+def test_register_builds_record_and_dedups_slug():
+    a = registry.register("ProjektA", "D:\\Arbeit\\ProjektA", "asb_local_st_1024")
+    assert a["slug"] == "projekta"
+    assert a["host_path"] == "D:/Arbeit/ProjektA"
+    assert a["collection"] == "asb_local_st_1024__projekta"
+    assert a["vault"] == "/projects/projekta/WissensWIKI"
+    # same display name -> a unique slug, not a collision
+    b = registry.register("ProjektA", "C:/Else/ProjektA", "asb_local_st_1024")
+    assert b["slug"] == "projekta_2"
+    assert {p["slug"] for p in registry.projects()} == {"projekta", "projekta_2"}
+
+
+def test_register_rejects_bad_path():
+    with pytest.raises(ValueError):
+        registry.register("Bad", "D:/has$dollar", "asb_local_st_1024")
+
+
+def test_get_and_remove():
+    registry.register("ProjektA", "D:/A", "asb_local_st_1024")
+    assert registry.get_collection("projekta") == "asb_local_st_1024__projekta"
+    assert registry.get_vault("projekta") == "/projects/projekta/WissensWIKI"
+    assert registry.remove("projekta") is True
+    assert registry.get("projekta") is None
+    assert registry.remove("projekta") is False  # already gone
+
+
+def test_synthesize_default_reuses_existing_collection():
+    rec = registry.synthesize_default("D:/Old/Vault", "asb_local_st_1024")
+    assert rec["slug"] == "default"
+    assert rec["collection"] == "asb_local_st_1024"   # VERBATIM, no __slug -> no re-embed
+    assert rec["vault"] == "/vault"
+    # idempotent + inserted first
+    again = registry.synthesize_default("D:/Old/Vault", "asb_local_st_1024")
+    assert again["slug"] == "default"
+    assert registry.projects()[0]["slug"] == "default"
+
+
+def test_save_is_atomic_and_readable():
+    registry.register("P", "D:/P", "asb_x_1")
+    raw = json.loads((registry.registry_path()).read_text(encoding="utf-8"))
+    assert raw["version"] == registry.SCHEMA_VERSION
+    assert raw["projects"][0]["name"] == "P"
