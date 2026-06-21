@@ -32,6 +32,29 @@ def test_connectors_for_registry(tmp_path, monkeypatch):
     assert "BRAG_PROJECT=projekta" in conns["brag-projekta"]["args"]
 
 
+def test_connector_key_for_project_is_the_keying_source(tmp_path, monkeypatch):
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "p.json"))
+    default = registry.synthesize_default("D:/Test Projekt 1", "asb_x")  # name "Test Projekt 1"
+    proj = registry.register("Projekt A", "D:/A", "asb_x")               # slug projekt_a
+    # default -> keyed after its folder; an extra project -> keyed after its slug.
+    assert setup_core.connector_key_for_project(default) == "brag-test_projekt_1"
+    assert setup_core.connector_key_for_project(proj) == "brag-projekt_a"
+    # connectors_for_registry must use exactly this helper (no drift between what
+    # the uninstall picker shows and what the connectors are actually keyed).
+    assert set(setup_core.connectors_for_registry()) == {"brag-test_projekt_1", "brag-projekt_a"}
+
+
+def test_connectors_disambiguate_key_collision(tmp_path, monkeypatch):
+    # The default folder name can slugify to the same string as an extra project's
+    # slug; connectors_for_registry must keep BOTH connectors (no silent drop).
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "p.json"))
+    registry.synthesize_default("D:/Thesis", "asb_x")   # default folder -> key brag-thesis
+    registry.register("Thesis", "D:/Other", "asb_x")    # extra slug 'thesis' -> also brag-thesis
+    conns = setup_core.connectors_for_registry()
+    assert len(conns) == 2              # neither connector collapsed away
+    assert "brag-thesis" in conns       # the default keeps the clean key
+
+
 def test_write_claude_config_syncs_brag_connectors(tmp_path, monkeypatch):
     monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "p.json"))
     monkeypatch.setenv("CLAUDE_CONFIG_MOUNTED", "1")

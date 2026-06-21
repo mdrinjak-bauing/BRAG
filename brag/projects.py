@@ -6,6 +6,7 @@ Run inside the one-shot setup container, which mounts the BRAG Assistent folder 
 
   docker compose run --rm setup python -m brag.projects add "My Thesis" "D:/Arbeit/Thesis"
   docker compose run --rm setup python -m brag.projects remove my-thesis
+  docker compose run --rm setup python -m brag.projects remove-interactive
   docker compose run --rm setup python -m brag.projects list
   docker compose run --rm setup python -m brag.projects migrate
 
@@ -65,6 +66,73 @@ def cmd_remove(slug: str, delete_index: bool = False) -> int:
     return 0
 
 
+def cmd_remove_interactive() -> int:
+    """Numbered picker for the uninstall launchers' [1] path: the user removes a
+    connection by choosing '1'/'2' (not by typing a slug), and ANY project can be
+    removed — INCLUDING the default. Runs in the one-shot setup container (it owns
+    the registry + reaches Qdrant), so the same prompt works on Windows and macOS.
+    Exit 0 = removed (host then re-mounts + re-syncs the connectors); 2 =
+    cancel/invalid (host stops); 1 = removal error."""
+    from brag import setup_core
+    projs = registry.projects()
+    if not projs:
+        print("No projects are registered - nothing to remove here.")
+        print("(To remove BRAG itself, choose the full uninstall.)")
+        return 2
+    if len(projs) == 1:
+        # Removing the only project would empty the registry, which the connector
+        # sync treats as a single-project install and re-adds a bare 'brag' - i.e.
+        # NOT "no connections". Refuse and send the user to the full uninstall, so
+        # the [1] path always means "keep BRAG + the others".
+        only = setup_core.connector_key_for_project(projs[0])
+        print(f"{only} is your only project. Removing a connection here is meant to")
+        print("leave BRAG and your OTHER projects in place - but there are no others.")
+        print("To remove BRAG entirely, cancel and choose the FULL uninstall instead.")
+        return 2
+    if not sys.stdin.isatty():
+        # No interactive terminal was forwarded into the container - don't hang on
+        # input(); point the user at the explicit, scriptable form instead.
+        print("This picker needs an interactive terminal. List your projects with:")
+        print("  docker compose run --rm setup python -m brag.projects list")
+        print("then remove one by its slug:")
+        print("  docker compose run --rm setup python -m brag.projects "
+              "remove <slug> [--delete-index]")
+        return 2
+    print()
+    print("Which connection do you want to remove?")
+    for i, p in enumerate(projs, 1):
+        key = setup_core.connector_key_for_project(p)
+        print(f"  [{i}] {key}   (folder: {p.get('host_path', '')})")
+    print("  [C] Cancel")
+    try:
+        choice = input("Choose a number (or C to cancel): ").strip()
+    except EOFError:
+        choice = ""
+    if not choice or choice.lower() == "c":
+        print("Cancelled - nothing was changed.")
+        return 2
+    try:
+        n = int(choice)
+        if n < 1:
+            raise IndexError
+        sel = projs[n - 1]
+    except (ValueError, IndexError):
+        print("Invalid choice - nothing was changed.")
+        return 2
+    slug = sel["slug"]
+    key = setup_core.connector_key_for_project(sel)
+    try:
+        di = input(f"Also delete the search index for {key}? "
+                   "Your documents stay. (y/N): ").strip().lower()
+    except EOFError:
+        di = ""
+    rc = cmd_remove(slug, delete_index=(di == "y"))
+    if rc == 0:
+        # The host launcher greps this line to report what it just unwired.
+        print(f"REMOVED\t{key}")
+    return rc
+
+
 def cmd_list() -> int:
     projects = registry.projects()
     if not projects:
@@ -100,12 +168,14 @@ def main(argv: list[str]) -> int:
         return cmd_add(rest[0], rest[1])
     if cmd == "remove" and len(rest) >= 1:
         return cmd_remove(rest[0], delete_index="--delete-index" in rest)
+    if cmd == "remove-interactive":
+        return cmd_remove_interactive()
     if cmd == "list":
         return cmd_list()
     if cmd == "migrate":
         return cmd_migrate()
-    print("usage: projects {add <name> <host_path>|remove <slug>|list|migrate}",
-          file=sys.stderr)
+    print("usage: projects {add <name> <host_path>|remove <slug>|"
+          "remove-interactive|list|migrate}", file=sys.stderr)
     return 2
 
 

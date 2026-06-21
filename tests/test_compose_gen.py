@@ -7,10 +7,14 @@ def test_render_empty_is_noop():
     assert "services: {}" in compose_gen.render_override([])
 
 
-def test_render_skips_default_project():
-    # the default project uses the base /vault mount -> nothing added
+def test_render_binds_registry_for_default_only():
+    # A default-only registry: NO /projects/<slug> mount (the default uses the base
+    # /vault), but the app MUST still see projects.json so its connector stays the
+    # named 'brag-<folder>' and never collapses to a phantom bare 'brag'.
     out = compose_gen.render_override([{"slug": "default", "host_path": "/x"}])
-    assert "services: {}" in out
+    assert "/registry/projects.json:ro" in out   # registry IS bound read-only
+    assert ":/projects/" not in out               # but no per-project vault mount
+    assert "services:" in out and "app:" in out
 
 
 def test_render_mounts_additional_project():

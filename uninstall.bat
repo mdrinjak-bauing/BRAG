@@ -1,8 +1,9 @@
 @echo off
 REM BRAG - Building Retrieval-Augmented Generation - uninstall / remove a project
 REM (Windows). You choose: remove ONE project connection (keep BRAG + your other
-REM projects + all documents), or remove the WHOLE BRAG system. Double-click is
-REM fine; it runs from the "BRAG Assistent" folder. Your documents are never deleted.
+REM projects + all documents), or remove the WHOLE BRAG system (a full Docker clean).
+REM Double-click is fine; it runs from the "BRAG Assistent" folder. Your documents
+REM on disk are NEVER deleted.
 setlocal EnableExtensions
 cd /d "%~dp0"
 chcp 65001 >nul 2>nul
@@ -11,7 +12,7 @@ echo === BRAG - uninstall ===
 echo.
 echo What do you want to remove?
 echo   [1] One project connection  ^(keep BRAG and your other projects^)
-echo   [2] The WHOLE BRAG system
+echo   [2] The WHOLE BRAG system   ^(full Docker clean^)
 echo   [C] Cancel
 echo.
 set "MODE="
@@ -27,71 +28,67 @@ REM ===================== remove ONE project =====================
 :remove_one
 echo.
 docker info >nul 2>nul
-if errorlevel 1 (
-  echo Docker is not running - start Docker Desktop, then try again.
-  pause
-  exit /b 1
-)
-echo Your projects ^(slug ^| name ^| folder ^| collection^):
-docker compose run --rm setup python -m brag.projects list
+if errorlevel 1 goto docker_down
+REM The numbered picker + the registry/override/index removal all run in the
+REM one-shot setup container (it owns the registry and reaches Qdrant). Exit code:
+REM 0 = removed, 2 = cancelled / only-one-project / invalid, 1 = error.
+docker compose run --rm setup python -m brag.projects remove-interactive
+set "RC=%ERRORLEVEL%"
+if "%RC%"=="2" goto cancel
+if not "%RC%"=="0" goto remove_one_err
 echo.
-echo Note: the "default" project can only be removed via the full uninstall [2].
-set "SLUG="
-set /p SLUG="Type the slug to remove (or C to cancel): "
-if /i "%SLUG%"=="C" goto cancel
-if not defined SLUG goto cancel
-if /i "%SLUG%"=="default" (
-  echo The "default" project is removed only via the full uninstall.
-  pause
-  exit /b 0
-)
-set "DELIDX="
-set /p DELIDX="Also delete this project's search index? Your documents stay. (y/N): "
-set "RMFLAG="
-if /i "%DELIDX%"=="y" set "RMFLAG=--delete-index"
-echo Removing project "%SLUG%"...
-docker compose run --rm setup python -m brag.projects remove "%SLUG%" %RMFLAG%
-if errorlevel 1 (
-  echo Could not remove "%SLUG%" - check the slug from the list above.
-  pause
-  exit /b 1
-)
-echo Applying...
-docker compose up -d
-REM Drop this project's connector from Claude + LM Studio. Claude rewrites its
-REM config while running, so close it first (the helper offers to) for it to stick.
+echo Applying the change to the running app...
+REM --force-recreate so brag-app re-reads the just-rewritten projects.json: a Docker
+REM single-file bind mount pins the old inode until the container is recreated, so
+REM without this the connector merge below could re-add the project we just removed.
+docker compose up -d --force-recreate app
+REM Drop the removed project's connector from Claude + LM Studio. Claude rewrites
+REM its config while running, so close it first (the helper offers to) for it to stick.
 call "%~dp0tools\ensure_claude_closed.bat"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_claude_config.ps1"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\merge_lmstudio_config.ps1"
 echo.
-echo Done - project "%SLUG%" removed. BRAG and your other projects stay.
-echo Its documents on disk are untouched. Reopen Claude Desktop to refresh the list.
+echo Done - the project connection was removed. BRAG and your other projects stay,
+echo and that project's documents on disk are untouched. Reopen Claude Desktop to
+echo refresh the connector list.
 pause
 exit /b 0
+
+:remove_one_err
+echo.
+echo Could not remove the project - see the message above. Nothing was changed.
+pause
+exit /b 1
+
+:docker_down
+echo Docker is not running - start Docker Desktop, wait until it says "running",
+echo then double-click this again.
+pause
+exit /b 1
 
 REM ===================== remove the WHOLE system =====================
 :remove_all
 echo.
-echo This will REMOVE:
-echo   - the BRAG containers and network
-echo   - the ~3 GB model cache ^(re-downloads on a fresh install^)
+echo This removes EVERYTHING BRAG put on your machine - a full Docker clean:
+echo   - the BRAG containers, network and any leftover one-shot containers
+echo   - BOTH Docker volumes: the ~3 GB model cache AND the search index
 echo   - the BRAG app image
-echo   - the local .env ^(it holds your API key^) + the project registry
+echo   - the local .env ^(it holds your API key^) + the project registry + override
 echo   - the BRAG entries in Claude Desktop and LM Studio ^(other MCP servers kept^)
 echo.
-echo This will KEEP:
-echo   - your documents in every project folder
-echo   - the search index ^(the qdrant_data volume^)
+echo This KEEPS your documents in every project folder. The search index can be
+echo rebuilt from them on a fresh install ^(re-ingest^).
 echo.
 set "CONFIRM="
 set /p CONFIRM="Type y and press Enter to continue (anything else cancels): "
 if /i not "%CONFIRM%"=="y" goto cancel
 
-REM Capture the compose project name now, while the containers still exist, so we
-REM can remove exactly this install's model-cache volume later.
-set "PROJ="
-for /f "delims=" %%p in ('docker inspect -f "{{index .Config.Labels \"com.docker.compose.project\"}}" brag-app 2^>nul') do set "PROJ=%%p"
-if not defined PROJ for /f "delims=" %%p in ('docker inspect -f "{{index .Config.Labels \"com.docker.compose.project\"}}" brag-qdrant 2^>nul') do set "PROJ=%%p"
+REM Close Claude FIRST: it rewrites claude_desktop_config.json from memory while
+REM running and would resurrect the brag entries we are about to delete, leaving
+REM dead connectors after the containers are gone. The helper loops until Claude is
+REM closed (and offers to close it). If you launched Claude Code inside Claude, that
+REM session ends - but this console keeps running and finishes the job.
+call "%~dp0tools\ensure_claude_closed.bat"
 
 REM Remove BRAG's Claude + LM Studio entries (ALL brag/brag-<project> keys) in a
 REM throwaway Python container, so no Python is needed on the host. Flat (goto) so
@@ -105,17 +102,18 @@ echo Removing the LM Studio connections...
 docker run --rm -v "%USERPROFILE%\.lmstudio":/cfg -v "%~dp0tools":/tools python:3.12-slim python /tools/remove_claude_mcp.py /cfg/mcp.json
 :no_lms_cfg
 
-echo Stopping and removing the containers...
-docker compose down
+echo Stopping and removing the containers, network and ALL BRAG volumes...
+REM -p brag pins the project name so teardown works even if .env (and its
+REM COMPOSE_PROJECT_NAME) is already gone; -v removes the named volumes (model
+REM cache + search index); --remove-orphans sweeps any one-shot setup/run
+REM containers; --profile setup includes the profiled 'setup' service.
+docker compose -p brag --profile setup down -v --remove-orphans
 
-REM Remove ONLY the model-cache volume; the qdrant_data index stays.
-if not defined PROJ goto cache_fallback
-echo Removing the ~3 GB model cache...
-docker volume rm "%PROJ%_models_cache" >nul 2>nul
-goto cache_done
-:cache_fallback
-for /f "delims=" %%v in ('docker volume ls -q --filter "label=com.docker.compose.volume=models_cache"') do docker volume rm "%%v" >nul 2>nul
-:cache_done
+REM Belt-and-suspenders against a missing .env / odd state: remove the named
+REM volumes, the containers and the network by their pinned names too.
+docker volume rm brag_models_cache brag_qdrant_data >nul 2>nul
+docker rm -f brag-app brag-qdrant brag-setup >nul 2>nul
+docker network rm brag_default >nul 2>nul
 
 echo Removing the BRAG image...
 for /f "delims=" %%i in ('docker images -q "ghcr.io/mdrinjak-bauing/brag" 2^>nul') do docker rmi -f %%i >nul 2>nul
@@ -129,11 +127,23 @@ if exist projects.json del /q projects.json
 if exist docker-compose.override.yml del /q docker-compose.override.yml
 
 echo.
-echo Done - BRAG is uninstalled.
-echo   KEPT: your documents in every project folder + the search index.
-echo   You can delete this "BRAG Assistent" folder now if you no longer need it.
-echo   Docker Desktop and Claude Desktop are untouched - uninstall them the
-echo   normal way if you only used them for BRAG.
+echo Verifying the Docker clean-up...
+set "LEFT="
+for /f "delims=" %%c in ('docker ps -a --filter "name=brag-" --format "{{.Names}}" 2^>nul') do set "LEFT=1"
+for /f "delims=" %%v in ('docker volume ls -q 2^>nul ^| findstr /i /x "brag_models_cache brag_qdrant_data"') do set "LEFT=1"
+if defined LEFT goto left_warn
+echo   [ OK ]  No BRAG containers or volumes remain.
+goto left_done
+:left_warn
+echo   Note: some BRAG Docker items remain - re-run this, or check 'docker ps -a'.
+:left_done
+
+echo.
+echo Done - BRAG is uninstalled and Docker is clean.
+echo   KEPT: your documents in every project folder.
+echo   The base images ^(Qdrant, Python^) are left in case other tools use them;
+echo   remove them in Docker Desktop if you want every last byte back.
+echo   You can delete this "BRAG Assistent" folder now.
 pause
 exit /b 0
 
