@@ -217,6 +217,16 @@ X?"* → Claude reads your topic note and tops it up with search; *"save the res
 → it files them itself. Keep `CLAUDE.md` updated — whenever you correct Claude twice
 about the same thing, put the rule in there.
 
+### Routines — delegate recurring tasks
+
+For tasks that are always the same — *"catch me up"*, *"update the bibliography"*,
+*"write the journal entry"* — BRAG seeds a `WissensWIKI/Routinen/` folder with example
+recipes: short Markdown files Claude follows when you name them. Their triggers are
+listed in `CLAUDE.md` as commands, so once that's in your Project instructions, a bare
+phrase runs the routine — no re-explaining. Add your own by dropping a `.md` into
+`Routinen/` and a trigger line into `CLAUDE.md`. *(The separate `AGENTS.md` holds the
+safety rules for autonomous/agent runs — not tasks.)*
+
 ## Choose your profile
 
 The profile only picks the **text AI** (writing context, describing figures).

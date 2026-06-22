@@ -226,6 +226,17 @@ der Stand bei X?"* → Claude liest deine Themen-Notiz und ergänzt per Suche; *
 die Ergebnisse"* → es legt sie selbst ab. Halte die `CLAUDE.md` aktuell — was du Claude
 zweimal korrigierst, gehört als Regel hinein.
 
+### Routinen — wiederkehrende Aufgaben delegieren
+
+Für Aufgaben, die immer gleich laufen — *„hol mich auf den Stand"*, *„aktualisier das
+Quellenverzeichnis"*, *„schreib den Tagebucheintrag"* — seedet BRAG einen Ordner
+`WissensWIKI/Routinen/` mit Beispiel-Rezepten: kurze Markdown-Dateien, denen Claude
+folgt, wenn du sie beim Namen nennst. Ihre Auslöser stehen in der `CLAUDE.md` als
+Befehle — sobald die in deiner Projekt-Anweisung steht, startet ein bloßes Stichwort
+die Routine, ganz ohne Erklären. Eigene ergänzt du mit einer `.md` in `Routinen/` und
+einer Auslöser-Zeile in der `CLAUDE.md`. *(Die separate `AGENTS.md` enthält die
+Sicherheitsregeln fürs autonome Arbeiten — keine Aufgaben.)*
+
 ## Wähle dein Profil
 
 Das Profil wählt nur die **Text-KI** (Kontext schreiben, Abbildungen
