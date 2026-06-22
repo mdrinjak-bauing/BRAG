@@ -13,7 +13,6 @@ use config's vault paths — the bridge scopes those per project via
 config.project_context in a later phase; today they target the single vault.
 """
 
-import re
 import shutil
 from datetime import date
 
@@ -214,7 +213,7 @@ def rename_source(source_file: str, new_name: str) -> str:
 
 
 def _passage_file(topic: str):
-    slug = re.sub(r"[^\w\-]+", "_", topic.strip()).strip("_") or "general"
+    slug = config.slugify_topic(topic)
     config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
     return config.PASSAGES_DIR / f"{slug}.md", slug
 

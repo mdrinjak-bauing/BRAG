@@ -459,8 +459,6 @@ def index_passage(topic: str, text: str, source: str, page: str = "",
     stays clearly distinguishable from primary sources. Best-effort: never
     raises, because the file on disk is already saved and a failed index must
     not turn the save_passage tool call into an error."""
-    import re
-
     from qdrant_client.models import PointStruct
 
     from brag.embeddings import get_embedder
@@ -468,7 +466,7 @@ def index_passage(topic: str, text: str, source: str, page: str = "",
     from brag.ingest.extract import Chunk
 
     try:
-        slug = re.sub(r"[^\w\-]+", "_", topic.strip()).strip("_") or "general"
+        slug = config.slugify_topic(topic)
         body = text.strip()
         if note.strip():
             body += f"\n\nNote: {note.strip()}"

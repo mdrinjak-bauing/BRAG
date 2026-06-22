@@ -372,3 +372,15 @@ def source_key_variants(value) -> list[str]:
             seen.add(c)
             out.append(c)
     return out
+
+
+def slugify_topic(value) -> str:
+    """Slug for a passage/report topic — NFC-normalized, lowercased, non-word
+    chars collapsed to '_'. Case- and Unicode-form-insensitive, so 'Method',
+    'method' and a macOS-NFD variant all map to the SAME file + index key (a
+    case-sensitive slug silently created two files and made list_passages miss
+    its own passage)."""
+    import re
+    import unicodedata
+    t = unicodedata.normalize("NFC", "" if value is None else str(value)).strip().lower()
+    return re.sub(r"[^\w\-]+", "_", t).strip("_") or "general"
