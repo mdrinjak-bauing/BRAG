@@ -4,15 +4,29 @@
 
 **🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.5.0** ([Änderungen](#versionen))
 
-> **Ein KI-Assistent, der deine eigenen Quellen wirklich kennt.** Leg deine Dokumente — PDFs, Word, PowerPoint, deine eigenen Notizen — in einen Ordner. BRAG erschließt sie **auf deinem Rechner** und reicht der KI bei jeder Frage genau die passenden Stellen — seitengenau belegt, ein Klick führt aufs Original. Ob die KI dabei lokal oder in der Cloud rechnet, entscheidest du; gesendet werden höchstens deine Frage und die passenden Stellen — nie der ganze Korpus.
+> **Ein KI-Assistent, der deine eigenen Quellen wirklich kennt.** Leg deine Dokumente — PDFs, Word, PowerPoint, deine eigenen Notizen — in einen Ordner. BRAG **liest sie auf deinem Rechner ein, macht sie seitengenau durchsuchbar** und reicht der KI bei jeder Frage genau die passenden Stellen — **belegt, ein Klick führt aufs Original**. Ob die KI dabei lokal oder in der Cloud rechnet, entscheidest du; gesendet werden höchstens deine Frage und die passenden Stellen — nie der ganze Korpus.
 
-## Was es tut
+## Worum es geht
+
+**BRAG ist ein hybrides Retrieval-System mit einer mehrschichtigen Einlese-Pipeline**,
+in der mehrere Modelle ineinandergreifen: Ein Dokument wird erkannt (Docling), in
+Stücke zerlegt, von einer KI mit 1–2 einordnenden Sätzen angereichert, **lokal** in
+zwei „Fingerabdrücke" — Bedeutung *und* Stichwort — eingebettet und in einer
+Suchdatenbank abgelegt. Bei jeder Frage findet eine hybride Suche mit Reranking die
+wirklich passenden Stellen (die drei Abläufe im Detail unter
+[Wie es funktioniert](#wie-es-funktioniert)).
+
+Steuern kannst du es aus deinem gewohnten KI-Client — **Claude Desktop**,
+**LM Studio** (lokal) oder Claude Code — und denselben Ordner mit
+**[Obsidian](https://obsidian.md)** als komfortables Wissens-Wiki betrachten und
+pflegen. Das Rechenintensive läuft **lokal auf der CPU** (Einlesen, Embedding,
+Reranker); nur die Text- und Bild-KI rechnet je nach Profil lokal **oder** in der Cloud.
 
 <p align="center">
   <img src="docs/assets/overview.de.svg" alt="Der BRAG-Kreislauf — sammeln, lokal verwerten, fragen mit Beleg, mit KI denken und Notizen zurück in den Wissensspeicher schreiben" width="100%">
 </p>
 
-Du pflegst einen Ordner mit Dateien. BRAG macht daraus einen durchsuchbaren Wissensspeicher und reicht der KI bei jeder Frage genau die passenden Stellen — so kommt jede Antwort **seitengenau belegt**, mit Link direkt zur Quelle. Zitate, die du behalten willst, werden in denselben Ordner zurückgeschrieben: Dein Wissen sammelt sich damit **in Dateien, die dir gehören**, nicht in einem Chatverlauf, der vergisst. Ein neuer Chat morgen — auch bei einem anderen Modell — knüpft genau dort an, wo du aufgehört hast.
+Du bindest einen Ordner mit Dateien ein. BRAG macht daraus einen durchsuchbaren Wissensspeicher und reicht der KI bei jeder Frage genau die passenden Stellen — so kommt jede Antwort **seitengenau belegt**, mit Link direkt zur Quelle. Zitate, die du behalten willst, werden in denselben Ordner zurückgeschrieben: Dein Wissen sammelt sich damit **in Dateien, die dir gehören**, nicht in einem Chatverlauf, der vergisst. Ein neuer Chat morgen — auch bei einem anderen Modell — knüpft genau dort an, wo du aufgehört hast.
 
 Drei Dinge machen den Unterschied:
 
@@ -74,7 +88,7 @@ Praxis — hat zwei Hälften, und ihre strikte Trennung ist der Kern dieses Desi
 |---|---|---|
 | Ordner | dein ganzer **Projektordner** | `WissensWIKI/Notizen/` (und beliebige eigene Unterordner) |
 | Enthält | externe Quellen: Paper, Bücher, Berichte | **dein eigenes Denken**: Konzepte, Entwürfe, Lesenotizen |
-| Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | bewusst **nein** |
+| Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | freie Notizen bewusst **nein** · gespeicherte **Passagen: ja** (die dritte Ebene, siehe unten) |
 | Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die Werkzeuge `read_note` / `write_note` (und optional Obsidian) |
 
 **Dazu eine dritte Ebene dazwischen — gespeicherte Passagen.** Wenn du Claude
@@ -110,8 +124,12 @@ aber der entscheidende Vorteil:
 - **Es läuft überall.** Dieselbe Datei lesen und schreiben Obsidian, Claude,
   dein Texteditor, dein Backup, Git. Verschieben, kopieren, sichern wie jede
   andere Datei.
-- **Es lässt sich verknüpfen.** Mit `[[Wikilinks]]` verbindest du Konzepte zu
-  einem Netz — dein Wissen wird durchwanderbar statt in Dokumenten vergraben.
+- **Es lässt sich verknüpfen.** Schreib `[[Notizname]]` mitten in eine Notiz — das
+  verlinkt auf die gleichnamige `.md`-Datei (eckige Doppelklammern, der Dateiname
+  ohne `.md`). Obsidian macht daraus einen klickbaren Graphen verwandter Konzepte,
+  und Claude folgt den Links beim Lesen. So wird dein Wissen **durchwanderbar** statt
+  in Dokumenten vergraben. Mehr zur Notizbuch-Pflege:
+  [Obsidian + Notizbuch](docs/OBSIDIAN.de.md).
 
 **Der unbequeme Teil:** Ein zweites Gehirn entsteht nicht von allein — du musst
 dir das **Dokumentieren angewöhnen.** Die Quellen sammeln sich automatisch,
@@ -126,42 +144,81 @@ kein Chatverlauf je sein kann: **dein** wachsendes, durchsuchbares Wissen.
 ![Architektur: Wissensspeicher, Docker-Container, Claude Desktop und die zwei MCP-Anschlüsse](docs/assets/architecture.svg)
 
 Alles läuft in zwei Docker-Containern auf deinem Rechner. Im Cloud-Profil
-verarbeitet ein KI-Anbieter nur die Dokumenttexte; in den Lokal-Profilen
-verlässt nichts deinen Rechner. Eine ausführliche, technikfreie Erklärung steht
-in **[So funktioniert's](docs/HOW_IT_WORKS.de.md)** — hier das Wichtigste.
+verarbeitet ein KI-Anbieter nur die Dokumenttexte (und bei Vision die Bilder); in
+den Lokal-Profilen verlässt nichts deinen Rechner. Eine ausführliche, technikfreie
+Erklärung steht in **[So funktioniert's](docs/HOW_IT_WORKS.de.md)** — hier das Wichtigste.
 
-**Was ist Docker?** Statt Python, Datenbanken und KI-Bibliotheken einzeln zu
-installieren (und mit Versionskonflikten zu kämpfen), startet Docker eine fertig
-geschnürte Box, die auf jedem Rechner identisch ist. Du installierst einmal
-Docker Desktop; den Rest startet das Projekt. Die ~3 GB Modelle liegen in Dockers
-verwaltetem Speicher — **nicht** in deinem Projektordner; dein Projektordner
-enthält nur deine eigenen Dateien.
+**Was du von GitHub bekommst — und was du selbst installierst.** Von GitHub lädst du
+das BRAG-Projekt (grüner „Code"-Knopf → „Download ZIP"): die Setup-Skripte, die
+`docker-compose.yml` und den Programmcode. Selbst installieren musst du nur **Docker
+Desktop** (startet die Container) und einen KI-Client zum Fragen — **Claude Desktop**
+(Standard) und/oder **LM Studio** (für den lokalen Weg). Einen **API-Schlüssel**
+brauchst du nur für ein Cloud-Profil. Die **~3 GB** Analyse-Modelle lädt Docker beim
+ersten Start selbst nach (die konkreten Schritte: unten unter
+[Einrichten](#einrichten--realistisch-etwa-1-stunde)).
 
-![Pipeline: Einlesen und Abfrage](docs/assets/pipeline.svg)
+**Was ist Docker — und wieso?** Statt Python, Datenbanken und KI-Bibliotheken einzeln
+zu installieren (und mit Versionskonflikten zu kämpfen), startet Docker eine fertig
+geschnürte Box, die auf jedem Rechner identisch ist. Du installierst einmal Docker
+Desktop; den Rest startet das Projekt. Die Modelle liegen in Dockers verwaltetem
+Speicher — **nicht** in deinem Projektordner; der enthält nur deine eigenen Dateien.
 
-Die Antwortqualität entsteht in zwei Abläufen:
+### Drei Pipelines — und welche Hardware sie beanspruchen
 
-**Beim Einlesen** schreibt eine KI zu jedem Textabschnitt 1–2 einordnende Sätze
-(*Contextual Retrieval*) — knapper Fachtext wird so überhaupt erst auffindbar.
-Abbildungen werden von einem multimodalen Modell beschrieben (*Vision-Pass*).
-Jeder Abschnitt bekommt zwei „Fingerabdrücke": einen für die **Bedeutung**
-(semantische Suche) und einen für **exakte Begriffe** (Stichwortsuche).
+**1 · Einlesen** — sobald eine Datei im Projektordner landet:
 
-**Bei jeder Frage** läuft die Abfragepipeline — von der Frage bis zum Beleg:
+```mermaid
+flowchart TD
+    F["📄 Beispiel.pdf — in den Projektordner gelegt"]
+    F --> D["1 · Docling: Layout & Tabellen erkennen → Markdown + Seitenzahlen<br/>lokal · CPU"]
+    D --> C["2 · Chunking: in ~2000-Zeichen-Stücke (Tabellen ganz)<br/>lokal · CPU · kein Modell"]
+    C --> K["3 · Kontext-LLM: 1–2 einordnende Sätze je Stück<br/>Profil-Text-LLM · Cloud ODER lokal (LM Studio)"]
+    C -. Abbildungen .-> V["4 · Vision-Pass: Bild → 1–3 Sätze<br/>multimodales Modell · Cloud ODER lokal (LM Studio)"]
+    K --> E["5 · Embedding: Bedeutung (arctic, 1024-dim) + Stichwort (BM25)<br/>lokal · CPU"]
+    V --> E
+    E --> Q[("6 · Qdrant: Suchdatenbank<br/>lokaler Container")]
+```
 
-1. **Zwei Suchen gleichzeitig** — Bedeutungssuche (findet Sinnverwandtes, auch
-   mit anderen Worten) **und** Stichwortsuche (BM25; findet exakte Begriffe wie
-   Abkürzungen, Paragraphen, Aktenzeichen). Je ~80 Kandidaten.
-2. **Zusammenführen (RRF)** — beide Listen verschmelzen; ~40 bleiben übrig.
-3. **Reranker** — ein Cross-Encoder liest deine Frage gemeinsam mit jeder Stelle
-   und sortiert nach echter Passung. Der Unterschied zwischen „enthält die
-   Suchworte" und „beantwortet die Frage". Er läuft **lokal auf deiner CPU** —
-   der teuerste Teil einer Suche — daher ist sein Aufwand einstellbar:
-   `RERANK_PROFILE=off/eco/balanced/full` (Standard `eco`; auf schwachen PCs
-   `off`/`eco`, auf starken `full`).
-4. **Kürzen** — die besten Treffer bleiben (Standard 15, max. 3 je Quelle).
-5. **Antworten** — Claude formuliert aus genau diesen Stellen, jede Aussage mit
-   Quelle und Seite belegt.
+Docling erkennt Layout und Tabellen (OCR ist **nicht** aktiv — ein gescanntes PDF
+ohne Textebene wird nicht erkannt, BRAG legt dann einen sichtbaren Marker an); der
+Text wird in Stücke zerlegt; eine KI schreibt 1–2 einordnende Sätze je Stück
+(*Contextual Retrieval*), Abbildungen beschreibt ein multimodales Modell
+(*Vision-Pass*) — **beides läuft je nach Profil in der Cloud oder lokal in LM Studio**.
+Dann entstehen **lokal auf der CPU** zwei „Fingerabdrücke" (Bedeutung: arctic,
+1024-dim; Stichwort: BM25), und alles wandert in Qdrant.
+
+**2 · Fragen** — bei jeder Frage:
+
+```mermaid
+flowchart TD
+    QF["❓ Deine Frage"]
+    QF --> S["1 · Zwei Suchen: Bedeutung (arctic) + Stichwort (BM25), je ~80 Kandidaten<br/>lokal · CPU"]
+    S --> RF["2 · RRF-Fusion in Qdrant → beste ~40<br/>lokaler Container"]
+    RF --> RR["3 · Reranker (bge-reranker-v2-m3): nach echter Passung sortieren<br/>einstellbar (off/eco/balanced/full, k-Wert) · lokal · CPU — teuerster Schritt"]
+    RR --> DV["4 · Kürzen & Diversität: Top-k (Std. 15), max. 3 je Quelle<br/>lokal · CPU"]
+    DV --> AN["5 · Antwort mit Seitenbeleg<br/>Antwort-KI · Cloud (Claude) ODER lokal (LM Studio)"]
+```
+
+Beispiel — *„Welche Frist nennt der Bauvertrag für die Mängelrüge?"*: Bedeutungs- und
+Stichwortsuche liefern je ~80 Kandidaten, Qdrant fusioniert sie (RRF) auf ~40, der
+**Reranker** liest deine Frage gemeinsam mit jeder Stelle und sortiert nach echter
+Passung (der Unterschied zwischen „enthält die Suchworte" und „beantwortet die
+Frage"). Die besten (Standard 15, max. 3 je Quelle) gehen an die Antwort-KI, die
+seitengenau belegt formuliert. **Du hast die Wahl:** *wie viele* Stellen der Reranker
+bewertet (der **k-Wert**) und *ob* er überhaupt läuft, stellst du je nach Rechner und
+Modell ein — siehe [Suchqualität einstellen](#suchqualität-einstellen-der-reranker).
+
+**3 · Speichern** — Wissen zurückschreiben:
+
+```mermaid
+flowchart TD
+    SP["💬 „Speichere diese Passage“ → save_passage"] --> PA[("Passagen/*.md + Index<br/>durchsuchbar · lokal · CPU")]
+    WN["✍️ „Notiere …“ / „Bericht“ → write_note · save_report"] --> NO["Notizen/ · Berichte/*.md<br/>nicht indexiert · lokal · CPU"]
+```
+
+Ein gespeichertes Zitat (`save_passage`) wird zusätzlich eingebettet und ist damit
+durchsuchbar; eigene Notizen und Berichte (`write_note` / `save_report`) bleiben
+bewusst außerhalb des Suchindex.
 
 Mehr Tiefe (mit Zahlen) in [So funktioniert's](docs/HOW_IT_WORKS.de.md) und
 [Architektur](docs/ARCHITECTURE.de.md); alle Parameter in [`.env.example`](.env.example).
@@ -169,11 +226,12 @@ Mehr Tiefe (mit Zahlen) in [So funktioniert's](docs/HOW_IT_WORKS.de.md) und
 ### Der KI-Anschluss (MCP)
 
 Automatisch eingerichtet, gibt der **BRAG-MCP-Server** deinem Assistenten einen
-Anschluss mit zwei Werkzeug-Sätzen — über deine **Bibliothek** (Suche) und dein
-**Notizbuch** (Lesen/Schreiben); die Notizbuch-Werkzeuge fassen den Suchindex nie
-an. Das Setup trägt das in **Claude Desktop** ein — und in **LM Studio**, falls
-installiert (LM Studios Chat ist ein MCP-Host).
-Die Werkzeuge:
+Anschluss mit Werkzeugen in vier Gruppen: **Suche** (durchsucht deinen Korpus),
+**Korpus** (Inventar pflegen, taggen, umbenennen), **Belege** (zitierfähige
+Passagen sammeln) und **Notizbuch/Berichte** (lesen/schreiben) — wobei die
+Notizbuch-Werkzeuge den Suchindex nie anfassen. Das Setup trägt den Anschluss in
+**Claude Desktop** ein — und in **LM Studio**, falls installiert (LM Studios Chat
+ist ein MCP-Host). Die Werkzeuge im Einzelnen:
 
 | Werkzeug | Was es tut | Beispielfrage |
 |---|---|---|
@@ -284,8 +342,21 @@ RRF-Fusion von Bedeutungs- und Stichwortsuche — beide Zweige bleiben gefüllt,
 „kippt" also nichts, aber die *wichtigste* Stelle steht seltener ganz oben. Da
 ein LLM bevorzugt die oberen Treffer zitiert, lohnt der Reranker besonders bei
 spitzen Faktenfragen und bei **gemischten DE/EN-Korpora** (dort stützt er die
-Trefferqualität spürbarer). Einzelwerte lassen sich bei Bedarf über
-`RERANK_ENABLED` / `RERANK_PREFETCH` / `RERANK_FUSION_LIMIT` feinjustieren.
+Trefferqualität spürbarer).
+
+**Den k-Wert selbst einstellen.** Wem die vier Profile nicht reichen, justiert die
+Einzelwerte direkt in `.env` — sie überschreiben das Profil:
+
+- **`RERANK_FUSION_LIMIT`** — der **k-Wert**: wie viele Stellen der Cross-Encoder
+  tatsächlich bewertet. Das ist der teuerste Hebel (mehr = gründlicher, aber
+  langsamer); die Profilwerte oben (40 / 60 / 120) sind nur Voreinstellungen.
+- **`RERANK_PREFETCH`** — wie viele Kandidaten **pro Zweig** (Bedeutung + Stichwort)
+  überhaupt geladen werden. Vergrößert die Auswahl, ohne mehr zu bewerten.
+- **`RERANK_ENABLED`** — schaltet das Nachsortieren ganz an oder aus.
+
+Beispiel: `RERANK_FUSION_LIMIT=80` lässt den Reranker 80 statt der Standard-40
+Stellen bewerten. Wie viele Treffer am Ende zurückkommen, steuerst du davon
+unabhängig über `mode`/`top_k` direkt im Suchaufruf.
 
 Bei einem Cloud-Profil geht der **Textauszug** jedes Abschnitts an den Anbieter —
 bei aktivem Vision-Pass (Standard) zusätzlich die **Bilder deiner Abbildungen**.
@@ -411,6 +482,15 @@ ignoriert. Alles, was du in den Projektordner legst, wandert automatisch in die
 Suchdatenbank (den Index); nimmst du eine Datei wieder heraus oder löschst sie,
 verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem Rechner
 angefasst.
+
+Praktisch heißt das: **Dokumente kommen in den Projektordner** (oder einen
+beliebigen Unterordner) — **nicht** nach `Notizen/` (das ist dein Notizbuch und
+wird nicht durchsucht) und auch nicht von Hand nach `Passagen/` (dorthin legt nur
+das Werkzeug `save_passage` belegte Zitate). Dass dein Assistent diese Aufteilung
+kennt — was Korpus ist, was Notizbuch, wohin er was schreibt —, kommt nicht von
+allein: Es steht in der `WissensWIKI/CLAUDE.md`, die du in deine
+**Projekt-Anweisungen** kopierst (siehe [BRAG mit einem Claude-Projekt
+nutzen](#brag-mit-einem-claude-projekt-nutzen-empfohlen)).
 
 So sieht es auf der Festplatte aus:
 
