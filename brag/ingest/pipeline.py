@@ -62,7 +62,7 @@ def _mark_ingest_blocked(path: Path, attempts: int) -> None:
     try:
         german = config.VAULT_LANGUAGE.strip().lower().startswith("german")
         name = "INDEXIERUNG-GESTOPPT.md" if german else "INDEXING-STOPPED.md"
-        marker = config.VAULT / name
+        marker = config.WISSENSWIKI_DIR / name
         key = config.normalize_source_key(path.name)
         existing = marker.read_text(encoding="utf-8") if marker.exists() else ""
         if key in existing:
@@ -86,7 +86,7 @@ def _mark_ingest_blocked(path: Path, attempts: int) -> None:
                 "use a cloud profile, then drop the file in again.\n\n"
             )
             line = f"- `{key}` — stopped after {attempts} interruptions\n"
-        config.VAULT.mkdir(parents=True, exist_ok=True)
+        config.WISSENSWIKI_DIR.mkdir(parents=True, exist_ok=True)
         with open(marker, "a", encoding="utf-8") as f:
             if not existing:
                 f.write(header)
@@ -130,11 +130,11 @@ def _mark_not_indexed(path: Path) -> None:
     """Make a non-indexable document VISIBLE to the user. A scanned PDF without
     a text layer yields zero chunks and would otherwise vanish silently from the
     corpus — the user keeps believing it is searchable. We append one line per
-    affected file to a marker file in the knowledge-store root (next to
-    sources/notes, where the user will actually see it); its name and text follow
-    VAULT_LANGUAGE. Idempotent: a file already listed is not added again. Fully
-    best-effort — never crashes the ingest (the on-screen log line is printed
-    regardless by the caller)."""
+    affected file to a marker file in the WissensWIKI/ workspace — visible to the
+    user but NOT part of the searchable corpus, so the marker is never itself
+    indexed; its name and text follow VAULT_LANGUAGE. Idempotent: a file already
+    listed is not added again. Fully best-effort — never crashes the ingest (the
+    on-screen log line is printed regardless by the caller)."""
     german = config.VAULT_LANGUAGE.strip().lower().startswith("german")
     if german:
         marker_name = "NICHT-INDEXIERT.md"
@@ -155,14 +155,14 @@ def _mark_not_indexed(path: Path) -> None:
         reason = ("likely a scanned PDF without a text layer, not searchable; "
                   "apply OCR and drop it in again")
     try:
-        marker = config.VAULT / marker_name
+        marker = config.WISSENSWIKI_DIR / marker_name
         name = config.normalize_source_key(path.name)
         existing = ""
         if marker.exists():
             existing = marker.read_text(encoding="utf-8")
             if name in existing:
                 return
-        config.VAULT.mkdir(parents=True, exist_ok=True)
+        config.WISSENSWIKI_DIR.mkdir(parents=True, exist_ok=True)
         with open(marker, "a", encoding="utf-8") as f:
             if not existing:
                 f.write(header)
@@ -440,8 +440,7 @@ def reapply_folder_metadata(folder: Path) -> int:
         for p in sorted(folder.rglob("*")):
             if (p.is_file()
                     and p.suffix.lower() in config.SUPPORTED_SUFFIXES
-                    and not p.name.startswith(".")
-                    and not any(part in config.WATCH_IGNORE_DIRS for part in p.parts)):
+                    and config.is_corpus_path(p)):
                 try:
                     if rename_source(config.source_key_from_path(p), p):
                         updated += 1

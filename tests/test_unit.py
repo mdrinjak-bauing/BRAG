@@ -86,6 +86,20 @@ def test_page_range_spans_full_provenance():
     assert _page_range(object()) == (1, 1)  # no prov → safe default
 
 
+def test_system_markers_live_outside_the_corpus(tmp_path, monkeypatch):
+    # NOT-INDEXED / INDEXING-STOPPED markers must NOT be re-indexed: they go to
+    # WissensWIKI/, which is_corpus_path excludes — else the marker itself
+    # becomes a searchable "document" in the corpus root.
+    from brag.ingest import pipeline
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    monkeypatch.setattr(config, "VAULT_LANGUAGE", "english", raising=False)
+    pipeline._mark_not_indexed(tmp_path / "scan.pdf")
+    marker = tmp_path / config.WISSENSWIKI_NAME / "NOT-INDEXED.md"
+    assert marker.exists()                              # written under WissensWIKI/
+    assert not (tmp_path / "NOT-INDEXED.md").exists()   # NOT at the corpus root
+    assert config.is_corpus_path(marker) is False       # and excluded from the index
+
+
 def test_chunk_id_deterministic_for_identical_chunk():
     # Same content+location → same id, so an idempotent re-ingest overwrites in
     # place instead of duplicating.
