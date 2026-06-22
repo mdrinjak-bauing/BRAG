@@ -2,22 +2,33 @@
 
 **🇬🇧 [English](OBSIDIAN.md) | 🇩🇪 Deutsch**
 
-Dein Wissensspeicher ist ein Ordner aus einfachen Markdown-Dateien — Obsidian ist der
-ideale Weg, ihn zu lesen und zu beschreiben.
+Dein Wissensspeicher ist ein Ordner aus einfachen Markdown-Dateien. Obsidian ist
+ein **optionaler**, schönerer Weg, ihn zu lesen und zu beschreiben — kein zweiter
+Speicher, sondern nur eine Ansicht auf genau denselben `WissensWIKI/`-Ordner.
+Bearbeitest oder löschst du eine Datei in Obsidian, ändert sie sich im Ordner
+(und bei `Passagen/` auch im Suchindex) mit. Nichts wird importiert oder kopiert.
 
 ## Teil 1: Den Wissensspeicher in Obsidian öffnen
 
 1. [Obsidian](https://obsidian.md) installieren (kostenlos).
 2. „Ordner als Vault öffnen" → den Ordner `WissensWIKI/` innerhalb deines
-   BRAG-Verzeichnisses wählen.
-3. Fertig. Literaturnotizen erscheinen in `Notizen/`, deine gespeicherten
-   Passagen in `Passagen/`, dein eigenes Denken kommt in freie Unterordner dort.
+   Projektordners wählen.
+3. Fertig. Du siehst deinen Arbeitsbereich: `Notizen/` (deine eigenen Notizen,
+   beliebige freie Unterordner sowie eine automatisch erzeugte Literaturnotiz je
+   Quelle), `Passagen/` (gespeicherte Passagen), `Berichte/` (gespeicherte
+   Berichte), `Routinen/` (Aufgaben-Rezepte) sowie `CLAUDE.md` / `AGENTS.md`.
 
-## Teil 2 (optional): Claude deine Notizen lesen und schreiben lassen
+**Tipp — Wikilinks.** Schreib `[[Notizname]]` in eine Notiz, um auf die
+gleichnamige `.md`-Datei zu verlinken; Obsidian macht daraus einen klickbaren
+Graphen verwandter Konzepte, und Claude folgt den Links beim Lesen.
 
-Der Suchindex umfasst deine **Quellen**. Wenn Claude Desktop zusätzlich deine
-**Notizen** lesen und bearbeiten soll, ergänze das
-Community-Plugin „MCP Tools":
+## Teil 2 (optional): Claude innerhalb von Obsidian agieren lassen
+
+Claude kann dein Notizbuch **bereits** über die eingebauten BRAG-Werkzeuge
+`list_notebook` / `read_note` / `write_note` lesen und schreiben — dafür brauchst
+du Obsidian **nicht**. Dieser Teil ist nur, wenn Claude *zusätzlich* in Obsidians
+eigener Oberfläche agieren soll (dessen Befehle, Vorlagen und Suche). Dafür
+ergänzt du das Community-Plugin „MCP Tools":
 
 1. In Obsidian: Einstellungen → Community-Plugins → Durchsuchen → **Local REST
    API** installieren und aktivieren.
@@ -38,11 +49,11 @@ Community-Plugin „MCP Tools":
 
 5. Claude Desktop beenden und neu öffnen.
 
-Jetzt hat Claude zwei sich ergänzende Werkzeugsätze: **Suche** über deine
-Quellen (dieses Projekt) und **Lese-/Schreibzugriff** auf deine Notizen
-(Obsidian MCP Tools). Diese Trennung ist gewollt — deine eigenen Notizen sind
-nie Teil des Suchindex, sodass dein Denken nie als Beleg getarnt zurückkommt.
+So oder so — eingebaute Werkzeuge oder Obsidian-Plugin — die Grenze bleibt: deine
+eigenen Notizen sind nie Teil des Suchindex, sodass dein Denken nie als Beleg
+getarnt zurückkommt. Die eine gewollte Ausnahme ist `Passagen/`: die indexierst
+du bewusst mit `save_passage`.
 
-> Obsidian muss laufen, damit die Notiz-Werkzeuge funktionieren. Hören sie nach
-> einem Obsidian-Update auf zu arbeiten, in den MCP-Tools-Einstellungen erneut
-> „Install Server" ausführen.
+> Obsidian muss laufen, damit die Werkzeuge des Obsidian-Plugins funktionieren.
+> Hören sie nach einem Obsidian-Update auf zu arbeiten, in den
+> MCP-Tools-Einstellungen erneut „Install Server" ausführen.

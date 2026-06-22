@@ -19,6 +19,15 @@ on macOS (install → connector → query → uninstall).
 - **Installer port-in-use preflight** (macOS + Windows): if the bridge port is
   taken, setup now explains it in plain language and points to `BRIDGE_HOST_PORT`
   instead of surfacing Docker's raw "address already in use" error.
+- **Seven more knowledge-work tools (18 total):** `read_source` (read a document in
+  reading order, to summarise/evaluate a whole report), `recent_sources`,
+  `set_metadata` (tag a corpus folder via `_meta.txt`, re-applied in place),
+  `list_reports`, `delete_passage`/`delete_note` (WissensWIKI-only, two-step confirm),
+  and `move_note` (reorganise/rename notebook files).
+- **Task-adaptive search:** a `mode` (precise/normal/review/deep) with calibrated
+  presets, plus model-facing `top_k` and `max_per_source` levers (breadth vs depth).
+- **Seeded `WissensWIKI/Routinen/`** with example task recipes — reusable, named
+  workflows Claude follows (their triggers registered in `CLAUDE.md`).
 
 ### Changed
 - **Clearer tool docs**, mirrored across both tool surfaces: when to use
@@ -34,6 +43,14 @@ on macOS (install → connector → query → uninstall).
   macOS and warns not to click "Move to Trash" on the first-launch Gatekeeper prompt.
 - README EN/DE tables aligned; internal de-duplication of the marker writer and the
   meta-filter parser; CI now runs the full test suite.
+- **German tool descriptions:** all MCP tool docstrings are now German (names,
+  parameters and `mode` values stay English), in byte-parity across both surfaces.
+- **Seeded `CLAUDE.md`** gains an "Arbeitsweise" workflow section (status-on-X /
+  continue-on-X / save-results conventions); corrected the misleading note that Claude
+  Desktop auto-reads it (it does not — paste it into a Project's custom instructions).
+- README (EN/DE): all 18 tools, a "Use BRAG with a Claude Project" section and a
+  Routines section. Map-reduce guidance — evaluating many reports = one focused call
+  per item, then synthesise (not one oversized search).
 
 ### Fixed
 - **Ingest/watcher data-safety guards:** reconcile no longer prunes the index on an

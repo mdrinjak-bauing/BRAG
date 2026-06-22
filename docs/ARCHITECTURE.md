@@ -2,8 +2,9 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](ARCHITECTURE.de.md)**
 
-For the curious and for contributors. Two containers, one bind-mounted
-folder, Claude Desktop as the user interface.
+For the curious and for contributors. Two containers and a shared model cache,
+Claude Desktop as the user interface — and, with multiple projects, one Qdrant
+with a **collection per project** (see *Multi-project* below).
 
 ```
  HOST                                   DOCKER
@@ -21,6 +22,10 @@ folder, Claude Desktop as the user interface.
 │ LM Studio        ◀── host.docker.internal (hybrid profile only)
 └──────────────────┘
 ```
+
+*The diagram shows a single project. The engine and the model cache are shared;
+each project gets its own Qdrant collection and its own `brag-<name>` MCP
+connector (see Multi-project below).*
 
 ## Ingest pipeline (per document)
 
@@ -46,7 +51,8 @@ folder, Claude Desktop as the user interface.
    boundaries.
 3. **Contextualize** (`contextualize.py`) — each chunk gets 1–2 sentences of
    LLM context (table of contents + current chapter as grounding), processed in
-   batches (5 chunks per LLM call by default). Figures go through the **vision
+   batches (`CR_BATCH_SIZE`: 5 chunks per LLM call on a cloud profile, 3 on a
+   local one). Figures go through the **vision
    pass** (`VISION_ENABLED`, on by default): the rendered image is sent to the
    multimodal LLM for an honest description that is embedded too. Without a
    vision model or image, it falls back to the honest caption-only prompt (never
@@ -66,12 +72,38 @@ folder, Claude Desktop as the user interface.
 ## Query pipeline
 
 dense + sparse prefetch (80 each) → reciprocal rank fusion → top 40 →
-cross-encoder reranking (`BAAI/bge-reranker-v2-m3`) → source-diversity cap
-(max 3 chunks/source) → top k (15 by default). These breadths follow the
-`RERANK_PROFILE` dial (default `eco` = load 160, rerank 40; also
-`off`/`balanced`/`full`). Rerank scores are reported, never used as a
-hard filter — cross-encoder scores are not absolutely calibrated, and any
-floor cuts legitimate top hits on factual queries.
+cross-encoder reranking (`BAAI/bge-reranker-v2-m3`) → diversify (per-source cap,
+max 3 chunks/source; cross-source near-duplicate filter,
+`DEDUP_SIMILARITY_THRESHOLD` 0.90; backfill to refill dropped slots) → top k
+(15 by default). These breadths follow the `RERANK_PROFILE` dial (default `eco`
+= load 160, rerank 40; also `off`/`balanced`/`full`), and the number reranked
+— the k-value — is also settable directly (`RERANK_FUSION_LIMIT`). The `search`
+tool's `mode` presets (`precise`/`normal`/`review`/`deep`) override `top_k` and
+the per-source cap per call. Rerank scores are reported, never used as a hard
+filter — cross-encoder scores are not absolutely calibrated, and any floor cuts
+legitimate top hits on factual queries.
+
+## Multi-project
+
+One engine and one Qdrant serve any number of projects. Each project is a host
+folder registered in `projects.json`; `brag/compose_gen.py` generates a
+`docker-compose.override.yml` with the per-project bind mounts, and each project
+gets its own Qdrant **collection** plus its own `brag-<slug>` MCP connector. A
+single shared **model service** keeps RAM flat as projects are added.
+`config.project_context` (a ContextVar) scopes every request to the active
+project, so nothing leaks across projects. The default project is served
+in-process by `mcp_server.py`; each *additional* project uses the thin,
+model-free `mcp_client.py`, which forwards search and index operations over the
+HTTP bridge — both surfaces expose the **same tool set** (kept byte-identical).
+
+## Saving back (notebook & evidence)
+
+`save_passage` writes a quote into `WissensWIKI/Passagen/` **and indexes it** —
+the one indexed part of the workspace, so curated evidence is searchable in later
+chats. `write_note` / `save_report` write to `WissensWIKI/Notizen/` and
+`Berichte/` and are **never** indexed, so your own output never echoes back as
+evidence. (Ingest also drops an auto literature note per source into `Notizen/`;
+likewise not indexed.)
 
 ## Design decisions
 

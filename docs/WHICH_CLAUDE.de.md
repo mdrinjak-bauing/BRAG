@@ -27,8 +27,9 @@ gebaut:
   `inspect_chunks`, … erscheinen dann **direkt im Chat**.
 - Die **PDF-Deep-Links** in jeder Antwort öffnen im Browser an der zitierten Seite
   — ein Desktop-/Chat-Ablauf.
-- Über **Projekte** in Claude Desktop lädst du deine `WissensWIKI/CLAUDE.md`-Anweisungen,
-  sodass jeder Chat mit deinem Fach und deiner Zitierweise startet.
+- Über **Projekte** in Claude Desktop fügst du den Inhalt deiner
+  `WissensWIKI/CLAUDE.md` in die Projekt-Anweisungen ein (Claude Desktop liest die
+  Datei nicht von allein), sodass jeder Chat mit deinem Fach und deiner Zitierweise startet.
 - Du bleibst **in der Schleife**: fragen, die belegten Stellen lesen, nachschärfen.
   Genau dieser Recherche-Rhythmus ist BRAGs Idee — und er ist am
   token-sparsamsten (siehe unten).

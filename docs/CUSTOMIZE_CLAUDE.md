@@ -3,10 +3,12 @@
 **🇬🇧 English | 🇩🇪 [Deutsch](CUSTOMIZE_CLAUDE.de.md)**
 
 The single highest-impact thing you can do after installation is to fill in
-**`WissensWIKI/CLAUDE.md`**. It is read automatically by Claude (in Claude
-Desktop Projects and Claude Code) and turns a generic assistant into one that
-knows your field, your conventions, and your corpus — **whether you do research
-or work in practice.**
+**`WissensWIKI/CLAUDE.md`**. It turns a generic assistant into one that knows
+your field, your conventions, and your corpus — **whether you do research or
+work in practice.** **Claude Code** reads it from the folder automatically;
+**Claude Desktop does _not_** read it on its own — there you create a Project and
+paste its content into the Project's custom instructions (see [Using it in Claude
+Desktop](#using-it-in-claude-desktop) below).
 
 > **Research or practice?** BRAG works for both. A scholar wants clean citations
 > and discipline conventions; a site manager wants to stay on top of the
@@ -24,9 +26,16 @@ or work in practice.**
 | Reference / citation style | Claude cites the way your context expects — a discipline citation *or* **standard + clause**, **contract + section**, **document + date** |
 | Project / matter context (practice) | If your corpus mixes several projects/clients, tell Claude to always scope to the current project via `meta_filter` so unrelated matters don't leak in |
 | Conventions | Language, note naming, anything you'd otherwise repeat every session |
+| Routine triggers | List the trigger phrases for your reusable workflows in `WissensWIKI/Routinen/`, so a bare phrase like *"catch me up"* runs the routine without re-explaining |
 
 **Rule of thumb:** whenever you correct Claude twice about the same thing,
 that correction belongs in CLAUDE.md.
+
+**Routines.** BRAG seeds a `WissensWIKI/Routinen/` folder with example recipes
+(short Markdown files Claude follows when you name them). Put each routine's
+trigger phrase in CLAUDE.md as a command — once that's in your Project
+instructions, naming it runs the routine. Add your own by dropping a `.md` into
+`Routinen/` and a trigger line here.
 
 ## What goes into AGENTS.md
 

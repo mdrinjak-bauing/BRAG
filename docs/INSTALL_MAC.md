@@ -7,8 +7,8 @@
 > assistant like [Claude Code](https://claude.com/claude-code) can walk you
 > through it and explain what each command does.
 
-Time needed: about **15 minutes of active work** — you only need your mouse and
-the Terminal once, no programming required. On top of that, the first build and
+Time needed: about **15 minutes of active work** — mostly your mouse (the
+Terminal only for the optional log view in step 5), no programming required. On top of that, the first build and
 the one-time model downloads run mostly **unattended** in the background; on a
 first install, allow roughly **30–60 minutes total** depending on your internet
 connection.
@@ -67,7 +67,7 @@ set up automatically in step 4 — nothing to do here yet.
      **do not click "Move to Trash"** — the file is safe. **Right-click** it →
      **Open** → **Open** again in the dialog.
    - On newer macOS the right-click dialog may show no "Open" button. Then open
-      → **System Settings** → **Privacy & Security**, scroll down, and next to
+     **System Settings** → **Privacy & Security**, scroll down, and next to
      *"setup.command was blocked…"* click **"Open Anyway"**; confirm with Touch ID,
      then double-click `setup.command` again. (Normal for any unsigned downloaded
      script — you only confirm it once.)
@@ -146,7 +146,17 @@ Now ask Claude:
   To stop manually: open Terminal in the project folder, `docker compose down`.
   To start: `docker compose up -d`.
 - **Hybrid profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first,
-  load a model, then run setup. Setup auto-connects the BRAG tools (named `brag-<folder>`)
-  to LM Studio's chat too (not just Claude); if you install LM Studio *after* setup, just run
-  `setup.command` again to add the connection. See [PROFILES.md](PROFILES.md).
+  load a model, then run setup. Setup auto-connects the BRAG tools (the connector
+  is named `brag` for your first project) to LM Studio's chat too (not just Claude);
+  if you install LM Studio *after* setup, just run `setup.command` again to add the
+  connection. See [PROFILES.md](PROFILES.md).
+- **Add another project:** double-click **`Projekt hinzufuegen.command`**, pick a
+  second project folder and name it. BRAG creates a `WissensWIKI/` workspace inside
+  it and adds a `brag-<name>` connector next to your first one; the engine and the
+  ~3 GB models stay shared. Nothing from one project leaks into another.
+- **Remove BRAG:** double-click **`uninstall.command`**. A menu offers **[1]**
+  remove one project's connection (keeps BRAG and your other projects), **[2]**
+  remove the whole system (a full Docker clean: containers, model cache, search
+  index, Claude/LM Studio connection), or **[C]** cancel. Either way **your
+  documents on disk are never deleted** — a re-install picks them up again.
 - Trouble? See [FAQ.md](FAQ.md).

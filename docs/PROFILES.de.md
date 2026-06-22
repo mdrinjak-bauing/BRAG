@@ -69,10 +69,10 @@ wenigen Cent.
 Du lädst **kein** Embedding-Modell — arctic läuft eigenständig im Container. Die
 App läuft in Docker und erreicht LM Studio auf dem Host über
 `host.docker.internal` (Port 1234). Das lokale Profil heißt in LM Studio
-**Hybrid**. Jedes registrierte Projekt bekommt einen eigenen Connector namens
-`brag-<Ordner>` (in Claude / LM Studio) — auch das Standard- bzw. erste Projekt;
-ein bloßes `brag` erscheint nur bei einer frischen Installation, bevor ein
-Projekt hinzugefügt wurde.
+**Hybrid**. Eine Einzelprojekt-Installation registriert einen Connector namens
+`brag` (in Claude / LM Studio); sobald du weitere Projekte hinzufügst, bekommt
+jedes seinen eigenen beschrifteten Connector — das Standardprojekt wird zu
+`brag-<Ordner>` und jedes zusätzliche zu `brag-<Name>`, damit keiner unbeschriftet bleibt.
 
 ## Mischen (für Fortgeschrittene)
 

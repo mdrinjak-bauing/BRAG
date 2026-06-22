@@ -27,7 +27,7 @@ default `eco`); see `.env.example`.
 
 - *"I just want it to work, on this laptop."* → **Gemini** (free tier)
 - *"I already pay for ChatGPT / Claude and want to use it."* → **OpenAI** / **Claude**
-- *"My documents are confidential."* → **Hybrid**
+- *"My documents are confidential and I want to process them locally."* → **Hybrid**
 
 ## Cloud-LLM profiles (any laptop, need an API key)
 
@@ -58,15 +58,16 @@ cents for a typical corpus.
 |---|---|
 | Text LLM | your model in [LM Studio](https://lmstudio.ai) |
 | Needs | LM Studio running on the host with a loaded model |
-| Hardware | ~16 GB RAM runs a ~7B model (`qwen2.5-7b-instruct`); 32 GB a 14B (`qwen2.5-14b-instruct`); 64 GB+ a 27B (`gemma-3-27b-it`) — give LM Studio the model's full path from its model browser (e.g. the Hugging Face id) |
+| Hardware | ~16 GB RAM runs a ~7B model (`qwen2.5-7b-instruct`); 32 GB a 14B (`qwen2.5-14b-instruct`); 64 GB+ a 27B (`gemma-3-27b-it`) — give LM Studio the model's full path from its model browser (e.g. the Hugging Face id); a GPU helps a lot |
 | Privacy | nothing leaves your machine |
 
 You **don't** pull an embedding model — arctic runs inside the container on its
 own. The app runs in Docker and reaches LM Studio on the host via
 `host.docker.internal` (port 1234). The local profile is named **Hybrid** in
-LM Studio. Each registered project gets its own connector named `brag-<folder>`
-(in Claude / LM Studio) — including the default/first one; a bare `brag`
-connector only appears on a fresh install before any project is added.
+LM Studio. A single-project install registers one connector named `brag` (in
+Claude / LM Studio); once you add more projects, each gets its own labelled
+connector — the default becomes `brag-<folder>` and every extra one is
+`brag-<name>`, so none is left unlabelled.
 
 ## Mixing (advanced)
 

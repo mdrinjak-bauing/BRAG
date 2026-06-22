@@ -13,7 +13,7 @@ machine, where your data lives, and how a question becomes a cited answer.
 Python, databases and AI libraries by hand (and fighting version conflicts),
 Docker runs a ready-made box that already contains everything, identically on
 every computer. You install Docker once; it runs the rest. That's why setup is
-"double-click and answer three questions" instead of a page of commands.
+"double-click and answer a few questions" instead of a page of commands.
 
 Two "appliances" run side by side inside that box:
 
@@ -103,7 +103,9 @@ Within seconds the app notices it and runs five steps:
 1. **Read the layout — "Docling".** Docling is the tool that *understands the
    page*: it separates headings, paragraphs, tables and figures, and remembers
    which page each piece came from. (That page memory is what later lets every
-   answer link to the exact page.)
+   answer link to the exact page.) Note: it reads the document's **text layer**,
+   it does not run OCR — a purely scanned PDF with no text layer isn't recognised,
+   and BRAG drops a visible marker for it instead (see [FAQ](FAQ.md)).
 
 2. **Cut into chunks.** A whole book is too big to search as one lump, so it's
    cut into bite-sized passages. Tables are kept whole (with their header
@@ -116,12 +118,17 @@ Within seconds the app notices it and runs five steps:
    can actually find it. This single step is the biggest reason answers are
    good.
 
-4. **Make two "fingerprints".** Each passage gets a *meaning fingerprint* (for
-   the similar-meaning search) and a *keyword fingerprint* (for exact terms like
-   GEG or § 71). Having both is why the system finds things whether you remember
-   the exact word or only the idea.
+4. **Make two "fingerprints".** Each passage gets a *meaning fingerprint* (the
+   local **arctic** model turns it into 1024 numbers, for the similar-meaning
+   search) and a *keyword fingerprint* (**BM25**, for exact terms like GEG or
+   § 71). Both are computed **locally on your CPU**. Having both is why the system
+   finds things whether you remember the exact word or only the idea.
 
-5. **File it in Qdrant** + write a short literature note in `WissensWIKI/Notizen/`.
+5. **Store it in Qdrant.** The fingerprints and the passage go into the meaning
+   database, and the document is now searchable. BRAG also writes a short,
+   Obsidian-compatible **literature note** for the source into
+   `WissensWIKI/Notizen/` (your own *"My notes"* part of it survives re-ingest).
+   Like everything in `Notizen/`, that note is **not** indexed.
 
 ### What about figures?
 
@@ -167,11 +174,14 @@ You ask Claude something. Behind the scenes:
    The re-ranker runs **locally on your CPU** and is the main cost of a search,
    so how many passages it scores — or whether it runs at all — is a setting
    (`RERANK_PROFILE`: `off` / `eco` / `balanced` / `full`); pick `eco` (default)
-   or `off` on a weak machine, `full` on a strong one.
+   or `off` on a weak machine, `full` on a strong one. That "how many to score"
+   number — the **k-value** — can also be set directly (`RERANK_FUSION_LIMIT`).
 
 4. **Trim and diversify.** The top results are kept (by default 15, at most 3
    from any single source so one book can't crowd out the rest). This "how many
-   to keep" number is the **top-K**.
+   to keep" number is the **top-K** — and you can scale it to the task with the
+   `search` tool's **mode** (`precise` for a single fact, `normal`, `review` for a
+   broad survey across many sources, `deep` to dig into one document).
 
 5. **Answer.** Claude reads those passages and writes an answer — citing each
    source with its page, and a link that opens the PDF right there.

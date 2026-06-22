@@ -7,8 +7,8 @@
 > unclear, an AI assistant like [Claude Code](https://claude.com/claude-code) can
 > walk you through it and explain what each command does.
 
-Time needed: about **15–20 minutes of active work** — you only need your mouse
-and the Command Prompt once, no programming required. On top of that, the first
+Time needed: about **15–20 minutes of active work** — mostly your mouse (the
+Command Prompt only for the optional log view in step 5), no programming required. On top of that, the first
 build and the one-time model downloads run mostly **unattended** in the
 background; on a first install, allow roughly **30–60 minutes total** depending
 on your internet connection.
@@ -79,13 +79,25 @@ Then open the folder and double-click **`setup.bat`**.
      **SmartScreen** box ("Windows protected your PC") click **"More info"** →
      **"Run anyway"**.
 
+> **If setup says "Port 8765 is already in use":** another program (often another
+> BRAG, or another local tool) is holding the port BRAG needs for the setup
+> assistant and the page-precise PDF links. Either quit that program, or pick a
+> free port by adding these two lines to the `.env` next to `setup.bat`, then
+> double-click `setup.bat` again:
+>
+> ```
+> BRIDGE_HOST_PORT=8770
+> BRIDGE_PUBLIC_URL=http://localhost:8770
+> ```
+
 **Setup asks two things in order.** First a folder picker asks *where the
 `BRAG Assistent` program should live* (e.g. on your Desktop) — pick anywhere you
 like. Then a second picker asks for *your project folder* (your documents). BRAG
-copies the program into a `BRAG Assistent` folder, creates a `WissensWIKI`
-workspace inside your project folder, and continues from there in a fresh window.
-*(If you cancel the first picker, the program just installs in the unpacked
-folder; the project folder in the second step is required.)*
+copies the program into a `BRAG Assistent` folder (which gets a BRAG folder icon
+and a "do not delete" note so you don't remove it by accident), creates a
+`WissensWIKI` workspace inside your project folder, and continues from there in a
+fresh window. *(If you cancel the first picker, the program just installs in the
+unpacked folder; the project folder in the second step is required.)*
 
 **What you see:** A black Command Prompt window opens and, shortly after, **your
 browser opens automatically** with the setup assistant. There you answer, in
@@ -151,7 +163,17 @@ Now ask Claude:
 - **Stopping/starting:** To stop, open a Command Prompt in the project folder and
   run `docker compose down`. To start: `docker compose up -d`.
 - **Hybrid profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first, then
-  run setup. Setup auto-connects the BRAG tools (named `brag-<folder>`) to LM Studio's chat too (not just
-  Claude); if you install LM Studio *after* setup, just double-click `setup.bat`
-  again to add the connection. See [PROFILES.md](PROFILES.md).
+  run setup. Setup auto-connects the BRAG tools (the connector is named `brag` for
+  your first project) to LM Studio's chat too (not just Claude); if you install LM
+  Studio *after* setup, just double-click `setup.bat` again to add the connection.
+  See [PROFILES.md](PROFILES.md).
+- **Add another project:** double-click **`Projekt hinzufuegen.bat`**, pick a
+  second project folder and name it. BRAG creates a `WissensWIKI/` workspace inside
+  it and adds a `brag-<name>` connector next to your first one; the engine and the
+  ~3 GB models stay shared. Nothing from one project leaks into another.
+- **Remove BRAG:** double-click **`uninstall.bat`**. A menu offers **[1]** remove
+  one project's connection (keeps BRAG and your other projects), **[2]** remove the
+  whole system (a full Docker clean: containers, model cache, search index,
+  Claude/LM Studio connection), or **[C]** cancel. Either way **your documents on
+  disk are never deleted** — a re-install picks them up again.
 - Trouble? See [FAQ.md](FAQ.md).

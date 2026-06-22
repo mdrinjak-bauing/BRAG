@@ -4,15 +4,38 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.5.0** ([changes](#versions))
 
-> **An AI assistant that actually knows your sources.** Drop your documents — PDFs, Word, PowerPoint, your own notes — into a folder. BRAG makes sense of them **on your own machine** and hands the AI the right passages for every question — page-cited, one click from the original. Whether that AI runs locally or in the cloud is your call; at most your question and the matching passages are sent — never the whole corpus.
+> **An AI assistant that actually knows your sources.** Drop your documents — PDFs, Word, PowerPoint, your own notes — into a folder. BRAG **reads them on your own machine, makes them searchable down to the page**, and hands the AI exactly the matching passages for every question — **cited, one click to the original**. Whether that AI runs locally or in the cloud is your call; at most your question and the matching passages are sent — never the whole corpus.
 
-## What it does
+**A quick word on who I am — and why BRAG exists.** I'm a civil engineer
+writing my doctoral thesis. It all started with a simple thought: *my AI needs
+to get better so it genuinely supports me through the doctorate* — it should
+work with my **own** sources, answer **with citations**, and not forget
+everything after every chat. Step by step that became this RAG system. At some
+point I thought: *couldn't this be halfway plug-and-play for others too —
+especially for people who don't feel like coding?* That's exactly the aim here:
+a double-click installer and a browser assistant instead of terminal acrobatics.
+
+## What it's about
+
+**BRAG is a hybrid retrieval system with a multi-layered ingest pipeline**, in
+which several models interlock: a document is recognised (Docling), split into
+chunks, enriched by an AI with 1–2 anchoring sentences, embedded **locally** into
+two "fingerprints" — meaning *and* keyword — and stored in a search database. For
+every question a hybrid search with reranking finds the passages that genuinely
+fit (the three workflows in detail under [How it works](#how-it-works)).
+
+You drive it from your usual AI client — **Claude Desktop**, **LM Studio**
+(local) or Claude Code — and view and maintain the same folder with
+**[Obsidian](https://obsidian.md)** as a comfortable knowledge wiki. The
+compute-heavy work runs **locally on your CPU** (ingest, embedding, reranker);
+only the text and image AI runs locally **or** in the cloud, depending on your
+profile.
 
 <p align="center">
   <img src="docs/assets/overview.en.svg" alt="The BRAG cycle — collect, process locally, ask with citations, think with AI, and write notes back into your knowledge store" width="100%">
 </p>
 
-You keep a folder of files. BRAG turns it into a searchable knowledge store and hands the AI the right passages on demand — so every answer comes **page-cited**, with a link straight to the source. Quotes you want to keep are saved back into that same folder, which means your knowledge accumulates **in files you own**, not in a chat log that forgets. Start a new conversation tomorrow — even with a different model — and you pick up where you left off.
+You connect a folder of files. BRAG turns it into a searchable knowledge store and hands the AI the right passages on demand — so every answer comes **page-cited**, with a link straight to the source. Quotes you want to keep are saved back into that same folder, which means your knowledge accumulates **in files you own**, not in a chat log that forgets. Start a new conversation tomorrow — even with a different model — and you pick up where you left off.
 
 Three things set it apart:
 
@@ -26,7 +49,7 @@ Three things set it apart:
 
 ## Who is it for?
 
-Researchers, lecturers and PhD students — and just as much practitioners who need to stay on top of standards, reports, bills of quantities and trade literature in everyday project work. **No programming required.**
+Researchers, lecturers, **students** and PhD candidates — and just as much practitioners who need to stay on top of standards, reports, bills of quantities and trade literature in everyday project work. In short: **anyone who works with a lot of files** and wants to reliably find the right thing in them. And if you like, you can use the open foundation as a **playground for going deeper into coding and building your own agents and tools with AI** (see [Extension & automation](#extension--automation-with-claude-code--co)). **No programming required** — code is the bonus, not the price of entry.
 
 ---
 
@@ -73,7 +96,7 @@ alike — has two halves, and keeping them strictly apart is the heart of the de
 |---|---|---|
 | Folder | your whole **project folder** | `WissensWIKI/Notizen/` (and any subfolders you create) |
 | Contains | external sources: papers, books, reports | **your own thinking**: concepts, drafts, reading notes |
-| Searchable by Claude? | yes — hybrid search with page-precise citations | deliberately **no** |
+| Searchable by Claude? | yes — hybrid search with page-precise citations | free notes deliberately **no** · saved **passages: yes** (the third layer, see below) |
 | Claude can read/write it? | read-only (via search) | yes — via the `read_note` / `write_note` tools (and optionally Obsidian) |
 
 **Plus a third, in-between layer — saved passages.** When you tell Claude (in
@@ -106,8 +129,12 @@ decisive advantage:
   vendor that can shut down — no lock-in.
 - **It runs everywhere.** The same file is read and written by Obsidian, Claude,
   your text editor, your backup, Git. Move, copy, back it up like any other file.
-- **It links up.** With `[[wikilinks]]` you connect concepts into a network —
-  your knowledge becomes walkable instead of buried in documents.
+- **It links up.** Write `[[NoteName]]` in the middle of a note — that links to
+  the `.md` file of the same name (double square brackets, the filename without
+  `.md`). Obsidian turns this into a clickable graph of related concepts, and
+  Claude follows the links as it reads. Your knowledge becomes **walkable**
+  instead of buried in documents. More on tending the notebook:
+  [Obsidian + notebook](docs/OBSIDIAN.md).
 
 **The uncomfortable part:** a second brain doesn't build itself — you have to
 **make documenting a habit.** The sources accumulate automatically; your
@@ -117,115 +144,159 @@ perfect note that never gets written. Claude can help you write (via the
 Obsidian connection). Over time this becomes what no chat log ever can: **your**
 growing, searchable knowledge.
 
+## Your knowledge store
+
+Here's the most important distinction — **two separate locations you choose during setup:**
+
+- **`BRAG Assistent`** = the **program** (the engine; the unpacked ZIP lands
+  here). You pick *where* it lives — anywhere you like. You need it to start/stop
+  the app; **don't delete it**, but you never have to open it. *(On Windows it
+  even gets a custom folder icon and a "do not delete" note.)*
+- **Your project folder** = your **documents** — chosen independently. The
+  **whole folder is the searchable corpus**: drop documents straight in, any
+  subfolder, any depth. It's yours, so back it up.
+
+*(If you cancel the first picker, the program just installs in the unpacked
+folder; the project folder in step 2 is required.)*
+
+Inside the project folder, **one special subfolder `WissensWIKI/` is your
+workspace** and is deliberately **not** bulk-indexed — so your own notes never
+echo back into search results. It holds:
+
+- **`Passagen/`** — verified passages you save via Claude. These **are** indexed
+  and searchable.
+- **`Notizen/`** (plus any subfolders you create) — your own notes and writing.
+  Claude can read and write here (`read_note` / `write_note`); **not** indexed.
+  BRAG also drops an auto-generated literature note per ingested source here
+  (likewise not indexed).
+- **`CLAUDE.md`** (teaches Claude about your field — you fill it in) and
+  **`AGENTS.md`** (extra rules for autonomous agent tasks). Not indexed.
+
+**The one rule that explains everything:** the **whole project folder** is
+searched, **except** the `WissensWIKI/` workspace — and within `WissensWIKI/`,
+only `Passagen/` is searched. Hidden folders and any `_inbox/` are ignored.
+Anything you add to the project folder is automatically put into the search
+database (the index); take a file back out or delete it and it disappears from
+the database too. Nothing else on your computer is touched.
+
+In practice that means: **documents go into the project folder** (or any
+subfolder) — **not** into `Notizen/` (that's your notebook and isn't searched) and
+not by hand into `Passagen/` either (only the `save_passage` tool files quotes
+there). Your assistant doesn't know this split — what's corpus, what's notebook,
+where it writes what — on its own: it's spelled out in the `WissensWIKI/CLAUDE.md`
+you paste into your **Project instructions** (see [Use BRAG with a Claude
+Project](#use-brag-with-a-claude-project-recommended)).
+
+On your disk it looks like this:
+
+```
+<your project folder>/              ← your documents (the whole folder is searched)
+├── Report.pdf                      ← drop documents straight in (PDF, DOCX, …)
+├── Interviews/                     ← any subfolders; the FIRST level = document type
+│   └── Person_A.pdf
+└── WissensWIKI/                    ← 📓 your workspace — NOT bulk-indexed
+    ├── Passagen/                   ← verified passages saved via Claude (these ARE searched)
+    ├── Notizen/                    ← your notes & subfolders (Claude reads/writes; NOT searched)
+    ├── CLAUDE.md                   ← teaches Claude about YOUR field
+    └── AGENTS.md                   ← rules for autonomous agent tasks
+
+…elsewhere…/BRAG Assistent/         ← the program (don't delete; you never open it)
+```
+
+### Obsidian: a nicer view of the same folder
+
+You can open the knowledge store with [Obsidian](https://obsidian.md) (free) —
+it renders the Markdown files far more nicely and makes writing in the notebook
+pleasant. Important to understand: **Obsidian is not a second copy, just a view
+onto the exact same folder.** It works directly on the files — **delete a file
+in Obsidian and it's gone from the normal folder (and the index) too.** Nothing
+is imported or copied; it's the same structure, just nicer to work with.
+Step by step: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
+
 ## How it works
 
 ![Architecture: knowledge store, Docker containers, Claude Desktop and the two MCP connections](docs/assets/architecture.svg)
 
 Everything runs in two Docker containers on your machine. In a cloud profile an
-AI provider only processes document text; in the local profiles nothing leaves
+AI provider only processes the document text (and, with vision, the images); in the local profiles nothing leaves
 your computer. A thorough, jargon-free explanation lives in
 **[How it works](docs/HOW_IT_WORKS.md)** — here's the gist.
 
-**What is Docker?** Instead of installing Python, databases and AI libraries by
-hand (and fighting version conflicts), Docker runs a ready-made box that is
-identical on every machine. You install Docker Desktop once; the project starts
-the rest. The ~3 GB of models live in Docker's managed storage — **not** in your
-project folder; your project folder holds only your own files.
+**What you get from GitHub — and what you install yourself.** From GitHub you
+download the BRAG project (green "Code" button → "Download ZIP"): the setup
+scripts, the `docker-compose.yml` and the program code. The only things you
+install yourself are **Docker Desktop** (starts the containers) and an AI client
+to ask questions — **Claude Desktop** (default) and/or **LM Studio** (for the
+local path). You only need an **API key** for a cloud profile. Docker fetches the
+**~3 GB** of analysis models itself on first run (the concrete steps: under
+[Setup](#setup--realistically-about-an-hour) below).
 
-![Pipeline: ingest and query](docs/assets/pipeline.svg)
+**What is Docker — and why?** Instead of installing Python, databases and AI
+libraries by hand (and fighting version conflicts), Docker runs a ready-made box
+that is identical on every machine. You install Docker Desktop once; the project
+starts the rest. The models live in Docker's managed storage — **not** in your
+project folder, which holds only your own files.
 
-Answer quality comes from two workflows:
+### Three pipelines — and the hardware they use
 
-**On ingest**, an AI writes 1–2 anchoring sentences for each text chunk
-(*contextual retrieval*) — terse trade prose becomes findable in the first
-place. Figures are described by a multimodal model (*vision pass*). Each chunk
-gets two "fingerprints": one for **meaning** (semantic search) and one for
-**exact terms** (keyword search).
+**1 · Ingest** — as soon as a file lands in the project folder:
 
-**On every question** the query pipeline runs — from question to evidence:
+```mermaid
+flowchart TD
+    F["📄 Example.pdf — dropped into the project folder"]
+    F --> D["1 · Docling: detect layout & tables → Markdown + page numbers<br/>local · CPU"]
+    D --> C["2 · Chunking: into ~2000-character pieces (tables whole)<br/>local · CPU · no model"]
+    C --> K["3 · Context LLM: 1–2 anchoring sentences per chunk<br/>profile text LLM · cloud OR local (LM Studio)"]
+    C -. figures .-> V["4 · Vision pass: image → 1–3 sentences<br/>multimodal model · cloud OR local (LM Studio)"]
+    K --> E["5 · Embedding: meaning (arctic, 1024-dim) + keyword (BM25)<br/>local · CPU"]
+    V --> E
+    E --> Q[("6 · Qdrant: search database<br/>local container")]
+```
 
-1. **Two searches at once** — meaning search (finds related things, even in
-   different words) **and** keyword search (BM25; finds exact terms like
-   abbreviations, section numbers, file references). ~80 candidates each.
-2. **Merge (RRF)** — both lists fuse; ~40 remain.
-3. **Reranker** — a cross-encoder reads your question together with each passage
-   and sorts by true fit. The difference between "contains the search terms" and
-   "answers the question". It runs **locally on your CPU** — the main cost of a
-   search — so its effort is a setting: `RERANK_PROFILE=off/eco/balanced/full`
-   (default `eco`; pick `off`/`eco` on a weak PC, `full` on a strong one).
-4. **Trim** — the best hits remain (15 by default, max 3 per source).
-5. **Answer** — Claude writes from exactly these passages, every statement cited
-   with source and page.
+Docling detects layout and tables (OCR is **not** enabled — a scanned PDF with no
+text layer isn't recognised; BRAG drops a visible marker then); the text is split
+into chunks; an AI writes 1–2 anchoring sentences per chunk (*contextual
+retrieval*), and a multimodal model describes figures (*vision pass*) — **both run
+in the cloud or locally in LM Studio, depending on your profile**. Then two
+"fingerprints" are built **locally on the CPU** (meaning: arctic, 1024-dim;
+keyword: BM25), and everything goes into Qdrant.
+
+**2 · Asking** — for every question:
+
+```mermaid
+flowchart TD
+    QF["❓ Your question"]
+    QF --> S["1 · Two searches: meaning (arctic) + keyword (BM25), ~80 candidates each<br/>local · CPU"]
+    S --> RF["2 · RRF fusion in Qdrant → best ~40<br/>local container"]
+    RF --> RR["3 · Reranker (bge-reranker-v2-m3): sort by true fit<br/>adjustable (off/eco/balanced/full, k-value) · local · CPU — costliest step"]
+    RR --> DV["4 · Trim & diversity: top-k (15 by default), max 3 per source<br/>local · CPU"]
+    DV --> AN["5 · Answer with page citation<br/>answer AI · cloud (Claude) OR local (LM Studio)"]
+```
+
+Example — *"What deadline does the construction contract set for a defect
+notice?"*: meaning and keyword search return ~80 candidates each, Qdrant fuses
+them (RRF) down to ~40, the **reranker** reads your question together with each
+passage and sorts by true fit (the difference between "contains the search terms"
+and "answers the question"). The best ones (15 by default, max 3 per source) go
+to the answer AI, which writes with page-precise citations. **You have the
+choice:** *how many* passages the reranker scores (the **k-value**) and *whether*
+it runs at all, you set depending on your machine and model — see [Tuning search
+quality](#tuning-search-quality-the-reranker).
+
+**3 · Saving** — writing knowledge back:
+
+```mermaid
+flowchart TD
+    SP["💬 “save this passage” → save_passage"] --> PA[("Passagen/*.md + index<br/>searchable · local · CPU")]
+    WN["✍️ “make a note …” / “report” → write_note · save_report"] --> NO["Notizen/ · Berichte/*.md<br/>not indexed · local · CPU"]
+```
+
+A saved quote (`save_passage`) is additionally embedded and thus searchable; your
+own notes and reports (`write_note` / `save_report`) deliberately stay outside the
+search index.
 
 More depth (with numbers) in [How it works](docs/HOW_IT_WORKS.md) and
 [Architecture](docs/ARCHITECTURE.md); every parameter in [`.env.example`](.env.example).
-
-### The AI connection (MCP)
-
-Set up automatically, the **BRAG MCP server** gives your assistant one connection
-with two sets of tools — over your **library** (search) and your **notebook**
-(read/write); the notebook tools never touch the search index. Setup wires this
-into **Claude Desktop**, and into **LM Studio** as well if it is installed (LM
-Studio's chat is an MCP host). The tools:
-
-| Tool | What it does | Example question |
-|---|---|---|
-| `search` | Hybrid search; pick a `mode` (precise/normal/review/deep) + filters (type, year, tables/figures, source) | *"What do all the reports say about change orders?"* |
-| `list_sources` | Inventory of all indexed documents | *"What documents are in my knowledge base?"* |
-| `read_source` | Reads a whole document in reading order — summarise/evaluate a report | *"Summarise the Müller soil report."* |
-| `inspect_chunks` | Diagnostics: what is stored for a source | *"Show what was indexed from Smith 2023, p. 14."* |
-| `set_metadata` | Tags a corpus folder (writes `_meta.txt`) so search can filter by it | *"Tag the Nachträge folder as project=School Center."* |
-| `recent_sources` | The most recently ingested documents | *"What came in this week?"* |
-| `remove_source` | Drops a source from the index; moves the file to an `_inbox/` (reversible, not deleted) | *"Remove the outdated draft from my index."* |
-| `rename_source` | Re-files an indexed document; metadata patched in place, no re-embedding | *"Rename Smith_2023_draft to its final title."* |
-| `save_passage` | Saves a quotable hit under a topic (indexed) | *"Save this quote for my methods chapter."* |
-| `list_passages` | Shows collected passages per topic | *"What have I collected for the methods chapter?"* |
-| `delete_passage` | Deletes a topic's passages + their index entries (asks to confirm) | *"Delete the passages on change orders."* |
-| `write_note` | Creates / appends a note in `WissensWIKI/` (never indexed) | *"Save these conclusions as a note."* |
-| `read_note` | Reads a notebook page | *"Open my note on process maturity."* |
-| `list_notebook` | Lists your notebook | *"What's in my notebook?"* |
-| `move_note` | Moves or renames a notebook file (creates subfolders) | *"Move this note into Kapitel/2."* |
-| `save_report` | Compiles a result/report into the notebook for cheap reuse (never indexed) | *"Save this comparison table as a report."* |
-| `list_reports` | Lists your saved reports | *"Show my reports."* |
-| `delete_note` | Deletes a note/report (asks to confirm) | *"Delete the old status report."* |
-
-**Edit notes in Obsidian too (optional).** Claude can already read and write your
-notebook through the `list_notebook` / `read_note` / `write_note` tools above. To
-also edit notes in Obsidian's own interface, point Obsidian at the same knowledge
-folder; the **MCP Tools for Obsidian** plugin additionally lets Claude act inside
-Obsidian. Guide: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
-
-With both: *"Search definitions of process maturity (library), compare with my
-concept note (notebook), and fill in what's missing — with citations."*
-
-## Use BRAG with a Claude Project (recommended)
-
-Connecting BRAG gives Claude the **tools**; a Project gives it the **way of
-working** — so it searches before answering, cites with page links, and saves
-results to the right place **without you re-explaining context every time.**
-
-- **Claude Desktop:** create a **Project** for your knowledge base, open the
-  `WissensWIKI/CLAUDE.md` that BRAG put in your project folder, and **paste its
-  content into the Project's custom instructions** (fill in the placeholders:
-  your field, citation style, language). Claude Desktop does **not** read the file
-  on its own — the Project instructions are where it takes effect, in every chat.
-- **Claude Code** reads `CLAUDE.md` / `AGENTS.md` from the folder automatically —
-  nothing to paste.
-
-Once set up, the knowledge store becomes your shared memory: *"What's the status on
-X?"* → Claude reads your topic note and tops it up with search; *"save the results"*
-→ it files them itself. Keep `CLAUDE.md` updated — whenever you correct Claude twice
-about the same thing, put the rule in there.
-
-### Routines — delegate recurring tasks
-
-For tasks that are always the same — *"catch me up"*, *"update the bibliography"*,
-*"write the journal entry"* — BRAG seeds a `WissensWIKI/Routinen/` folder with example
-recipes: short Markdown files Claude follows when you name them. Their triggers are
-listed in `CLAUDE.md` as commands, so once that's in your Project instructions, a bare
-phrase runs the routine — no re-explaining. Add your own by dropping a `.md` into
-`Routinen/` and a trigger line into `CLAUDE.md`. *(The separate `AGENTS.md` holds the
-safety rules for autonomous/agent runs — not tasks.)*
 
 ## Choose your profile
 
@@ -273,8 +344,19 @@ meaning and keyword search — both branches stay populated, so nothing "breaks,
 but the *most relevant* passage sits at the very top less often. Since an LLM
 tends to cite the top hits, the reranker pays off most for pointed factual
 questions and for **mixed DE/EN corpora** (where it shores up hit quality more
-noticeably). Individual values can be fine-tuned via `RERANK_ENABLED` /
-`RERANK_PREFETCH` / `RERANK_FUSION_LIMIT`.
+noticeably). **Set the k-value yourself.** If the four profiles aren't enough, tune the
+individual values directly in `.env` — they override the profile:
+
+- **`RERANK_FUSION_LIMIT`** — the **k-value**: how many passages the cross-encoder
+  actually scores. This is the costliest lever (more = more thorough but slower);
+  the profile values above (40 / 60 / 120) are just presets.
+- **`RERANK_PREFETCH`** — how many candidates are loaded **per branch** (meaning +
+  keyword). Widens the pool without scoring more.
+- **`RERANK_ENABLED`** — turns the re-sorting on or off entirely.
+
+Example: `RERANK_FUSION_LIMIT=80` makes the reranker score 80 passages instead of
+the default 40. How many hits ultimately come back you control independently via
+`mode`/`top_k` in the search call itself.
 
 With a cloud profile the **text excerpt** of each chunk goes to the provider —
 plus, with the vision pass on (the default), the **images of your figures**.
@@ -358,54 +440,80 @@ happened, plus the status output above (details in
 First run downloads ~3 GB of analysis models once. Detailed, with "what you
 see": [Install macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md).
 
-## Your knowledge store
+## The AI connection (MCP)
 
-Here's the most important distinction — **two separate locations you choose during setup:**
+Set up automatically, the **BRAG MCP server** gives your assistant one
+connection with tools in four groups: **Search** (queries your corpus), **Corpus**
+(maintain the inventory, tag, rename), **Evidence** (collect quotable passages)
+and **Notebook/Reports** (read/write) — where the notebook tools never touch the
+search index. Setup wires the connection into **Claude Desktop**, and into **LM
+Studio** as well if it is installed (LM Studio's chat is an MCP host). The tools
+in detail:
 
-- **`BRAG Assistent`** = the **program** (the engine; the unpacked ZIP lands
-  here). You pick *where* it lives — anywhere you like. You need it to start/stop
-  the app; **don't delete it**, but you never have to open it. *(On Windows it
-  even gets a custom folder icon and a "do not delete" note.)*
-- **Your project folder** = your **documents** — chosen independently. The
-  **whole folder is the searchable corpus**: drop documents straight in, any
-  subfolder, any depth. It's yours, so back it up.
+| Tool | What it does | Example question |
+|---|---|---|
+| `search` | Hybrid search; pick a `mode` (precise/normal/review/deep) + filters (type, year, tables/figures, source) | *"What do all the reports say about change orders?"* |
+| `list_sources` | Inventory of all indexed documents | *"What documents are in my knowledge base?"* |
+| `read_source` | Reads a whole document in reading order — summarise/evaluate a report | *"Summarise the Müller soil report."* |
+| `inspect_chunks` | Diagnostics: what is stored for a source | *"Show what was indexed from Smith 2023, p. 14."* |
+| `set_metadata` | Tags a corpus folder (writes `_meta.txt`) so search can filter by it | *"Tag the Nachträge folder as project=School Center."* |
+| `recent_sources` | The most recently ingested documents | *"What came in this week?"* |
+| `remove_source` | Drops a source from the index; moves the file to an `_inbox/` (reversible, not deleted) | *"Remove the outdated draft from my index."* |
+| `rename_source` | Re-files an indexed document; metadata patched in place, no re-embedding | *"Rename Smith_2023_draft to its final title."* |
+| `save_passage` | Saves a quotable hit under a topic (indexed) | *"Save this quote for my methods chapter."* |
+| `list_passages` | Shows collected passages per topic | *"What have I collected for the methods chapter?"* |
+| `delete_passage` | Deletes a topic's passages + their index entries (asks to confirm) | *"Delete the passages on change orders."* |
+| `write_note` | Creates / appends a note in `WissensWIKI/` (never indexed) | *"Save these conclusions as a note."* |
+| `read_note` | Reads a notebook page | *"Open my note on process maturity."* |
+| `list_notebook` | Lists your notebook | *"What's in my notebook?"* |
+| `move_note` | Moves or renames a notebook file (creates subfolders) | *"Move this note into Kapitel/2."* |
+| `save_report` | Compiles a result/report into the notebook for cheap reuse (never indexed) | *"Save this comparison table as a report."* |
+| `list_reports` | Lists your saved reports | *"Show my reports."* |
+| `delete_note` | Deletes a note/report (asks to confirm) | *"Delete the old status report."* |
 
-*(If you cancel the first picker, the program just installs in the unpacked
-folder; the project folder in step 2 is required.)*
+**Edit notes in Obsidian too (optional).** Claude can already read and write your
+notebook through the `list_notebook` / `read_note` / `write_note` tools above. To
+also edit notes in Obsidian's own interface, point Obsidian at the same knowledge
+folder; the **MCP Tools for Obsidian** plugin additionally lets Claude act inside
+Obsidian. Guide: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
 
-Inside the project folder, **one special subfolder `WissensWIKI/` is your
-workspace** and is deliberately **not** bulk-indexed — so your own notes never
-echo back into search results. It holds:
+With both: *"Search definitions of process maturity (library), compare with my
+concept note (notebook), and fill in what's missing — with citations."*
 
-- **`Passagen/`** — verified passages you save via Claude. These **are** indexed
-  and searchable.
-- **`Notizen/`** (plus any subfolders you create) — your own notes and writing.
-  Claude can read and write here (`read_note` / `write_note`); **not** indexed.
-- **`CLAUDE.md`** (teaches Claude about your field — you fill it in) and
-  **`AGENTS.md`** (extra rules for autonomous agent tasks). Not indexed.
+## Use BRAG with a Claude Project (recommended)
 
-**The one rule that explains everything:** the **whole project folder** is
-searched, **except** the `WissensWIKI/` workspace — and within `WissensWIKI/`,
-only `Passagen/` is searched. Hidden folders and any `_inbox/` are ignored.
-Anything you add to the project folder is automatically put into the search
-database (the index); take a file back out or delete it and it disappears from
-the database too. Nothing else on your computer is touched.
+Connecting BRAG gives Claude the **tools**; a Project gives it the **way of
+working** — so it searches before answering, cites with page links, and saves
+results to the right place **without you re-explaining context every time.**
 
-On your disk it looks like this:
+- **Claude Desktop:** create a **Project** for your knowledge base, open the
+  `WissensWIKI/CLAUDE.md` that BRAG put in your project folder, and **paste its
+  content into the Project's custom instructions** (fill in the placeholders:
+  your field, citation style, language). Claude Desktop does **not** read the file
+  on its own — the Project instructions are where it takes effect, in every chat.
+- **Claude Code** reads `CLAUDE.md` / `AGENTS.md` from the folder automatically —
+  nothing to paste.
 
-```
-<your project folder>/              ← your documents (the whole folder is searched)
-├── Report.pdf                      ← drop documents straight in (PDF, DOCX, …)
-├── Interviews/                     ← any subfolders; the FIRST level = document type
-│   └── Person_A.pdf
-└── WissensWIKI/                    ← 📓 your workspace — NOT bulk-indexed
-    ├── Passagen/                   ← verified passages saved via Claude (these ARE searched)
-    ├── Notizen/                    ← your notes & subfolders (Claude reads/writes; NOT searched)
-    ├── CLAUDE.md                   ← teaches Claude about YOUR field
-    └── AGENTS.md                   ← rules for autonomous agent tasks
+Once set up, the knowledge store becomes your shared memory: *"What's the status on
+X?"* → Claude reads your topic note and tops it up with search; *"save the results"*
+→ it files them itself. Keep `CLAUDE.md` updated — whenever you correct Claude twice
+about the same thing, put the rule in there.
 
-…elsewhere…/BRAG Assistent/         ← the program (don't delete; you never open it)
-```
+### Routines — delegate recurring tasks
+
+For tasks that are always the same — *"catch me up"*, *"update the bibliography"*,
+*"write the journal entry"* — BRAG seeds a `WissensWIKI/Routinen/` folder with example
+recipes: short Markdown files Claude follows when you name them. Their triggers are
+listed in `CLAUDE.md` as commands, so once that's in your Project instructions, a bare
+phrase runs the routine — no re-explaining. Add your own by dropping a `.md` into
+`Routinen/` and a trigger line into `CLAUDE.md`. *(The separate `AGENTS.md` holds the
+safety rules for autonomous/agent runs — not tasks.)*
+
+## Multiple projects & your own metadata
+
+As your knowledge store grows: here's how to keep several bodies of work
+cleanly apart, tag documents with your own metadata, and keep the index up to
+date automatically.
 
 **Multiple projects (optional).** Keep separate bodies of work fully apart — each
 with its own search database and its own connector in Claude. Double-click
@@ -464,16 +572,6 @@ Claude twice about the same thing, that correction belongs in
 **`WissensWIKI/CLAUDE.md`**, not in the next chat — a well-kept instruction file
 turns a generic assistant into *yours* (examples:
 [docs/CUSTOMIZE_CLAUDE.md](docs/CUSTOMIZE_CLAUDE.md)).
-
-### Obsidian: a nicer view of the same folder
-
-You can open the knowledge store with [Obsidian](https://obsidian.md) (free) —
-it renders the Markdown files far more nicely and makes writing in the notebook
-pleasant. Important to understand: **Obsidian is not a second copy, just a view
-onto the exact same folder.** It works directly on the files — **delete a file
-in Obsidian and it's gone from the normal folder (and the index) too.** Nothing
-is imported or copied; it's the same structure, just nicer to work with.
-Step by step: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
 
 ## Extension & automation (with Claude Code & co.)
 

@@ -63,9 +63,9 @@ Dann erneut einen Doppelklick auf `setup.command` machen.
    öffnen — ein Schließen des Fensters genügt nicht.
 2. Prüfen, ob der Container läuft: `docker ps` sollte `brag-app` auflisten.
 3. Prüfen, ob die Konfigurationsdatei (Pfad siehe [OBSIDIAN.de.md](OBSIDIAN.de.md))
-   den Eintrag `brag-<Ordner>` enthält (ein bloßes `brag` erscheint nur bei einer
-   frischen Installation, in der noch kein Projekt registriert ist; ältere
-   Installationen zeigen ggf. noch den langen Alt-Namen, bis du das Setup erneut
+   einen BRAG-Eintrag enthält — `brag` bei einer Einzelprojekt-Installation, oder
+   `brag-<Ordner>` / `brag-<Name>`, sobald du mehrere Projekte hast (ältere
+   Installationen zeigen ggf. noch den Alt-Namen, bis du das Setup erneut
    ausführst).
 
 ## Indexierung
@@ -208,8 +208,8 @@ Claude auch bitten, *„entferne diese Quelle aus meinem Index"* (das Werkzeug
 gelöscht) und räumt ihre Chunks ab. Löschungen, die du bei gestoppter App machst,
 werden beim nächsten Start automatisch bereinigt.
 
-**Ich habe eine Datei aktualisiert/überschrieben, die Suche zeigt aber noch den alten Inhalt.**
-Ja, ein gleichnamiges Überschreiben wird automatisch erkannt: Der Watcher
+**Ich habe eine Datei aktualisiert/überschrieben — erkennt die Suche die neue Fassung?**
+Ja. Ein gleichnamiges Überschreiben wird automatisch erkannt: Der Watcher
 indexiert die Datei neu, sobald sich die Änderung beruhigt hat (die alten Chunks
 werden ersetzt). Gib ihm ein paar Sekunden; im Log siehst du die Zeile
 *„document changed … re-indexing"* in `docker compose logs -f app`.

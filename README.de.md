@@ -4,15 +4,39 @@
 
 **🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.5.0** ([Änderungen](#versionen))
 
-> **Ein KI-Assistent, der deine eigenen Quellen wirklich kennt.** Leg deine Dokumente — PDFs, Word, PowerPoint, deine eigenen Notizen — in einen Ordner. BRAG erschließt sie **auf deinem Rechner** und reicht der KI bei jeder Frage genau die passenden Stellen — seitengenau belegt, ein Klick führt aufs Original. Ob die KI dabei lokal oder in der Cloud rechnet, entscheidest du; gesendet werden höchstens deine Frage und die passenden Stellen — nie der ganze Korpus.
+> **Ein KI-Assistent, der deine eigenen Quellen wirklich kennt.** Leg deine Dokumente — PDFs, Word, PowerPoint, deine eigenen Notizen — in einen Ordner. BRAG **liest sie auf deinem Rechner ein, macht sie seitengenau durchsuchbar** und reicht der KI bei jeder Frage genau die passenden Stellen — **belegt, ein Klick führt aufs Original**. Ob die KI dabei lokal oder in der Cloud rechnet, entscheidest du; gesendet werden höchstens deine Frage und die passenden Stellen — nie der ganze Korpus.
 
-## Was es tut
+**Kurz zu mir — und warum es BRAG gibt.** Ich bin Bauingenieur und schreibe an
+meiner Promotion. Angefangen hat alles mit einem einfachen Gedanken: *meine KI
+muss besser werden, damit sie mich bei der Promotion wirklich unterstützt* — sie
+sollte mit meinen **eigenen** Quellen arbeiten, **belegt** antworten und nicht nach
+jedem Chat alles wieder vergessen. Daraus wurde Schritt für Schritt dieses
+RAG-System. Irgendwann dachte ich: *Geht das nicht auch halbwegs Plug-and-play für
+andere — gerade für die, die keine Lust auf Coding haben?* Genau das ist hier der
+Anspruch: ein Doppelklick-Installer und ein Browser-Assistent statt
+Terminal-Akrobatik.
+
+## Worum es geht
+
+**BRAG ist ein hybrides Retrieval-System mit einer mehrschichtigen Einlese-Pipeline**,
+in der mehrere Modelle ineinandergreifen: Ein Dokument wird erkannt (Docling), in
+Stücke zerlegt, von einer KI mit 1–2 einordnenden Sätzen angereichert, **lokal** in
+zwei „Fingerabdrücke" — Bedeutung *und* Stichwort — eingebettet und in einer
+Suchdatenbank abgelegt. Bei jeder Frage findet eine hybride Suche mit Reranking die
+wirklich passenden Stellen (die drei Abläufe im Detail unter
+[Wie es funktioniert](#wie-es-funktioniert)).
+
+Steuern kannst du es aus deinem gewohnten KI-Client — **Claude Desktop**,
+**LM Studio** (lokal) oder Claude Code — und denselben Ordner mit
+**[Obsidian](https://obsidian.md)** als komfortables Wissens-Wiki betrachten und
+pflegen. Das Rechenintensive läuft **lokal auf der CPU** (Einlesen, Embedding,
+Reranker); nur die Text- und Bild-KI rechnet je nach Profil lokal **oder** in der Cloud.
 
 <p align="center">
   <img src="docs/assets/overview.de.svg" alt="Der BRAG-Kreislauf — sammeln, lokal verwerten, fragen mit Beleg, mit KI denken und Notizen zurück in den Wissensspeicher schreiben" width="100%">
 </p>
 
-Du pflegst einen Ordner mit Dateien. BRAG macht daraus einen durchsuchbaren Wissensspeicher und reicht der KI bei jeder Frage genau die passenden Stellen — so kommt jede Antwort **seitengenau belegt**, mit Link direkt zur Quelle. Zitate, die du behalten willst, werden in denselben Ordner zurückgeschrieben: Dein Wissen sammelt sich damit **in Dateien, die dir gehören**, nicht in einem Chatverlauf, der vergisst. Ein neuer Chat morgen — auch bei einem anderen Modell — knüpft genau dort an, wo du aufgehört hast.
+Du bindest einen Ordner mit Dateien ein. BRAG macht daraus einen durchsuchbaren Wissensspeicher und reicht der KI bei jeder Frage genau die passenden Stellen — so kommt jede Antwort **seitengenau belegt**, mit Link direkt zur Quelle. Zitate, die du behalten willst, werden in denselben Ordner zurückgeschrieben: Dein Wissen sammelt sich damit **in Dateien, die dir gehören**, nicht in einem Chatverlauf, der vergisst. Ein neuer Chat morgen — auch bei einem anderen Modell — knüpft genau dort an, wo du aufgehört hast.
 
 Drei Dinge machen den Unterschied:
 
@@ -26,7 +50,7 @@ Drei Dinge machen den Unterschied:
 
 ## Für wen?
 
-Forschende, Lehrende und Promovierende — und genauso Praktiker, die im Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und Fachliteratur behalten müssen. **Ohne Programmierkenntnisse nutzbar.**
+Forschende, Lehrende, **Studierende** und Promovierende — und genauso Praktiker, die im Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und Fachliteratur behalten müssen. Kurz: **alle, die mit vielen Dateien arbeiten** und darin verlässlich das Richtige wiederfinden wollen. Und wer mag, nutzt das offene Fundament als **Spielwiese, um mit KI tiefer in Coding und den Bau eigener Agenten und Werkzeuge einzutauchen** (siehe [Ausbau & Automatisierung](#ausbau--automatisierung-mit-claude-code--co)). **Ohne Programmierkenntnisse nutzbar** — Code ist die Kür, nicht die Pflicht.
 
 ---
 
@@ -74,7 +98,7 @@ Praxis — hat zwei Hälften, und ihre strikte Trennung ist der Kern dieses Desi
 |---|---|---|
 | Ordner | dein ganzer **Projektordner** | `WissensWIKI/Notizen/` (und beliebige eigene Unterordner) |
 | Enthält | externe Quellen: Paper, Bücher, Berichte | **dein eigenes Denken**: Konzepte, Entwürfe, Lesenotizen |
-| Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | bewusst **nein** |
+| Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | freie Notizen bewusst **nein** · gespeicherte **Passagen: ja** (die dritte Ebene, siehe unten) |
 | Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die Werkzeuge `read_note` / `write_note` (und optional Obsidian) |
 
 **Dazu eine dritte Ebene dazwischen — gespeicherte Passagen.** Wenn du Claude
@@ -110,8 +134,12 @@ aber der entscheidende Vorteil:
 - **Es läuft überall.** Dieselbe Datei lesen und schreiben Obsidian, Claude,
   dein Texteditor, dein Backup, Git. Verschieben, kopieren, sichern wie jede
   andere Datei.
-- **Es lässt sich verknüpfen.** Mit `[[Wikilinks]]` verbindest du Konzepte zu
-  einem Netz — dein Wissen wird durchwanderbar statt in Dokumenten vergraben.
+- **Es lässt sich verknüpfen.** Schreib `[[Notizname]]` mitten in eine Notiz — das
+  verlinkt auf die gleichnamige `.md`-Datei (eckige Doppelklammern, der Dateiname
+  ohne `.md`). Obsidian macht daraus einen klickbaren Graphen verwandter Konzepte,
+  und Claude folgt den Links beim Lesen. So wird dein Wissen **durchwanderbar** statt
+  in Dokumenten vergraben. Mehr zur Notizbuch-Pflege:
+  [Obsidian + Notizbuch](docs/OBSIDIAN.de.md).
 
 **Der unbequeme Teil:** Ein zweites Gehirn entsteht nicht von allein — du musst
 dir das **Dokumentieren angewöhnen.** Die Quellen sammeln sich automatisch,
@@ -121,121 +149,161 @@ unfertige Sätze als die perfekte Notiz, die nie entsteht. Claude kann dir beim
 Schreiben helfen (über die Obsidian-Anbindung). Mit der Zeit wird daraus, was
 kein Chatverlauf je sein kann: **dein** wachsendes, durchsuchbares Wissen.
 
+## Dein Wissensspeicher
+
+Hier die wichtigste Unterscheidung — **zwei getrennte Orte, die du beim Setup wählst:**
+
+- **`BRAG Assistent`** = das **Programm** (die Engine; hier landet die entpackte
+  ZIP). Du wählst, *wo* es liegt — an beliebigem Ort. Das brauchst du zum
+  Starten/Stoppen; **nicht löschen** — öffnen musst du es nie. *(Unter Windows
+  bekommt es sogar ein eigenes Ordnersymbol und einen „nicht löschen"-Hinweis.)*
+- **Dein Projektordner** = deine **Dokumente** — unabhängig davon gewählt. Der
+  **ganze Ordner ist der durchsuchbare Korpus**: Dokumente einfach hineinlegen,
+  beliebiger Unterordner, beliebige Tiefe. Er gehört dir, also sichere ihn.
+
+*(Brichst du die erste Auswahl ab, installiert sich das Programm einfach im
+entpackten Ordner; der Projektordner in Schritt 2 ist erforderlich.)*
+
+Im Projektordner ist **ein besonderer Unterordner `WissensWIKI/` dein
+Arbeitsbereich** und wird bewusst **nicht** mit-indexiert — so hallen deine
+eigenen Notizen nie in den Suchergebnissen wider. Er enthält:
+
+- **`Passagen/`** — belegte Passagen, die du über Claude speicherst. Diese
+  **werden** indexiert und sind durchsuchbar.
+- **`Notizen/`** (plus beliebige eigene Unterordner) — deine eigenen Notizen und
+  Texte. Claude kann hier lesen und schreiben (`read_note` / `write_note`);
+  **nicht** indexiert. BRAG legt hier zusätzlich je eingelesener Quelle eine
+  automatische Literaturnotiz ab (ebenfalls nicht indexiert).
+- **`CLAUDE.md`** (bringt Claude dein Fachgebiet bei — hier trägst du es ein) und
+  **`AGENTS.md`** (Zusatzregeln für autonome Agenten-Aufgaben). Nicht indexiert.
+
+**Die eine Regel, die alles erklärt:** Durchsucht wird der **ganze
+Projektordner**, **außer** dem Arbeitsbereich `WissensWIKI/` — und innerhalb von
+`WissensWIKI/` nur `Passagen/`. Versteckte Ordner und jeder `_inbox/` werden
+ignoriert. Alles, was du in den Projektordner legst, wandert automatisch in die
+Suchdatenbank (den Index); nimmst du eine Datei wieder heraus oder löschst sie,
+verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem Rechner
+angefasst.
+
+Praktisch heißt das: **Dokumente kommen in den Projektordner** (oder einen
+beliebigen Unterordner) — **nicht** nach `Notizen/` (das ist dein Notizbuch und
+wird nicht durchsucht) und auch nicht von Hand nach `Passagen/` (dorthin legt nur
+das Werkzeug `save_passage` belegte Zitate). Dass dein Assistent diese Aufteilung
+kennt — was Korpus ist, was Notizbuch, wohin er was schreibt —, kommt nicht von
+allein: Es steht in der `WissensWIKI/CLAUDE.md`, die du in deine
+**Projekt-Anweisungen** kopierst (siehe [BRAG mit einem Claude-Projekt
+nutzen](#brag-mit-einem-claude-projekt-nutzen-empfohlen)).
+
+So sieht es auf der Festplatte aus:
+
+```
+<dein Projektordner>/                ← deine Dokumente (der ganze Ordner wird durchsucht)
+├── Bericht.pdf                      ← Dokumente einfach hineinlegen (PDF, DOCX, …)
+├── Interviews/                      ← beliebige Unterordner; die ERSTE Ebene = Dokumenttyp
+│   └── Person_A.pdf
+└── WissensWIKI/                     ← 📓 dein Arbeitsbereich — NICHT mit-indexiert
+    ├── Passagen/                    ← über Claude gespeicherte belegte Passagen (DIESE werden durchsucht)
+    ├── Notizen/                     ← deine Notizen & Unterordner (Claude liest/schreibt; NICHT durchsucht)
+    ├── CLAUDE.md                    ← bringt Claude DEIN Fachgebiet bei
+    └── AGENTS.md                    ← Regeln für autonome Agenten-Aufgaben
+
+…anderswo…/BRAG Assistent/           ← das Programm (nicht löschen; öffnen musst du es nie)
+```
+
+### Obsidian: ein schönerer Blick auf denselben Ordner
+
+Du kannst den Wissensspeicher mit [Obsidian](https://obsidian.md) (kostenlos)
+öffnen — es stellt die Markdown-Dateien viel schöner dar und macht das Schreiben
+im Notizbuch angenehm. Wichtig zu verstehen: **Obsidian ist kein zweiter
+Speicher, sondern nur eine Ansicht auf genau denselben Ordner.** Es arbeitet
+direkt auf den Dateien — **löschst du eine Datei in Obsidian, ist sie auch im
+normalen Ordner (und damit aus dem Index) weg.** Nichts wird importiert oder
+kopiert; es ist dieselbe Struktur, nur bequemer zu bedienen. Schritt für Schritt:
+[docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
+
 ## Wie es funktioniert
 
 ![Architektur: Wissensspeicher, Docker-Container, Claude Desktop und die zwei MCP-Anschlüsse](docs/assets/architecture.svg)
 
 Alles läuft in zwei Docker-Containern auf deinem Rechner. Im Cloud-Profil
-verarbeitet ein KI-Anbieter nur die Dokumenttexte; in den Lokal-Profilen
-verlässt nichts deinen Rechner. Eine ausführliche, technikfreie Erklärung steht
-in **[So funktioniert's](docs/HOW_IT_WORKS.de.md)** — hier das Wichtigste.
+verarbeitet ein KI-Anbieter nur die Dokumenttexte (und bei Vision die Bilder); in
+den Lokal-Profilen verlässt nichts deinen Rechner. Eine ausführliche, technikfreie
+Erklärung steht in **[So funktioniert's](docs/HOW_IT_WORKS.de.md)** — hier das Wichtigste.
 
-**Was ist Docker?** Statt Python, Datenbanken und KI-Bibliotheken einzeln zu
-installieren (und mit Versionskonflikten zu kämpfen), startet Docker eine fertig
-geschnürte Box, die auf jedem Rechner identisch ist. Du installierst einmal
-Docker Desktop; den Rest startet das Projekt. Die ~3 GB Modelle liegen in Dockers
-verwaltetem Speicher — **nicht** in deinem Projektordner; dein Projektordner
-enthält nur deine eigenen Dateien.
+**Was du von GitHub bekommst — und was du selbst installierst.** Von GitHub lädst du
+das BRAG-Projekt (grüner „Code"-Knopf → „Download ZIP"): die Setup-Skripte, die
+`docker-compose.yml` und den Programmcode. Selbst installieren musst du nur **Docker
+Desktop** (startet die Container) und einen KI-Client zum Fragen — **Claude Desktop**
+(Standard) und/oder **LM Studio** (für den lokalen Weg). Einen **API-Schlüssel**
+brauchst du nur für ein Cloud-Profil. Die **~3 GB** Analyse-Modelle lädt Docker beim
+ersten Start selbst nach (die konkreten Schritte: unten unter
+[Einrichten](#einrichten--realistisch-etwa-1-stunde)).
 
-![Pipeline: Einlesen und Abfrage](docs/assets/pipeline.svg)
+**Was ist Docker — und wieso?** Statt Python, Datenbanken und KI-Bibliotheken einzeln
+zu installieren (und mit Versionskonflikten zu kämpfen), startet Docker eine fertig
+geschnürte Box, die auf jedem Rechner identisch ist. Du installierst einmal Docker
+Desktop; den Rest startet das Projekt. Die Modelle liegen in Dockers verwaltetem
+Speicher — **nicht** in deinem Projektordner; der enthält nur deine eigenen Dateien.
 
-Die Antwortqualität entsteht in zwei Abläufen:
+### Drei Pipelines — und welche Hardware sie beanspruchen
 
-**Beim Einlesen** schreibt eine KI zu jedem Textabschnitt 1–2 einordnende Sätze
-(*Contextual Retrieval*) — knapper Fachtext wird so überhaupt erst auffindbar.
-Abbildungen werden von einem multimodalen Modell beschrieben (*Vision-Pass*).
-Jeder Abschnitt bekommt zwei „Fingerabdrücke": einen für die **Bedeutung**
-(semantische Suche) und einen für **exakte Begriffe** (Stichwortsuche).
+**1 · Einlesen** — sobald eine Datei im Projektordner landet:
 
-**Bei jeder Frage** läuft die Abfragepipeline — von der Frage bis zum Beleg:
+```mermaid
+flowchart TD
+    F["📄 Beispiel.pdf — in den Projektordner gelegt"]
+    F --> D["1 · Docling: Layout & Tabellen erkennen → Markdown + Seitenzahlen<br/>lokal · CPU"]
+    D --> C["2 · Chunking: in ~2000-Zeichen-Stücke (Tabellen ganz)<br/>lokal · CPU · kein Modell"]
+    C --> K["3 · Kontext-LLM: 1–2 einordnende Sätze je Stück<br/>Profil-Text-LLM · Cloud ODER lokal (LM Studio)"]
+    C -. Abbildungen .-> V["4 · Vision-Pass: Bild → 1–3 Sätze<br/>multimodales Modell · Cloud ODER lokal (LM Studio)"]
+    K --> E["5 · Embedding: Bedeutung (arctic, 1024-dim) + Stichwort (BM25)<br/>lokal · CPU"]
+    V --> E
+    E --> Q[("6 · Qdrant: Suchdatenbank<br/>lokaler Container")]
+```
 
-1. **Zwei Suchen gleichzeitig** — Bedeutungssuche (findet Sinnverwandtes, auch
-   mit anderen Worten) **und** Stichwortsuche (BM25; findet exakte Begriffe wie
-   Abkürzungen, Paragraphen, Aktenzeichen). Je ~80 Kandidaten.
-2. **Zusammenführen (RRF)** — beide Listen verschmelzen; ~40 bleiben übrig.
-3. **Reranker** — ein Cross-Encoder liest deine Frage gemeinsam mit jeder Stelle
-   und sortiert nach echter Passung. Der Unterschied zwischen „enthält die
-   Suchworte" und „beantwortet die Frage". Er läuft **lokal auf deiner CPU** —
-   der teuerste Teil einer Suche — daher ist sein Aufwand einstellbar:
-   `RERANK_PROFILE=off/eco/balanced/full` (Standard `eco`; auf schwachen PCs
-   `off`/`eco`, auf starken `full`).
-4. **Kürzen** — die besten Treffer bleiben (Standard 15, max. 3 je Quelle).
-5. **Antworten** — Claude formuliert aus genau diesen Stellen, jede Aussage mit
-   Quelle und Seite belegt.
+Docling erkennt Layout und Tabellen (OCR ist **nicht** aktiv — ein gescanntes PDF
+ohne Textebene wird nicht erkannt, BRAG legt dann einen sichtbaren Marker an); der
+Text wird in Stücke zerlegt; eine KI schreibt 1–2 einordnende Sätze je Stück
+(*Contextual Retrieval*), Abbildungen beschreibt ein multimodales Modell
+(*Vision-Pass*) — **beides läuft je nach Profil in der Cloud oder lokal in LM Studio**.
+Dann entstehen **lokal auf der CPU** zwei „Fingerabdrücke" (Bedeutung: arctic,
+1024-dim; Stichwort: BM25), und alles wandert in Qdrant.
+
+**2 · Fragen** — bei jeder Frage:
+
+```mermaid
+flowchart TD
+    QF["❓ Deine Frage"]
+    QF --> S["1 · Zwei Suchen: Bedeutung (arctic) + Stichwort (BM25), je ~80 Kandidaten<br/>lokal · CPU"]
+    S --> RF["2 · RRF-Fusion in Qdrant → beste ~40<br/>lokaler Container"]
+    RF --> RR["3 · Reranker (bge-reranker-v2-m3): nach echter Passung sortieren<br/>einstellbar (off/eco/balanced/full, k-Wert) · lokal · CPU — teuerster Schritt"]
+    RR --> DV["4 · Kürzen & Diversität: Top-k (Std. 15), max. 3 je Quelle<br/>lokal · CPU"]
+    DV --> AN["5 · Antwort mit Seitenbeleg<br/>Antwort-KI · Cloud (Claude) ODER lokal (LM Studio)"]
+```
+
+Beispiel — *„Welche Frist nennt der Bauvertrag für die Mängelrüge?"*: Bedeutungs- und
+Stichwortsuche liefern je ~80 Kandidaten, Qdrant fusioniert sie (RRF) auf ~40, der
+**Reranker** liest deine Frage gemeinsam mit jeder Stelle und sortiert nach echter
+Passung (der Unterschied zwischen „enthält die Suchworte" und „beantwortet die
+Frage"). Die besten (Standard 15, max. 3 je Quelle) gehen an die Antwort-KI, die
+seitengenau belegt formuliert. **Du hast die Wahl:** *wie viele* Stellen der Reranker
+bewertet (der **k-Wert**) und *ob* er überhaupt läuft, stellst du je nach Rechner und
+Modell ein — siehe [Suchqualität einstellen](#suchqualität-einstellen-der-reranker).
+
+**3 · Speichern** — Wissen zurückschreiben:
+
+```mermaid
+flowchart TD
+    SP["💬 „Speichere diese Passage“ → save_passage"] --> PA[("Passagen/*.md + Index<br/>durchsuchbar · lokal · CPU")]
+    WN["✍️ „Notiere …“ / „Bericht“ → write_note · save_report"] --> NO["Notizen/ · Berichte/*.md<br/>nicht indexiert · lokal · CPU"]
+```
+
+Ein gespeichertes Zitat (`save_passage`) wird zusätzlich eingebettet und ist damit
+durchsuchbar; eigene Notizen und Berichte (`write_note` / `save_report`) bleiben
+bewusst außerhalb des Suchindex.
 
 Mehr Tiefe (mit Zahlen) in [So funktioniert's](docs/HOW_IT_WORKS.de.md) und
 [Architektur](docs/ARCHITECTURE.de.md); alle Parameter in [`.env.example`](.env.example).
-
-### Der KI-Anschluss (MCP)
-
-Automatisch eingerichtet, gibt der **BRAG-MCP-Server** deinem Assistenten einen
-Anschluss mit zwei Werkzeug-Sätzen — über deine **Bibliothek** (Suche) und dein
-**Notizbuch** (Lesen/Schreiben); die Notizbuch-Werkzeuge fassen den Suchindex nie
-an. Das Setup trägt das in **Claude Desktop** ein — und in **LM Studio**, falls
-installiert (LM Studios Chat ist ein MCP-Host).
-Die Werkzeuge:
-
-| Werkzeug | Was es tut | Beispielfrage |
-|---|---|---|
-| `search` | Hybride Suche; `mode` (precise/normal/review/deep) + Filter (Typ, Jahr, Tabellen/Abbildungen, Quelle) | *„Was sagen alle Berichte zu Nachträgen?"* |
-| `list_sources` | Inventar aller indexierten Dokumente | *„Welche Dokumente sind in meiner Wissensbasis?"* |
-| `read_source` | Liest ein ganzes Dokument der Reihe nach — Bericht zusammenfassen/bewerten | *„Fass das Bodengutachten Müller zusammen."* |
-| `inspect_chunks` | Diagnose: was zu einer Quelle gespeichert ist | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |
-| `set_metadata` | Taggt einen Korpus-Ordner (schreibt `_meta.txt`), damit die Suche danach filtern kann | *„Tagge den Ordner Nachträge als projekt=Schulzentrum."* |
-| `recent_sources` | Die zuletzt aufgenommenen Dokumente | *„Was ist diese Woche reingekommen?"* |
-| `remove_source` | Entfernt eine Quelle aus dem Index; verschiebt die Datei in einen `_inbox/` (umkehrbar, nicht gelöscht) | *„Entferne den veralteten Entwurf aus meinem Index."* |
-| `rename_source` | Benennt ein indexiertes Dokument um; Metadaten an Ort und Stelle, kein erneutes Embedding | *„Benenne Müller_2023_Entwurf in den finalen Titel um."* |
-| `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema (indexiert) | *„Speichere dieses Zitat fürs Methodenkapitel."* |
-| `list_passages` | Zeigt gesammelte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
-| `delete_passage` | Löscht die Passagen eines Themas + ihre Index-Einträge (mit Rückfrage) | *„Lösch die Passagen zu Nachträgen."* |
-| `write_note` | Erstellt/ergänzt eine Notiz in `WissensWIKI/` (nie indexiert) | *„Speichere diese Schlüsse als Notiz."* |
-| `read_note` | Liest eine Notizbuch-Seite | *„Öffne meine Notiz zur Prozessreife."* |
-| `list_notebook` | Listet dein Notizbuch | *„Was steht in meinem Notizbuch?"* |
-| `move_note` | Verschiebt/benennt eine Notizbuch-Datei um (legt Unterordner an) | *„Verschieb diese Notiz nach Kapitel/2."* |
-| `save_report` | Stellt ein Ergebnis/einen Bericht ins Notizbuch zur günstigen Wiederverwendung (nie indexiert) | *„Speichere diese Vergleichstabelle als Bericht."* |
-| `list_reports` | Listet deine gespeicherten Berichte | *„Zeig meine Berichte."* |
-| `delete_note` | Löscht eine Notiz/einen Bericht (mit Rückfrage) | *„Lösch den alten Statusbericht."* |
-
-**Notizen auch in Obsidian bearbeiten (optional).** Claude kann dein Notizbuch
-bereits über die Werkzeuge `list_notebook` / `read_note` / `write_note` oben lesen
-und schreiben. Um Notizen zusätzlich in Obsidians eigener Oberfläche zu
-bearbeiten, richte Obsidian auf denselben Wissensordner; das Plugin **MCP Tools
-für Obsidian** lässt Claude zudem innerhalb von Obsidian agieren. Anleitung:
-[docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
-
-Mit beiden zusammen: *„Such Definitionen von Prozessreife (Bibliothek),
-vergleiche mit meiner Konzeptnotiz (Notizbuch) und ergänze, was fehlt — mit
-Belegen."*
-
-## BRAG mit einem Claude-Projekt nutzen (empfohlen)
-
-Der BRAG-Anschluss gibt Claude die **Werkzeuge**; ein Projekt gibt ihm die
-**Arbeitsweise** — sodass es vor dem Antworten sucht, mit Seitenlinks zitiert und
-Ergebnisse am richtigen Ort ablegt, **ohne dass du jedes Mal Kontext nachlieferst.**
-
-- **Claude Desktop:** lege ein **Projekt** für deine Wissensbasis an, öffne die
-  `WissensWIKI/CLAUDE.md`, die BRAG in deinen Projektordner gelegt hat, und **kopiere
-  ihren Inhalt in die Projekt-Anweisungen** (Platzhalter ausfüllen: dein Fach,
-  Zitierstil, Sprache). Claude Desktop liest die Datei **nicht** von allein — die
-  Projekt-Anweisungen sind der Ort, an dem sie in **jedem** Chat wirkt.
-- **Claude Code** liest `CLAUDE.md` / `AGENTS.md` aus dem Ordner automatisch — nichts
-  zu kopieren.
-
-Einmal eingerichtet, wird der Wissensspeicher dein gemeinsames Gedächtnis: *„Was ist
-der Stand bei X?"* → Claude liest deine Themen-Notiz und ergänzt per Suche; *„speichere
-die Ergebnisse"* → es legt sie selbst ab. Halte die `CLAUDE.md` aktuell — was du Claude
-zweimal korrigierst, gehört als Regel hinein.
-
-### Routinen — wiederkehrende Aufgaben delegieren
-
-Für Aufgaben, die immer gleich laufen — *„hol mich auf den Stand"*, *„aktualisier das
-Quellenverzeichnis"*, *„schreib den Tagebucheintrag"* — seedet BRAG einen Ordner
-`WissensWIKI/Routinen/` mit Beispiel-Rezepten: kurze Markdown-Dateien, denen Claude
-folgt, wenn du sie beim Namen nennst. Ihre Auslöser stehen in der `CLAUDE.md` als
-Befehle — sobald die in deiner Projekt-Anweisung steht, startet ein bloßes Stichwort
-die Routine, ganz ohne Erklären. Eigene ergänzt du mit einer `.md` in `Routinen/` und
-einer Auslöser-Zeile in der `CLAUDE.md`. *(Die separate `AGENTS.md` enthält die
-Sicherheitsregeln fürs autonome Arbeiten — keine Aufgaben.)*
 
 ## Wähle dein Profil
 
@@ -284,8 +352,21 @@ RRF-Fusion von Bedeutungs- und Stichwortsuche — beide Zweige bleiben gefüllt,
 „kippt" also nichts, aber die *wichtigste* Stelle steht seltener ganz oben. Da
 ein LLM bevorzugt die oberen Treffer zitiert, lohnt der Reranker besonders bei
 spitzen Faktenfragen und bei **gemischten DE/EN-Korpora** (dort stützt er die
-Trefferqualität spürbarer). Einzelwerte lassen sich bei Bedarf über
-`RERANK_ENABLED` / `RERANK_PREFETCH` / `RERANK_FUSION_LIMIT` feinjustieren.
+Trefferqualität spürbarer).
+
+**Den k-Wert selbst einstellen.** Wem die vier Profile nicht reichen, justiert die
+Einzelwerte direkt in `.env` — sie überschreiben das Profil:
+
+- **`RERANK_FUSION_LIMIT`** — der **k-Wert**: wie viele Stellen der Cross-Encoder
+  tatsächlich bewertet. Das ist der teuerste Hebel (mehr = gründlicher, aber
+  langsamer); die Profilwerte oben (40 / 60 / 120) sind nur Voreinstellungen.
+- **`RERANK_PREFETCH`** — wie viele Kandidaten **pro Zweig** (Bedeutung + Stichwort)
+  überhaupt geladen werden. Vergrößert die Auswahl, ohne mehr zu bewerten.
+- **`RERANK_ENABLED`** — schaltet das Nachsortieren ganz an oder aus.
+
+Beispiel: `RERANK_FUSION_LIMIT=80` lässt den Reranker 80 statt der Standard-40
+Stellen bewerten. Wie viele Treffer am Ende zurückkommen, steuerst du davon
+unabhängig über `mode`/`top_k` direkt im Suchaufruf.
 
 Bei einem Cloud-Profil geht der **Textauszug** jedes Abschnitts an den Anbieter —
 bei aktivem Vision-Pass (Standard) zusätzlich die **Bilder deiner Abbildungen**.
@@ -377,56 +458,83 @@ Der erste Start lädt einmalig ~3 GB Analyse-Modelle. Ausführlich, mit „was d
 siehst": [Installation macOS](docs/INSTALL_MAC.de.md) ·
 [Windows](docs/INSTALL_WINDOWS.de.md).
 
-## Dein Wissensspeicher
+## Der KI-Anschluss (MCP)
 
-Hier die wichtigste Unterscheidung — **zwei getrennte Orte, die du beim Setup wählst:**
+Automatisch eingerichtet, gibt der **BRAG-MCP-Server** deinem Assistenten einen
+Anschluss mit Werkzeugen in vier Gruppen: **Suche** (durchsucht deinen Korpus),
+**Korpus** (Inventar pflegen, taggen, umbenennen), **Belege** (zitierfähige
+Passagen sammeln) und **Notizbuch/Berichte** (lesen/schreiben) — wobei die
+Notizbuch-Werkzeuge den Suchindex nie anfassen. Das Setup trägt den Anschluss in
+**Claude Desktop** ein — und in **LM Studio**, falls installiert (LM Studios Chat
+ist ein MCP-Host). Die Werkzeuge im Einzelnen:
 
-- **`BRAG Assistent`** = das **Programm** (die Engine; hier landet die entpackte
-  ZIP). Du wählst, *wo* es liegt — an beliebigem Ort. Das brauchst du zum
-  Starten/Stoppen; **nicht löschen** — öffnen musst du es nie. *(Unter Windows
-  bekommt es sogar ein eigenes Ordnersymbol und einen „nicht löschen"-Hinweis.)*
-- **Dein Projektordner** = deine **Dokumente** — unabhängig davon gewählt. Der
-  **ganze Ordner ist der durchsuchbare Korpus**: Dokumente einfach hineinlegen,
-  beliebiger Unterordner, beliebige Tiefe. Er gehört dir, also sichere ihn.
+| Werkzeug | Was es tut | Beispielfrage |
+|---|---|---|
+| `search` | Hybride Suche; `mode` (precise/normal/review/deep) + Filter (Typ, Jahr, Tabellen/Abbildungen, Quelle) | *„Was sagen alle Berichte zu Nachträgen?"* |
+| `list_sources` | Inventar aller indexierten Dokumente | *„Welche Dokumente sind in meiner Wissensbasis?"* |
+| `read_source` | Liest ein ganzes Dokument der Reihe nach — Bericht zusammenfassen/bewerten | *„Fass das Bodengutachten Müller zusammen."* |
+| `inspect_chunks` | Diagnose: was zu einer Quelle gespeichert ist | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |
+| `set_metadata` | Taggt einen Korpus-Ordner (schreibt `_meta.txt`), damit die Suche danach filtern kann | *„Tagge den Ordner Nachträge als projekt=Schulzentrum."* |
+| `recent_sources` | Die zuletzt aufgenommenen Dokumente | *„Was ist diese Woche reingekommen?"* |
+| `remove_source` | Entfernt eine Quelle aus dem Index; verschiebt die Datei in einen `_inbox/` (umkehrbar, nicht gelöscht) | *„Entferne den veralteten Entwurf aus meinem Index."* |
+| `rename_source` | Benennt ein indexiertes Dokument um; Metadaten an Ort und Stelle, kein erneutes Embedding | *„Benenne Müller_2023_Entwurf in den finalen Titel um."* |
+| `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema (indexiert) | *„Speichere dieses Zitat fürs Methodenkapitel."* |
+| `list_passages` | Zeigt gesammelte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
+| `delete_passage` | Löscht die Passagen eines Themas + ihre Index-Einträge (mit Rückfrage) | *„Lösch die Passagen zu Nachträgen."* |
+| `write_note` | Erstellt/ergänzt eine Notiz in `WissensWIKI/` (nie indexiert) | *„Speichere diese Schlüsse als Notiz."* |
+| `read_note` | Liest eine Notizbuch-Seite | *„Öffne meine Notiz zur Prozessreife."* |
+| `list_notebook` | Listet dein Notizbuch | *„Was steht in meinem Notizbuch?"* |
+| `move_note` | Verschiebt/benennt eine Notizbuch-Datei um (legt Unterordner an) | *„Verschieb diese Notiz nach Kapitel/2."* |
+| `save_report` | Stellt ein Ergebnis/einen Bericht ins Notizbuch zur günstigen Wiederverwendung (nie indexiert) | *„Speichere diese Vergleichstabelle als Bericht."* |
+| `list_reports` | Listet deine gespeicherten Berichte | *„Zeig meine Berichte."* |
+| `delete_note` | Löscht eine Notiz/einen Bericht (mit Rückfrage) | *„Lösch den alten Statusbericht."* |
 
-*(Brichst du die erste Auswahl ab, installiert sich das Programm einfach im
-entpackten Ordner; der Projektordner in Schritt 2 ist erforderlich.)*
+**Notizen auch in Obsidian bearbeiten (optional).** Claude kann dein Notizbuch
+bereits über die Werkzeuge `list_notebook` / `read_note` / `write_note` oben lesen
+und schreiben. Um Notizen zusätzlich in Obsidians eigener Oberfläche zu
+bearbeiten, richte Obsidian auf denselben Wissensordner; das Plugin **MCP Tools
+für Obsidian** lässt Claude zudem innerhalb von Obsidian agieren. Anleitung:
+[docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
 
-Im Projektordner ist **ein besonderer Unterordner `WissensWIKI/` dein
-Arbeitsbereich** und wird bewusst **nicht** mit-indexiert — so hallen deine
-eigenen Notizen nie in den Suchergebnissen wider. Er enthält:
+Mit beiden zusammen: *„Such Definitionen von Prozessreife (Bibliothek),
+vergleiche mit meiner Konzeptnotiz (Notizbuch) und ergänze, was fehlt — mit
+Belegen."*
 
-- **`Passagen/`** — belegte Passagen, die du über Claude speicherst. Diese
-  **werden** indexiert und sind durchsuchbar.
-- **`Notizen/`** (plus beliebige eigene Unterordner) — deine eigenen Notizen und
-  Texte. Claude kann hier lesen und schreiben (`read_note` / `write_note`);
-  **nicht** indexiert.
-- **`CLAUDE.md`** (bringt Claude dein Fachgebiet bei — hier trägst du es ein) und
-  **`AGENTS.md`** (Zusatzregeln für autonome Agenten-Aufgaben). Nicht indexiert.
+## BRAG mit einem Claude-Projekt nutzen (empfohlen)
 
-**Die eine Regel, die alles erklärt:** Durchsucht wird der **ganze
-Projektordner**, **außer** dem Arbeitsbereich `WissensWIKI/` — und innerhalb von
-`WissensWIKI/` nur `Passagen/`. Versteckte Ordner und jeder `_inbox/` werden
-ignoriert. Alles, was du in den Projektordner legst, wandert automatisch in die
-Suchdatenbank (den Index); nimmst du eine Datei wieder heraus oder löschst sie,
-verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem Rechner
-angefasst.
+Der BRAG-Anschluss gibt Claude die **Werkzeuge**; ein Projekt gibt ihm die
+**Arbeitsweise** — sodass es vor dem Antworten sucht, mit Seitenlinks zitiert und
+Ergebnisse am richtigen Ort ablegt, **ohne dass du jedes Mal Kontext nachlieferst.**
 
-So sieht es auf der Festplatte aus:
+- **Claude Desktop:** lege ein **Projekt** für deine Wissensbasis an, öffne die
+  `WissensWIKI/CLAUDE.md`, die BRAG in deinen Projektordner gelegt hat, und **kopiere
+  ihren Inhalt in die Projekt-Anweisungen** (Platzhalter ausfüllen: dein Fach,
+  Zitierstil, Sprache). Claude Desktop liest die Datei **nicht** von allein — die
+  Projekt-Anweisungen sind der Ort, an dem sie in **jedem** Chat wirkt.
+- **Claude Code** liest `CLAUDE.md` / `AGENTS.md` aus dem Ordner automatisch — nichts
+  zu kopieren.
 
-```
-<dein Projektordner>/                ← deine Dokumente (der ganze Ordner wird durchsucht)
-├── Bericht.pdf                      ← Dokumente einfach hineinlegen (PDF, DOCX, …)
-├── Interviews/                      ← beliebige Unterordner; die ERSTE Ebene = Dokumenttyp
-│   └── Person_A.pdf
-└── WissensWIKI/                     ← 📓 dein Arbeitsbereich — NICHT mit-indexiert
-    ├── Passagen/                    ← über Claude gespeicherte belegte Passagen (DIESE werden durchsucht)
-    ├── Notizen/                     ← deine Notizen & Unterordner (Claude liest/schreibt; NICHT durchsucht)
-    ├── CLAUDE.md                    ← bringt Claude DEIN Fachgebiet bei
-    └── AGENTS.md                    ← Regeln für autonome Agenten-Aufgaben
+Einmal eingerichtet, wird der Wissensspeicher dein gemeinsames Gedächtnis: *„Was ist
+der Stand bei X?"* → Claude liest deine Themen-Notiz und ergänzt per Suche; *„speichere
+die Ergebnisse"* → es legt sie selbst ab. Halte die `CLAUDE.md` aktuell — was du Claude
+zweimal korrigierst, gehört als Regel hinein.
 
-…anderswo…/BRAG Assistent/           ← das Programm (nicht löschen; öffnen musst du es nie)
-```
+### Routinen — wiederkehrende Aufgaben delegieren
+
+Für Aufgaben, die immer gleich laufen — *„hol mich auf den Stand"*, *„aktualisier das
+Quellenverzeichnis"*, *„schreib den Tagebucheintrag"* — seedet BRAG einen Ordner
+`WissensWIKI/Routinen/` mit Beispiel-Rezepten: kurze Markdown-Dateien, denen Claude
+folgt, wenn du sie beim Namen nennst. Ihre Auslöser stehen in der `CLAUDE.md` als
+Befehle — sobald die in deiner Projekt-Anweisung steht, startet ein bloßes Stichwort
+die Routine, ganz ohne Erklären. Eigene ergänzt du mit einer `.md` in `Routinen/` und
+einer Auslöser-Zeile in der `CLAUDE.md`. *(Die separate `AGENTS.md` enthält die
+Sicherheitsregeln fürs autonome Arbeiten — keine Aufgaben.)*
+
+## Mehrere Projekte & eigene Metadaten
+
+Wenn dein Wissensspeicher wächst: So hältst du mehrere Vorhaben sauber
+getrennt, taggst Dokumente mit eigenen Metadaten und hältst den Index
+automatisch aktuell.
 
 **Mehrere Projekte (optional).** Halte getrennte Arbeitsbereiche vollständig
 auseinander — jeder mit eigener Suchdatenbank und eigenem Anschluss in Claude.
@@ -490,17 +598,6 @@ zweimal dieselbe Sache, gehört die Korrektur in **`WissensWIKI/CLAUDE.md`**,
 nicht in den nächsten Chat — eine gepflegte Instruktionsdatei macht aus einem
 generischen Assistenten *deinen* (Beispiele:
 [docs/CUSTOMIZE_CLAUDE.de.md](docs/CUSTOMIZE_CLAUDE.de.md)).
-
-### Obsidian: ein schönerer Blick auf denselben Ordner
-
-Du kannst den Wissensspeicher mit [Obsidian](https://obsidian.md) (kostenlos)
-öffnen — es stellt die Markdown-Dateien viel schöner dar und macht das Schreiben
-im Notizbuch angenehm. Wichtig zu verstehen: **Obsidian ist kein zweiter
-Speicher, sondern nur eine Ansicht auf genau denselben Ordner.** Es arbeitet
-direkt auf den Dateien — **löschst du eine Datei in Obsidian, ist sie auch im
-normalen Ordner (und damit aus dem Index) weg.** Nichts wird importiert oder
-kopiert; es ist dieselbe Struktur, nur bequemer zu bedienen. Schritt für Schritt:
-[docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
 
 ## Ausbau & Automatisierung (mit Claude Code & Co.)
 
