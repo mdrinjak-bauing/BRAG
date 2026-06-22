@@ -52,16 +52,25 @@ def cmd_remove(slug: str, delete_index: bool = False) -> int:
     # collection only when explicitly requested. The project's documents on disk
     # are never touched here.
     if delete_index and rec and rec.get("collection"):
+        coll = rec["collection"]
+        if not coll.endswith("__" + slug):
+            # The bare base collection (no '__<slug>') is the legacy single-project
+            # data the 'default' project reuses verbatim and the single-project
+            # fallback also targets — deleting it would wipe shared data. The
+            # connector + mount are already removed above; keep the index (MP-F08).
+            print(f"warning: kept the search index '{coll}' — it is the shared base "
+                  f"collection, not a per-project one; not deleted.", file=sys.stderr)
+            return 0
         try:
             from brag import storage
             client = storage.get_client()
             try:
-                client.delete_collection(rec["collection"])
+                client.delete_collection(coll)
             finally:
                 client.close()
-            print(f"deleted index: {rec['collection']}")
+            print(f"deleted index: {coll}")
         except Exception as e:  # noqa: BLE001 — index delete is best-effort
-            print(f"warning: could not delete index {rec.get('collection')}: {e}",
+            print(f"warning: could not delete index {coll}: {e}",
                   file=sys.stderr)
     return 0
 

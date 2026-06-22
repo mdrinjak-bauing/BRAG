@@ -13,6 +13,7 @@ file lives on a small shared volume (default /registry/projects.json); override
 with the BRAG_REGISTRY env var (used by tests).
 """
 
+import contextlib
 import json
 import os
 import re
@@ -114,6 +115,30 @@ def save(data: dict) -> None:
     os.replace(tmp, p)
 
 
+@contextlib.contextmanager
+def _registry_lock():
+    """Serialize the registry read-modify-write across concurrent CLI runs (e.g.
+    two 'Projekt hinzufügen' launchers at once), so an append cannot be lost when
+    both load the same base and the second save() clobbers the first (MP-F04).
+    Best-effort: if file locking is unavailable (non-POSIX), proceed without it."""
+    p = registry_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        import fcntl
+    except ImportError:
+        yield
+        return
+    f = open(p.with_suffix(".lock"), "w")
+    try:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        yield
+    finally:
+        try:
+            fcntl.flock(f, fcntl.LOCK_UN)
+        finally:
+            f.close()
+
+
 def _unique_slug(name: str, taken: set[str]) -> str:
     slug = slugify(name)
     if slug not in taken:
@@ -132,35 +157,37 @@ def register(name: str, host_path: str, base_collection: str, *,
     ok, msg = validate_host_path(host_path)
     if not ok:
         raise ValueError(msg)
-    data = load()
-    taken = {p.get("slug") for p in data["projects"]}
-    slug = _unique_slug(name, taken)
-    record = {
-        "slug": slug,
-        "name": str(name).strip() or slug,
-        "host_path": normalize_host_path(host_path),
-        "vault": vault or f"/projects/{slug}",
-        "collection": collection_for(base_collection, slug),
-        "profile": profile,
-        "llm_model": llm_model,
-        "llm_base_url": llm_base_url,
-        "created_at": created_at,
-    }
-    data.setdefault("projects", []).append(record)
-    save(data)
+    with _registry_lock():
+        data = load()
+        taken = {p.get("slug") for p in data["projects"]}
+        slug = _unique_slug(name, taken)
+        record = {
+            "slug": slug,
+            "name": str(name).strip() or slug,
+            "host_path": normalize_host_path(host_path),
+            "vault": vault or f"/projects/{slug}",
+            "collection": collection_for(base_collection, slug),
+            "profile": profile,
+            "llm_model": llm_model,
+            "llm_base_url": llm_base_url,
+            "created_at": created_at,
+        }
+        data.setdefault("projects", []).append(record)
+        save(data)
     return record
 
 
 def remove(slug: str) -> bool:
     """Drop a project from the registry (does NOT touch its files or its Qdrant
     collection — those are handled, with confirmation, by the caller)."""
-    data = load()
-    before = len(data.get("projects", []))
-    data["projects"] = [p for p in data.get("projects", []) if p.get("slug") != slug]
-    if len(data["projects"]) != before:
-        save(data)
-        return True
-    return False
+    with _registry_lock():
+        data = load()
+        before = len(data.get("projects", []))
+        data["projects"] = [p for p in data.get("projects", []) if p.get("slug") != slug]
+        if len(data["projects"]) != before:
+            save(data)
+            return True
+        return False
 
 
 def synthesize_default(host_path: str, collection: str, *,
@@ -168,25 +195,26 @@ def synthesize_default(host_path: str, collection: str, *,
     """Migrate a legacy single-project install into a 'default' record that
     REUSES its existing collection + vault VERBATIM — so the user's data and
     connector survive the upgrade with no re-embed. No-op if 'default' exists."""
-    data = load()
-    existing = get("default")
-    if existing:
-        return existing
-    # Name the default after its folder (e.g. "Test Projekt 1"), so once a second
-    # project is added its connector is "brag-<folder>" too — symmetric with the
-    # extra projects instead of a bare, unlabelled "brag".
-    name = Path(normalize_host_path(host_path or "")).name or "BRAG"
-    record = {
-        "slug": "default",
-        "name": name,
-        "host_path": normalize_host_path(host_path or ""),
-        "vault": vault,
-        "collection": collection,
-        "profile": "",
-        "llm_model": "",
-        "llm_base_url": "",
-        "created_at": created_at,
-    }
-    data.setdefault("projects", []).insert(0, record)
-    save(data)
+    with _registry_lock():
+        data = load()
+        existing = get("default")
+        if existing:
+            return existing
+        # Name the default after its folder (e.g. "Test Projekt 1"), so once a
+        # second project is added its connector is "brag-<folder>" too — symmetric
+        # with the extra projects instead of a bare, unlabelled "brag".
+        name = Path(normalize_host_path(host_path or "")).name or "BRAG"
+        record = {
+            "slug": "default",
+            "name": name,
+            "host_path": normalize_host_path(host_path or ""),
+            "vault": vault,
+            "collection": collection,
+            "profile": "",
+            "llm_model": "",
+            "llm_base_url": "",
+            "created_at": created_at,
+        }
+        data.setdefault("projects", []).insert(0, record)
+        save(data)
     return record

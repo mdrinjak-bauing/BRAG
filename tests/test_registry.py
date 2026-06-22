@@ -125,3 +125,30 @@ def test_orphaned_collections_is_registry_aware(monkeypatch):
     ])
     orphans = storage.orphaned_collections(client)
     assert orphans == ["asb_old_768"]
+
+
+def test_registry_register_is_concurrency_safe(tmp_path, monkeypatch):
+    # Concurrent registrations must not lose an append (MP-F04): the file lock
+    # serializes the read-modify-write so every project lands.
+    import threading
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    threads = [threading.Thread(target=registry.register,
+                                args=(f"Project {i}", f"/host/{i}", "asb_x_1024"))
+               for i in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(registry.projects()) == 8
+
+
+def test_remove_keeps_the_shared_base_collection(tmp_path, monkeypatch, capsys):
+    # `remove --delete-index` on the default project must NOT drop the bare base
+    # collection (shared with the single-project fallback) (MP-F08).
+    from brag import projects
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    registry.synthesize_default("/host/x", "asb_local_st_1024")   # default → base
+    registry.register("Thesis", "/host/thesis", "asb_local_st_1024")  # → ...__thesis
+    rc = projects.cmd_remove("default", delete_index=True)
+    assert rc == 0
+    assert "shared base collection" in capsys.readouterr().err     # refused, data kept
