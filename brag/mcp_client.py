@@ -145,6 +145,10 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
                  note: str = "") -> str:
     """Save a quotable passage under a topic (e.g. a chapter or theme).
 
+    WHEN to use which: a verbatim QUOTE from a source → save_passage (it becomes
+    searchable evidence); YOUR OWN text (notes, drafts, conclusions) → write_note;
+    a finished/compiled deliverable → save_report.
+
     Builds your evidence base in WissensWIKI/Passagen/<topic>.md AND indexes
     the passage for semantic search, so a later chat (even with a different
     provider) finds it again via `search` — it appears as a clearly marked
@@ -182,8 +186,9 @@ def read_note(path: str) -> str:
 @mcp.tool()
 def write_note(path: str, content: str) -> str:
     """Create a NOTEBOOK note, or APPEND a dated section to an existing one — it
-    never silently overwrites, so your accumulated thinking is safe. YOUR own
-    notes (concepts, drafts, conclusions). Saved as plain Markdown under
+    never silently overwrites, so your accumulated thinking is safe. For YOUR OWN
+    text (concepts, drafts, conclusions); for a verbatim source quote that should
+    be searchable evidence use save_passage instead. Saved as plain Markdown under
     WissensWIKI/ and deliberately NEVER added to the search index. `path` is
     relative to WissensWIKI/, e.g. 'process-maturity.md' or 'Kapitel/2.md' (any
     subfolder). The corpus and the search index are never touched."""
