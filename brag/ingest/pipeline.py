@@ -181,6 +181,16 @@ def _append_ingest_log(source_file: str, path: Path, n_chunks: int,
         "collection": config.COLLECTION_NAME,
         "partial": partial, "attempts": attempts,
     }
+    try:
+        # Record the source file's mtime + size at ingest so a later in-place
+        # overwrite is detected by exact comparison, not a wall-clock margin that
+        # misses an edit within seconds of ingest (ING-07). Additive fields —
+        # legacy readers ignore them; a missing file just omits them.
+        stat = path.stat()
+        entry["source_mtime"] = stat.st_mtime
+        entry["source_size"] = stat.st_size
+    except OSError:
+        pass
     if contextualized is not None:
         # Persist contextualization coverage so a document whose anchoring-
         # sentence LLM call failed (chunks embedded as raw text) is visible in

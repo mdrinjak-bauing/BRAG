@@ -159,6 +159,34 @@ def test_handler_pins_project_record_against_midrun_registry_change(tmp_path, mo
         assert config.COLLECTION_NAME == rec["collection"]
 
 
+def test_changed_since_ingest_detects_inplace_overwrite(tmp_path, monkeypatch):
+    # An in-place overwrite is detected by comparing the file's mtime/size against
+    # the values stored at ingest — even within the old 5s wall-clock window (ING-07).
+    from brag import config
+    from brag.watcher import _changed_since_ingest
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    f = tmp_path / "doc.pdf"
+    f.write_text("v1")
+    stat = f.stat()
+    states = {config.source_key_from_path(f): {
+        "ingested_at": "2026-06-22T00:00:00",
+        "source_mtime": stat.st_mtime, "source_size": stat.st_size}}
+    assert _changed_since_ingest(f, states) is False        # unchanged → no re-ingest
+    f.write_text("v2 — different content and length")        # overwritten in place
+    assert _changed_since_ingest(f, states) is True          # detected via size/mtime
+
+
+def test_changed_since_ingest_legacy_entry_falls_back(tmp_path, monkeypatch):
+    # A legacy log entry without source_mtime keeps the old wall-clock heuristic.
+    from brag import config
+    from brag.watcher import _changed_since_ingest
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    f = tmp_path / "doc.pdf"
+    f.write_text("x")
+    states = {config.source_key_from_path(f): {"ingested_at": "2000-01-01T00:00:00"}}
+    assert _changed_since_ingest(f, states) is True          # mtime ≫ ingested+5
+
+
 def test_chunk_id_deterministic_for_identical_chunk():
     # Same content+location → same id, so an idempotent re-ingest overwrites in
     # place instead of duplicating.

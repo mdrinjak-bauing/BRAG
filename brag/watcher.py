@@ -93,22 +93,28 @@ def _wait_for_stable_file(path: Path, min_wait=3, max_wait=120, poll=2) -> bool:
 
 
 def _changed_since_ingest(path: Path, states: dict) -> bool:
-    """True if `path` was modified AFTER its last ingest — i.e. the document was
-    overwritten in place and its indexed chunks are now stale. Missing files are
-    caught by the corpus check and under-limit partials by the retry check; this
-    ALSO catches a file edited in place after ANY prior ingest, including a
-    retry-exhausted partial the user re-saved to fix. (An unchanged partial is
-    not re-driven here, because its mtime has not advanced — so this never
-    reintroduces an unbounded retry of a permanently-failing document.) `states`
-    is the per-source ingest-log map (fetch once, reuse across files); the small
-    margin absorbs copy-time jitter so a file is never re-ingested right after
-    its first ingest."""
+    """True if `path` was overwritten IN PLACE since its last ingest, so its
+    indexed chunks are now stale. Compares the file's current mtime + size against
+    the values recorded at ingest, so an edit is detected exactly — even one made
+    within seconds of the previous ingest (the old wall-clock margin missed those,
+    ING-07). An UNCHANGED file (including a retry-exhausted partial the user has
+    not re-saved) returns False, so this never reintroduces an unbounded retry of
+    a permanently-failing document. `states` is the per-source ingest-log map
+    (fetch once, reuse across files)."""
     st = states.get(config.source_key_from_path(path))
     if not st or not st.get("ingested_at"):
         return False
     try:
+        cur = path.stat()
+    except OSError:
+        return False
+    if st.get("source_mtime") is not None:
+        return cur.st_mtime != st["source_mtime"] or cur.st_size != st.get("source_size")
+    # Legacy log entry (written before mtime/size were recorded): fall back to the
+    # wall-clock heuristic with a small margin for copy-time jitter.
+    try:
         ingested = datetime.fromisoformat(st["ingested_at"]).timestamp()
-        return path.stat().st_mtime > ingested + 5
+        return cur.st_mtime > ingested + 5
     except (ValueError, OSError):
         return False
 
