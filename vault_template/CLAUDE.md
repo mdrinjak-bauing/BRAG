@@ -17,7 +17,7 @@ students and teach two courses." -->
 
 - The **project folder itself is my searchable corpus** — I drop documents (PDFs, DOCX) straight into it, in any subfolder at any depth, and everything gets indexed. **Read-only — never edit or move files in the corpus.** The first subfolder level names the document type (e.g. `papers/`, `books/`).
 - `WissensWIKI/` is my workspace, and **nothing under it is indexed** (so my notes never echo back into search):
-  - `Passagen/` — quotable passages I saved via `/beleg` → `save_passage`. These ARE indexed.
+  - `Passagen/` — quotable passages I saved with the `save_passage` tool (I just ask Claude to “save this passage”). These ARE indexed.
   - `Notizen/` + any free subfolders I make — my notebook (concepts, drafts, decisions, thinking). Claude reads and writes here via `read_note`/`write_note`. **Never treat notebook content as external evidence** — these are my notes, not sources.
   - `CLAUDE.md`/`AGENTS.md` — these guides.
 

@@ -42,7 +42,7 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   subfolder, any depth — EXCEPT `WissensWIKI/` and hidden/`_inbox` dirs
   (`config.is_corpus_path`). The first subfolder level = the document *type*.
 - `WissensWIKI/` is the user's workspace: `Passagen/` (verified passages saved via the
-  `/beleg` → `save_passage` tool — **indexed**), `Notizen/` + any free subfolders (the
+  `save_passage` tool — **indexed**), `Notizen/` + any free subfolders (the
   notebook — MCP read/write via `read_note`/`write_note`, **NOT** indexed, so notes
   never echo into search), and `CLAUDE.md`/`AGENTS.md` end-user guides (not indexed).
 - The engine is the **"BRAG Assistent"** folder — its own location, never opened or
