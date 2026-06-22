@@ -6,6 +6,16 @@
 
 > **Ein KI-Assistent, der deine eigenen Quellen wirklich kennt.** Leg deine Dokumente — PDFs, Word, PowerPoint, deine eigenen Notizen — in einen Ordner. BRAG **liest sie auf deinem Rechner ein, macht sie seitengenau durchsuchbar** und reicht der KI bei jeder Frage genau die passenden Stellen — **belegt, ein Klick führt aufs Original**. Ob die KI dabei lokal oder in der Cloud rechnet, entscheidest du; gesendet werden höchstens deine Frage und die passenden Stellen — nie der ganze Korpus.
 
+**Kurz zu mir — und warum es BRAG gibt.** Ich bin Bauingenieur und schreibe an
+meiner Promotion. Angefangen hat alles mit einem einfachen Gedanken: *meine KI
+muss besser werden, damit sie mich bei der Promotion wirklich unterstützt* — sie
+sollte mit meinen **eigenen** Quellen arbeiten, **belegt** antworten und nicht nach
+jedem Chat alles wieder vergessen. Daraus wurde Schritt für Schritt dieses
+RAG-System. Irgendwann dachte ich: *Geht das nicht auch halbwegs Plug-and-play für
+andere — gerade für die, die keine Lust auf Coding haben?* Genau das ist hier der
+Anspruch: ein Doppelklick-Installer und ein Browser-Assistent statt
+Terminal-Akrobatik.
+
 ## Worum es geht
 
 **BRAG ist ein hybrides Retrieval-System mit einer mehrschichtigen Einlese-Pipeline**,
