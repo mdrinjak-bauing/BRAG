@@ -185,6 +185,27 @@ echo Starting the setup assistant...
 if exist .setup_complete del .setup_complete
 docker compose stop app >nul 2>nul
 docker rm -f brag-setup >nul 2>nul
+
+REM Which host port the bridge will publish (default 8765; .env may override).
+set "PORT=8765"
+for /f "tokens=2 delims==" %%P in ('findstr /b "BRIDGE_HOST_PORT=" .env 2^>nul') do set "PORT=%%P"
+REM Preflight AFTER stopping our own app (so we only flag a FOREIGN program): a busy
+REM port otherwise surfaces only Docker's raw "address already in use" error - a
+REM dead end for non-technical users. Check first and explain the fix.
+netstat -ano | findstr /c:":%PORT% " | findstr /c:"LISTENING" >nul 2>nul
+if not errorlevel 1 (
+  echo.
+  echo Port %PORT% is already in use by another program ^(another BRAG, or another
+  echo tool^). BRAG needs it for the setup assistant and the page-precise PDF links.
+  echo Fix it one of two ways, then double-click setup.bat again:
+  echo   - quit the program currently using port %PORT%, or
+  echo   - pick a free port: add these two lines to the .env next to this file,
+  echo       BRIDGE_HOST_PORT=8770
+  echo       BRIDGE_PUBLIC_URL=http://localhost:8770
+  pause
+  exit /b 1
+)
+
 docker compose --profile setup up -d setup
 if errorlevel 1 (
   echo Start failed - see message above.
@@ -195,8 +216,6 @@ if errorlevel 1 (
 echo.
 echo Opening the setup assistant in your browser...
 timeout /t 3 /nobreak >nul
-set "PORT=8765"
-for /f "tokens=2 delims==" %%P in ('findstr /b "BRIDGE_HOST_PORT=" .env 2^>nul') do set "PORT=%%P"
 start "" "http://localhost:%PORT%/setup"
 
 echo.
