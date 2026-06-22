@@ -57,6 +57,35 @@ def test_chunk_id_distinguishes_same_120char_prefix():
     assert a.qdrant_id() != b.qdrant_id()
 
 
+def test_qdrant_id_full_width_and_stable():
+    # The point id must use the full 64-bit space (16 hex), not the old 60-bit
+    # (15-hex) truncation that risked silent cross-document overwrites at scale.
+    import hashlib
+    c = _mk_chunk("some chunk text")
+    qid = c.qdrant_id()
+    assert 0 <= qid < 2 ** 64
+    assert qid == c.qdrant_id()  # deterministic
+    assert qid == int(hashlib.sha256(c.chunk_id.encode()).hexdigest()[:16], 16)
+
+
+def test_page_range_spans_full_provenance():
+    # A table/figure spanning pages must report its real (min, max) page range,
+    # not just prov[0] (which silently pinned multi-page items to their first page).
+    from brag.ingest.extract import _page_range
+
+    class _P:
+        def __init__(self, n):
+            self.page_no = n
+
+    class _Item:
+        def __init__(self, pages):
+            self.prov = [_P(n) for n in pages]
+
+    assert _page_range(_Item([5, 6, 7])) == (5, 7)
+    assert _page_range(_Item([8])) == (8, 8)
+    assert _page_range(object()) == (1, 1)  # no prov → safe default
+
+
 def test_chunk_id_deterministic_for_identical_chunk():
     # Same content+location → same id, so an idempotent re-ingest overwrites in
     # place instead of duplicating.

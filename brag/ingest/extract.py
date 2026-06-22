@@ -45,7 +45,7 @@ class Chunk:
             self.chunk_id = hashlib.sha256(raw.encode()).hexdigest()[:32]
 
     def qdrant_id(self) -> int:
-        return int(hashlib.sha256(self.chunk_id.encode()).hexdigest()[:15], 16)
+        return int(hashlib.sha256(self.chunk_id.encode()).hexdigest()[:16], 16)
 
     def embedding_text(self) -> str:
         return f"{self.context}\n\n{self.text}" if self.context else self.text
@@ -209,6 +209,15 @@ def _picture_image_b64(item, doc) -> str:
         return ""
 
 
+def _page_range(item) -> tuple[int, int]:
+    """(min, max) source page over an item's provenance; (1, 1) if unknown.
+    A table/figure that spans pages must cite/deep-link its real range, not just
+    prov[0] (which silently pinned every multi-page item to its first page)."""
+    pages = [p.page_no for p in (getattr(item, "prov", None) or [])
+             if getattr(p, "page_no", None)]
+    return (min(pages), max(pages)) if pages else (1, 1)
+
+
 def extract(path: Path) -> tuple[list[Chunk], str]:
     """Run Docling and build chunks. Returns (chunks, full_markdown)."""
     from docling.datamodel.base_models import InputFormat
@@ -280,7 +289,8 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
             ))
 
     for item, level in doc.iterate_items():
-        page = item.prov[0].page_no if getattr(item, "prov", None) else 1
+        page_start, page_end = _page_range(item)
+        page = page_start
 
         if isinstance(item, SectionHeaderItem):
             flush()
@@ -301,7 +311,7 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
                 label = "" if len(parts) == 1 else f" part {i + 1}/{len(parts)}"
                 chunks.append(Chunk(
                     text=f"{header}**Table (p. {page}){label}:**\n\n{part}",
-                    chunk_type="table", page_start=page, page_end=page, **meta(),
+                    chunk_type="table", page_start=page_start, page_end=page_end, **meta(),
                 ))
 
         elif isinstance(item, PictureItem):
@@ -316,7 +326,7 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
             image_b64 = _picture_image_b64(item, doc) if config.VISION_ENABLED else ""
             chunks.append(Chunk(
                 text=f"{header}**Figure (p. {page}):** {display}",
-                chunk_type="figure", page_start=page, page_end=page,
+                chunk_type="figure", page_start=page_start, page_end=page_end,
                 image_b64=image_b64, **meta(),
             ))
 
