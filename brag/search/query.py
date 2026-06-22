@@ -139,9 +139,9 @@ def _diversify(candidates: list[dict], top_k: int, max_per_source: int) -> list[
 # Task presets → (top_k, max_per_source). "normal" uses the config defaults; an
 # explicit top_k / max_chunks_per_source argument still overrides the preset.
 _MODE_PRESETS = {
-    "precise": (6, 2),    # a single pinpoint fact
-    "review": (40, 2),    # broad literature survey: wide net, few per source
-    "deep": (20, 12),     # read one/few specific reports in depth (with source_file)
+    "precise": (8, 2),    # a pinpoint fact (+ a little cross-checking)
+    "review": (50, 2),    # broad literature survey: wide net, few per source
+    "deep": (30, 15),     # dig into one/few specific reports (with source_file)
 }
 
 

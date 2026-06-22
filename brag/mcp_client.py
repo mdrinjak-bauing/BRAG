@@ -129,7 +129,8 @@ def read_source(source_file: str, page_from: int = 0, page_to: int = 0,
     Reranking; gibt die Abschnitte in Seitenreihenfolge zurück. `source_file` ist der
     Schlüssel aus list_sources. Optional grenzen page_from/page_to einen Seitenbereich
     ein; `limit` begrenzt die Zahl der Abschnitte (für lange Dokumente erhöhen oder
-    einen Seitenbereich nutzen)."""
+    einen Seitenbereich nutzen). Für VIELE Berichte: pro Bericht EINMAL aufrufen, jeden
+    einzeln auswerten, dann zusammenführen — nicht alles in eine Abfrage zwängen."""
     return _index_op("read_source", source_file=source_file, page_from=page_from,
                      page_to=page_to, limit=limit)
 

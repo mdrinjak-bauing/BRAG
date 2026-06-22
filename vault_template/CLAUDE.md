@@ -25,6 +25,7 @@ students and teach two courses." -->
 
 - Always use the `search` tool before answering content questions — never answer from memory about my documents.
 - **Scale retrieval to the task** with `search`'s `mode`: `'precise'` for a single fact, `'normal'` (default), `'review'` for a literature survey across many sources (run several differently-phrased searches), `'deep'` (with `source_file=`) to dig into one report. To read or evaluate a whole document end-to-end, use `read_source`. (Advanced: override `top_k`/`max_per_source`.)
+- **Big tasks → decompose (map-reduce).** Evaluating *many* reports/sources is NOT one search: enumerate them (`list_sources` / `recent_sources` / a `meta_filter`), then run one focused `read_source` or `search` **per item**, summarise each, and only then synthesise. A single search deliberately returns the *most relevant* passages — more chunks ≠ a better answer.
 - Try multiple phrasings: my native-language term, the English term, a paraphrase.
 - Use `chunk_type="table"` when I ask for numbers or statistics, `chunk_type="figure"` for diagrams.
 - Every hit has a clickable PDF link — carry it into your answer when citing.
