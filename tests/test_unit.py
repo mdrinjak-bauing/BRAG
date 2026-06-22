@@ -100,6 +100,27 @@ def test_system_markers_live_outside_the_corpus(tmp_path, monkeypatch):
     assert config.is_corpus_path(marker) is False       # and excluded from the index
 
 
+def test_write_note_appends_instead_of_clobbering(tmp_path, monkeypatch):
+    # Persisting intermediate results must never lose prior content (TOOL-F02),
+    # and must not clobber an auto-literature-note sharing Notizen/ (WIK-01).
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    tools.write_note("Notizen/idea.md", "first finding")
+    tools.write_note("Notizen/idea.md", "second finding")
+    body = (tmp_path / config.WISSENSWIKI_NAME / "Notizen" / "idea.md").read_text("utf-8")
+    assert "first finding" in body and "second finding" in body  # nothing lost
+
+
+def test_save_report_writes_a_reusable_note_outside_the_index(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    tools.save_report("Q1 Findings", "| a | b |\n|---|---|\n| 1 | 2 |")
+    report = tmp_path / config.WISSENSWIKI_NAME / "Berichte" / "q1_findings.md"
+    assert report.exists()
+    assert config.is_corpus_path(report) is False          # never indexed
+    assert tools.read_note("Berichte/q1_findings.md").startswith("# Q1 Findings")
+
+
 def test_chunk_id_deterministic_for_identical_chunk():
     # Same content+location → same id, so an idempotent re-ingest overwrites in
     # place instead of duplicating.

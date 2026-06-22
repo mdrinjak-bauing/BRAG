@@ -305,6 +305,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             "read_note": lambda: tools.read_note(str(a.get("path", ""))),
             "write_note": lambda: tools.write_note(
                 str(a.get("path", "")), str(a.get("content", ""))),
+            "save_report": lambda: tools.save_report(
+                str(a.get("title", "")), str(a.get("content", ""))),
         }
         handler = ops.get(op)
         if handler is None:

@@ -181,12 +181,23 @@ def read_note(path: str) -> str:
 
 @mcp.tool()
 def write_note(path: str, content: str) -> str:
-    """Create or overwrite a NOTEBOOK note — YOUR own thinking (concepts, drafts,
-    conclusions). Saved as plain Markdown under WissensWIKI/ and deliberately
-    NEVER added to the search index. `path` is relative to WissensWIKI/, e.g.
-    'process-maturity.md' or 'Kapitel/2.md' (any subfolder you like). The corpus
-    and the search index are never touched."""
+    """Create a NOTEBOOK note, or APPEND a dated section to an existing one — it
+    never silently overwrites, so your accumulated thinking is safe. YOUR own
+    notes (concepts, drafts, conclusions). Saved as plain Markdown under
+    WissensWIKI/ and deliberately NEVER added to the search index. `path` is
+    relative to WissensWIKI/, e.g. 'process-maturity.md' or 'Kapitel/2.md' (any
+    subfolder). The corpus and the search index are never touched."""
     return _index_op("write_note", path=path, content=content)
+
+
+@mcp.tool()
+def save_report(title: str, content: str) -> str:
+    """Compile a RESULT/REPORT into the notebook for cheap reuse — a table of
+    findings, a comparison, an analysis summary. Saved as Markdown under
+    WissensWIKI/Berichte/<title>.md and NOT search-indexed, so you can read it
+    back later with read_note('Berichte/<title>.md') instead of re-deriving it
+    (no extra tokens). Writing the same title again appends a dated section."""
+    return _index_op("save_report", title=title, content=content)
 
 
 if __name__ == "__main__":

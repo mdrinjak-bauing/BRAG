@@ -317,6 +317,31 @@ def write_note(path: str, content: str) -> str:
     if target.suffix.lower() != ".md":
         target = target.with_suffix(".md")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content, encoding="utf-8")
+    existed = target.exists()
+    if existed:
+        # Never silently overwrite — a running note, or an auto-generated
+        # literature note in Notizen/, must not be clobbered. Append a dated
+        # section so the user's accumulated thinking is preserved (WIK-01/TOOL-F02).
+        with open(target, "a", encoding="utf-8") as f:
+            f.write(f"\n\n---\n\n_added {date.today().isoformat()}_\n\n"
+                    f"{content.rstrip()}\n")
+    else:
+        target.write_text(content.rstrip() + "\n", encoding="utf-8")
     rel_out = target.relative_to(config.WISSENSWIKI_DIR).as_posix()
-    return f"Saved to WissensWIKI/{rel_out} — your notebook (not indexed)."
+    verb = "Appended a dated section to" if existed else "Saved"
+    return f"{verb} WissensWIKI/{rel_out} — your notebook (not indexed)."
+
+
+def save_report(title: str, content: str) -> str:
+    slug = config.slugify_topic(title)
+    base = config.WISSENSWIKI_DIR / "Berichte"
+    base.mkdir(parents=True, exist_ok=True)
+    target = base / f"{slug}.md"
+    existed = target.exists()
+    block = (f"\n\n---\n\n_added {date.today().isoformat()}_\n\n{content.rstrip()}\n"
+             if existed else f"# {title}\n\n{content.rstrip()}\n")
+    with open(target, "a", encoding="utf-8") as f:
+        f.write(block)
+    verb = "Appended to" if existed else "Saved report to"
+    return (f"{verb} WissensWIKI/Berichte/{slug}.md — reuse it later with "
+            f"read_note('Berichte/{slug}.md'); not indexed.")
