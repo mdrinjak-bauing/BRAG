@@ -8,7 +8,8 @@ the tool names, signatures and docstrings Claude sees.
 
 Tools: search, list_sources, inspect_chunks, read_source, remove_source,
 rename_source, save_passage, list_passages, list_notebook, read_note, write_note,
-save_report, list_reports, recent_sources, set_metadata.
+save_report, list_reports, recent_sources, set_metadata, delete_note,
+delete_passage.
 """
 
 from mcp.server.fastmcp import FastMCP
@@ -202,6 +203,24 @@ def set_metadata(folder: str, key: str, value: str) -> str:
     phase=… und filterst danach mit search(meta_filter='…'). `folder` ist relativ zum
     Projektordner (z. B. 'Nachtraege' oder 'projekte/Schulzentrum')."""
     return tools.set_metadata(folder, key, value)
+
+
+@mcp.tool()
+def delete_note(path: str, confirm: bool = False) -> str:
+    """Löscht eine Notiz/einen Bericht im WissensWIKI-Notizbuch (Notizen/, Berichte/,
+    …) — NICHT Passagen/ (dafür delete_passage) und nie den Korpus. Schutzabfrage:
+    ohne confirm=True wird nur rückgefragt, erst confirm=True löscht. Zum Korrigieren:
+    löschen und mit write_note neu schreiben."""
+    return tools.delete_note(path, confirm=confirm)
+
+
+@mcp.tool()
+def delete_passage(topic: str, confirm: bool = False) -> str:
+    """Löscht alle gespeicherten Passagen eines Themas (WissensWIKI/Passagen/<thema>.md)
+    UND entfernt sie aus dem Suchindex. Schutzabfrage: ohne confirm=True wird nur
+    rückgefragt, erst confirm=True löscht. Zum Korrigieren: löschen und mit save_passage
+    neu sichern."""
+    return tools.delete_passage(topic, confirm=confirm)
 
 
 def _warmup_reranker() -> None:

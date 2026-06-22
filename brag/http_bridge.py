@@ -322,6 +322,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
             "set_metadata": lambda: tools.set_metadata(
                 str(a.get("folder", "")), str(a.get("key", "")),
                 str(a.get("value", ""))),
+            "delete_note": lambda: tools.delete_note(
+                str(a.get("path", "")), confirm=bool(a.get("confirm", False))),
+            "delete_passage": lambda: tools.delete_passage(
+                str(a.get("topic", "")), confirm=bool(a.get("confirm", False))),
         }
         handler = ops.get(op)
         if handler is None:

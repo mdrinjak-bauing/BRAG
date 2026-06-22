@@ -252,5 +252,23 @@ def set_metadata(folder: str, key: str, value: str) -> str:
     return _index_op("set_metadata", folder=folder, key=key, value=value)
 
 
+@mcp.tool()
+def delete_note(path: str, confirm: bool = False) -> str:
+    """Löscht eine Notiz/einen Bericht im WissensWIKI-Notizbuch (Notizen/, Berichte/,
+    …) — NICHT Passagen/ (dafür delete_passage) und nie den Korpus. Schutzabfrage:
+    ohne confirm=True wird nur rückgefragt, erst confirm=True löscht. Zum Korrigieren:
+    löschen und mit write_note neu schreiben."""
+    return _index_op("delete_note", path=path, confirm=confirm)
+
+
+@mcp.tool()
+def delete_passage(topic: str, confirm: bool = False) -> str:
+    """Löscht alle gespeicherten Passagen eines Themas (WissensWIKI/Passagen/<thema>.md)
+    UND entfernt sie aus dem Suchindex. Schutzabfrage: ohne confirm=True wird nur
+    rückgefragt, erst confirm=True löscht. Zum Korrigieren: löschen und mit save_passage
+    neu sichern."""
+    return _index_op("delete_passage", topic=topic, confirm=confirm)
+
+
 if __name__ == "__main__":
     mcp.run()

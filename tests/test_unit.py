@@ -172,6 +172,54 @@ def test_set_metadata_refuses_outside_corpus(tmp_path, monkeypatch):
     assert "Abgelehnt" in tools.set_metadata(config.WISSENSWIKI_NAME, "k", "v")
 
 
+def test_delete_note_two_step_and_scope(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    tools.write_note("Notizen/x.md", "hi")
+    p = tmp_path / config.WISSENSWIKI_NAME / "Notizen" / "x.md"
+    assert "Sicher?" in tools.delete_note("Notizen/x.md")     # no confirm → asks
+    assert p.exists()                                          # still there
+    assert "Gelöscht" in tools.delete_note("Notizen/x.md", confirm=True)
+    assert not p.exists()
+    # scope: Passagen and corpus escapes are refused even with confirm
+    assert "delete_passage" in tools.delete_note("Passagen/p.md", confirm=True)
+    assert "WissensWIKI" in tools.delete_note("../../evil.md", confirm=True)
+
+
+def test_delete_passage_removes_index_first_then_file(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
+    f = config.PASSAGES_DIR / "method.md"
+    f.write_text("# Passages: Method\n", encoding="utf-8")
+    seen = {}
+
+    def fake_unindex(slug):
+        seen["slug"] = slug
+        return 4
+
+    monkeypatch.setattr(tools, "_unindex_passage", fake_unindex)
+    assert "Sicher?" in tools.delete_passage("Method")         # no confirm → asks
+    assert f.exists()
+    out = tools.delete_passage("Method", confirm=True)
+    assert not f.exists() and "4 Chunks" in out and seen["slug"] == "method"
+
+
+def test_delete_passage_aborts_when_index_unreachable(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
+    f = config.PASSAGES_DIR / "method.md"
+    f.write_text("# Passages: Method\n", encoding="utf-8")
+
+    def boom(slug):
+        raise RuntimeError("no qdrant")
+
+    monkeypatch.setattr(tools, "_unindex_passage", boom)
+    out = tools.delete_passage("Method", confirm=True)
+    assert "NICHT" in out and f.exists()       # file preserved, no orphan index
+
+
 def test_diversify_backfills_instead_of_starving():
     # A source-skewed pool (one book dominates) must still return ~top_k, not a
     # short list: the over-cap, non-duplicate chunks backfill the empty slots.

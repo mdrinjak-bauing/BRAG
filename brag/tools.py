@@ -478,3 +478,52 @@ def set_metadata(folder: str, key: str, value: str) -> str:
     tail = f"; {n} indexierte Chunks aktualisiert" if n >= 0 else ""
     return (f"Metadaten '{key}={value}' für Ordner '{folder}' gesetzt{tail}. "
             f"Jetzt filterbar mit meta_filter='{key}={value}'.")
+
+
+def delete_note(path: str, confirm: bool = False) -> str:
+    """Delete a WissensWIKI notebook file (Notizen/, Berichte/, … — NOT Passagen/
+    nor the corpus). Two-step: refuses unless confirm=True."""
+    target = _resolve_under(path, config.WISSENSWIKI_DIR)
+    if target is None or not _is_notebook_path(target):
+        return ("delete_note löscht nur im WissensWIKI-Notizbuch (Notizen/, Berichte/, "
+                "…) — nicht Passagen/ (dafür delete_passage) und nie den Korpus.")
+    if target.suffix.lower() != ".md":
+        target = target.with_suffix(".md")
+    if not target.is_file():
+        return f"Keine Notiz: {path}"
+    rel = target.relative_to(config.WISSENSWIKI_DIR).as_posix()
+    if not confirm:
+        return (f"Sicher? Das löscht WissensWIKI/{rel} unwiderruflich. "
+                "Zum Bestätigen erneut mit confirm=True aufrufen.")
+    target.unlink()
+    return f"Gelöscht: WissensWIKI/{rel}."
+
+
+def _unindex_passage(slug: str) -> int:
+    """Drop a saved passage's points from the search index (Qdrant)."""
+    from brag.ingest.pipeline import remove_source as _remove
+    return _remove(f"passage:{slug}")
+
+
+def delete_passage(topic: str, confirm: bool = False) -> str:
+    """Delete all saved passages of a topic (Passagen/<slug>.md) AND their index
+    points. Two-step: refuses unless confirm=True. Index is removed first, so a
+    failure leaves the file (and index) intact rather than orphaning entries."""
+    slug = config.slugify_topic(topic)
+    path = config.PASSAGES_DIR / f"{slug}.md"
+    if not path.is_file():
+        return (f"Keine Passagen-Datei für '{topic}'. "
+                "Themen siehst du über list_passages().")
+    if not confirm:
+        return (f"Sicher? Das löscht ALLE Passagen unter '{topic}' "
+                f"(WissensWIKI/Passagen/{slug}.md) UND entfernt sie aus dem Suchindex. "
+                "Zum Bestätigen erneut mit confirm=True aufrufen.")
+    try:
+        removed = _unindex_passage(slug)
+    except Exception:  # noqa: BLE001 — keep file+index consistent: abort if index down
+        return ("Der Suchindex ist gerade nicht erreichbar — die Passage wurde NICHT "
+                "gelöscht (sonst bliebe ein verwaister Index-Eintrag). Bitte erneut "
+                "versuchen, sobald BRAG läuft.")
+    path.unlink()
+    return (f"Gelöscht: WissensWIKI/Passagen/{slug}.md, "
+            f"{removed} Chunks aus dem Suchindex entfernt.")
