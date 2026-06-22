@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.4.1** ([changes](#versions))
+**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.5.0** ([changes](#versions))
 
 > **An AI assistant that actually knows your sources.** Drop your documents — PDFs, Word, PowerPoint, your own notes — into a folder. BRAG makes sense of them **on your own machine** and hands the AI the right passages for every question — page-cited, one click from the original. Whether that AI runs locally or in the cloud is your call; at most your question and the matching passages are sent — never the whole corpus.
 
@@ -22,7 +22,7 @@ Three things set it apart:
 
 > *The name is a play on my field — civil engineering, where you* ***build*** *things — and on what the tool does: it builds up your knowledge and retrieves it when you need it.*
 
-*Note on scope (v0.4.1): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic; capturing your own conclusions as free-form notes is an optional Obsidian add-on (see [docs](docs/OBSIDIAN.md)).*
+*Note on scope (v0.5.0): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic; capturing your own conclusions as free-form notes is an optional Obsidian add-on (see [docs](docs/OBSIDIAN.md)).*
 
 ## Who is it for?
 
@@ -507,8 +507,12 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 ## Versions
 
-Current version: **0.4.1** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.5.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.5.x** — An audit-driven **hardening & polish** pass: a new `save_report`
+  tool, safer ingest/watcher and multi-project guards, clearer tool docs, a
+  friendlier installer (port-in-use preflight, macOS Gatekeeper guidance) and
+  security/documentation fixes.
 - **0.4.x** — **Multiple projects from one engine**, the **project folder itself is
   the corpus** (no more `sources/` subfolder), a friendlier install and a more
   granular uninstall (remove one project or the whole system).
@@ -546,7 +550,7 @@ Current version: **0.4.1** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
 ## Status
 
-Early release (0.4.1). The **Gemini profile** is the tested happy path; the
+Early release (0.5.0). The **Gemini profile** is the tested happy path; the
 other profiles work but are less battle-tested. Roadmap: automatic file naming,
 corpus overview modes (coverage/clusters), optional knowledge-graph layer — and
 the integrations sketched above.
