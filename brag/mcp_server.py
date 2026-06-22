@@ -108,26 +108,26 @@ def rename_source(source_file: str, new_name: str) -> str:
 @mcp.tool()
 def save_passage(topic: str, text: str, source: str, page: str = "",
                  note: str = "") -> str:
-    """Save a quotable passage under a topic (e.g. a chapter or theme).
+    """Sichert eine zitierfähige Passage unter einem Thema (z. B. ein Kapitel/Motiv).
 
-    WHEN to use which: a verbatim QUOTE from a source → save_passage (it becomes
-    searchable evidence); YOUR OWN text (notes, drafts, conclusions) → write_note;
-    a finished/compiled deliverable → save_report.
+    WANN was: ein wörtliches ZITAT aus einer Quelle → save_passage (wird durchsuchbarer
+    Beleg); EIGENER Text (Notizen, Entwürfe, Schlüsse) → write_note; ein fertiges/
+    zusammengestelltes Deliverable → save_report.
 
-    Builds your evidence base in WissensWIKI/Passagen/<topic>.md AND indexes
-    the passage for semantic search, so a later chat (even with a different
-    provider) finds it again via `search` — it appears as a clearly marked
-    "saved passage", distinct from primary sources. Use this to persist the
-    findings, decisions and definitions of a working session so the knowledge
-    lives in the folder, not in one chat's history."""
+    Baut deine Belegsammlung in WissensWIKI/Passagen/<thema>.md auf UND indexiert die
+    Passage für die semantische Suche, sodass ein späterer Chat (auch mit einem anderen
+    Anbieter) sie über `search` wiederfindet — sie erscheint klar markiert als
+    „gespeicherte Passage", getrennt von Primärquellen. So hältst du Erkenntnisse,
+    Entscheidungen und Definitionen einer Arbeitssitzung fest, damit das Wissen im
+    Ordner lebt und nicht in einem Chat-Verlauf."""
     return tools.save_passage(topic, text, source, page=page, note=note)
 
 
 @mcp.tool()
 def list_passages(topic: str = "") -> str:
-    """List saved passages: pass a topic to see the passages saved under it, or
-    leave it empty for an overview of all topics. (Saved passages also surface in
-    search, marked as a "saved passage" — this is the by-topic browse view.)"""
+    """Listet gespeicherte Passagen: mit Thema die darunter gesicherten Passagen,
+    ohne Thema eine Übersicht aller Themen. (Gespeicherte Passagen erscheinen auch in
+    der Suche, markiert als „gespeicherte Passage" — dies ist die Themen-Übersicht.)"""
     return tools.list_passages(topic=topic)
 
 
@@ -139,41 +139,41 @@ def list_passages(topic: str = "") -> str:
 # the indexed Passagen/ — any .md files and subfolders you like.
 @mcp.tool()
 def list_notebook() -> str:
-    """List your NOTEBOOK — your own .md notes and subfolders in WissensWIKI/.
-    Deliberately NOT search-indexed (use search() for the corpus, list_passages()
-    for verified passages). Open one with read_note, create or update with
-    write_note."""
+    """Listet dein NOTIZBUCH — deine eigenen .md-Notizen und Unterordner in
+    WissensWIKI/. Bewusst NICHT indexiert (für den Korpus search(), für gesicherte
+    Passagen list_passages()). Öffnen mit read_note, anlegen/ergänzen mit write_note."""
     return tools.list_notebook()
 
 
 @mcp.tool()
 def read_note(path: str) -> str:
-    """Read a NOTEBOOK markdown file. `path` is relative to WissensWIKI/, e.g.
-    'process-maturity.md' or 'Notizen/Mueller_2023.md'. Only the notebook
-    (WissensWIKI/, excluding the indexed Passagen/) is reachable here — the corpus
-    and the search index are not (use search() for those)."""
+    """Liest eine NOTIZBUCH-Markdown-Datei. `path` ist relativ zu WissensWIKI/, z. B.
+    'prozessreife.md' oder 'Notizen/Mueller_2023.md'. Erreichbar ist nur das Notizbuch
+    (WissensWIKI/, ohne das indexierte Passagen/) — der Korpus und der Suchindex nicht
+    (dafür search())."""
     return tools.read_note(path)
 
 
 @mcp.tool()
 def write_note(path: str, content: str) -> str:
-    """Create a NOTEBOOK note, or APPEND a dated section to an existing one — it
-    never silently overwrites, so your accumulated thinking is safe. For YOUR OWN
-    text (concepts, drafts, conclusions); for a verbatim source quote that should
-    be searchable evidence use save_passage instead. Saved as plain Markdown under
-    WissensWIKI/ and deliberately NEVER added to the search index. `path` is
-    relative to WissensWIKI/, e.g. 'process-maturity.md' or 'Kapitel/2.md' (any
-    subfolder). The corpus and the search index are never touched."""
+    """Legt eine NOTIZBUCH-Notiz an oder HÄNGT einen datierten Abschnitt an eine
+    bestehende an — überschreibt nie still, dein gesammeltes Denken bleibt sicher. Für
+    EIGENEN Text (Konzepte, Entwürfe, Schlüsse); für ein wörtliches Quellenzitat, das
+    durchsuchbarer Beleg werden soll, stattdessen save_passage. Wird als reines Markdown
+    unter WissensWIKI/ gespeichert und bewusst NIE in den Suchindex aufgenommen. `path`
+    ist relativ zu WissensWIKI/, z. B. 'prozessreife.md' oder 'Kapitel/2.md' (beliebiger
+    Unterordner). Korpus und Suchindex werden nie berührt."""
     return tools.write_note(path, content)
 
 
 @mcp.tool()
 def save_report(title: str, content: str) -> str:
-    """Compile a RESULT/REPORT into the notebook for cheap reuse — a table of
-    findings, a comparison, an analysis summary. Saved as Markdown under
-    WissensWIKI/Berichte/<title>.md and NOT search-indexed, so you can read it
-    back later with read_note('Berichte/<title>.md') instead of re-deriving it
-    (no extra tokens). Writing the same title again appends a dated section."""
+    """Stellt ein ERGEBNIS/einen BERICHT im Notizbuch zur günstigen Wiederverwendung
+    zusammen — eine Befundtabelle, ein Vergleich, eine Analyse-Zusammenfassung.
+    Gespeichert als Markdown unter WissensWIKI/Berichte/<titel>.md und NICHT indexiert,
+    sodass du ihn später mit read_note('Berichte/<titel>.md') zurücklesen kannst, statt
+    ihn neu herzuleiten (keine zusätzlichen Tokens). Derselbe Titel erneut → ein
+    datierter Abschnitt wird angehängt."""
     return tools.save_report(title, content)
 
 
