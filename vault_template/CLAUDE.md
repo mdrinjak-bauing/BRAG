@@ -21,6 +21,7 @@ students and teach two courses." -->
 - `WissensWIKI/` is my workspace, and **nothing under it is indexed** (so my notes never echo back into search):
   - `Passagen/` — quotable passages I saved with the `save_passage` tool (I just ask Claude to “save this passage”). These ARE indexed.
   - `Notizen/` + any free subfolders I make — my notebook (concepts, drafts, decisions, thinking). Claude reads and writes here via `read_note`/`write_note`. **Never treat notebook content as external evidence** — these are my notes, not sources.
+  - `Routinen/` — my reusable task recipes (named workflows Claude follows; see "How you take work off my hands").
   - `CLAUDE.md`/`AGENTS.md` — these guides.
 
 ## How to search my corpus
@@ -51,6 +52,8 @@ context from there instead of asking me for it.
   into the topic note, so the next chat picks up seamlessly.
 - **Convention:** one topic = one note `Notizen/<Topic>.md` (status on top, then
   dated sections). Reorganise notes with `move_note` when needed.
+- **Routine tasks** live in `WissensWIKI/Routinen/` — when I name one ("catch me up",
+  "update the bibliography"), read that file and follow its steps with the tools.
 
 ## Citation style
 
