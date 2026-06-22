@@ -106,6 +106,36 @@ def _is_near_duplicate(text: str, accepted_tokens: list) -> bool:
     return False
 
 
+def _diversify(candidates: list[dict], top_k: int, max_per_source: int) -> list[dict]:
+    """Pick up to top_k hits: cap per source and drop near-duplicates, then
+    BACKFILL the remaining slots from candidates that only hit the per-source cap
+    (never from true duplicates), so a source-skewed pool still returns ~top_k
+    instead of a short list (RET-F02). The diverse hits keep their reranked order
+    and the backfill is appended in reranked order, so when the pool already
+    yields top_k diverse hits the result is identical to a plain per-source cap."""
+    hits, per_source, accepted_tokens, overflow = [], {}, [], []
+    for c in candidates:
+        if _is_near_duplicate(c.get("text", ""), accepted_tokens):
+            continue
+        src = c.get("source_file", "")
+        if per_source.get(src, 0) >= max_per_source:
+            overflow.append(c)  # not a dup, only over the per-source cap → backfill
+            continue
+        per_source[src] = per_source.get(src, 0) + 1
+        accepted_tokens.append(_token_set(c.get("text", "")))
+        hits.append(c)
+        if len(hits) >= top_k:
+            return hits
+    for c in overflow:
+        if _is_near_duplicate(c.get("text", ""), accepted_tokens):
+            continue
+        accepted_tokens.append(_token_set(c.get("text", "")))
+        hits.append(c)
+        if len(hits) >= top_k:
+            break
+    return hits
+
+
 def search(query: str, top_k: int | None = None, reranking: bool | None = None,
            max_chunks_per_source: int | None = None,
            collection_name: str | None = None, **filters) -> list[dict]:
@@ -170,19 +200,7 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
             c["rerank_score"] = float(s)
         candidates.sort(key=lambda c: c["rerank_score"], reverse=True)
 
-    # Source diversity: cap hits per source so one book cannot fill the list,
-    # and drop cross-source near-duplicates (the same passage reproduced in a
-    # different file) that the per-source count cap cannot catch.
-    hits, per_source, accepted_tokens = [], {}, []
-    for c in candidates:
-        src = c.get("source_file", "")
-        if per_source.get(src, 0) >= max_chunks_per_source:
-            continue
-        if _is_near_duplicate(c.get("text", ""), accepted_tokens):
-            continue
-        per_source[src] = per_source.get(src, 0) + 1
-        accepted_tokens.append(_token_set(c.get("text", "")))
-        hits.append(c)
-        if len(hits) >= top_k:
-            break
-    return hits
+    # Source diversity: cap hits per source so one book cannot fill the list and
+    # drop cross-source near-duplicates — then backfill so a source-skewed pool
+    # still returns ~top_k instead of a short answer (RET-F02).
+    return _diversify(candidates, top_k, max_chunks_per_source)

@@ -121,6 +121,28 @@ def test_save_report_writes_a_reusable_note_outside_the_index(tmp_path, monkeypa
     assert tools.read_note("Berichte/q1_findings.md").startswith("# Q1 Findings")
 
 
+def test_diversify_backfills_instead_of_starving():
+    # A source-skewed pool (one book dominates) must still return ~top_k, not a
+    # short list: the over-cap, non-duplicate chunks backfill the empty slots.
+    from brag.search.query import _diversify
+    cand = [{"source_file": "A", "text": f"alpha text {i}"} for i in range(6)]
+    cand.append({"source_file": "B", "text": "beta unrelated text"})
+    hits = _diversify(cand, top_k=5, max_per_source=3)
+    # plain cap would give only 3×A + 1×B = 4; backfill fills the 5th slot
+    assert len(hits) == 5
+    assert [h["source_file"] for h in hits[:4]] == ["A", "A", "A", "B"]  # diverse order kept
+    assert hits[4]["source_file"] == "A"  # backfilled from the capped-out A pool
+
+
+def test_diversify_identical_when_not_starved():
+    # When the pool already yields top_k diverse hits, the result is exactly the
+    # plain per-source cap — nothing reordered, nothing added.
+    from brag.search.query import _diversify
+    cand = [{"source_file": s, "text": f"{s} unique text"} for s in "ABCDE"]
+    assert [h["source_file"] for h in _diversify(cand, top_k=3, max_per_source=3)] == \
+        ["A", "B", "C"]
+
+
 def test_chunk_id_deterministic_for_identical_chunk():
     # Same content+location → same id, so an idempotent re-ingest overwrites in
     # place instead of duplicating.
