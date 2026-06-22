@@ -100,6 +100,21 @@ def test_system_markers_live_outside_the_corpus(tmp_path, monkeypatch):
     assert config.is_corpus_path(marker) is False       # and excluded from the index
 
 
+def test_marker_is_idempotent_with_header_once(tmp_path, monkeypatch):
+    # The shared _append_marker writes the header exactly once and never lists
+    # the same source twice, while a second distinct source still appends a line.
+    from brag.ingest import pipeline
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    monkeypatch.setattr(config, "VAULT_LANGUAGE", "english", raising=False)
+    pipeline._mark_not_indexed(tmp_path / "scan.pdf")
+    pipeline._mark_not_indexed(tmp_path / "scan.pdf")     # same source again
+    pipeline._mark_not_indexed(tmp_path / "other.pdf")    # a different source
+    body = (tmp_path / config.WISSENSWIKI_NAME / "NOT-INDEXED.md").read_text("utf-8")
+    assert body.count("# Documents that could not be indexed") == 1   # header once
+    assert body.count("`scan.pdf`") == 1                              # no duplicate
+    assert "`other.pdf`" in body                                      # second appended
+
+
 def test_write_note_appends_instead_of_clobbering(tmp_path, monkeypatch):
     # Persisting intermediate results must never lose prior content (TOOL-F02),
     # and must not clobber an auto-literature-note sharing Notizen/ (WIK-01).

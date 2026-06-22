@@ -57,42 +57,56 @@ def _clear_attempts(source_key: str) -> None:
         _save_attempts(counts)
 
 
-def _mark_ingest_blocked(path: Path, attempts: int) -> None:
-    """Make a crash-loop skip VISIBLE to the user (best-effort; never raises)."""
+def _append_marker(marker_name: str, header: str, key: str, line: str,
+                   label: str) -> None:
+    """Append one idempotent line to a visible marker file in WissensWIKI/.
+
+    Shared by the two user-facing markers (indexing-stopped, not-indexed). The
+    marker lives in WissensWIKI/ — visible to the user but excluded from the
+    corpus (is_corpus_path), so it is never itself indexed. Idempotent: if `key`
+    already appears in the file, nothing is written; the `header` is written only
+    when the file is first created. Best-effort: a marker write must NEVER break
+    an ingest, so every error is swallowed with a non-fatal log line."""
     try:
-        german = config.VAULT_LANGUAGE.strip().lower().startswith("german")
-        name = "INDEXIERUNG-GESTOPPT.md" if german else "INDEXING-STOPPED.md"
-        marker = config.WISSENSWIKI_DIR / name
-        key = config.normalize_source_key(path.name)
+        marker = config.WISSENSWIKI_DIR / marker_name
         existing = marker.read_text(encoding="utf-8") if marker.exists() else ""
         if key in existing:
             return
-        if german:
-            header = (
-                "# Indexierung gestoppt (Schutz vor Absturz-Schleife)\n\n"
-                "Diese Dateien wurden nach mehreren **unerwarteten Abbrüchen** "
-                "nicht weiter indexiert — dein PC könnte unter der lokalen KI-Last "
-                "neu starten. GPU-Last senken (Power-Limit / andere GPU-Programme "
-                "schließen) oder ein Cloud-Profil nutzen, dann die Datei neu "
-                "ablegen.\n\n"
-            )
-            line = f"- `{key}` — nach {attempts} Abbrüchen gestoppt\n"
-        else:
-            header = (
-                "# Indexing stopped (crash-loop protection)\n\n"
-                "These files were not re-indexed after several **unexpected "
-                "interruptions** — your PC may be resetting under the local-AI "
-                "load. Lower the GPU load (power limit / close other GPU apps) or "
-                "use a cloud profile, then drop the file in again.\n\n"
-            )
-            line = f"- `{key}` — stopped after {attempts} interruptions\n"
         config.WISSENSWIKI_DIR.mkdir(parents=True, exist_ok=True)
         with open(marker, "a", encoding="utf-8") as f:
             if not existing:
                 f.write(header)
             f.write(line)
     except Exception as e:  # noqa: BLE001 — marking must never fail the ingest
-        print(f"  could not write the indexing-stopped marker (non-fatal): {e}")
+        print(f"  could not write the {label} marker (non-fatal): {e}")
+
+
+def _mark_ingest_blocked(path: Path, attempts: int) -> None:
+    """Make a crash-loop skip VISIBLE to the user (best-effort; never raises)."""
+    german = config.VAULT_LANGUAGE.strip().lower().startswith("german")
+    key = config.normalize_source_key(path.name)
+    if german:
+        name = "INDEXIERUNG-GESTOPPT.md"
+        header = (
+            "# Indexierung gestoppt (Schutz vor Absturz-Schleife)\n\n"
+            "Diese Dateien wurden nach mehreren **unerwarteten Abbrüchen** "
+            "nicht weiter indexiert — dein PC könnte unter der lokalen KI-Last "
+            "neu starten. GPU-Last senken (Power-Limit / andere GPU-Programme "
+            "schließen) oder ein Cloud-Profil nutzen, dann die Datei neu "
+            "ablegen.\n\n"
+        )
+        line = f"- `{key}` — nach {attempts} Abbrüchen gestoppt\n"
+    else:
+        name = "INDEXING-STOPPED.md"
+        header = (
+            "# Indexing stopped (crash-loop protection)\n\n"
+            "These files were not re-indexed after several **unexpected "
+            "interruptions** — your PC may be resetting under the local-AI "
+            "load. Lower the GPU load (power limit / close other GPU apps) or "
+            "use a cloud profile, then drop the file in again.\n\n"
+        )
+        line = f"- `{key}` — stopped after {attempts} interruptions\n"
+    _append_marker(name, header, key, line, "indexing-stopped")
 
 
 def _crash_loop_skip(source_key: str, path: Path) -> bool:
@@ -154,21 +168,9 @@ def _mark_not_indexed(path: Path) -> None:
         )
         reason = ("likely a scanned PDF without a text layer, not searchable; "
                   "apply OCR and drop it in again")
-    try:
-        marker = config.WISSENSWIKI_DIR / marker_name
-        name = config.normalize_source_key(path.name)
-        existing = ""
-        if marker.exists():
-            existing = marker.read_text(encoding="utf-8")
-            if name in existing:
-                return
-        config.WISSENSWIKI_DIR.mkdir(parents=True, exist_ok=True)
-        with open(marker, "a", encoding="utf-8") as f:
-            if not existing:
-                f.write(header)
-            f.write(f"- `{name}` — {date.today().isoformat()} — {reason}\n")
-    except Exception as e:  # noqa: BLE001 — marking must never fail the ingest
-        print(f"  could not write the not-indexed marker (non-fatal): {e}")
+    key = config.normalize_source_key(path.name)
+    line = f"- `{key}` — {date.today().isoformat()} — {reason}\n"
+    _append_marker(marker_name, header, key, line, "not-indexed")
 
 
 def _append_ingest_log(source_file: str, path: Path, n_chunks: int,
