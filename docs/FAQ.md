@@ -56,10 +56,10 @@ Then double-click `setup.command` again.
 1. Quit Claude Desktop **completely** (Cmd+Q / tray icon → Quit) and reopen —
    a window close is not enough.
 2. Check the container is running: `docker ps` should list `brag-app`.
-3. Check the config file (see [OBSIDIAN.md](OBSIDIAN.md) for the path)
-   contains the `brag-<folder>` entry (a bare `brag` appears only on a fresh
-   install with no project registered yet; older installs may show the longer
-   legacy name until you re-run setup).
+3. Check the config file (see [OBSIDIAN.md](OBSIDIAN.md) for the path) contains a
+   BRAG entry — `brag` for a single-project install, or `brag-<folder>` /
+   `brag-<name>` once you have several projects (older installs may show a legacy
+   name until you re-run setup).
 
 ## Indexing
 
@@ -76,9 +76,10 @@ page link. **Excel (`.xlsx`) is not supported yet.**
 - Files inside any `_inbox/` are deliberately ignored (staging area).
 
 **"Scanned PDF without text layer."**
-The PDF contains only images of text. OCR support is on the roadmap; for
-now, run the PDF through an OCR tool first (e.g. Acrobat, or macOS Preview's
-built-in text recognition won't embed a layer — use `ocrmypdf` or similar).
+The PDF contains only images of text. OCR support is on the roadmap; for now, run
+the PDF through an OCR tool first to add a text layer (e.g. Acrobat, or `ocrmypdf`).
+Note: macOS Preview's built-in text recognition does *not* embed a text layer, so
+it won't help here.
 
 **Indexing is slow.**
 The first document downloads the layout-analysis models once. A 50-page

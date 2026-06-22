@@ -3,10 +3,13 @@
 **🇬🇧 [English](CUSTOMIZE_CLAUDE.md) | 🇩🇪 Deutsch**
 
 Das Wirkungsvollste, was du nach der Installation tun kannst, ist, die Datei
-**`WissensWIKI/CLAUDE.md`** auszufüllen. Sie wird von Claude automatisch
-gelesen (in Claude-Desktop-Projekten und in Claude Code) und macht aus einem
-generischen Assistenten einen, der dein Fachgebiet, deine Konventionen und
-deinen Korpus kennt — **egal ob du forschst oder in der Praxis arbeitest.**
+**`WissensWIKI/CLAUDE.md`** auszufüllen. Sie macht aus einem generischen
+Assistenten einen, der dein Fachgebiet, deine Konventionen und deinen Korpus
+kennt — **egal ob du forschst oder in der Praxis arbeitest.** **Claude Code**
+liest sie automatisch aus dem Ordner; **Claude Desktop liest sie _nicht_** von
+allein — dort legst du ein Projekt an und kopierst ihren Inhalt in die
+Projekt-Anweisungen (siehe [In Claude Desktop nutzen](#in-claude-desktop-nutzen)
+unten).
 
 > **Forschung oder Praxis?** BRAG funktioniert für beides. Eine Wissenschaftlerin
 > will saubere Zitate und Disziplin-Konventionen; ein Bauleiter will den
@@ -24,9 +27,16 @@ deinen Korpus kennt — **egal ob du forschst oder in der Praxis arbeitest.**
 | Beleg-/Zitierstil | Claude verweist so, wie es dein Umfeld erwartet — Disziplin-Zitat *oder* **Norm + Abschnitt**, **Vertrag + Paragraf**, **Dokument + Datum** |
 | Projekt-/Mandatskontext (Praxis) | Mischt dein Korpus mehrere Projekte/Kunden? Sag Claude, immer per `meta_filter` auf das aktuelle Projekt einzugrenzen, damit keine fremden Vorgänge hineinrutschen |
 | Konventionen | Sprache, Notiz-Benennung, alles, was du sonst jede Sitzung wiederholen müsstest |
+| Routinen-Auslöser | Trag die Auslöser-Stichworte deiner wiederkehrenden Abläufe aus `WissensWIKI/Routinen/` hier ein, damit ein bloßes *„hol mich auf den Stand"* die Routine startet — ganz ohne Erklären |
 
 **Faustregel:** Wenn du Claude zweimal dieselbe Sache korrigierst, gehört die
 Korrektur in die CLAUDE.md.
+
+**Routinen.** BRAG legt einen Ordner `WissensWIKI/Routinen/` mit Beispiel-Rezepten
+an (kurze Markdown-Dateien, denen Claude folgt, wenn du sie beim Namen nennst).
+Trag das Auslöser-Stichwort jeder Routine als Befehl in die CLAUDE.md ein — sobald
+das in deiner Projekt-Anweisung steht, startet ein Stichwort die Routine. Eigene
+ergänzt du mit einer `.md` in `Routinen/` und einer Auslöser-Zeile hier.
 
 ## Was in die AGENTS.md gehört
 

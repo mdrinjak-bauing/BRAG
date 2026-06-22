@@ -13,7 +13,7 @@ passiert, wo deine Daten liegen und wie aus einer Frage eine belegte Antwort wir
 Datenbanken und KI-Bibliotheken von Hand zu installieren (und mit
 Versionskonflikten zu kämpfen), startet Docker eine fertige Box, die alles
 schon enthält — auf jedem Rechner identisch. Du installierst einmal Docker; den
-Rest startet es. Deshalb ist die Einrichtung „doppelklicken und drei Fragen
+Rest startet es. Deshalb ist die Einrichtung „doppelklicken und ein paar Fragen
 beantworten" statt einer Seite voller Befehle.
 
 In dieser Box laufen zwei „Geräte" nebeneinander:
@@ -111,7 +111,10 @@ Sekunden bemerkt die App es und durchläuft fünf Schritte:
 1. **Das Layout lesen — „Docling".** Docling ist das Werkzeug, das *die Seite
    versteht*: es trennt Überschriften, Absätze, Tabellen und Abbildungen und
    merkt sich, von welcher Seite jedes Stück stammt. (Dieses Seiten-Gedächtnis
-   ist es, was später jede Antwort auf die genaue Seite verlinken lässt.)
+   ist es, was später jede Antwort auf die genaue Seite verlinken lässt.) Hinweis:
+   Es liest die **Textebene** des Dokuments, führt aber kein OCR aus — ein rein
+   gescanntes PDF ohne Textebene wird nicht erkannt, BRAG legt dafür stattdessen
+   einen sichtbaren Marker ab (siehe [FAQ](FAQ.de.md)).
 
 2. **In Stücke schneiden.** Ein ganzes Buch ist zu groß, um als Klumpen
    durchsucht zu werden — also wird es in handliche Passagen geschnitten.
@@ -126,12 +129,17 @@ Sekunden bemerkt die App es und durchläuft fünf Schritte:
    größte Grund für gute Antworten.
 
 4. **Zwei „Fingerabdrücke" erzeugen.** Jede Passage bekommt einen
-   *Bedeutungs-Fingerabdruck* (für die Ähnlichkeits-Suche) und einen
-   *Stichwort-Fingerabdruck* (für exakte Begriffe wie GEG oder § 71). Beides zu
-   haben ist der Grund, warum das System Dinge findet — egal ob du das genaue
-   Wort erinnerst oder nur die Idee.
+   *Bedeutungs-Fingerabdruck* (das lokale **arctic**-Modell macht daraus 1024
+   Zahlen, für die Ähnlichkeits-Suche) und einen *Stichwort-Fingerabdruck*
+   (**BM25**, für exakte Begriffe wie GEG oder § 71). Beides entsteht **lokal auf
+   deiner CPU**. Beides zu haben ist der Grund, warum das System Dinge findet —
+   egal ob du das genaue Wort erinnerst oder nur die Idee.
 
-5. **In Qdrant ablegen** + eine kurze Literaturnotiz in `WissensWIKI/Notizen/` schreiben.
+5. **In Qdrant ablegen.** Die Fingerabdrücke und die Passage wandern in die
+   Bedeutungsdatenbank, und das Dokument ist nun durchsuchbar. BRAG schreibt
+   außerdem eine kurze, Obsidian-kompatible **Literaturnotiz** zur Quelle nach
+   `WissensWIKI/Notizen/` (dein eigener *„Meine Notizen"*-Teil darin bleibt beim
+   Neu-Einlesen erhalten). Wie alles in `Notizen/` ist diese Notiz **nicht** indexiert.
 
 ### Und was ist mit Abbildungen?
 
@@ -179,11 +187,16 @@ Du fragst Claude etwas. Hinter den Kulissen:
    Der Reranker läuft **lokal auf deiner CPU** und ist der teuerste Teil einer
    Suche — wie viele Passagen er bewertet (oder ob überhaupt) ist daher eine
    Einstellung (`RERANK_PROFILE`: `off` / `eco` / `balanced` / `full`): auf
-   schwachen Rechnern `eco` (Standard) oder `off`, auf starken `full`.
+   schwachen Rechnern `eco` (Standard) oder `off`, auf starken `full`. Diese
+   „wie viele bewerten"-Zahl — der **k-Wert** — lässt sich auch direkt setzen
+   (`RERANK_FUSION_LIMIT`).
 
 4. **Kürzen und durchmischen.** Die besten Treffer bleiben (standardmäßig 15,
    höchstens 3 aus einer einzelnen Quelle, damit ein Buch nicht alles
-   verdrängt). Diese „wie viele behalten"-Zahl ist das **top-K**.
+   verdrängt). Diese „wie viele behalten"-Zahl ist das **top-K** — und du skalierst
+   sie über den **Modus** des `search`-Werkzeugs auf die Aufgabe (`precise` für
+   einen einzelnen Fakt, `normal`, `review` für einen breiten Überblick über viele
+   Quellen, `deep` zum Vertiefen in ein Dokument).
 
 5. **Antworten.** Claude liest diese Passagen und schreibt eine Antwort — jede
    Quelle mit Seite belegt und einem Link, der das PDF genau dort öffnet.

@@ -7,8 +7,8 @@
 > ist, kann dich ein KI-Assistent wie [Claude Code](https://claude.com/claude-code)
 > hindurchführen und dir erklären, was jeder Befehl tut.
 
-Zeitbedarf: etwa **15 Minuten aktive Arbeit** — du brauchst nur deine Maus und
-einmal kurz das Terminal, keine Programmierkenntnisse. Hinzu kommen der erste
+Zeitbedarf: etwa **15 Minuten aktive Arbeit** — überwiegend nur deine Maus (das
+Terminal nur für die optionale Log-Ansicht in Schritt 5), keine Programmierkenntnisse. Hinzu kommen der erste
 Build und die einmaligen Modell-Downloads, die größtenteils **unbeaufsichtigt**
 im Hintergrund laufen; beim ersten Einrichten solltest du je nach
 Internetverbindung mit insgesamt rund **30–60 Minuten** rechnen.
@@ -74,7 +74,7 @@ nichts weiter tun.
      überprüfen…"): **nicht auf „In den Papierkorb legen" klicken** — die Datei ist
      sicher. **Rechtsklick** auf die Datei → **Öffnen** → im Dialog erneut **Öffnen**.
    - Bei neueren macOS-Versionen hat der Rechtsklick-Dialog evtl. keinen
-     „Öffnen"-Knopf. Dann  → **Systemeinstellungen** → **Datenschutz & Sicherheit**
+     „Öffnen"-Knopf. Dann **Systemeinstellungen** → **Datenschutz & Sicherheit**
      öffnen, nach unten scrollen und neben *„setup.command wurde blockiert…"* auf
      **„Trotzdem öffnen"** klicken; mit Touch ID bestätigen und `setup.command`
      erneut doppelklicken. (Bei jedem unsignierten heruntergeladenen Skript normal —
@@ -160,7 +160,19 @@ Stelle Claude jetzt eine Frage:
   `docker compose down`. Zum Starten: `docker compose up -d`.
 - **Hybrid-Profil (LM Studio):** zuerst [LM Studio](https://lmstudio.ai)
   installieren, ein Modell laden, dann das Setup ausführen. Das Setup verbindet
-  die BRAG-Werkzeuge (Name `brag-<Ordner>`) automatisch auch mit dem LM-Studio-Chat (nicht nur Claude);
-  installierst du LM Studio *nach* dem Setup, einfach `setup.command` erneut
-  ausführen, um die Verbindung zu ergänzen. Siehe [PROFILES.de.md](PROFILES.de.md).
+  die BRAG-Werkzeuge (der Connector heißt beim ersten Projekt `brag`) automatisch
+  auch mit dem LM-Studio-Chat (nicht nur Claude); installierst du LM Studio *nach*
+  dem Setup, einfach `setup.command` erneut ausführen, um die Verbindung zu
+  ergänzen. Siehe [PROFILES.de.md](PROFILES.de.md).
+- **Zweites Projekt hinzufügen:** Doppelklick auf **`Projekt hinzufuegen.command`**,
+  einen zweiten Projektordner wählen und benennen. BRAG legt darin einen
+  `WissensWIKI/`-Arbeitsbereich an und ergänzt einen Connector `brag-<Name>` neben
+  dem ersten; Engine und die ~3 GB Modelle bleiben geteilt. Nichts aus einem
+  Projekt vermischt sich mit einem anderen.
+- **BRAG entfernen:** Doppelklick auf **`uninstall.command`**. Ein Menü bietet
+  **[1]** die Verbindung eines Projekts entfernen (lässt BRAG und deine übrigen
+  Projekte laufen), **[2]** das ganze System entfernen (vollständiges
+  Docker-Aufräumen: Container, Modell-Cache, Suchindex, Claude-/LM-Studio-Verbindung)
+  oder **[C]** abbrechen. In jedem Fall werden **deine Dokumente auf der Festplatte
+  nie gelöscht** — eine Neuinstallation findet sie wieder.
 - Probleme? Siehe [FAQ.de.md](FAQ.de.md).

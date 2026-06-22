@@ -8,8 +8,8 @@
 > [Claude Code](https://claude.com/claude-code) hindurchführen und dir erklären,
 > was jeder Befehl tut.
 
-Zeitbedarf: etwa **15–20 Minuten aktive Arbeit** — du brauchst nur deine Maus und
-einmal kurz die Eingabeaufforderung, keine Programmierkenntnisse. Hinzu kommen der
+Zeitbedarf: etwa **15–20 Minuten aktive Arbeit** — überwiegend nur deine Maus (die
+Eingabeaufforderung nur für die optionale Log-Ansicht in Schritt 5), keine Programmierkenntnisse. Hinzu kommen der
 erste Build und die einmaligen Modell-Downloads, die größtenteils
 **unbeaufsichtigt** im Hintergrund laufen; beim ersten Einrichten solltest du je
 nach Internetverbindung mit insgesamt rund **30–60 Minuten** rechnen.
@@ -84,14 +84,26 @@ Dann den Ordner öffnen und **`setup.bat`** doppelklicken.
      in der blauen **SmartScreen**-Box („Der Computer wurde geschützt") auf
      **„Weitere Informationen"** → **„Trotzdem ausführen"**.
 
+> **Wenn das Setup „Port 8765 ist bereits belegt" meldet:** ein anderes Programm
+> (oft ein zweites BRAG oder ein anderes lokales Tool) belegt den Port, den BRAG
+> für den Einrichtungs-Assistenten und die seitengenauen PDF-Links braucht. Beende
+> entweder dieses Programm oder wähle einen freien Port, indem du diese zwei Zeilen
+> in die `.env` neben `setup.bat` einträgst und `setup.bat` erneut doppelklickst:
+>
+> ```
+> BRIDGE_HOST_PORT=8770
+> BRIDGE_PUBLIC_URL=http://localhost:8770
+> ```
+
 **Das Setup fragt nacheinander zwei Dinge.** Zuerst fragt ein
 Ordner-Auswahlfenster, *wo das Programm `BRAG Assistent` liegen soll* (z. B. auf
 dem Desktop) — wähle einen beliebigen Ort. Dann fragt ein zweites Fenster nach
 *deinem Projektordner* (deine Dokumente). BRAG kopiert das Programm in einen
-Ordner `BRAG Assistent`, legt in deinem Projektordner einen Arbeitsbereich
-`WissensWIKI` an und macht von dort in einem neuen Fenster weiter. *(Brichst du
-die erste Auswahl ab, installiert sich das Programm einfach im entpackten Ordner;
-der Projektordner im zweiten Schritt ist erforderlich.)*
+Ordner `BRAG Assistent` (der ein BRAG-Ordnersymbol und einen „nicht löschen"-Hinweis
+bekommt, damit du ihn nicht versehentlich entfernst), legt in deinem Projektordner
+einen Arbeitsbereich `WissensWIKI` an und macht von dort in einem neuen Fenster
+weiter. *(Brichst du die erste Auswahl ab, installiert sich das Programm einfach im
+entpackten Ordner; der Projektordner im zweiten Schritt ist erforderlich.)*
 
 **Was du siehst:** Ein schwarzes Eingabeaufforderungs-Fenster öffnet sich und
 kurz darauf **automatisch dein Browser** mit dem Einrichtungs-Assistenten. Dort
@@ -160,10 +172,21 @@ Stelle Claude jetzt eine Frage:
   Datenbank liegt in Docker, sicher außerhalb jedes Sync-Ordners.
 - **Stoppen/Starten:** Zum Stoppen eine Eingabeaufforderung im Projektordner
   öffnen, `docker compose down`. Zum Starten: `docker compose up -d`.
-- **Hybrid-Profil (LM Studio):** zuerst [LM Studio](https://lmstudio.ai) installieren
-  (unter Windows empfohlen), dann das Setup ausführen. Das Setup verbindet die
-  BRAG-Werkzeuge (Name `brag-<Ordner>`) automatisch auch mit dem LM-Studio-Chat (nicht nur Claude);
-  installierst du LM Studio *nach* dem Setup, einfach `setup.bat` erneut
-  doppelklicken, um die Verbindung zu ergänzen. Siehe
+- **Hybrid-Profil (LM Studio):** zuerst [LM Studio](https://lmstudio.ai)
+  installieren, dann das Setup ausführen. Das Setup verbindet die BRAG-Werkzeuge
+  (der Connector heißt beim ersten Projekt `brag`) automatisch auch mit dem
+  LM-Studio-Chat (nicht nur Claude); installierst du LM Studio *nach* dem Setup,
+  einfach `setup.bat` erneut doppelklicken, um die Verbindung zu ergänzen. Siehe
   [PROFILES.de.md](PROFILES.de.md).
+- **Zweites Projekt hinzufügen:** Doppelklick auf **`Projekt hinzufuegen.bat`**,
+  einen zweiten Projektordner wählen und benennen. BRAG legt darin einen
+  `WissensWIKI/`-Arbeitsbereich an und ergänzt einen Connector `brag-<Name>` neben
+  dem ersten; Engine und die ~3 GB Modelle bleiben geteilt. Nichts aus einem
+  Projekt vermischt sich mit einem anderen.
+- **BRAG entfernen:** Doppelklick auf **`uninstall.bat`**. Ein Menü bietet **[1]**
+  die Verbindung eines Projekts entfernen (lässt BRAG und deine übrigen Projekte
+  laufen), **[2]** das ganze System entfernen (vollständiges Docker-Aufräumen:
+  Container, Modell-Cache, Suchindex, Claude-/LM-Studio-Verbindung) oder **[C]**
+  abbrechen. In jedem Fall werden **deine Dokumente auf der Festplatte nie gelöscht**
+  — eine Neuinstallation findet sie wieder.
 - Probleme? Siehe [FAQ.de.md](FAQ.de.md).

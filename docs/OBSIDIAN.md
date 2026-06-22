@@ -2,22 +2,33 @@
 
 **🇬🇧 English | 🇩🇪 [Deutsch](OBSIDIAN.de.md)**
 
-Your knowledge store is a folder of plain Markdown files — Obsidian is the
-perfect way to read and write it.
+Your knowledge store is a folder of plain Markdown files. Obsidian is an
+**optional** nicer way to read and write it — not a second copy, just a view
+onto the exact same `WissensWIKI/` folder. Edit or delete a file in Obsidian and
+it changes in the folder (and, for `Passagen/`, in the search index) too. Nothing
+is imported or copied.
 
 ## Part 1: Open the knowledge store in Obsidian
 
 1. Install [Obsidian](https://obsidian.md) (free).
 2. "Open folder as vault" → choose the `WissensWIKI/` folder inside your
-   BRAG directory.
-3. Done. Literature notes appear in `Notizen/`, your saved passages in
-   `Passagen/`, your own thinking goes into free subfolders there.
+   project folder.
+3. Done. You'll see your workspace: `Notizen/` (your own notes, any free
+   subfolders, plus an auto-generated literature note per source), `Passagen/`
+   (passages you saved), `Berichte/` (reports you saved), `Routinen/` (task
+   recipes), and `CLAUDE.md` / `AGENTS.md`.
 
-## Part 2 (optional): Let Claude read and write your notes
+**Tip — wikilinks.** Write `[[NoteName]]` inside a note to link to the same-named
+`.md` file; Obsidian turns these into a clickable graph of related concepts, and
+Claude follows the links as it reads.
 
-The search index covers your **sources**. If you also want Claude Desktop to
-read and edit your **notes**, add the community plugin
-"MCP Tools":
+## Part 2 (optional): Let Claude act inside Obsidian
+
+Claude can **already** read and write your notebook through BRAG's built-in
+`list_notebook` / `read_note` / `write_note` tools — you do **not** need Obsidian
+for that. This part is only if you *also* want Claude to act inside Obsidian's own
+interface (its commands, templates and search). For that, add the community
+plugin "MCP Tools":
 
 1. In Obsidian: Settings → Community plugins → Browse → install and enable
    **Local REST API**.
@@ -38,10 +49,11 @@ read and edit your **notes**, add the community plugin
 
 5. Quit and reopen Claude Desktop.
 
-Now Claude has two complementary tool sets: **search** over your sources
-(this project) and **read/write** access to your notes (Obsidian MCP Tools).
-That separation is deliberate — your own notes are never part of the search
-index, so your thinking never comes back disguised as evidence.
+Either way — built-in tools or the Obsidian plugin — the boundary holds: your own
+notes are never part of the search index, so your thinking never comes back
+disguised as evidence. The one deliberate exception is `Passagen/`: you index
+those on purpose with `save_passage`.
 
-> Obsidian must be running for the note tools to work. If they stop working
-> after an Obsidian update, re-run "Install Server" in the MCP Tools settings.
+> Obsidian must be running for the Obsidian-plugin tools to work. If they stop
+> working after an Obsidian update, re-run "Install Server" in the MCP Tools
+> settings.
