@@ -52,8 +52,16 @@ context from there instead of asking me for it.
   into the topic note, so the next chat picks up seamlessly.
 - **Convention:** one topic = one note `Notizen/<Topic>.md` (status on top, then
   dated sections). Reorganise notes with `move_note` when needed.
-- **Routine tasks** live in `WissensWIKI/Routinen/` — when I name one ("catch me up",
-  "update the bibliography"), read that file and follow its steps with the tools.
+
+## My routines (treat these as commands — don't ask me to explain)
+
+When my message matches a trigger below, READ that file in `Routinen/` and run its
+steps with the tools, without asking me for background:
+
+- „hol mich auf den Stand" / „woran haben wir gearbeitet?" → `Routinen/Hol-mich-auf-den-Stand.md`
+- „aktualisier das Quellenverzeichnis" / „die Quellenliste" → `Routinen/Quellenverzeichnis-aktualisieren.md`
+
+To add a routine: drop a new `.md` in `Routinen/`, then add one trigger line here.
 
 ## Citation style
 
