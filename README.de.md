@@ -40,7 +40,7 @@ Drei Dinge machen den Unterschied:
 
 ## Für wen?
 
-Forschende, Lehrende und Promovierende — und genauso Praktiker, die im Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und Fachliteratur behalten müssen. **Ohne Programmierkenntnisse nutzbar.**
+Forschende, Lehrende, **Studierende** und Promovierende — und genauso Praktiker, die im Projektalltag den Überblick über Normen, Berichte, Leistungsverzeichnisse und Fachliteratur behalten müssen. Kurz: **alle, die mit vielen Dateien arbeiten** und darin verlässlich das Richtige wiederfinden wollen. Und wer mag, nutzt das offene Fundament als **Spielwiese, um mit KI tiefer in Coding und den Bau eigener Agenten und Werkzeuge einzutauchen** (siehe [Ausbau & Automatisierung](#ausbau--automatisierung-mit-claude-code--co)). **Ohne Programmierkenntnisse nutzbar** — Code ist die Kür, nicht die Pflicht.
 
 ---
 
@@ -139,6 +139,77 @@ unfertige Sätze als die perfekte Notiz, die nie entsteht. Claude kann dir beim
 Schreiben helfen (über die Obsidian-Anbindung). Mit der Zeit wird daraus, was
 kein Chatverlauf je sein kann: **dein** wachsendes, durchsuchbares Wissen.
 
+## Dein Wissensspeicher
+
+Hier die wichtigste Unterscheidung — **zwei getrennte Orte, die du beim Setup wählst:**
+
+- **`BRAG Assistent`** = das **Programm** (die Engine; hier landet die entpackte
+  ZIP). Du wählst, *wo* es liegt — an beliebigem Ort. Das brauchst du zum
+  Starten/Stoppen; **nicht löschen** — öffnen musst du es nie. *(Unter Windows
+  bekommt es sogar ein eigenes Ordnersymbol und einen „nicht löschen"-Hinweis.)*
+- **Dein Projektordner** = deine **Dokumente** — unabhängig davon gewählt. Der
+  **ganze Ordner ist der durchsuchbare Korpus**: Dokumente einfach hineinlegen,
+  beliebiger Unterordner, beliebige Tiefe. Er gehört dir, also sichere ihn.
+
+*(Brichst du die erste Auswahl ab, installiert sich das Programm einfach im
+entpackten Ordner; der Projektordner in Schritt 2 ist erforderlich.)*
+
+Im Projektordner ist **ein besonderer Unterordner `WissensWIKI/` dein
+Arbeitsbereich** und wird bewusst **nicht** mit-indexiert — so hallen deine
+eigenen Notizen nie in den Suchergebnissen wider. Er enthält:
+
+- **`Passagen/`** — belegte Passagen, die du über Claude speicherst. Diese
+  **werden** indexiert und sind durchsuchbar.
+- **`Notizen/`** (plus beliebige eigene Unterordner) — deine eigenen Notizen und
+  Texte. Claude kann hier lesen und schreiben (`read_note` / `write_note`);
+  **nicht** indexiert.
+- **`CLAUDE.md`** (bringt Claude dein Fachgebiet bei — hier trägst du es ein) und
+  **`AGENTS.md`** (Zusatzregeln für autonome Agenten-Aufgaben). Nicht indexiert.
+
+**Die eine Regel, die alles erklärt:** Durchsucht wird der **ganze
+Projektordner**, **außer** dem Arbeitsbereich `WissensWIKI/` — und innerhalb von
+`WissensWIKI/` nur `Passagen/`. Versteckte Ordner und jeder `_inbox/` werden
+ignoriert. Alles, was du in den Projektordner legst, wandert automatisch in die
+Suchdatenbank (den Index); nimmst du eine Datei wieder heraus oder löschst sie,
+verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem Rechner
+angefasst.
+
+Praktisch heißt das: **Dokumente kommen in den Projektordner** (oder einen
+beliebigen Unterordner) — **nicht** nach `Notizen/` (das ist dein Notizbuch und
+wird nicht durchsucht) und auch nicht von Hand nach `Passagen/` (dorthin legt nur
+das Werkzeug `save_passage` belegte Zitate). Dass dein Assistent diese Aufteilung
+kennt — was Korpus ist, was Notizbuch, wohin er was schreibt —, kommt nicht von
+allein: Es steht in der `WissensWIKI/CLAUDE.md`, die du in deine
+**Projekt-Anweisungen** kopierst (siehe [BRAG mit einem Claude-Projekt
+nutzen](#brag-mit-einem-claude-projekt-nutzen-empfohlen)).
+
+So sieht es auf der Festplatte aus:
+
+```
+<dein Projektordner>/                ← deine Dokumente (der ganze Ordner wird durchsucht)
+├── Bericht.pdf                      ← Dokumente einfach hineinlegen (PDF, DOCX, …)
+├── Interviews/                      ← beliebige Unterordner; die ERSTE Ebene = Dokumenttyp
+│   └── Person_A.pdf
+└── WissensWIKI/                     ← 📓 dein Arbeitsbereich — NICHT mit-indexiert
+    ├── Passagen/                    ← über Claude gespeicherte belegte Passagen (DIESE werden durchsucht)
+    ├── Notizen/                     ← deine Notizen & Unterordner (Claude liest/schreibt; NICHT durchsucht)
+    ├── CLAUDE.md                    ← bringt Claude DEIN Fachgebiet bei
+    └── AGENTS.md                    ← Regeln für autonome Agenten-Aufgaben
+
+…anderswo…/BRAG Assistent/           ← das Programm (nicht löschen; öffnen musst du es nie)
+```
+
+### Obsidian: ein schönerer Blick auf denselben Ordner
+
+Du kannst den Wissensspeicher mit [Obsidian](https://obsidian.md) (kostenlos)
+öffnen — es stellt die Markdown-Dateien viel schöner dar und macht das Schreiben
+im Notizbuch angenehm. Wichtig zu verstehen: **Obsidian ist kein zweiter
+Speicher, sondern nur eine Ansicht auf genau denselben Ordner.** Es arbeitet
+direkt auf den Dateien — **löschst du eine Datei in Obsidian, ist sie auch im
+normalen Ordner (und damit aus dem Index) weg.** Nichts wird importiert oder
+kopiert; es ist dieselbe Struktur, nur bequemer zu bedienen. Schritt für Schritt:
+[docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
+
 ## Wie es funktioniert
 
 ![Architektur: Wissensspeicher, Docker-Container, Claude Desktop und die zwei MCP-Anschlüsse](docs/assets/architecture.svg)
@@ -222,78 +293,6 @@ bewusst außerhalb des Suchindex.
 
 Mehr Tiefe (mit Zahlen) in [So funktioniert's](docs/HOW_IT_WORKS.de.md) und
 [Architektur](docs/ARCHITECTURE.de.md); alle Parameter in [`.env.example`](.env.example).
-
-### Der KI-Anschluss (MCP)
-
-Automatisch eingerichtet, gibt der **BRAG-MCP-Server** deinem Assistenten einen
-Anschluss mit Werkzeugen in vier Gruppen: **Suche** (durchsucht deinen Korpus),
-**Korpus** (Inventar pflegen, taggen, umbenennen), **Belege** (zitierfähige
-Passagen sammeln) und **Notizbuch/Berichte** (lesen/schreiben) — wobei die
-Notizbuch-Werkzeuge den Suchindex nie anfassen. Das Setup trägt den Anschluss in
-**Claude Desktop** ein — und in **LM Studio**, falls installiert (LM Studios Chat
-ist ein MCP-Host). Die Werkzeuge im Einzelnen:
-
-| Werkzeug | Was es tut | Beispielfrage |
-|---|---|---|
-| `search` | Hybride Suche; `mode` (precise/normal/review/deep) + Filter (Typ, Jahr, Tabellen/Abbildungen, Quelle) | *„Was sagen alle Berichte zu Nachträgen?"* |
-| `list_sources` | Inventar aller indexierten Dokumente | *„Welche Dokumente sind in meiner Wissensbasis?"* |
-| `read_source` | Liest ein ganzes Dokument der Reihe nach — Bericht zusammenfassen/bewerten | *„Fass das Bodengutachten Müller zusammen."* |
-| `inspect_chunks` | Diagnose: was zu einer Quelle gespeichert ist | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |
-| `set_metadata` | Taggt einen Korpus-Ordner (schreibt `_meta.txt`), damit die Suche danach filtern kann | *„Tagge den Ordner Nachträge als projekt=Schulzentrum."* |
-| `recent_sources` | Die zuletzt aufgenommenen Dokumente | *„Was ist diese Woche reingekommen?"* |
-| `remove_source` | Entfernt eine Quelle aus dem Index; verschiebt die Datei in einen `_inbox/` (umkehrbar, nicht gelöscht) | *„Entferne den veralteten Entwurf aus meinem Index."* |
-| `rename_source` | Benennt ein indexiertes Dokument um; Metadaten an Ort und Stelle, kein erneutes Embedding | *„Benenne Müller_2023_Entwurf in den finalen Titel um."* |
-| `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema (indexiert) | *„Speichere dieses Zitat fürs Methodenkapitel."* |
-| `list_passages` | Zeigt gesammelte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
-| `delete_passage` | Löscht die Passagen eines Themas + ihre Index-Einträge (mit Rückfrage) | *„Lösch die Passagen zu Nachträgen."* |
-| `write_note` | Erstellt/ergänzt eine Notiz in `WissensWIKI/` (nie indexiert) | *„Speichere diese Schlüsse als Notiz."* |
-| `read_note` | Liest eine Notizbuch-Seite | *„Öffne meine Notiz zur Prozessreife."* |
-| `list_notebook` | Listet dein Notizbuch | *„Was steht in meinem Notizbuch?"* |
-| `move_note` | Verschiebt/benennt eine Notizbuch-Datei um (legt Unterordner an) | *„Verschieb diese Notiz nach Kapitel/2."* |
-| `save_report` | Stellt ein Ergebnis/einen Bericht ins Notizbuch zur günstigen Wiederverwendung (nie indexiert) | *„Speichere diese Vergleichstabelle als Bericht."* |
-| `list_reports` | Listet deine gespeicherten Berichte | *„Zeig meine Berichte."* |
-| `delete_note` | Löscht eine Notiz/einen Bericht (mit Rückfrage) | *„Lösch den alten Statusbericht."* |
-
-**Notizen auch in Obsidian bearbeiten (optional).** Claude kann dein Notizbuch
-bereits über die Werkzeuge `list_notebook` / `read_note` / `write_note` oben lesen
-und schreiben. Um Notizen zusätzlich in Obsidians eigener Oberfläche zu
-bearbeiten, richte Obsidian auf denselben Wissensordner; das Plugin **MCP Tools
-für Obsidian** lässt Claude zudem innerhalb von Obsidian agieren. Anleitung:
-[docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
-
-Mit beiden zusammen: *„Such Definitionen von Prozessreife (Bibliothek),
-vergleiche mit meiner Konzeptnotiz (Notizbuch) und ergänze, was fehlt — mit
-Belegen."*
-
-## BRAG mit einem Claude-Projekt nutzen (empfohlen)
-
-Der BRAG-Anschluss gibt Claude die **Werkzeuge**; ein Projekt gibt ihm die
-**Arbeitsweise** — sodass es vor dem Antworten sucht, mit Seitenlinks zitiert und
-Ergebnisse am richtigen Ort ablegt, **ohne dass du jedes Mal Kontext nachlieferst.**
-
-- **Claude Desktop:** lege ein **Projekt** für deine Wissensbasis an, öffne die
-  `WissensWIKI/CLAUDE.md`, die BRAG in deinen Projektordner gelegt hat, und **kopiere
-  ihren Inhalt in die Projekt-Anweisungen** (Platzhalter ausfüllen: dein Fach,
-  Zitierstil, Sprache). Claude Desktop liest die Datei **nicht** von allein — die
-  Projekt-Anweisungen sind der Ort, an dem sie in **jedem** Chat wirkt.
-- **Claude Code** liest `CLAUDE.md` / `AGENTS.md` aus dem Ordner automatisch — nichts
-  zu kopieren.
-
-Einmal eingerichtet, wird der Wissensspeicher dein gemeinsames Gedächtnis: *„Was ist
-der Stand bei X?"* → Claude liest deine Themen-Notiz und ergänzt per Suche; *„speichere
-die Ergebnisse"* → es legt sie selbst ab. Halte die `CLAUDE.md` aktuell — was du Claude
-zweimal korrigierst, gehört als Regel hinein.
-
-### Routinen — wiederkehrende Aufgaben delegieren
-
-Für Aufgaben, die immer gleich laufen — *„hol mich auf den Stand"*, *„aktualisier das
-Quellenverzeichnis"*, *„schreib den Tagebucheintrag"* — seedet BRAG einen Ordner
-`WissensWIKI/Routinen/` mit Beispiel-Rezepten: kurze Markdown-Dateien, denen Claude
-folgt, wenn du sie beim Namen nennst. Ihre Auslöser stehen in der `CLAUDE.md` als
-Befehle — sobald die in deiner Projekt-Anweisung steht, startet ein bloßes Stichwort
-die Routine, ganz ohne Erklären. Eigene ergänzt du mit einer `.md` in `Routinen/` und
-einer Auslöser-Zeile in der `CLAUDE.md`. *(Die separate `AGENTS.md` enthält die
-Sicherheitsregeln fürs autonome Arbeiten — keine Aufgaben.)*
 
 ## Wähle dein Profil
 
@@ -448,65 +447,83 @@ Der erste Start lädt einmalig ~3 GB Analyse-Modelle. Ausführlich, mit „was d
 siehst": [Installation macOS](docs/INSTALL_MAC.de.md) ·
 [Windows](docs/INSTALL_WINDOWS.de.md).
 
-## Dein Wissensspeicher
+## Der KI-Anschluss (MCP)
 
-Hier die wichtigste Unterscheidung — **zwei getrennte Orte, die du beim Setup wählst:**
+Automatisch eingerichtet, gibt der **BRAG-MCP-Server** deinem Assistenten einen
+Anschluss mit Werkzeugen in vier Gruppen: **Suche** (durchsucht deinen Korpus),
+**Korpus** (Inventar pflegen, taggen, umbenennen), **Belege** (zitierfähige
+Passagen sammeln) und **Notizbuch/Berichte** (lesen/schreiben) — wobei die
+Notizbuch-Werkzeuge den Suchindex nie anfassen. Das Setup trägt den Anschluss in
+**Claude Desktop** ein — und in **LM Studio**, falls installiert (LM Studios Chat
+ist ein MCP-Host). Die Werkzeuge im Einzelnen:
 
-- **`BRAG Assistent`** = das **Programm** (die Engine; hier landet die entpackte
-  ZIP). Du wählst, *wo* es liegt — an beliebigem Ort. Das brauchst du zum
-  Starten/Stoppen; **nicht löschen** — öffnen musst du es nie. *(Unter Windows
-  bekommt es sogar ein eigenes Ordnersymbol und einen „nicht löschen"-Hinweis.)*
-- **Dein Projektordner** = deine **Dokumente** — unabhängig davon gewählt. Der
-  **ganze Ordner ist der durchsuchbare Korpus**: Dokumente einfach hineinlegen,
-  beliebiger Unterordner, beliebige Tiefe. Er gehört dir, also sichere ihn.
+| Werkzeug | Was es tut | Beispielfrage |
+|---|---|---|
+| `search` | Hybride Suche; `mode` (precise/normal/review/deep) + Filter (Typ, Jahr, Tabellen/Abbildungen, Quelle) | *„Was sagen alle Berichte zu Nachträgen?"* |
+| `list_sources` | Inventar aller indexierten Dokumente | *„Welche Dokumente sind in meiner Wissensbasis?"* |
+| `read_source` | Liest ein ganzes Dokument der Reihe nach — Bericht zusammenfassen/bewerten | *„Fass das Bodengutachten Müller zusammen."* |
+| `inspect_chunks` | Diagnose: was zu einer Quelle gespeichert ist | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |
+| `set_metadata` | Taggt einen Korpus-Ordner (schreibt `_meta.txt`), damit die Suche danach filtern kann | *„Tagge den Ordner Nachträge als projekt=Schulzentrum."* |
+| `recent_sources` | Die zuletzt aufgenommenen Dokumente | *„Was ist diese Woche reingekommen?"* |
+| `remove_source` | Entfernt eine Quelle aus dem Index; verschiebt die Datei in einen `_inbox/` (umkehrbar, nicht gelöscht) | *„Entferne den veralteten Entwurf aus meinem Index."* |
+| `rename_source` | Benennt ein indexiertes Dokument um; Metadaten an Ort und Stelle, kein erneutes Embedding | *„Benenne Müller_2023_Entwurf in den finalen Titel um."* |
+| `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema (indexiert) | *„Speichere dieses Zitat fürs Methodenkapitel."* |
+| `list_passages` | Zeigt gesammelte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
+| `delete_passage` | Löscht die Passagen eines Themas + ihre Index-Einträge (mit Rückfrage) | *„Lösch die Passagen zu Nachträgen."* |
+| `write_note` | Erstellt/ergänzt eine Notiz in `WissensWIKI/` (nie indexiert) | *„Speichere diese Schlüsse als Notiz."* |
+| `read_note` | Liest eine Notizbuch-Seite | *„Öffne meine Notiz zur Prozessreife."* |
+| `list_notebook` | Listet dein Notizbuch | *„Was steht in meinem Notizbuch?"* |
+| `move_note` | Verschiebt/benennt eine Notizbuch-Datei um (legt Unterordner an) | *„Verschieb diese Notiz nach Kapitel/2."* |
+| `save_report` | Stellt ein Ergebnis/einen Bericht ins Notizbuch zur günstigen Wiederverwendung (nie indexiert) | *„Speichere diese Vergleichstabelle als Bericht."* |
+| `list_reports` | Listet deine gespeicherten Berichte | *„Zeig meine Berichte."* |
+| `delete_note` | Löscht eine Notiz/einen Bericht (mit Rückfrage) | *„Lösch den alten Statusbericht."* |
 
-*(Brichst du die erste Auswahl ab, installiert sich das Programm einfach im
-entpackten Ordner; der Projektordner in Schritt 2 ist erforderlich.)*
+**Notizen auch in Obsidian bearbeiten (optional).** Claude kann dein Notizbuch
+bereits über die Werkzeuge `list_notebook` / `read_note` / `write_note` oben lesen
+und schreiben. Um Notizen zusätzlich in Obsidians eigener Oberfläche zu
+bearbeiten, richte Obsidian auf denselben Wissensordner; das Plugin **MCP Tools
+für Obsidian** lässt Claude zudem innerhalb von Obsidian agieren. Anleitung:
+[docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
 
-Im Projektordner ist **ein besonderer Unterordner `WissensWIKI/` dein
-Arbeitsbereich** und wird bewusst **nicht** mit-indexiert — so hallen deine
-eigenen Notizen nie in den Suchergebnissen wider. Er enthält:
+Mit beiden zusammen: *„Such Definitionen von Prozessreife (Bibliothek),
+vergleiche mit meiner Konzeptnotiz (Notizbuch) und ergänze, was fehlt — mit
+Belegen."*
 
-- **`Passagen/`** — belegte Passagen, die du über Claude speicherst. Diese
-  **werden** indexiert und sind durchsuchbar.
-- **`Notizen/`** (plus beliebige eigene Unterordner) — deine eigenen Notizen und
-  Texte. Claude kann hier lesen und schreiben (`read_note` / `write_note`);
-  **nicht** indexiert.
-- **`CLAUDE.md`** (bringt Claude dein Fachgebiet bei — hier trägst du es ein) und
-  **`AGENTS.md`** (Zusatzregeln für autonome Agenten-Aufgaben). Nicht indexiert.
+## BRAG mit einem Claude-Projekt nutzen (empfohlen)
 
-**Die eine Regel, die alles erklärt:** Durchsucht wird der **ganze
-Projektordner**, **außer** dem Arbeitsbereich `WissensWIKI/` — und innerhalb von
-`WissensWIKI/` nur `Passagen/`. Versteckte Ordner und jeder `_inbox/` werden
-ignoriert. Alles, was du in den Projektordner legst, wandert automatisch in die
-Suchdatenbank (den Index); nimmst du eine Datei wieder heraus oder löschst sie,
-verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem Rechner
-angefasst.
+Der BRAG-Anschluss gibt Claude die **Werkzeuge**; ein Projekt gibt ihm die
+**Arbeitsweise** — sodass es vor dem Antworten sucht, mit Seitenlinks zitiert und
+Ergebnisse am richtigen Ort ablegt, **ohne dass du jedes Mal Kontext nachlieferst.**
 
-Praktisch heißt das: **Dokumente kommen in den Projektordner** (oder einen
-beliebigen Unterordner) — **nicht** nach `Notizen/` (das ist dein Notizbuch und
-wird nicht durchsucht) und auch nicht von Hand nach `Passagen/` (dorthin legt nur
-das Werkzeug `save_passage` belegte Zitate). Dass dein Assistent diese Aufteilung
-kennt — was Korpus ist, was Notizbuch, wohin er was schreibt —, kommt nicht von
-allein: Es steht in der `WissensWIKI/CLAUDE.md`, die du in deine
-**Projekt-Anweisungen** kopierst (siehe [BRAG mit einem Claude-Projekt
-nutzen](#brag-mit-einem-claude-projekt-nutzen-empfohlen)).
+- **Claude Desktop:** lege ein **Projekt** für deine Wissensbasis an, öffne die
+  `WissensWIKI/CLAUDE.md`, die BRAG in deinen Projektordner gelegt hat, und **kopiere
+  ihren Inhalt in die Projekt-Anweisungen** (Platzhalter ausfüllen: dein Fach,
+  Zitierstil, Sprache). Claude Desktop liest die Datei **nicht** von allein — die
+  Projekt-Anweisungen sind der Ort, an dem sie in **jedem** Chat wirkt.
+- **Claude Code** liest `CLAUDE.md` / `AGENTS.md` aus dem Ordner automatisch — nichts
+  zu kopieren.
 
-So sieht es auf der Festplatte aus:
+Einmal eingerichtet, wird der Wissensspeicher dein gemeinsames Gedächtnis: *„Was ist
+der Stand bei X?"* → Claude liest deine Themen-Notiz und ergänzt per Suche; *„speichere
+die Ergebnisse"* → es legt sie selbst ab. Halte die `CLAUDE.md` aktuell — was du Claude
+zweimal korrigierst, gehört als Regel hinein.
 
-```
-<dein Projektordner>/                ← deine Dokumente (der ganze Ordner wird durchsucht)
-├── Bericht.pdf                      ← Dokumente einfach hineinlegen (PDF, DOCX, …)
-├── Interviews/                      ← beliebige Unterordner; die ERSTE Ebene = Dokumenttyp
-│   └── Person_A.pdf
-└── WissensWIKI/                     ← 📓 dein Arbeitsbereich — NICHT mit-indexiert
-    ├── Passagen/                    ← über Claude gespeicherte belegte Passagen (DIESE werden durchsucht)
-    ├── Notizen/                     ← deine Notizen & Unterordner (Claude liest/schreibt; NICHT durchsucht)
-    ├── CLAUDE.md                    ← bringt Claude DEIN Fachgebiet bei
-    └── AGENTS.md                    ← Regeln für autonome Agenten-Aufgaben
+### Routinen — wiederkehrende Aufgaben delegieren
 
-…anderswo…/BRAG Assistent/           ← das Programm (nicht löschen; öffnen musst du es nie)
-```
+Für Aufgaben, die immer gleich laufen — *„hol mich auf den Stand"*, *„aktualisier das
+Quellenverzeichnis"*, *„schreib den Tagebucheintrag"* — seedet BRAG einen Ordner
+`WissensWIKI/Routinen/` mit Beispiel-Rezepten: kurze Markdown-Dateien, denen Claude
+folgt, wenn du sie beim Namen nennst. Ihre Auslöser stehen in der `CLAUDE.md` als
+Befehle — sobald die in deiner Projekt-Anweisung steht, startet ein bloßes Stichwort
+die Routine, ganz ohne Erklären. Eigene ergänzt du mit einer `.md` in `Routinen/` und
+einer Auslöser-Zeile in der `CLAUDE.md`. *(Die separate `AGENTS.md` enthält die
+Sicherheitsregeln fürs autonome Arbeiten — keine Aufgaben.)*
+
+## Mehrere Projekte & eigene Metadaten
+
+Wenn dein Wissensspeicher wächst: So hältst du mehrere Vorhaben sauber
+getrennt, taggst Dokumente mit eigenen Metadaten und hältst den Index
+automatisch aktuell.
 
 **Mehrere Projekte (optional).** Halte getrennte Arbeitsbereiche vollständig
 auseinander — jeder mit eigener Suchdatenbank und eigenem Anschluss in Claude.
@@ -570,17 +587,6 @@ zweimal dieselbe Sache, gehört die Korrektur in **`WissensWIKI/CLAUDE.md`**,
 nicht in den nächsten Chat — eine gepflegte Instruktionsdatei macht aus einem
 generischen Assistenten *deinen* (Beispiele:
 [docs/CUSTOMIZE_CLAUDE.de.md](docs/CUSTOMIZE_CLAUDE.de.md)).
-
-### Obsidian: ein schönerer Blick auf denselben Ordner
-
-Du kannst den Wissensspeicher mit [Obsidian](https://obsidian.md) (kostenlos)
-öffnen — es stellt die Markdown-Dateien viel schöner dar und macht das Schreiben
-im Notizbuch angenehm. Wichtig zu verstehen: **Obsidian ist kein zweiter
-Speicher, sondern nur eine Ansicht auf genau denselben Ordner.** Es arbeitet
-direkt auf den Dateien — **löschst du eine Datei in Obsidian, ist sie auch im
-normalen Ordner (und damit aus dem Index) weg.** Nichts wird importiert oder
-kopiert; es ist dieselbe Struktur, nur bequemer zu bedienen. Schritt für Schritt:
-[docs/OBSIDIAN.de.md](docs/OBSIDIAN.de.md).
 
 ## Ausbau & Automatisierung (mit Claude Code & Co.)
 
