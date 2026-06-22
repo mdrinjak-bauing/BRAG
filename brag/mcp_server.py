@@ -49,8 +49,9 @@ def list_sources(doc_type: str = "") -> str:
 
 @mcp.tool()
 def inspect_chunks(source_file: str, page: int = 0, limit: int = 10) -> str:
-    """Show what is actually stored in the index for a source (debugging:
-    'why doesn't the search find X?'). Optionally filter by page number."""
+    """Diagnostic tool — show the raw chunks stored in the index for one source,
+    to debug retrieval ('why doesn't search find X?'). NOT for answering a
+    question (use search for that). Optionally filter by page number."""
     return tools.inspect_chunks(source_file, page=page, limit=limit)
 
 
@@ -96,7 +97,9 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
 
 @mcp.tool()
 def list_passages(topic: str = "") -> str:
-    """List saved passages — for one topic, or an overview of all topics."""
+    """List saved passages: pass a topic to see the passages saved under it, or
+    leave it empty for an overview of all topics. (Saved passages also surface in
+    search, marked as a "saved passage" — this is the by-topic browse view.)"""
     return tools.list_passages(topic=topic)
 
 

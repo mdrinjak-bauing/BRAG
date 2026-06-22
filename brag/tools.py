@@ -17,7 +17,7 @@ import shutil
 from datetime import date
 
 from brag import config, storage
-from brag.formatting import format_hit
+from brag.formatting import format_hit, parse_meta_filter
 from brag.search.query import search as run_search
 
 
@@ -26,12 +26,7 @@ def search_text(query: str, top_k: int = 15, doc_type: str = "",
                 source_file: str = "", meta_filter: str = "",
                 reranking: bool | None = None,
                 collection_name: str | None = None) -> str:
-    meta = {}
-    for part in meta_filter.split(","):
-        if "=" in part:
-            key, _, value = part.partition("=")
-            if key.strip() and value.strip():
-                meta[key.strip().lower().replace(" ", "_")] = value.strip()
+    meta = parse_meta_filter(meta_filter)
     hits = run_search(
         query, top_k=top_k, reranking=reranking, collection_name=collection_name,
         doc_type=doc_type or None, chunk_type=chunk_type or None,

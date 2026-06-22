@@ -2,7 +2,7 @@
 file-based and formatting paths that need no Qdrant / models."""
 
 from brag import config, tools
-from brag.formatting import format_hit
+from brag.formatting import format_hit, parse_meta_filter
 
 
 def test_format_hit_source_has_link_citation_and_rerank(monkeypatch):
@@ -95,3 +95,32 @@ def test_list_passages_empty_and_listing(tmp_path, monkeypatch):
     out = tools.list_passages()
     assert "method" in out
     assert tools.list_passages("Method").startswith("# Passages: Method")
+
+
+def test_parse_meta_filter_normalises_and_drops_blanks():
+    # both tool surfaces (tools.search_text + the thin mcp_client) share this:
+    # keys lower-cased, spaces → underscores, blank key/value pairs dropped.
+    assert parse_meta_filter("project=School Center") == {"project": "School Center"}
+    assert parse_meta_filter("Course Name=CM, semester=WS25") == {
+        "course_name": "CM", "semester": "WS25"}
+    assert parse_meta_filter("") == {}
+    assert parse_meta_filter("garbage, =noval, nokey=") == {}
+
+
+def test_format_hit_offset_larger_than_page_falls_back(monkeypatch):
+    # A bad/too-large page_offset must never produce a zero or negative printed
+    # page — the citation falls back to the physical page (link unaffected).
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    hit = {"source_file": "b.pdf", "rel_path": "sources/b.pdf", "page_start": 5,
+           "page_offset": 20, "text": "x"}
+    assert "p. 5" in format_hit(1, hit)
+
+
+def test_format_hit_non_numeric_offset_is_ignored(monkeypatch):
+    # A non-numeric page_offset (e.g. a typo'd _meta.txt) is treated as 0.
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    hit = {"source_file": "b.pdf", "rel_path": "sources/b.pdf", "page_start": 12,
+           "page_offset": "abc", "text": "x"}
+    assert "p. 12" in format_hit(1, hit)

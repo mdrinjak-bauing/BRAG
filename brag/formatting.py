@@ -10,6 +10,22 @@ from brag.http_bridge import pdf_link
 PREVIEW_CHARS = 1000  # tables are never truncated; long text gets a preview
 
 
+def parse_meta_filter(meta_filter: str) -> dict:
+    """Parse a 'key=value, key2=value2' meta-filter string into a dict.
+
+    Keys are normalised (lower-cased, spaces → underscores) to match the stored
+    payload field names; blank keys/values are dropped. Shared by the MCP server
+    (tools.search_text) and the thin MCP client so the two surfaces parse the
+    user's filter identically."""
+    meta: dict = {}
+    for part in meta_filter.split(","):
+        if "=" in part:
+            key, _, value = part.partition("=")
+            if key.strip() and value.strip():
+                meta[key.strip().lower().replace(" ", "_")] = value.strip()
+    return meta
+
+
 def format_hit(i: int, hit: dict, project: str = "") -> str:
     if hit.get("chunk_type") == "passage":
         topic = hit.get("topic", "") or hit.get("source_file", "").replace("passage:", "")
