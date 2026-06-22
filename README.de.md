@@ -187,6 +187,7 @@ Die Werkzeuge:
 | `list_notebook` | Listet dein Notizbuch (Notizen in `Notizen/`) | *„Was steht in meinem Notizbuch?"* |
 | `read_note` | Liest eine Notizbuch-Seite | *„Öffne meine Notiz zur Prozessreife."* |
 | `write_note` | Erstellt/aktualisiert eine Notiz in `Notizen/` (nie indexiert) | *„Speichere diese Schlüsse als Notiz."* |
+| `save_report` | Stellt ein Ergebnis/einen Bericht ins Notizbuch zur günstigen Wiederverwendung (nie indexiert) | *„Speichere diese Vergleichstabelle als Bericht."* |
 
 **Notizen auch in Obsidian bearbeiten (optional).** Claude kann dein Notizbuch
 bereits über die Werkzeuge `list_notebook` / `read_note` / `write_note` oben lesen
@@ -211,7 +212,7 @@ wechseln, **ohne neu zu indexieren.**
 | **Gemini** (Standard) | Google Gemini (Free Tier) | gemini-2.5-flash-lite | jeder Laptop | ja (Google) |
 | **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini | jeder Laptop | ja (OpenAI) |
 | **Claude** | Anthropic Claude | claude-haiku-4-5 | jeder Laptop | ja (Anthropic) |
-| **Hybrid** | LM Studio (auf deinem Rechner) | qwen2.5-7b-instruct | ab ~16 GB RAM | nein |
+| **Hybrid** | LM Studio (auf deinem Rechner) | dein lokales Modell (z. B. qwen2.5-7b-instruct) | ab ~16 GB RAM (mehr für größere Modelle) | nein |
 
 **Welche Hardware schaltet welche Stufe frei?** Cloud-Profile laufen auf jedem
 Rechner; lokale Text-KI und ein voll aufgedrehter Reranker brauchen mehr:
@@ -220,8 +221,8 @@ Rechner; lokale Text-KI und ein voll aufgedrehter Reranker brauchen mehr:
 |---|---|---|---|
 | **Leicht** | 8 GB Minimum, 16 GB komfortabel; jeder Rechner, keine GPU | Cloud-LLM, lokaler Index, Reranker sparsam/aus | API-Key nötig; Dokumenttext geht an Anbieter; der erste Ingest ist RAM-intensiv |
 | **Mittel** | ~16 GB RAM, LM Studio | + Reranker flüssig, optional erstes lokales LLM (LM Studio, z. B. qwen2.5-7b-instruct) | lokales LLM langsamer/schwächer |
-| **Privat-lokal** | 32 GB, LM Studio | lokales LLM (z. B. qwen2.5-14b-instruct), Reranker voll, Vision lokal | nichts verlässt den Rechner; mehr Setup |
-| **Voll-Version** | 64 GB+, LM Studio | großes lokales LLM (z. B. gemma-3-27b-it) + Vision + Reranker voll | höchste Qualität, höchste Last |
+| **Privat-lokal** | M-Mac 32 GB, LM Studio | lokales LLM (z. B. qwen2.5-14b-instruct), Reranker voll, Vision lokal | nichts verlässt den Rechner; mehr Setup |
+| **Voll-Version** | M-Mac 64 GB+, LM Studio | großes lokales LLM (z. B. gemma-3-27b-it) + Vision + Reranker voll | höchste Qualität, höchste Last |
 
 ### Suchqualität einstellen: der Reranker
 

@@ -180,6 +180,7 @@ Studio's chat is an MCP host). The tools:
 | `list_notebook` | Lists your notebook (notes in `Notizen/`) | *"What's in my notebook?"* |
 | `read_note` | Reads a notebook page | *"Open my note on process maturity."* |
 | `write_note` | Creates / updates a note in `Notizen/` (never indexed) | *"Save these conclusions as a note."* |
+| `save_report` | Compiles a result/report into the notebook for cheap reuse (never indexed) | *"Save this comparison table as a report."* |
 
 **Edit notes in Obsidian too (optional).** Claude can already read and write your
 notebook through the `list_notebook` / `read_note` / `write_note` tools above. To
@@ -202,7 +203,7 @@ re-indexing.**
 | **Gemini** (default) | Google Gemini (free tier) | gemini-2.5-flash-lite | any laptop | yes (Google) |
 | **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini | any laptop | yes (OpenAI) |
 | **Claude** | Anthropic Claude | claude-haiku-4-5 | any laptop | yes (Anthropic) |
-| **Hybrid** | LM Studio (on your machine) | your local model | ~16 GB+ RAM (more for bigger models) | no |
+| **Hybrid** | LM Studio (on your machine) | your local model (e.g. qwen2.5-7b-instruct) | ~16 GB+ RAM (more for bigger models) | no |
 
 **Which hardware unlocks which tier?** Cloud profiles run on any machine; a local
 text AI and a fully cranked-up reranker need more:
@@ -210,7 +211,7 @@ text AI and a fully cranked-up reranker need more:
 | Tier | Hardware | Unlocks | Trade-off |
 |---|---|---|---|
 | **Light** | 8 GB minimum, 16 GB comfortable; any computer, no GPU | Cloud LLM, local index, reranker eco/off | API key needed; document text goes to the provider; the first ingest is RAM-heavy |
-| **Medium** | ~16 GB RAM | + smooth reranker, optionally a first local LLM (LM Studio, e.g. qwen2.5-7b-instruct) | local LLM slower/weaker |
+| **Medium** | ~16 GB RAM, LM Studio | + smooth reranker, optionally a first local LLM (LM Studio, e.g. qwen2.5-7b-instruct) | local LLM slower/weaker |
 | **Private-local** | M-Mac 32 GB, LM Studio | local LLM (e.g. qwen2.5-14b-instruct), reranker full, vision local | nothing leaves the machine; more setup |
 | **Full version** | M-Mac 64 GB+, LM Studio | large local LLM (e.g. gemma-3-27b-it) + vision + reranker full | highest quality, highest load |
 
