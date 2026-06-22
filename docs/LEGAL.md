@@ -34,6 +34,11 @@ What leaves your machine depends on the chosen **profile**:
   So content from your documents leaves your machine and is subject to the
   provider's terms. You can disable the image upload with `VISION_ENABLED=false`.
 
+*One-time, in every profile: the very first run downloads the local analysis
+models — the embedder, reranker and document parser — from HuggingFace. That is
+the only outbound connection for local work; once cached, the local profile
+sends nothing.*
+
 **Your API key.** Your API key is stored only in a local `.env` file on your
 computer (owner-readable only) and is used solely to authenticate your own
 requests to the provider you chose. It is never sent to the makers of this app
@@ -41,12 +46,15 @@ or any third party; the live check during setup just sends one small test
 request to that provider to confirm the key works. The local profile (LM
 Studio) needs no key at all.
 
-**Important — free Gemini tier (the default):** On the *free* tier of Google AI
-Studio, Google may **use** the submitted inputs and outputs to **improve its
-products**, and they may be **reviewed by humans**. The free tier is therefore
-**not suitable** for confidential, secret or personal content — use a **local
-profile** instead, or a paid tier (e.g. Google Cloud/Vertex AI) where, per the
-provider, data is not used for training.
+**Important — Gemini free vs. paid tier (the default is free):** On the *free*
+tier of Google AI Studio / the Gemini API, Google may **use** the submitted
+inputs and outputs to **improve its products**, and they may be **reviewed by
+humans** — so the free tier is **not suitable** for confidential, secret or
+personal content. The lever is the **billing tier, not the model**: if you **set
+up billing** on your Google account and load a small amount of credit, the
+**paid tier of the same Gemini API key is not used for training** (per Google's
+terms). So for sensitive content, either **enable billing** (paid tier) or use a
+**local profile**.
 
 For context on the other cloud providers (as of June 2026, no guarantee — the
 provider's current terms always govern):
