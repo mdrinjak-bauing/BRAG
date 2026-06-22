@@ -167,6 +167,8 @@ echo back into search results. It holds:
   and searchable.
 - **`Notizen/`** (plus any subfolders you create) — your own notes and writing.
   Claude can read and write here (`read_note` / `write_note`); **not** indexed.
+  BRAG also drops an auto-generated literature note per ingested source here
+  (likewise not indexed).
 - **`CLAUDE.md`** (teaches Claude about your field — you fill it in) and
   **`AGENTS.md`** (extra rules for autonomous agent tasks). Not indexed.
 

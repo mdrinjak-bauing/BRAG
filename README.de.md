@@ -172,7 +172,8 @@ eigenen Notizen nie in den Suchergebnissen wider. Er enthält:
   **werden** indexiert und sind durchsuchbar.
 - **`Notizen/`** (plus beliebige eigene Unterordner) — deine eigenen Notizen und
   Texte. Claude kann hier lesen und schreiben (`read_note` / `write_note`);
-  **nicht** indexiert.
+  **nicht** indexiert. BRAG legt hier zusätzlich je eingelesener Quelle eine
+  automatische Literaturnotiz ab (ebenfalls nicht indexiert).
 - **`CLAUDE.md`** (bringt Claude dein Fachgebiet bei — hier trägst du es ein) und
   **`AGENTS.md`** (Zusatzregeln für autonome Agenten-Aufgaben). Nicht indexiert.
 
