@@ -201,7 +201,7 @@ def seed_vault_if_empty(vault: Path) -> None:
     """Seed the project's WissensWIKI workspace from the template without
     overwriting anything that exists. Called at app startup. The project root holds
     the user's documents (the searchable corpus); only the WissensWIKI workspace
-    (Passagen/, Notizen/, guides) is seeded — never the root itself."""
+    (Quellenbelege/, Wissen/, guides) is seeded — never the root itself."""
     if not VAULT_TEMPLATE.exists():
         return
     wiki = vault / "WissensWIKI"

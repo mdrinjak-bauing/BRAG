@@ -83,11 +83,11 @@ def test_write_claude_config_syncs_brag_connectors(tmp_path, monkeypatch):
 def test_seed_vault_seeds_only_wissenswiki(tmp_path):
     setup_core.seed_vault_if_empty(tmp_path)
     wiki = tmp_path / "WissensWIKI"
-    assert (wiki / "Passagen").is_dir()
+    assert (wiki / "Quellenbelege").is_dir()
     assert (wiki / "CLAUDE.md").exists()
     # The project ROOT is the corpus; the template must NOT land there (or the
     # guides/notes would be indexed and echo back into search).
-    assert not (tmp_path / "Passagen").exists()
+    assert not (tmp_path / "Quellenbelege").exists()
     assert not (tmp_path / "CLAUDE.md").exists()
 
 
@@ -127,4 +127,4 @@ def test_seed_vault_is_idempotent_and_nondestructive(tmp_path):
     # an existing file is never overwritten ...
     assert (wiki / "CLAUDE.md").read_text(encoding="utf-8") == "MY EDITS"
     # ... but missing pieces are still added.
-    assert (wiki / "Passagen").is_dir()
+    assert (wiki / "Quellenbelege").is_dir()

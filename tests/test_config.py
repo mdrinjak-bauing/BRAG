@@ -14,9 +14,9 @@ def test_defaults_outside_any_context(monkeypatch):
     assert config.VAULT == Path("/vault")
     assert config.SOURCES_DIR == Path("/vault")                    # corpus = project root
     assert config.WISSENSWIKI_DIR == Path("/vault/WissensWIKI")
-    assert config.PASSAGES_DIR == Path("/vault/WissensWIKI/Passagen")
+    assert config.PASSAGES_DIR == Path("/vault/WissensWIKI/Quellenbelege")
     assert config.NOTEBOOK_DIR == Path("/vault/WissensWIKI")
-    assert config.NOTES_DIR == Path("/vault/WissensWIKI/Notizen")
+    assert config.NOTES_DIR == Path("/vault/WissensWIKI/Wissen")
     assert config.DATA_DIR == Path("/vault/WissensWIKI/.brag")
     assert config.INGEST_LOG == Path("/vault/WissensWIKI/.brag/ingest_log.jsonl")
     assert config.COLLECTION_NAME == "asb_default"
@@ -27,9 +27,9 @@ def test_is_corpus_path(tmp_path, monkeypatch):
     # corpus: documents anywhere in the project root (incl. subfolders)
     assert config.is_corpus_path(tmp_path / "Berichte" / "x.pdf")
     assert config.is_corpus_path(tmp_path / "y.pdf")
-    # NOT corpus: the whole WissensWIKI workspace (incl. Passagen), hidden, _inbox
+    # NOT corpus: the whole WissensWIKI workspace (incl. Quellenbelege), hidden, _inbox
     assert not config.is_corpus_path(tmp_path / "WissensWIKI" / "note.md")
-    assert not config.is_corpus_path(tmp_path / "WissensWIKI" / "Passagen" / "p.md")
+    assert not config.is_corpus_path(tmp_path / "WissensWIKI" / "Quellenbelege" / "p.md")
     assert not config.is_corpus_path(tmp_path / "_inbox" / "z.pdf")
     assert not config.is_corpus_path(tmp_path / ".brag" / "log.jsonl")
     assert not config.is_corpus_path(tmp_path.parent / "elsewhere.pdf")  # outside vault
@@ -42,7 +42,7 @@ def test_project_context_scopes_and_resets(monkeypatch):
     with config.project_context(rec):
         assert config.VAULT == Path("/projects/a")
         assert config.SOURCES_DIR == Path("/projects/a")
-        assert config.PASSAGES_DIR == Path("/projects/a/WissensWIKI/Passagen")
+        assert config.PASSAGES_DIR == Path("/projects/a/WissensWIKI/Quellenbelege")
         assert config.NOTEBOOK_DIR == Path("/projects/a/WissensWIKI")
         assert config.COLLECTION_NAME == "asb_default__a"
     # restored after the block

@@ -1,5 +1,5 @@
 """Auto-generated literature notes: one markdown file per ingested source,
-Obsidian-compatible, written to WissensWIKI/Notizen/."""
+Obsidian-compatible, written to WissensWIKI/Wissen/."""
 
 from datetime import date
 from pathlib import Path

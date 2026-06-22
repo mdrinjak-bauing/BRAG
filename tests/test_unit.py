@@ -117,33 +117,13 @@ def test_marker_is_idempotent_with_header_once(tmp_path, monkeypatch):
 
 def test_write_note_appends_instead_of_clobbering(tmp_path, monkeypatch):
     # Persisting intermediate results must never lose prior content (TOOL-F02),
-    # and must not clobber an auto-literature-note sharing Notizen/ (WIK-01).
+    # and must not clobber an auto-literature-note sharing Wissen/ (WIK-01).
     from brag import tools
     monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
-    tools.write_note("Notizen/idea.md", "first finding")
-    tools.write_note("Notizen/idea.md", "second finding")
-    body = (tmp_path / config.WISSENSWIKI_NAME / "Notizen" / "idea.md").read_text("utf-8")
+    tools.write_note("Wissen/idea.md", "first finding")
+    tools.write_note("Wissen/idea.md", "second finding")
+    body = (tmp_path / config.WISSENSWIKI_NAME / "Wissen" / "idea.md").read_text("utf-8")
     assert "first finding" in body and "second finding" in body  # nothing lost
-
-
-def test_save_report_writes_a_reusable_note_outside_the_index(tmp_path, monkeypatch):
-    from brag import tools
-    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
-    tools.save_report("Q1 Findings", "| a | b |\n|---|---|\n| 1 | 2 |")
-    report = tmp_path / config.WISSENSWIKI_NAME / "Berichte" / "q1_findings.md"
-    assert report.exists()
-    assert config.is_corpus_path(report) is False          # never indexed
-    assert tools.read_note("Berichte/q1_findings.md").startswith("# Q1 Findings")
-
-
-def test_list_reports_lists_saved_reports(tmp_path, monkeypatch):
-    from brag import tools
-    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
-    assert "Noch keine Berichte" in tools.list_reports()
-    tools.save_report("Nachtrags-Status", "inhalt")
-    out = tools.list_reports()
-    assert "Nachtrags-Status" in out                  # title from the first heading
-    assert "Berichte/nachtrags-status.md" in out      # read_note hint
 
 
 def test_set_metadata_writes_and_merges_meta_txt(tmp_path, monkeypatch):
@@ -175,14 +155,14 @@ def test_set_metadata_refuses_outside_corpus(tmp_path, monkeypatch):
 def test_delete_note_two_step_and_scope(tmp_path, monkeypatch):
     from brag import tools
     monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
-    tools.write_note("Notizen/x.md", "hi")
-    p = tmp_path / config.WISSENSWIKI_NAME / "Notizen" / "x.md"
-    assert "Sicher?" in tools.delete_note("Notizen/x.md")     # no confirm → asks
+    tools.write_note("Wissen/x.md", "hi")
+    p = tmp_path / config.WISSENSWIKI_NAME / "Wissen" / "x.md"
+    assert "Sicher?" in tools.delete_note("Wissen/x.md")     # no confirm → asks
     assert p.exists()                                          # still there
-    assert "Gelöscht" in tools.delete_note("Notizen/x.md", confirm=True)
+    assert "Gelöscht" in tools.delete_note("Wissen/x.md", confirm=True)
     assert not p.exists()
-    # scope: Passagen and corpus escapes are refused even with confirm
-    assert "delete_passage" in tools.delete_note("Passagen/p.md", confirm=True)
+    # scope: Quellenbelege and corpus escapes are refused even with confirm
+    assert "delete_passage" in tools.delete_note("Quellenbelege/p.md", confirm=True)
     assert "WissensWIKI" in tools.delete_note("../../evil.md", confirm=True)
 
 
@@ -224,21 +204,21 @@ def test_move_note_moves_renames_and_guards(tmp_path, monkeypatch):
     from brag import tools
     monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
     nb = tmp_path / config.WISSENSWIKI_NAME
-    tools.write_note("Notizen/x.md", "hi")
+    tools.write_note("Wissen/x.md", "hi")
     # move into a NEW subfolder (created automatically)
-    out = tools.move_note("Notizen/x.md", "Kapitel/2/x.md")
+    out = tools.move_note("Wissen/x.md", "Kapitel/2/x.md")
     assert "Kapitel/2/x.md" in out
-    assert not (nb / "Notizen" / "x.md").exists()
+    assert not (nb / "Wissen" / "x.md").exists()
     assert (nb / "Kapitel" / "2" / "x.md").exists()
     # rename in place
     tools.move_note("Kapitel/2/x.md", "Kapitel/2/thema_final.md")
     assert (nb / "Kapitel" / "2" / "thema_final.md").exists()
-    # guards: no overwrite, no Passagen target, no corpus escape
-    tools.write_note("Notizen/a.md", "a")
-    tools.write_note("Notizen/b.md", "b")
-    assert "existiert bereits" in tools.move_note("Notizen/a.md", "Notizen/b.md")
-    assert "Notizbuch" in tools.move_note("Notizen/a.md", "Passagen/a.md")
-    assert "Notizbuch" in tools.move_note("../evil.md", "Notizen/z.md")
+    # guards: no overwrite, no Quellenbelege target, no corpus escape
+    tools.write_note("Wissen/a.md", "a")
+    tools.write_note("Wissen/b.md", "b")
+    assert "existiert bereits" in tools.move_note("Wissen/a.md", "Wissen/b.md")
+    assert "Notizbuch" in tools.move_note("Wissen/a.md", "Quellenbelege/a.md")
+    assert "Notizbuch" in tools.move_note("../evil.md", "Wissen/z.md")
 
 
 def test_diversify_backfills_instead_of_starving():
@@ -323,7 +303,7 @@ def test_is_corpus_path_keeps_in_tree_symlinks(tmp_path, monkeypatch):
     # a genuine lexical '..' escape is still rejected
     assert config.is_corpus_path(vault / ".." / "outside" / "doc.pdf") is False
     # WissensWIKI workspace + hidden/_inbox stay excluded
-    assert config.is_corpus_path(vault / "WissensWIKI" / "Notizen" / "n.md") is False
+    assert config.is_corpus_path(vault / "WissensWIKI" / "Wissen" / "n.md") is False
     assert config.is_corpus_path(vault / "_inbox" / "x.pdf") is False
 
 

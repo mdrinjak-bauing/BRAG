@@ -90,7 +90,7 @@ if not defined PROJDIR (
   exit /b 1
 )
 
-REM Seed the WissensWIKI workspace inside the project (Passagen + guides), only
+REM Seed the WissensWIKI workspace inside the project (Quellenbelege + guides), only
 REM when new, so a re-run never overwrites your notes. Flat (no parenthesized
 REM block) so a project path containing parentheses cannot break it.
 if exist "%PROJDIR%\WissensWIKI" goto seeded

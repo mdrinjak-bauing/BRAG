@@ -116,12 +116,12 @@ def _active_collection() -> str:
 # ── Vault layout ────────────────────────────────────────────────
 # NEW model: the chosen PROJECT folder is the vault root, and EVERYTHING under it
 # is the searchable corpus EXCEPT the WissensWIKI/ workspace (and hidden dirs).
-# WissensWIKI is the user's space: Passagen/ (verified passages, indexed via
+# WissensWIKI is the user's space: Quellenbelege/ (verified passages, indexed via
 # save_passage), the user's own .md + free subfolders (the notebook — read/write,
 # NOT indexed, so notes don't echo the corpus), and a hidden .brag/ for logs.
 WISSENSWIKI_NAME = "WissensWIKI"
-PASSAGES_NAME = "Passagen"
-NOTES_NAME = "Notizen"          # auto literature notes (notebook, not indexed)
+PASSAGES_NAME = "Quellenbelege"
+NOTES_NAME = "Wissen"            # notebook (your own .md + auto literature notes), not indexed
 DATA_NAME = ".brag"
 
 # Names whose value depends on the active project. Served via module __getattr__

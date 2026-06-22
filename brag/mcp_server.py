@@ -8,8 +8,7 @@ the tool names, signatures and docstrings Claude sees.
 
 Tools: search, list_sources, inspect_chunks, read_source, remove_source,
 rename_source, save_passage, list_passages, list_notebook, read_note, write_note,
-save_report, list_reports, recent_sources, set_metadata, delete_note,
-delete_passage, move_note.
+recent_sources, set_metadata, delete_note, delete_passage, move_note.
 """
 
 from mcp.server.fastmcp import FastMCP
@@ -113,10 +112,10 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
     """Sichert eine zitierfähige Passage unter einem Thema (z. B. ein Kapitel/Motiv).
 
     WANN was: ein wörtliches ZITAT aus einer Quelle → save_passage (wird durchsuchbarer
-    Beleg); EIGENER Text (Notizen, Entwürfe, Schlüsse) → write_note; ein fertiges/
-    zusammengestelltes Deliverable → save_report.
+    Beleg); EIGENER Text (Notizen, Entwürfe, Schlüsse, auch ein zusammengestelltes
+    Ergebnis) → write_note.
 
-    Baut deine Belegsammlung in WissensWIKI/Passagen/<thema>.md auf UND indexiert die
+    Baut deine Belegsammlung in WissensWIKI/Quellenbelege/<thema>.md auf UND indexiert die
     Passage für die semantische Suche, sodass ein späterer Chat (auch mit einem anderen
     Anbieter) sie über `search` wiederfindet — sie erscheint klar markiert als
     „gespeicherte Passage", getrennt von Primärquellen. So hältst du Erkenntnisse,
@@ -138,7 +137,7 @@ def list_passages(topic: str = "") -> str:
 # filesystem MCP (extra dependency + its own Claude-config entry), the notebook
 # read/write tools live in THIS server. The corpus stays read-only via search();
 # the search index is never touched by these. The notebook is WissensWIKI/ minus
-# the indexed Passagen/ — any .md files and subfolders you like.
+# the indexed Quellenbelege/ — any .md files and subfolders you like.
 @mcp.tool()
 def list_notebook() -> str:
     """Listet dein NOTIZBUCH — deine eigenen .md-Notizen und Unterordner in
@@ -150,8 +149,8 @@ def list_notebook() -> str:
 @mcp.tool()
 def read_note(path: str) -> str:
     """Liest eine NOTIZBUCH-Markdown-Datei. `path` ist relativ zu WissensWIKI/, z. B.
-    'prozessreife.md' oder 'Notizen/Mueller_2023.md'. Erreichbar ist nur das Notizbuch
-    (WissensWIKI/, ohne das indexierte Passagen/) — der Korpus und der Suchindex nicht
+    'prozessreife.md' oder 'Wissen/Mueller_2023.md'. Erreichbar ist nur das Notizbuch
+    (WissensWIKI/, ohne das indexierte Quellenbelege/) — der Korpus und der Suchindex nicht
     (dafür search())."""
     return tools.read_note(path)
 
@@ -166,25 +165,6 @@ def write_note(path: str, content: str) -> str:
     ist relativ zu WissensWIKI/, z. B. 'prozessreife.md' oder 'Kapitel/2.md' (beliebiger
     Unterordner). Korpus und Suchindex werden nie berührt."""
     return tools.write_note(path, content)
-
-
-@mcp.tool()
-def save_report(title: str, content: str) -> str:
-    """Stellt ein ERGEBNIS/einen BERICHT im Notizbuch zur günstigen Wiederverwendung
-    zusammen — eine Befundtabelle, ein Vergleich, eine Analyse-Zusammenfassung.
-    Gespeichert als Markdown unter WissensWIKI/Berichte/<titel>.md und NICHT indexiert,
-    sodass du ihn später mit read_note('Berichte/<titel>.md') zurücklesen kannst, statt
-    ihn neu herzuleiten (keine zusätzlichen Tokens). Derselbe Titel erneut → ein
-    datierter Abschnitt wird angehängt."""
-    return tools.save_report(title, content)
-
-
-@mcp.tool()
-def list_reports() -> str:
-    """Listet deine gespeicherten BERICHTE (save_report → WissensWIKI/Berichte/).
-    Gegenstück zu list_passages/list_notebook für fertige Deliverables; einen Bericht
-    öffnest du mit read_note('Berichte/<datei>.md'). Nicht indexiert."""
-    return tools.list_reports()
 
 
 @mcp.tool()
@@ -207,8 +187,8 @@ def set_metadata(folder: str, key: str, value: str) -> str:
 
 @mcp.tool()
 def delete_note(path: str, confirm: bool = False) -> str:
-    """Löscht eine Notiz/einen Bericht im WissensWIKI-Notizbuch (Notizen/, Berichte/,
-    …) — NICHT Passagen/ (dafür delete_passage) und nie den Korpus. Schutzabfrage:
+    """Löscht eine Notiz im WissensWIKI-Notizbuch (Wissen/, …) — NICHT Quellenbelege/
+    (dafür delete_passage) und nie den Korpus. Schutzabfrage:
     ohne confirm=True wird nur rückgefragt, erst confirm=True löscht. Zum Korrigieren:
     löschen und mit write_note neu schreiben."""
     return tools.delete_note(path, confirm=confirm)
@@ -216,7 +196,7 @@ def delete_note(path: str, confirm: bool = False) -> str:
 
 @mcp.tool()
 def delete_passage(topic: str, confirm: bool = False) -> str:
-    """Löscht alle gespeicherten Passagen eines Themas (WissensWIKI/Passagen/<thema>.md)
+    """Löscht alle gespeicherten Passagen eines Themas (WissensWIKI/Quellenbelege/<thema>.md)
     UND entfernt sie aus dem Suchindex. Schutzabfrage: ohne confirm=True wird nur
     rückgefragt, erst confirm=True löscht. Zum Korrigieren: löschen und mit save_passage
     neu sichern."""
@@ -226,10 +206,10 @@ def delete_passage(topic: str, confirm: bool = False) -> str:
 @mcp.tool()
 def move_note(path: str, new_path: str) -> str:
     """Verschiebt oder benennt eine NOTIZBUCH-Datei im WissensWIKI um (legt Ziel-
-    Unterordner automatisch an, überschreibt nie). So sortierst du Notizen/Berichte um
-    oder benennst sie um. Nur das Notizbuch (Notizen/, Berichte/, …) — NICHT Passagen/
+    Unterordner automatisch an, überschreibt nie). So räumst du dein Notizbuch um
+    oder benennst Dateien um. Nur das Notizbuch (Wissen/, …) — NICHT Quellenbelege/
     (dort delete_passage + save_passage) und nie den Korpus. `path`/`new_path` sind
-    relativ zu WissensWIKI/, z. B. move_note('Notizen/x.md', 'Kapitel/2/x.md')."""
+    relativ zu WissensWIKI/, z. B. move_note('Wissen/x.md', 'Kapitel/2/x.md')."""
     return tools.move_note(path, new_path)
 
 

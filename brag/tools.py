@@ -285,7 +285,7 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
     indexed = index_passage(topic, text, source, page, note)
     suffix = (" and indexed for search" if indexed
               else " (saved to file; search index unavailable)")
-    return f"Saved to `WissensWIKI/Passagen/{slug}.md`{suffix}."
+    return f"Saved to `WissensWIKI/Quellenbelege/{slug}.md`{suffix}."
 
 
 def list_passages(topic: str = "") -> str:
@@ -328,7 +328,7 @@ def _is_within(target, base) -> bool:
 
 def _is_notebook_path(target) -> bool:
     """A path inside the WissensWIKI notebook — under WissensWIKI/ but NOT the
-    indexed Passagen/ nor the hidden .brag/. The user may use any subfolders."""
+    indexed Quellenbelege/ nor the hidden .brag/. The user may use any subfolders."""
     return (_is_within(target, config.NOTEBOOK_DIR)
             and not _is_within(target, config.PASSAGES_DIR)
             and not _is_within(target, config.DATA_DIR))
@@ -340,7 +340,7 @@ def list_notebook() -> str:
              if nb.exists() else [])
     if not files:
         return ("Notebook is empty. Write into WissensWIKI/ (any .md, any subfolder "
-                "you like — Notizen/, Kapitel/, …) with write_note; it is NOT indexed.")
+                "you like — Wissen/, Kapitel/, …) with write_note; it is NOT indexed.")
     out = [f"**Notebook — {len(files)} note(s) in WissensWIKI/**\n"]
     out += [f"- {p.relative_to(config.WISSENSWIKI_DIR).as_posix()}" for p in files]
     return "\n".join(out)
@@ -349,7 +349,7 @@ def list_notebook() -> str:
 def read_note(path: str) -> str:
     target = _resolve_under(path, config.WISSENSWIKI_DIR)
     if target is None or not _is_notebook_path(target):
-        return ("read_note reads your WissensWIKI notebook only — not Passagen/ or "
+        return ("read_note reads your WissensWIKI notebook only — not Quellenbelege/ or "
                 "the corpus (use search() for documents, list_passages() for passages).")
     if not target.is_file():
         return f"No such note: {path}"
@@ -360,14 +360,14 @@ def write_note(path: str, content: str) -> str:
     target = _resolve_under(path, config.WISSENSWIKI_DIR)
     if target is None or not _is_notebook_path(target):
         return ("Refused: write_note only writes inside WissensWIKI/ "
-                "(not Passagen/ or .brag/).")
+                "(not Quellenbelege/ or .brag/).")
     if target.suffix.lower() != ".md":
         target = target.with_suffix(".md")
     target.parent.mkdir(parents=True, exist_ok=True)
     existed = target.exists()
     if existed:
         # Never silently overwrite — a running note, or an auto-generated
-        # literature note in Notizen/, must not be clobbered. Append a dated
+        # literature note in Wissen/, must not be clobbered. Append a dated
         # section so the user's accumulated thinking is preserved (WIK-01/TOOL-F02).
         with open(target, "a", encoding="utf-8") as f:
             f.write(f"\n\n---\n\n_added {date.today().isoformat()}_\n\n"
@@ -377,35 +377,6 @@ def write_note(path: str, content: str) -> str:
     rel_out = target.relative_to(config.WISSENSWIKI_DIR).as_posix()
     verb = "Appended a dated section to" if existed else "Saved"
     return f"{verb} WissensWIKI/{rel_out} — your notebook (not indexed)."
-
-
-def save_report(title: str, content: str) -> str:
-    slug = config.slugify_topic(title)
-    base = config.WISSENSWIKI_DIR / "Berichte"
-    base.mkdir(parents=True, exist_ok=True)
-    target = base / f"{slug}.md"
-    existed = target.exists()
-    block = (f"\n\n---\n\n_added {date.today().isoformat()}_\n\n{content.rstrip()}\n"
-             if existed else f"# {title}\n\n{content.rstrip()}\n")
-    with open(target, "a", encoding="utf-8") as f:
-        f.write(block)
-    verb = "Appended to" if existed else "Saved report to"
-    return (f"{verb} WissensWIKI/Berichte/{slug}.md — reuse it later with "
-            f"read_note('Berichte/{slug}.md'); not indexed.")
-
-
-def list_reports() -> str:
-    base = config.WISSENSWIKI_DIR / "Berichte"
-    files = sorted(base.glob("*.md")) if base.exists() else []
-    if not files:
-        return ("Noch keine Berichte. Lege einen mit save_report an "
-                "(→ WissensWIKI/Berichte/, nicht indexiert).")
-    out = [f"**Gespeicherte Berichte ({len(files)}):**\n"]
-    for f in files:
-        first = f.read_text(encoding="utf-8").lstrip().splitlines()
-        title = first[0].lstrip("# ").strip() if first else f.stem
-        out.append(f"- `{title}` — lesen mit read_note('Berichte/{f.name}')")
-    return "\n".join(out)
 
 
 def recent_sources(limit: int = 15, collection_name: str | None = None) -> str:
@@ -481,12 +452,12 @@ def set_metadata(folder: str, key: str, value: str) -> str:
 
 
 def delete_note(path: str, confirm: bool = False) -> str:
-    """Delete a WissensWIKI notebook file (Notizen/, Berichte/, … — NOT Passagen/
-    nor the corpus). Two-step: refuses unless confirm=True."""
+    """Delete a WissensWIKI notebook file (Wissen/, … — NOT Quellenbelege/ nor the
+    corpus). Two-step: refuses unless confirm=True."""
     target = _resolve_under(path, config.WISSENSWIKI_DIR)
     if target is None or not _is_notebook_path(target):
-        return ("delete_note löscht nur im WissensWIKI-Notizbuch (Notizen/, Berichte/, "
-                "…) — nicht Passagen/ (dafür delete_passage) und nie den Korpus.")
+        return ("delete_note löscht nur im WissensWIKI-Notizbuch (Wissen/, …) — nicht "
+                "Quellenbelege/ (dafür delete_passage) und nie den Korpus.")
     if target.suffix.lower() != ".md":
         target = target.with_suffix(".md")
     if not target.is_file():
@@ -506,7 +477,7 @@ def _unindex_passage(slug: str) -> int:
 
 
 def delete_passage(topic: str, confirm: bool = False) -> str:
-    """Delete all saved passages of a topic (Passagen/<slug>.md) AND their index
+    """Delete all saved passages of a topic (Quellenbelege/<slug>.md) AND their index
     points. Two-step: refuses unless confirm=True. Index is removed first, so a
     failure leaves the file (and index) intact rather than orphaning entries."""
     slug = config.slugify_topic(topic)
@@ -516,7 +487,7 @@ def delete_passage(topic: str, confirm: bool = False) -> str:
                 "Themen siehst du über list_passages().")
     if not confirm:
         return (f"Sicher? Das löscht ALLE Passagen unter '{topic}' "
-                f"(WissensWIKI/Passagen/{slug}.md) UND entfernt sie aus dem Suchindex. "
+                f"(WissensWIKI/Quellenbelege/{slug}.md) UND entfernt sie aus dem Suchindex. "
                 "Zum Bestätigen erneut mit confirm=True aufrufen.")
     try:
         removed = _unindex_passage(slug)
@@ -525,17 +496,17 @@ def delete_passage(topic: str, confirm: bool = False) -> str:
                 "gelöscht (sonst bliebe ein verwaister Index-Eintrag). Bitte erneut "
                 "versuchen, sobald BRAG läuft.")
     path.unlink()
-    return (f"Gelöscht: WissensWIKI/Passagen/{slug}.md, "
+    return (f"Gelöscht: WissensWIKI/Quellenbelege/{slug}.md, "
             f"{removed} Chunks aus dem Suchindex entfernt.")
 
 
 def move_note(path: str, new_path: str) -> str:
     """Move or rename a notebook file within WissensWIKI (creates target subfolders;
-    never overwrites). Notebook only — not Passagen/ nor the corpus."""
+    never overwrites). Notebook only — not Quellenbelege/ nor the corpus."""
     src = _resolve_under(path, config.WISSENSWIKI_DIR)
     if src is None or not _is_notebook_path(src):
-        return ("move_note bewegt nur Notizbuch-Dateien (Notizen/, Berichte/, …) — "
-                "nicht Passagen/ und nicht den Korpus.")
+        return ("move_note bewegt nur Notizbuch-Dateien (Wissen/, …) — "
+                "nicht Quellenbelege/ und nicht den Korpus.")
     if src.suffix.lower() != ".md":
         src = src.with_suffix(".md")
     if not src.is_file():
@@ -543,7 +514,7 @@ def move_note(path: str, new_path: str) -> str:
     dst = _resolve_under(new_path, config.WISSENSWIKI_DIR)
     if dst is None or not _is_notebook_path(dst):
         return ("Abgelehnt: Das Ziel muss im Notizbuch liegen "
-                "(nicht Passagen/ oder Korpus).")
+                "(nicht Quellenbelege/ oder Korpus).")
     if dst.suffix.lower() != ".md":
         dst = dst.with_suffix(".md")
     src_rel = src.relative_to(config.WISSENSWIKI_DIR).as_posix()
