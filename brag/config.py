@@ -148,7 +148,12 @@ def is_corpus_path(path) -> bool:
     staging (_inbox) dir. The watcher never indexes WissensWIKI (the notebook
     would echo the corpus); Passagen is indexed via save_passage instead."""
     try:
-        rel = Path(path).resolve().relative_to(_vault().resolve())
+        # Compare WITHOUT resolving symlinks: a corpus file reached through an
+        # in-tree symlinked folder whose target lives outside the vault must still
+        # count as corpus (ING-02 — resolve() dropped it silently). abspath()
+        # collapses '.'/'..' lexically, so a literal '..' escape is still rejected.
+        # (The HTTP /file/ serving guard stays resolve-based — that is separate.)
+        rel = Path(os.path.abspath(path)).relative_to(os.path.abspath(_vault()))
     except (ValueError, OSError):
         return False
     parts = rel.parts

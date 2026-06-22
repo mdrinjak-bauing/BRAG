@@ -187,6 +187,26 @@ def test_changed_since_ingest_legacy_entry_falls_back(tmp_path, monkeypatch):
     assert _changed_since_ingest(f, states) is True          # mtime ≫ ingested+5
 
 
+def test_is_corpus_path_keeps_in_tree_symlinks(tmp_path, monkeypatch):
+    # A corpus file reached through an in-tree symlinked folder whose target is
+    # OUTSIDE the vault must still count as corpus (ING-02); resolve() dropped it.
+    import os as _os
+    from brag import config
+    vault = tmp_path / "project"
+    vault.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "doc.pdf").write_text("x")
+    _os.symlink(outside, vault / "linked")               # in-tree link → outside target
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", vault)
+    assert config.is_corpus_path(vault / "linked" / "doc.pdf") is True
+    # a genuine lexical '..' escape is still rejected
+    assert config.is_corpus_path(vault / ".." / "outside" / "doc.pdf") is False
+    # WissensWIKI workspace + hidden/_inbox stay excluded
+    assert config.is_corpus_path(vault / "WissensWIKI" / "Notizen" / "n.md") is False
+    assert config.is_corpus_path(vault / "_inbox" / "x.pdf") is False
+
+
 def test_chunk_id_deterministic_for_identical_chunk():
     # Same content+location → same id, so an idempotent re-ingest overwrites in
     # place instead of duplicating.
