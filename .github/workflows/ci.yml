@@ -54,13 +54,20 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: "3.12"
-      - name: Unit tests (light — no heavy runtime deps)
+      - name: Unit tests (full suite — light deps; heavy ML libs are lazy-imported)
         run: |
-          pip install pytest pytest-cov
+          # The whole unit suite is light by design: qdrant/torch/docling/fastembed
+          # are imported lazily inside functions and guarded as best-effort, so the
+          # only top-level third-party imports the suite needs are mcp + watchdog
+          # (qdrant-client added belt-and-suspenders for any lazy storage path).
+          # NOTE: previously this ran only test_unit.py + test_http_bridge.py, so the
+          # entire multi-project suite (registry/compose_gen/claude_sync/config/
+          # projects/tools/setup_core/crash_loop) never ran in CI. e2e_smoke.py is
+          # not a test_*.py and is exercised by the separate e2e workflow.
+          pip install pytest pytest-cov mcp watchdog qdrant-client
           # Coverage is informational, NOT a gate (no --cov-fail-under). Promote
           # it to a hard threshold later once a baseline is known.
-          python -m pytest tests/test_unit.py tests/test_http_bridge.py -q \
-            --cov=brag --cov-report=term-missing
+          python -m pytest tests/ -q --cov=brag --cov-report=term-missing
 
   docker-build:
     runs-on: ubuntu-latest
