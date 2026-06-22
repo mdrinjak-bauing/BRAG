@@ -116,14 +116,19 @@ def _changed_since_ingest(path: Path, states: dict) -> bool:
 class DocumentHandler(FileSystemEventHandler):
     def __init__(self, slug=None):
         super().__init__()
-        # The project this observer watches; None = the single-project default.
         self.slug = slug
+        # Pin the project's registry RECORD at observer creation, so a mid-run
+        # registry change (a project removed/renamed) cannot make this still-
+        # running observer fall back to the DEFAULT vault/collection on its next
+        # event (ING-05). None = the single-project default.
+        from brag import registry
+        self.record = registry.get(slug) if slug else None
 
     def dispatch(self, event):
         # Run EVERY on_* callback inside this project's context (per-callback,
         # per-thread) so config's paths + collection resolve to THIS project —
         # one project's file events can never land in another's collection/vault.
-        with config.project_context(self.slug):
+        with config.project_context(self.record):
             super().dispatch(event)
 
     def on_created(self, event):

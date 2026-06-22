@@ -114,7 +114,11 @@ class _FakeClient:
 
 def test_orphaned_collections_is_registry_aware(monkeypatch):
     from brag import config, storage
-    monkeypatch.setattr(config, "COLLECTION_NAME", "asb_local_st_1024", raising=False)
+    # Monkeypatch the REAL module attr that COLLECTION_NAME resolves to, not the
+    # PEP-562 __getattr__-served name itself: setattr(config, "COLLECTION_NAME", …)
+    # leaks a static attribute that permanently shadows __getattr__ for every later
+    # test (monkeypatch "restores" the dynamic value as a static one).
+    monkeypatch.setattr(config, "_DEFAULT_COLLECTION", "asb_local_st_1024")
     # a registered sibling project must NOT be flagged as a droppable orphan
     registry.register("ProjektA", "D:/A", "asb_local_st_1024")  # -> ...__projekta
     client = _FakeClient([

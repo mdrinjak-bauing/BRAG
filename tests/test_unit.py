@@ -143,6 +143,22 @@ def test_diversify_identical_when_not_starved():
         ["A", "B", "C"]
 
 
+def test_handler_pins_project_record_against_midrun_registry_change(tmp_path, monkeypatch):
+    # A still-running observer must keep resolving to ITS project's collection
+    # even if the project is removed from the registry mid-run (ING-05): the
+    # record is captured at observer creation, not re-resolved per event.
+    from brag import config, registry
+    from brag.watcher import DocumentHandler
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    rec = registry.register("Thesis", "/host/thesis", "asb_local_st_1024")
+    handler = DocumentHandler(rec["slug"])
+    registry.remove(rec["slug"])  # project removed while the observer keeps running
+    # OLD behaviour: project_context(slug) -> registry.get -> None -> default.
+    # Fixed: the handler pinned the record, so the collection stays the project's.
+    with config.project_context(handler.record):
+        assert config.COLLECTION_NAME == rec["collection"]
+
+
 def test_chunk_id_deterministic_for_identical_chunk():
     # Same content+location → same id, so an idempotent re-ingest overwrites in
     # place instead of duplicating.
