@@ -527,3 +527,34 @@ def delete_passage(topic: str, confirm: bool = False) -> str:
     path.unlink()
     return (f"Gelöscht: WissensWIKI/Passagen/{slug}.md, "
             f"{removed} Chunks aus dem Suchindex entfernt.")
+
+
+def move_note(path: str, new_path: str) -> str:
+    """Move or rename a notebook file within WissensWIKI (creates target subfolders;
+    never overwrites). Notebook only — not Passagen/ nor the corpus."""
+    src = _resolve_under(path, config.WISSENSWIKI_DIR)
+    if src is None or not _is_notebook_path(src):
+        return ("move_note bewegt nur Notizbuch-Dateien (Notizen/, Berichte/, …) — "
+                "nicht Passagen/ und nicht den Korpus.")
+    if src.suffix.lower() != ".md":
+        src = src.with_suffix(".md")
+    if not src.is_file():
+        return f"Keine Notiz: {path}"
+    dst = _resolve_under(new_path, config.WISSENSWIKI_DIR)
+    if dst is None or not _is_notebook_path(dst):
+        return ("Abgelehnt: Das Ziel muss im Notizbuch liegen "
+                "(nicht Passagen/ oder Korpus).")
+    if dst.suffix.lower() != ".md":
+        dst = dst.with_suffix(".md")
+    src_rel = src.relative_to(config.WISSENSWIKI_DIR).as_posix()
+    if dst.resolve() == src.resolve():
+        return "Quelle und Ziel sind identisch."
+    if dst.exists():
+        return f"Am Ziel existiert bereits {dst.name} — wähle einen anderen Namen."
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        shutil.move(str(src), str(dst))
+    except OSError as e:
+        return f"Konnte die Notiz nicht verschieben: {e}"
+    dst_rel = dst.relative_to(config.WISSENSWIKI_DIR).as_posix()
+    return f"Verschoben: WissensWIKI/{src_rel} → WissensWIKI/{dst_rel}."

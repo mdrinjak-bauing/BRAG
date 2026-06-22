@@ -270,5 +270,15 @@ def delete_passage(topic: str, confirm: bool = False) -> str:
     return _index_op("delete_passage", topic=topic, confirm=confirm)
 
 
+@mcp.tool()
+def move_note(path: str, new_path: str) -> str:
+    """Verschiebt oder benennt eine NOTIZBUCH-Datei im WissensWIKI um (legt Ziel-
+    Unterordner automatisch an, überschreibt nie). So sortierst du Notizen/Berichte um
+    oder benennst sie um. Nur das Notizbuch (Notizen/, Berichte/, …) — NICHT Passagen/
+    (dort delete_passage + save_passage) und nie den Korpus. `path`/`new_path` sind
+    relativ zu WissensWIKI/, z. B. move_note('Notizen/x.md', 'Kapitel/2/x.md')."""
+    return _index_op("move_note", path=path, new_path=new_path)
+
+
 if __name__ == "__main__":
     mcp.run()

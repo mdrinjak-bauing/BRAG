@@ -326,6 +326,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 str(a.get("path", "")), confirm=bool(a.get("confirm", False))),
             "delete_passage": lambda: tools.delete_passage(
                 str(a.get("topic", "")), confirm=bool(a.get("confirm", False))),
+            "move_note": lambda: tools.move_note(
+                str(a.get("path", "")), str(a.get("new_path", ""))),
         }
         handler = ops.get(op)
         if handler is None:

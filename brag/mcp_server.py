@@ -9,7 +9,7 @@ the tool names, signatures and docstrings Claude sees.
 Tools: search, list_sources, inspect_chunks, read_source, remove_source,
 rename_source, save_passage, list_passages, list_notebook, read_note, write_note,
 save_report, list_reports, recent_sources, set_metadata, delete_note,
-delete_passage.
+delete_passage, move_note.
 """
 
 from mcp.server.fastmcp import FastMCP
@@ -221,6 +221,16 @@ def delete_passage(topic: str, confirm: bool = False) -> str:
     rückgefragt, erst confirm=True löscht. Zum Korrigieren: löschen und mit save_passage
     neu sichern."""
     return tools.delete_passage(topic, confirm=confirm)
+
+
+@mcp.tool()
+def move_note(path: str, new_path: str) -> str:
+    """Verschiebt oder benennt eine NOTIZBUCH-Datei im WissensWIKI um (legt Ziel-
+    Unterordner automatisch an, überschreibt nie). So sortierst du Notizen/Berichte um
+    oder benennst sie um. Nur das Notizbuch (Notizen/, Berichte/, …) — NICHT Passagen/
+    (dort delete_passage + save_passage) und nie den Korpus. `path`/`new_path` sind
+    relativ zu WissensWIKI/, z. B. move_note('Notizen/x.md', 'Kapitel/2/x.md')."""
+    return tools.move_note(path, new_path)
 
 
 def _warmup_reranker() -> None:

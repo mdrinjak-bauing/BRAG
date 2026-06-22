@@ -220,6 +220,27 @@ def test_delete_passage_aborts_when_index_unreachable(tmp_path, monkeypatch):
     assert "NICHT" in out and f.exists()       # file preserved, no orphan index
 
 
+def test_move_note_moves_renames_and_guards(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    nb = tmp_path / config.WISSENSWIKI_NAME
+    tools.write_note("Notizen/x.md", "hi")
+    # move into a NEW subfolder (created automatically)
+    out = tools.move_note("Notizen/x.md", "Kapitel/2/x.md")
+    assert "Kapitel/2/x.md" in out
+    assert not (nb / "Notizen" / "x.md").exists()
+    assert (nb / "Kapitel" / "2" / "x.md").exists()
+    # rename in place
+    tools.move_note("Kapitel/2/x.md", "Kapitel/2/thema_final.md")
+    assert (nb / "Kapitel" / "2" / "thema_final.md").exists()
+    # guards: no overwrite, no Passagen target, no corpus escape
+    tools.write_note("Notizen/a.md", "a")
+    tools.write_note("Notizen/b.md", "b")
+    assert "existiert bereits" in tools.move_note("Notizen/a.md", "Notizen/b.md")
+    assert "Notizbuch" in tools.move_note("Notizen/a.md", "Passagen/a.md")
+    assert "Notizbuch" in tools.move_note("../evil.md", "Notizen/z.md")
+
+
 def test_diversify_backfills_instead_of_starving():
     # A source-skewed pool (one book dominates) must still return ~top_k, not a
     # short list: the over-cap, non-duplicate chunks backfill the empty slots.
