@@ -170,17 +170,24 @@ Studio's chat is an MCP host). The tools:
 
 | Tool | What it does | Example question |
 |---|---|---|
-| `search` | Hybrid search with filters (type, year, tables/figures only, source) | *"What does my corpus say about change-order management?"* |
+| `search` | Hybrid search; pick a `mode` (precise/normal/review/deep) + filters (type, year, tables/figures, source) | *"What do all the reports say about change orders?"* |
 | `list_sources` | Inventory of all indexed documents | *"What documents are in my knowledge base?"* |
-| `inspect_chunks` | Shows what is stored for a source (diagnostics) | *"Show what was indexed from Smith 2023, p. 14."* |
-| `save_passage` | Saves a quotable hit under a topic | *"Save this quote for my methods chapter."* |
-| `list_passages` | Shows collected passages per topic | *"What have I collected for the methods chapter?"* |
+| `read_source` | Reads a whole document in reading order — summarise/evaluate a report | *"Summarise the Müller soil report."* |
+| `inspect_chunks` | Diagnostics: what is stored for a source | *"Show what was indexed from Smith 2023, p. 14."* |
+| `set_metadata` | Tags a corpus folder (writes `_meta.txt`) so search can filter by it | *"Tag the Nachträge folder as project=School Center."* |
+| `recent_sources` | The most recently ingested documents | *"What came in this week?"* |
 | `remove_source` | Drops a source from the index; moves the file to an `_inbox/` (reversible, not deleted) | *"Remove the outdated draft from my index."* |
 | `rename_source` | Re-files an indexed document; metadata patched in place, no re-embedding | *"Rename Smith_2023_draft to its final title."* |
-| `list_notebook` | Lists your notebook (notes in `Notizen/`) | *"What's in my notebook?"* |
+| `save_passage` | Saves a quotable hit under a topic (indexed) | *"Save this quote for my methods chapter."* |
+| `list_passages` | Shows collected passages per topic | *"What have I collected for the methods chapter?"* |
+| `delete_passage` | Deletes a topic's passages + their index entries (asks to confirm) | *"Delete the passages on change orders."* |
+| `write_note` | Creates / appends a note in `WissensWIKI/` (never indexed) | *"Save these conclusions as a note."* |
 | `read_note` | Reads a notebook page | *"Open my note on process maturity."* |
-| `write_note` | Creates / updates a note in `Notizen/` (never indexed) | *"Save these conclusions as a note."* |
+| `list_notebook` | Lists your notebook | *"What's in my notebook?"* |
+| `move_note` | Moves or renames a notebook file (creates subfolders) | *"Move this note into Kapitel/2."* |
 | `save_report` | Compiles a result/report into the notebook for cheap reuse (never indexed) | *"Save this comparison table as a report."* |
+| `list_reports` | Lists your saved reports | *"Show my reports."* |
+| `delete_note` | Deletes a note/report (asks to confirm) | *"Delete the old status report."* |
 
 **Edit notes in Obsidian too (optional).** Claude can already read and write your
 notebook through the `list_notebook` / `read_note` / `write_note` tools above. To

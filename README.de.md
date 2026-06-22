@@ -177,17 +177,24 @@ Die Werkzeuge:
 
 | Werkzeug | Was es tut | Beispielfrage |
 |---|---|---|
-| `search` | Hybride Suche mit Filtern (Typ, Jahr, nur Tabellen/Abbildungen, Quelle) | *„Was sagt mein Korpus zum Nachtragsmanagement?"* |
+| `search` | Hybride Suche; `mode` (precise/normal/review/deep) + Filter (Typ, Jahr, Tabellen/Abbildungen, Quelle) | *„Was sagen alle Berichte zu Nachträgen?"* |
 | `list_sources` | Inventar aller indexierten Dokumente | *„Welche Dokumente sind in meiner Wissensbasis?"* |
-| `inspect_chunks` | Zeigt, was zu einer Quelle gespeichert ist (Diagnose) | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |
-| `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema | *„Speichere dieses Zitat fürs Methodenkapitel."* |
-| `list_passages` | Zeigt gesammelte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
+| `read_source` | Liest ein ganzes Dokument der Reihe nach — Bericht zusammenfassen/bewerten | *„Fass das Bodengutachten Müller zusammen."* |
+| `inspect_chunks` | Diagnose: was zu einer Quelle gespeichert ist | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |
+| `set_metadata` | Taggt einen Korpus-Ordner (schreibt `_meta.txt`), damit die Suche danach filtern kann | *„Tagge den Ordner Nachträge als projekt=Schulzentrum."* |
+| `recent_sources` | Die zuletzt aufgenommenen Dokumente | *„Was ist diese Woche reingekommen?"* |
 | `remove_source` | Entfernt eine Quelle aus dem Index; verschiebt die Datei in einen `_inbox/` (umkehrbar, nicht gelöscht) | *„Entferne den veralteten Entwurf aus meinem Index."* |
 | `rename_source` | Benennt ein indexiertes Dokument um; Metadaten an Ort und Stelle, kein erneutes Embedding | *„Benenne Müller_2023_Entwurf in den finalen Titel um."* |
-| `list_notebook` | Listet dein Notizbuch (Notizen in `Notizen/`) | *„Was steht in meinem Notizbuch?"* |
+| `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema (indexiert) | *„Speichere dieses Zitat fürs Methodenkapitel."* |
+| `list_passages` | Zeigt gesammelte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
+| `delete_passage` | Löscht die Passagen eines Themas + ihre Index-Einträge (mit Rückfrage) | *„Lösch die Passagen zu Nachträgen."* |
+| `write_note` | Erstellt/ergänzt eine Notiz in `WissensWIKI/` (nie indexiert) | *„Speichere diese Schlüsse als Notiz."* |
 | `read_note` | Liest eine Notizbuch-Seite | *„Öffne meine Notiz zur Prozessreife."* |
-| `write_note` | Erstellt/aktualisiert eine Notiz in `Notizen/` (nie indexiert) | *„Speichere diese Schlüsse als Notiz."* |
+| `list_notebook` | Listet dein Notizbuch | *„Was steht in meinem Notizbuch?"* |
+| `move_note` | Verschiebt/benennt eine Notizbuch-Datei um (legt Unterordner an) | *„Verschieb diese Notiz nach Kapitel/2."* |
 | `save_report` | Stellt ein Ergebnis/einen Bericht ins Notizbuch zur günstigen Wiederverwendung (nie indexiert) | *„Speichere diese Vergleichstabelle als Bericht."* |
+| `list_reports` | Listet deine gespeicherten Berichte | *„Zeig meine Berichte."* |
+| `delete_note` | Löscht eine Notiz/einen Bericht (mit Rückfrage) | *„Lösch den alten Statusbericht."* |
 
 **Notizen auch in Obsidian bearbeiten (optional).** Claude kann dein Notizbuch
 bereits über die Werkzeuge `list_notebook` / `read_note` / `write_note` oben lesen
