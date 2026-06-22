@@ -6,17 +6,16 @@ Dein Wissensspeicher ist ein Ordner aus einfachen Markdown-Dateien. Obsidian ist
 ein **optionaler**, schönerer Weg, ihn zu lesen und zu beschreiben — kein zweiter
 Speicher, sondern nur eine Ansicht auf genau denselben `WissensWIKI/`-Ordner.
 Bearbeitest oder löschst du eine Datei in Obsidian, ändert sie sich im Ordner
-(und bei `Passagen/` auch im Suchindex) mit. Nichts wird importiert oder kopiert.
+(und bei `Quellenbelege/` auch im Suchindex) mit. Nichts wird importiert oder kopiert.
 
 ## Teil 1: Den Wissensspeicher in Obsidian öffnen
 
 1. [Obsidian](https://obsidian.md) installieren (kostenlos).
 2. „Ordner als Vault öffnen" → den Ordner `WissensWIKI/` innerhalb deines
    Projektordners wählen.
-3. Fertig. Du siehst deinen Arbeitsbereich: `Notizen/` (deine eigenen Notizen,
+3. Fertig. Du siehst deinen Arbeitsbereich: `Wissen/` (deine eigenen Notizen,
    beliebige freie Unterordner sowie eine automatisch erzeugte Literaturnotiz je
-   Quelle), `Passagen/` (gespeicherte Passagen), `Berichte/` (gespeicherte
-   Berichte), `Routinen/` (Aufgaben-Rezepte) sowie `CLAUDE.md` / `AGENTS.md`.
+   Quelle), `Quellenbelege/` (gespeicherte Passagen), `Workflows/` (Aufgaben-Rezepte) sowie `CLAUDE.md` / `AGENTS.md`.
 
 **Tipp — Wikilinks.** Schreib `[[Notizname]]` in eine Notiz, um auf die
 gleichnamige `.md`-Datei zu verlinken; Obsidian macht daraus einen klickbaren
@@ -51,7 +50,7 @@ ergänzt du das Community-Plugin „MCP Tools":
 
 So oder so — eingebaute Werkzeuge oder Obsidian-Plugin — die Grenze bleibt: deine
 eigenen Notizen sind nie Teil des Suchindex, sodass dein Denken nie als Beleg
-getarnt zurückkommt. Die eine gewollte Ausnahme ist `Passagen/`: die indexierst
+getarnt zurückkommt. Die eine gewollte Ausnahme ist `Quellenbelege/`: die indexierst
 du bewusst mit `save_passage`.
 
 > Obsidian muss laufen, damit die Werkzeuge des Obsidian-Plugins funktionieren.

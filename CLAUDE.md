@@ -41,8 +41,8 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
 - The **project folder** the user picks **IS** the searchable corpus — every
   subfolder, any depth — EXCEPT `WissensWIKI/` and hidden/`_inbox` dirs
   (`config.is_corpus_path`). The first subfolder level = the document *type*.
-- `WissensWIKI/` is the user's workspace: `Passagen/` (verified passages saved via the
-  `save_passage` tool — **indexed**), `Notizen/` + any free subfolders (the
+- `WissensWIKI/` is the user's workspace: `Quellenbelege/` (verified passages saved via the
+  `save_passage` tool — **indexed**), `Wissen/` + any free subfolders (the
   notebook — MCP read/write via `read_note`/`write_note`, **NOT** indexed, so notes
   never echo into search), and `CLAUDE.md`/`AGENTS.md` end-user guides (not indexed).
 - The engine is the **"BRAG Assistent"** folder — its own location, never opened or
@@ -55,10 +55,15 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
 - **0.4.1 shipped:** per-connector uninstall now removes the connector (incl. the
   default project) plus a full Docker clean — also merged to `main`.
 - **0.5.0 (in review on `claude/compassionate-brahmagupta-egb1jq`):** audit-driven
-  hardening/polish — `save_report`, ingest/watcher + multi-project data-safety guards,
-  clearer tool docs, privacy framing (paid-tier = no training), installer port-in-use
-  preflight + macOS Gatekeeper "Open Anyway" guidance, security/doc fixes. Verified
-  end-to-end on macOS (install → connector → query → uninstall).
+  hardening/polish + a **lean WissensWIKI restructure** — folders renamed
+  (`Passagen`→`Quellenbelege`, `Notizen`→`Wissen`, `Routinen`→`Workflows`),
+  `save_report`/`Berichte` dropped (18→16 tools), AGENTS.md reframed for code agents,
+  and a **growth layer** (read-first `Wissen/Übersicht.md` + dated `Wissen/Verlauf.md`
+  + compounding/Wissens-Check workflows). Plus ingest/watcher + multi-project
+  data-safety guards, clearer tool docs, privacy framing (paid-tier = no training),
+  installer port-in-use preflight + macOS Gatekeeper "Open Anyway" guidance,
+  security/doc fixes. Verified end-to-end on macOS (install → connector → query →
+  uninstall). Fresh-installs-only, so the rename needs no migration.
 - **Current version: 0.5.0.** The repo + the GHCR `brag` package are kept **PRIVATE**
   for now. No data migration — fresh installs only. **Windows install still
   unverified live** (Gatekeeper/SmartScreen + the new `.bat` port preflight need a

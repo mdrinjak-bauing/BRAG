@@ -11,27 +11,30 @@ the index rebuilds from your documents on a fresh install. Verified end-to-end
 on macOS (install → connector → query → uninstall).
 
 ### Added
-- **`save_report` tool** — compile a result/report (a findings table, a
-  comparison, an analysis summary) into `WissensWIKI/Berichte/` for cheap reuse
-  via `read_note`, without re-deriving it. Not search-indexed.
 - **Bundled example** (`examples/BRAG-Beispiel.pdf`) plus concrete, answerable
   onboarding test questions, so a first run has something to search immediately.
 - **Installer port-in-use preflight** (macOS + Windows): if the bridge port is
   taken, setup now explains it in plain language and points to `BRIDGE_HOST_PORT`
   instead of surfacing Docker's raw "address already in use" error.
-- **Seven more knowledge-work tools (18 total):** `read_source` (read a document in
+- **Six more knowledge-work tools (16 total):** `read_source` (read a document in
   reading order, to summarise/evaluate a whole report), `recent_sources`,
   `set_metadata` (tag a corpus folder via `_meta.txt`, re-applied in place),
-  `list_reports`, `delete_passage`/`delete_note` (WissensWIKI-only, two-step confirm),
+  `delete_passage`/`delete_note` (WissensWIKI-only, two-step confirm),
   and `move_note` (reorganise/rename notebook files).
 - **Task-adaptive search:** a `mode` (precise/normal/review/deep) with calibrated
   presets, plus model-facing `top_k` and `max_per_source` levers (breadth vs depth).
-- **Seeded `WissensWIKI/Routinen/`** with example task recipes — reusable, named
+- **Seeded `WissensWIKI/Workflows/`** with example task recipes — reusable, named
   workflows Claude follows (their triggers registered in `CLAUDE.md`).
 
 ### Changed
+- **Lean WissensWIKI restructure** — folders renamed for clarity
+  (`Passagen`→`Quellenbelege`, `Notizen`→`Wissen`, `Routinen`→`Workflows`); the
+  `Berichte/` folder and the `save_report`/`list_reports` tools removed (a report is
+  now just a note); `AGENTS.md` reframed for code agents. Plus a **growth layer** so
+  the notebook grows and a new session continues: a read-first `Wissen/Übersicht.md`
+  map, a dated `Wissen/Verlauf.md` log, and compounding + Wissens-Check workflows.
 - **Clearer tool docs**, mirrored across both tool surfaces: when to use
-  `save_passage` vs `write_note` vs `save_report`; `inspect_chunks` framed as a
+  `save_passage` vs `write_note`; `inspect_chunks` framed as a
   diagnostic ("not for answering — use search"); `list_passages` dual-mode spelled out.
 - **Privacy framing** (setup wizard + LEGAL, EN/DE): cloud users should enable
   paid billing — the real lever against training is the **paid tier**, not the model.
@@ -48,8 +51,8 @@ on macOS (install → connector → query → uninstall).
 - **Seeded `CLAUDE.md`** gains an "Arbeitsweise" workflow section (status-on-X /
   continue-on-X / save-results conventions); corrected the misleading note that Claude
   Desktop auto-reads it (it does not — paste it into a Project's custom instructions).
-- README (EN/DE): all 18 tools, a "Use BRAG with a Claude Project" section and a
-  Routines section. Map-reduce guidance — evaluating many reports = one focused call
+- README (EN/DE): all 16 tools, a "Use BRAG with a Claude Project" section and a
+  Workflows section. Map-reduce guidance — evaluating many reports = one focused call
   per item, then synthesise (not one oversized search).
 
 ### Fixed
