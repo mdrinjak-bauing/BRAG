@@ -63,9 +63,14 @@ set up automatically in step 4 — nothing to do here yet.
    the ZIP). *Prefer the terminal?* `git clone https://github.com/mdrinjak-bauing/BRAG.git`
    avoids the quarantine prompt altogether.
 2. Open that folder in Finder and double-click **`setup.command`**.
-   - If macOS blocks it ("unidentified developer"): **right-click** the file →
-     **Open** → **Open** again in the dialog. (This is normal for any unsigned
-     downloaded script — you only confirm it once.)
+   - If macOS blocks it ("unidentified developer" / "Apple could not verify…"):
+     **do not click "Move to Trash"** — the file is safe. **Right-click** it →
+     **Open** → **Open** again in the dialog.
+   - On newer macOS the right-click dialog may show no "Open" button. Then open
+      → **System Settings** → **Privacy & Security**, scroll down, and next to
+     *"setup.command was blocked…"* click **"Open Anyway"**; confirm with Touch ID,
+     then double-click `setup.command` again. (Normal for any unsigned downloaded
+     script — you only confirm it once.)
 
 **Setup asks two things in order.** First a folder picker asks *where the
 `BRAG Assistent` program should live* (e.g. on your Desktop) — pick anywhere you
