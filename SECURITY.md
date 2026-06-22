@@ -36,6 +36,28 @@ RAG system: treat AI-generated output as untrusted, and verify answers and
 citations against the linked original source. For confidential or untrusted
 material, prefer a **local profile** so nothing leaves your machine.
 
+## Known threat model: the local HTTP bridge is loopback-only, not authenticated
+
+BRAG runs a small HTTP bridge on `127.0.0.1:8765` (published **only to loopback**
+in `docker-compose.yml`). The persistent app uses it to serve your documents for
+page-deep-links (`/file/…`) and to answer search/notebook tool calls for extra
+projects (`/api/…`). It carries **no per-request token**: any process on the
+**same machine** can call it and read or modify any registered project's data.
+
+This is a **deliberate, accepted trade-off** for a single-user, local-first
+desktop tool — the same model as other localhost developer services (Ollama, LM
+Studio, a local Qdrant dashboard). The bridge is **not reachable from the
+network**: the `127.0.0.1:` prefix on the published port plus a Host-header
+allowlist (which also defeats DNS-rebinding) keep it loopback-only; `/file/` is
+path-traversal-guarded and serves non-PDF files as downloads (no same-origin
+script execution); and no CORS headers are sent, so a cross-origin web page
+cannot read responses.
+
+Practical guidance: don't run BRAG on a shared/multi-user host if you don't trust
+the other local users, and **do not remove the `127.0.0.1:` prefix** from the
+published port (`docker-compose.yml` / `BRIDGE_HOST_PORT`) — that would expose
+your documents and tools to the local network without authentication.
+
 ## Supported versions
 
 Only the latest release receives security fixes.
