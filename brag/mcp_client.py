@@ -22,7 +22,7 @@ import urllib.request
 from mcp.server.fastmcp import FastMCP
 
 from brag import config
-from brag.formatting import format_hit
+from brag.formatting import format_hit, parse_meta_filter
 
 mcp = FastMCP("brag")
 
@@ -57,16 +57,6 @@ def _index_op(op: str, **args) -> str:
     return resp.get("text", "")
 
 
-def _parse_meta(meta_filter: str) -> dict:
-    meta = {}
-    for part in meta_filter.split(","):
-        if "=" in part:
-            key, _, value = part.partition("=")
-            if key.strip() and value.strip():
-                meta[key.strip().lower().replace(" ", "_")] = value.strip()
-    return meta
-
-
 @mcp.tool()
 def search(query: str, top_k: int = 15, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
@@ -90,7 +80,7 @@ def search(query: str, top_k: int = 15, doc_type: str = "",
         "doc_type": doc_type, "chunk_type": chunk_type,
         "year_min": year_min, "year_max": year_max,
         "source_file": source_file, "reranking": reranking,
-        "meta": _parse_meta(meta_filter),
+        "meta": parse_meta_filter(meta_filter),
     })
     if resp is None:
         return _BUSY
@@ -113,8 +103,9 @@ def list_sources(doc_type: str = "") -> str:
 
 @mcp.tool()
 def inspect_chunks(source_file: str, page: int = 0, limit: int = 10) -> str:
-    """Show what is actually stored in the index for a source (debugging:
-    'why doesn't the search find X?'). Optionally filter by page number."""
+    """Diagnostic tool — show the raw chunks stored in the index for one source,
+    to debug retrieval ('why doesn't search find X?'). NOT for answering a
+    question (use search for that). Optionally filter by page number."""
     return _index_op("inspect_chunks", source_file=source_file, page=page, limit=limit)
 
 
@@ -145,6 +136,10 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
                  note: str = "") -> str:
     """Save a quotable passage under a topic (e.g. a chapter or theme).
 
+    WHEN to use which: a verbatim QUOTE from a source → save_passage (it becomes
+    searchable evidence); YOUR OWN text (notes, drafts, conclusions) → write_note;
+    a finished/compiled deliverable → save_report.
+
     Builds your evidence base in WissensWIKI/Passagen/<topic>.md AND indexes
     the passage for semantic search, so a later chat (even with a different
     provider) finds it again via `search` — it appears as a clearly marked
@@ -157,7 +152,9 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
 
 @mcp.tool()
 def list_passages(topic: str = "") -> str:
-    """List saved passages — for one topic, or an overview of all topics."""
+    """List saved passages: pass a topic to see the passages saved under it, or
+    leave it empty for an overview of all topics. (Saved passages also surface in
+    search, marked as a "saved passage" — this is the by-topic browse view.)"""
     return _index_op("list_passages", topic=topic)
 
 
@@ -181,12 +178,24 @@ def read_note(path: str) -> str:
 
 @mcp.tool()
 def write_note(path: str, content: str) -> str:
-    """Create or overwrite a NOTEBOOK note — YOUR own thinking (concepts, drafts,
-    conclusions). Saved as plain Markdown under WissensWIKI/ and deliberately
-    NEVER added to the search index. `path` is relative to WissensWIKI/, e.g.
-    'process-maturity.md' or 'Kapitel/2.md' (any subfolder you like). The corpus
-    and the search index are never touched."""
+    """Create a NOTEBOOK note, or APPEND a dated section to an existing one — it
+    never silently overwrites, so your accumulated thinking is safe. For YOUR OWN
+    text (concepts, drafts, conclusions); for a verbatim source quote that should
+    be searchable evidence use save_passage instead. Saved as plain Markdown under
+    WissensWIKI/ and deliberately NEVER added to the search index. `path` is
+    relative to WissensWIKI/, e.g. 'process-maturity.md' or 'Kapitel/2.md' (any
+    subfolder). The corpus and the search index are never touched."""
     return _index_op("write_note", path=path, content=content)
+
+
+@mcp.tool()
+def save_report(title: str, content: str) -> str:
+    """Compile a RESULT/REPORT into the notebook for cheap reuse — a table of
+    findings, a comparison, an analysis summary. Saved as Markdown under
+    WissensWIKI/Berichte/<title>.md and NOT search-indexed, so you can read it
+    back later with read_note('Berichte/<title>.md') instead of re-deriving it
+    (no extra tokens). Writing the same title again appends a dated section."""
+    return _index_op("save_report", title=title, content=content)
 
 
 if __name__ == "__main__":

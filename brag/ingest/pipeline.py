@@ -57,42 +57,56 @@ def _clear_attempts(source_key: str) -> None:
         _save_attempts(counts)
 
 
-def _mark_ingest_blocked(path: Path, attempts: int) -> None:
-    """Make a crash-loop skip VISIBLE to the user (best-effort; never raises)."""
+def _append_marker(marker_name: str, header: str, key: str, line: str,
+                   label: str) -> None:
+    """Append one idempotent line to a visible marker file in WissensWIKI/.
+
+    Shared by the two user-facing markers (indexing-stopped, not-indexed). The
+    marker lives in WissensWIKI/ — visible to the user but excluded from the
+    corpus (is_corpus_path), so it is never itself indexed. Idempotent: if `key`
+    already appears in the file, nothing is written; the `header` is written only
+    when the file is first created. Best-effort: a marker write must NEVER break
+    an ingest, so every error is swallowed with a non-fatal log line."""
     try:
-        german = config.VAULT_LANGUAGE.strip().lower().startswith("german")
-        name = "INDEXIERUNG-GESTOPPT.md" if german else "INDEXING-STOPPED.md"
-        marker = config.VAULT / name
-        key = config.normalize_source_key(path.name)
+        marker = config.WISSENSWIKI_DIR / marker_name
         existing = marker.read_text(encoding="utf-8") if marker.exists() else ""
         if key in existing:
             return
-        if german:
-            header = (
-                "# Indexierung gestoppt (Schutz vor Absturz-Schleife)\n\n"
-                "Diese Dateien wurden nach mehreren **unerwarteten Abbrüchen** "
-                "nicht weiter indexiert — dein PC könnte unter der lokalen KI-Last "
-                "neu starten. GPU-Last senken (Power-Limit / andere GPU-Programme "
-                "schließen) oder ein Cloud-Profil nutzen, dann die Datei neu "
-                "ablegen.\n\n"
-            )
-            line = f"- `{key}` — nach {attempts} Abbrüchen gestoppt\n"
-        else:
-            header = (
-                "# Indexing stopped (crash-loop protection)\n\n"
-                "These files were not re-indexed after several **unexpected "
-                "interruptions** — your PC may be resetting under the local-AI "
-                "load. Lower the GPU load (power limit / close other GPU apps) or "
-                "use a cloud profile, then drop the file in again.\n\n"
-            )
-            line = f"- `{key}` — stopped after {attempts} interruptions\n"
-        config.VAULT.mkdir(parents=True, exist_ok=True)
+        config.WISSENSWIKI_DIR.mkdir(parents=True, exist_ok=True)
         with open(marker, "a", encoding="utf-8") as f:
             if not existing:
                 f.write(header)
             f.write(line)
     except Exception as e:  # noqa: BLE001 — marking must never fail the ingest
-        print(f"  could not write the indexing-stopped marker (non-fatal): {e}")
+        print(f"  could not write the {label} marker (non-fatal): {e}")
+
+
+def _mark_ingest_blocked(path: Path, attempts: int) -> None:
+    """Make a crash-loop skip VISIBLE to the user (best-effort; never raises)."""
+    german = config.VAULT_LANGUAGE.strip().lower().startswith("german")
+    key = config.normalize_source_key(path.name)
+    if german:
+        name = "INDEXIERUNG-GESTOPPT.md"
+        header = (
+            "# Indexierung gestoppt (Schutz vor Absturz-Schleife)\n\n"
+            "Diese Dateien wurden nach mehreren **unerwarteten Abbrüchen** "
+            "nicht weiter indexiert — dein PC könnte unter der lokalen KI-Last "
+            "neu starten. GPU-Last senken (Power-Limit / andere GPU-Programme "
+            "schließen) oder ein Cloud-Profil nutzen, dann die Datei neu "
+            "ablegen.\n\n"
+        )
+        line = f"- `{key}` — nach {attempts} Abbrüchen gestoppt\n"
+    else:
+        name = "INDEXING-STOPPED.md"
+        header = (
+            "# Indexing stopped (crash-loop protection)\n\n"
+            "These files were not re-indexed after several **unexpected "
+            "interruptions** — your PC may be resetting under the local-AI "
+            "load. Lower the GPU load (power limit / close other GPU apps) or "
+            "use a cloud profile, then drop the file in again.\n\n"
+        )
+        line = f"- `{key}` — stopped after {attempts} interruptions\n"
+    _append_marker(name, header, key, line, "indexing-stopped")
 
 
 def _crash_loop_skip(source_key: str, path: Path) -> bool:
@@ -130,11 +144,11 @@ def _mark_not_indexed(path: Path) -> None:
     """Make a non-indexable document VISIBLE to the user. A scanned PDF without
     a text layer yields zero chunks and would otherwise vanish silently from the
     corpus — the user keeps believing it is searchable. We append one line per
-    affected file to a marker file in the knowledge-store root (next to
-    sources/notes, where the user will actually see it); its name and text follow
-    VAULT_LANGUAGE. Idempotent: a file already listed is not added again. Fully
-    best-effort — never crashes the ingest (the on-screen log line is printed
-    regardless by the caller)."""
+    affected file to a marker file in the WissensWIKI/ workspace — visible to the
+    user but NOT part of the searchable corpus, so the marker is never itself
+    indexed; its name and text follow VAULT_LANGUAGE. Idempotent: a file already
+    listed is not added again. Fully best-effort — never crashes the ingest (the
+    on-screen log line is printed regardless by the caller)."""
     german = config.VAULT_LANGUAGE.strip().lower().startswith("german")
     if german:
         marker_name = "NICHT-INDEXIERT.md"
@@ -154,21 +168,9 @@ def _mark_not_indexed(path: Path) -> None:
         )
         reason = ("likely a scanned PDF without a text layer, not searchable; "
                   "apply OCR and drop it in again")
-    try:
-        marker = config.VAULT / marker_name
-        name = config.normalize_source_key(path.name)
-        existing = ""
-        if marker.exists():
-            existing = marker.read_text(encoding="utf-8")
-            if name in existing:
-                return
-        config.VAULT.mkdir(parents=True, exist_ok=True)
-        with open(marker, "a", encoding="utf-8") as f:
-            if not existing:
-                f.write(header)
-            f.write(f"- `{name}` — {date.today().isoformat()} — {reason}\n")
-    except Exception as e:  # noqa: BLE001 — marking must never fail the ingest
-        print(f"  could not write the not-indexed marker (non-fatal): {e}")
+    key = config.normalize_source_key(path.name)
+    line = f"- `{key}` — {date.today().isoformat()} — {reason}\n"
+    _append_marker(marker_name, header, key, line, "not-indexed")
 
 
 def _append_ingest_log(source_file: str, path: Path, n_chunks: int,
@@ -181,6 +183,16 @@ def _append_ingest_log(source_file: str, path: Path, n_chunks: int,
         "collection": config.COLLECTION_NAME,
         "partial": partial, "attempts": attempts,
     }
+    try:
+        # Record the source file's mtime + size at ingest so a later in-place
+        # overwrite is detected by exact comparison, not a wall-clock margin that
+        # misses an edit within seconds of ingest (ING-07). Additive fields —
+        # legacy readers ignore them; a missing file just omits them.
+        stat = path.stat()
+        entry["source_mtime"] = stat.st_mtime
+        entry["source_size"] = stat.st_size
+    except OSError:
+        pass
     if contextualized is not None:
         # Persist contextualization coverage so a document whose anchoring-
         # sentence LLM call failed (chunks embedded as raw text) is visible in
@@ -440,8 +452,7 @@ def reapply_folder_metadata(folder: Path) -> int:
         for p in sorted(folder.rglob("*")):
             if (p.is_file()
                     and p.suffix.lower() in config.SUPPORTED_SUFFIXES
-                    and not p.name.startswith(".")
-                    and not any(part in config.WATCH_IGNORE_DIRS for part in p.parts)):
+                    and config.is_corpus_path(p)):
                 try:
                     if rename_source(config.source_key_from_path(p), p):
                         updated += 1
@@ -459,8 +470,6 @@ def index_passage(topic: str, text: str, source: str, page: str = "",
     stays clearly distinguishable from primary sources. Best-effort: never
     raises, because the file on disk is already saved and a failed index must
     not turn the save_passage tool call into an error."""
-    import re
-
     from qdrant_client.models import PointStruct
 
     from brag.embeddings import get_embedder
@@ -468,7 +477,7 @@ def index_passage(topic: str, text: str, source: str, page: str = "",
     from brag.ingest.extract import Chunk
 
     try:
-        slug = re.sub(r"[^\w\-]+", "_", topic.strip()).strip("_") or "general"
+        slug = config.slugify_topic(topic)
         body = text.strip()
         if note.strip():
             body += f"\n\nNote: {note.strip()}"

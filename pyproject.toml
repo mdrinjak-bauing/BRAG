@@ -1,6 +1,6 @@
 [project]
 name = "brag"
-version = "0.4.1"  # keep in sync with brag/__init__.py:__version__
+version = "0.5.0"  # keep in sync with brag/__init__.py:__version__
 description = "BRAG — Building Retrieval-Augmented Generation: a local, page-cited RAG second brain for Claude Desktop."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -19,3 +19,8 @@ extend-exclude = ["vault_template"]
 # CI red. Deliberately NOT enabling I/UP/B/SIM: they would require churn or
 # touch intentional choices (e.g. EnvironmentError, bare-except guards).
 select = ["E9", "F63", "F7", "F82", "F401", "F811", "E501", "W"]
+
+[tool.pytest.ini_options]
+# Default discovery = the whole tests/ dir (e2e_smoke.py is not a test_*.py and
+# is run by the e2e workflow). The CI `unit` job runs exactly this set.
+testpaths = ["tests"]

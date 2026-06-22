@@ -4,6 +4,55 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — 2026-06-22
+
+An audit-driven hardening, polish and onboarding release. No data migration —
+the index rebuilds from your documents on a fresh install. Verified end-to-end
+on macOS (install → connector → query → uninstall).
+
+### Added
+- **`save_report` tool** — compile a result/report (a findings table, a
+  comparison, an analysis summary) into `WissensWIKI/Berichte/` for cheap reuse
+  via `read_note`, without re-deriving it. Not search-indexed.
+- **Bundled example** (`examples/BRAG-Beispiel.pdf`) plus concrete, answerable
+  onboarding test questions, so a first run has something to search immediately.
+- **Installer port-in-use preflight** (macOS + Windows): if the bridge port is
+  taken, setup now explains it in plain language and points to `BRIDGE_HOST_PORT`
+  instead of surfacing Docker's raw "address already in use" error.
+
+### Changed
+- **Clearer tool docs**, mirrored across both tool surfaces: when to use
+  `save_passage` vs `write_note` vs `save_report`; `inspect_chunks` framed as a
+  diagnostic ("not for answering — use search"); `list_passages` dual-mode spelled out.
+- **Privacy framing** (setup wizard + LEGAL, EN/DE): cloud users should enable
+  paid billing — the real lever against training is the **paid tier**, not the model.
+- **Onboarding copy** (EN/DE): keep the computer awake, realistic first-run download
+  time, the ingest "done" signal, and the `WissensWIKI` curate loop as a core step.
+- **HOW_IT_WORKS** now separates the three places — the "BRAG Assistent" program
+  folder, your project folder, and Docker's own storage (EN/DE).
+- **macOS install guide**: covers the System-Settings "Open Anyway" path for newer
+  macOS and warns not to click "Move to Trash" on the first-launch Gatekeeper prompt.
+- README EN/DE tables aligned; internal de-duplication of the marker writer and the
+  meta-filter parser; CI now runs the full test suite.
+
+### Fixed
+- **Ingest/watcher data-safety guards:** reconcile no longer prunes the index on an
+  empty/missing mount; the per-project record is pinned once per observer; change
+  detection compares stored mtime/size; symlinked corpus subtrees are indexed; and
+  multi-page tables/figures cite a real page range.
+- **Multi-project robustness:** an OS file-lock guards the registry read-modify-write;
+  deleting the base collection is refused; the delete-index warning is louder; and
+  invalid path characters are rejected before they reach Docker Compose.
+- `list_passages` is now case/Unicode-insensitive (shared topic slug); result
+  diversification backfills instead of returning fewer than `top_k`.
+
+### Security
+- `Cross-Origin-Resource-Policy: same-origin` on the bridge's `/file/` responses.
+- Documented the loopback-only, unauthenticated bridge threat model (SECURITY.md,
+  `.env.example`); the `127.0.0.1:` publish prefix is load-bearing.
+- The Claude Desktop / LM Studio config writers refuse to overwrite a
+  present-but-non-dict `mcpServers` rather than clobbering it.
+
 ## [0.4.1] — 2026-06-21
 
 A focused fix release for the uninstall flow and the connector sync.
@@ -405,6 +454,7 @@ re-index).
 - Knowledge store (library vs. notebook) and the search MCP server for
   Claude Desktop.
 
+[0.5.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.5.0
 [0.4.1]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.4.1
 [0.4.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.4.0
 [0.3.4]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.3.4

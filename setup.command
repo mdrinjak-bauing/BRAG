@@ -163,13 +163,32 @@ echo "Starting the setup assistant..."
 rm -f .setup_complete
 docker compose stop app >/dev/null 2>&1
 docker rm -f brag-setup >/dev/null 2>&1
+
+# Which host port the bridge will publish (default 8765; .env may override).
+PORT="$(grep -E '^BRIDGE_HOST_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2 | tr -d '[:space:]')"
+PORT="${PORT:-8765}"
+# Preflight AFTER stopping our own app (so we only flag a FOREIGN program): a busy
+# port otherwise surfaces only Docker's raw "address already in use" error - a dead
+# end for non-technical users. Check first and explain the fix in plain language.
+if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+  echo
+  echo "Port $PORT is already in use by another program (another BRAG, or another"
+  echo "tool). BRAG needs it for the setup assistant and the page-precise PDF links."
+  echo "Fix it one of two ways, then double-click setup.command again:"
+  echo "  - quit the program currently using port $PORT, or"
+  echo "  - pick a free port: add these two lines to the .env next to this file,"
+  echo "      BRIDGE_HOST_PORT=8770"
+  echo "      BRIDGE_PUBLIC_URL=http://localhost:8770"
+  read -r -p "Press Enter to close..."
+  exit 1
+fi
+
 docker compose --profile setup up -d setup || { echo "Start failed — see message above."; read -r -p "Press Enter to close..."; exit 1; }
 
 echo
 echo "Opening the setup assistant in your browser..."
 sleep 3
-PORT="$(grep -E '^BRIDGE_HOST_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2 | tr -d '[:space:]')"
-open "http://localhost:${PORT:-8765}/setup"
+open "http://localhost:$PORT/setup"
 
 echo
 echo "Finish the setup in your browser — this window waits for you."

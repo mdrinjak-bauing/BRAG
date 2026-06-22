@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.4.1** ([changes](#versions))
+**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.5.0** ([changes](#versions))
 
 > **An AI assistant that actually knows your sources.** Drop your documents — PDFs, Word, PowerPoint, your own notes — into a folder. BRAG makes sense of them **on your own machine** and hands the AI the right passages for every question — page-cited, one click from the original. Whether that AI runs locally or in the cloud is your call; at most your question and the matching passages are sent — never the whole corpus.
 
@@ -22,7 +22,7 @@ Three things set it apart:
 
 > *The name is a play on my field — civil engineering, where you* ***build*** *things — and on what the tool does: it builds up your knowledge and retrieves it when you need it.*
 
-*Note on scope (v0.4.1): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic; capturing your own conclusions as free-form notes is an optional Obsidian add-on (see [docs](docs/OBSIDIAN.md)).*
+*Note on scope (v0.5.0): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic; capturing your own conclusions as free-form notes is an optional Obsidian add-on (see [docs](docs/OBSIDIAN.md)).*
 
 ## Who is it for?
 
@@ -180,6 +180,7 @@ Studio's chat is an MCP host). The tools:
 | `list_notebook` | Lists your notebook (notes in `Notizen/`) | *"What's in my notebook?"* |
 | `read_note` | Reads a notebook page | *"Open my note on process maturity."* |
 | `write_note` | Creates / updates a note in `Notizen/` (never indexed) | *"Save these conclusions as a note."* |
+| `save_report` | Compiles a result/report into the notebook for cheap reuse (never indexed) | *"Save this comparison table as a report."* |
 
 **Edit notes in Obsidian too (optional).** Claude can already read and write your
 notebook through the `list_notebook` / `read_note` / `write_note` tools above. To
@@ -202,7 +203,7 @@ re-indexing.**
 | **Gemini** (default) | Google Gemini (free tier) | gemini-2.5-flash-lite | any laptop | yes (Google) |
 | **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini | any laptop | yes (OpenAI) |
 | **Claude** | Anthropic Claude | claude-haiku-4-5 | any laptop | yes (Anthropic) |
-| **Hybrid** | LM Studio (on your machine) | your local model | ~16 GB+ RAM (more for bigger models) | no |
+| **Hybrid** | LM Studio (on your machine) | your local model (e.g. qwen2.5-7b-instruct) | ~16 GB+ RAM (more for bigger models) | no |
 
 **Which hardware unlocks which tier?** Cloud profiles run on any machine; a local
 text AI and a fully cranked-up reranker need more:
@@ -210,7 +211,7 @@ text AI and a fully cranked-up reranker need more:
 | Tier | Hardware | Unlocks | Trade-off |
 |---|---|---|---|
 | **Light** | 8 GB minimum, 16 GB comfortable; any computer, no GPU | Cloud LLM, local index, reranker eco/off | API key needed; document text goes to the provider; the first ingest is RAM-heavy |
-| **Medium** | ~16 GB RAM | + smooth reranker, optionally a first local LLM (LM Studio, e.g. qwen2.5-7b-instruct) | local LLM slower/weaker |
+| **Medium** | ~16 GB RAM, LM Studio | + smooth reranker, optionally a first local LLM (LM Studio, e.g. qwen2.5-7b-instruct) | local LLM slower/weaker |
 | **Private-local** | M-Mac 32 GB, LM Studio | local LLM (e.g. qwen2.5-14b-instruct), reranker full, vision local | nothing leaves the machine; more setup |
 | **Full version** | M-Mac 64 GB+, LM Studio | large local LLM (e.g. gemma-3-27b-it) + vision + reranker full | highest quality, highest load |
 
@@ -506,8 +507,12 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 ## Versions
 
-Current version: **0.4.1** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.5.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.5.x** — An audit-driven **hardening & polish** pass: a new `save_report`
+  tool, safer ingest/watcher and multi-project guards, clearer tool docs, a
+  friendlier installer (port-in-use preflight, macOS Gatekeeper guidance) and
+  security/documentation fixes.
 - **0.4.x** — **Multiple projects from one engine**, the **project folder itself is
   the corpus** (no more `sources/` subfolder), a friendlier install and a more
   granular uninstall (remove one project or the whole system).
@@ -545,7 +550,7 @@ Current version: **0.4.1** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
 ## Status
 
-Early release (0.4.1). The **Gemini profile** is the tested happy path; the
+Early release (0.5.0). The **Gemini profile** is the tested happy path; the
 other profiles work but are less battle-tested. Roadmap: automatic file naming,
 corpus overview modes (coverage/clusters), optional knowledge-graph layer — and
 the integrations sketched above.

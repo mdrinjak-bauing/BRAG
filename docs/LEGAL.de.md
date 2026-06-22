@@ -37,6 +37,11 @@ Was deinen Rechner verlässt, hängt vom gewählten **Profil** ab:
   Dokumente deinen Rechner und unterliegen den Bedingungen des Anbieters. Den
   Bildversand kannst du mit `VISION_ENABLED=false` abschalten.
 
+*Einmalig, in jedem Profil: Beim allerersten Lauf werden die lokalen
+Analyse-Modelle — Embedder, Reranker und Dokument-Parser — von HuggingFace
+geladen. Das ist die einzige ausgehende Verbindung für die lokale Arbeit;
+danach sendet das lokale Profil nichts.*
+
 **Dein API-Schlüssel.** Dein API-Schlüssel wird nur in einer lokalen
 `.env`-Datei auf deinem Rechner gespeichert (nur für dich lesbar) und dient
 ausschließlich dazu, deine eigenen Anfragen beim gewählten Anbieter zu
@@ -45,13 +50,16 @@ die Live-Prüfung beim Setup sendet lediglich eine kleine Testanfrage an diesen
 Anbieter, um die Gültigkeit zu bestätigen. Lokale Profile (LM Studio)
 brauchen gar keinen Schlüssel.
 
-**Wichtig — kostenloser Gemini-Tarif (Standard):** Beim *kostenlosen* Tarif von
-Google AI Studio kann Google die übermittelten Eingaben und Ausgaben zur
-**Verbesserung seiner Produkte verwenden**, und sie können **von Menschen
-geprüft** werden. Für vertrauliche, geheime oder personenbezogene Inhalte ist
-der kostenlose Tarif daher **nicht geeignet** — nutze stattdessen ein **lokales
-Profil** oder einen kostenpflichtigen Tarif (z. B. Google Cloud/Vertex AI), bei
-dem Daten laut Anbieter nicht zum Training verwendet werden.
+**Wichtig — Gemini kostenlos vs. kostenpflichtig (Standard ist kostenlos):** Beim
+*kostenlosen* Tarif von Google AI Studio / der Gemini-API kann Google die
+übermittelten Eingaben und Ausgaben zur **Verbesserung seiner Produkte
+verwenden**, und sie können **von Menschen geprüft** werden — für vertrauliche,
+geheime oder personenbezogene Inhalte ist der kostenlose Tarif daher **nicht
+geeignet**. Der Hebel ist die **Abrechnungsstufe, nicht das Modell**: Wenn du im
+Google-Konto die **Abrechnung einrichtest** und ein kleines Guthaben auflädst,
+wird der **bezahlte Tarif desselben Gemini-API-Schlüssels nicht zum Training
+genutzt** (laut Googles Bedingungen). Für sensible Inhalte also entweder die
+**Abrechnung aktivieren** (bezahlter Tarif) oder ein **lokales Profil** nutzen.
 
 Zur Einordnung der anderen Cloud-Anbieter (Stand Juni 2026, ohne Gewähr —
 maßgeblich sind stets die aktuellen Bedingungen des Anbieters):

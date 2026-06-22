@@ -57,6 +57,180 @@ def test_chunk_id_distinguishes_same_120char_prefix():
     assert a.qdrant_id() != b.qdrant_id()
 
 
+def test_qdrant_id_full_width_and_stable():
+    # The point id must use the full 64-bit space (16 hex), not the old 60-bit
+    # (15-hex) truncation that risked silent cross-document overwrites at scale.
+    import hashlib
+    c = _mk_chunk("some chunk text")
+    qid = c.qdrant_id()
+    assert 0 <= qid < 2 ** 64
+    assert qid == c.qdrant_id()  # deterministic
+    assert qid == int(hashlib.sha256(c.chunk_id.encode()).hexdigest()[:16], 16)
+
+
+def test_page_range_spans_full_provenance():
+    # A table/figure spanning pages must report its real (min, max) page range,
+    # not just prov[0] (which silently pinned multi-page items to their first page).
+    from brag.ingest.extract import _page_range
+
+    class _P:
+        def __init__(self, n):
+            self.page_no = n
+
+    class _Item:
+        def __init__(self, pages):
+            self.prov = [_P(n) for n in pages]
+
+    assert _page_range(_Item([5, 6, 7])) == (5, 7)
+    assert _page_range(_Item([8])) == (8, 8)
+    assert _page_range(object()) == (1, 1)  # no prov → safe default
+
+
+def test_system_markers_live_outside_the_corpus(tmp_path, monkeypatch):
+    # NOT-INDEXED / INDEXING-STOPPED markers must NOT be re-indexed: they go to
+    # WissensWIKI/, which is_corpus_path excludes — else the marker itself
+    # becomes a searchable "document" in the corpus root.
+    from brag.ingest import pipeline
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    monkeypatch.setattr(config, "VAULT_LANGUAGE", "english", raising=False)
+    pipeline._mark_not_indexed(tmp_path / "scan.pdf")
+    marker = tmp_path / config.WISSENSWIKI_NAME / "NOT-INDEXED.md"
+    assert marker.exists()                              # written under WissensWIKI/
+    assert not (tmp_path / "NOT-INDEXED.md").exists()   # NOT at the corpus root
+    assert config.is_corpus_path(marker) is False       # and excluded from the index
+
+
+def test_marker_is_idempotent_with_header_once(tmp_path, monkeypatch):
+    # The shared _append_marker writes the header exactly once and never lists
+    # the same source twice, while a second distinct source still appends a line.
+    from brag.ingest import pipeline
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    monkeypatch.setattr(config, "VAULT_LANGUAGE", "english", raising=False)
+    pipeline._mark_not_indexed(tmp_path / "scan.pdf")
+    pipeline._mark_not_indexed(tmp_path / "scan.pdf")     # same source again
+    pipeline._mark_not_indexed(tmp_path / "other.pdf")    # a different source
+    body = (tmp_path / config.WISSENSWIKI_NAME / "NOT-INDEXED.md").read_text("utf-8")
+    assert body.count("# Documents that could not be indexed") == 1   # header once
+    assert body.count("`scan.pdf`") == 1                              # no duplicate
+    assert "`other.pdf`" in body                                      # second appended
+
+
+def test_write_note_appends_instead_of_clobbering(tmp_path, monkeypatch):
+    # Persisting intermediate results must never lose prior content (TOOL-F02),
+    # and must not clobber an auto-literature-note sharing Notizen/ (WIK-01).
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    tools.write_note("Notizen/idea.md", "first finding")
+    tools.write_note("Notizen/idea.md", "second finding")
+    body = (tmp_path / config.WISSENSWIKI_NAME / "Notizen" / "idea.md").read_text("utf-8")
+    assert "first finding" in body and "second finding" in body  # nothing lost
+
+
+def test_save_report_writes_a_reusable_note_outside_the_index(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    tools.save_report("Q1 Findings", "| a | b |\n|---|---|\n| 1 | 2 |")
+    report = tmp_path / config.WISSENSWIKI_NAME / "Berichte" / "q1_findings.md"
+    assert report.exists()
+    assert config.is_corpus_path(report) is False          # never indexed
+    assert tools.read_note("Berichte/q1_findings.md").startswith("# Q1 Findings")
+
+
+def test_diversify_backfills_instead_of_starving():
+    # A source-skewed pool (one book dominates) must still return ~top_k, not a
+    # short list: the over-cap, non-duplicate chunks backfill the empty slots.
+    from brag.search.query import _diversify
+    cand = [{"source_file": "A", "text": f"alpha text {i}"} for i in range(6)]
+    cand.append({"source_file": "B", "text": "beta unrelated text"})
+    hits = _diversify(cand, top_k=5, max_per_source=3)
+    # plain cap would give only 3×A + 1×B = 4; backfill fills the 5th slot
+    assert len(hits) == 5
+    assert [h["source_file"] for h in hits[:4]] == ["A", "A", "A", "B"]  # diverse order kept
+    assert hits[4]["source_file"] == "A"  # backfilled from the capped-out A pool
+
+
+def test_diversify_identical_when_not_starved():
+    # When the pool already yields top_k diverse hits, the result is exactly the
+    # plain per-source cap — nothing reordered, nothing added.
+    from brag.search.query import _diversify
+    cand = [{"source_file": s, "text": f"{s} unique text"} for s in "ABCDE"]
+    assert [h["source_file"] for h in _diversify(cand, top_k=3, max_per_source=3)] == \
+        ["A", "B", "C"]
+
+
+def test_handler_pins_project_record_against_midrun_registry_change(tmp_path, monkeypatch):
+    # A still-running observer must keep resolving to ITS project's collection
+    # even if the project is removed from the registry mid-run (ING-05): the
+    # record is captured at observer creation, not re-resolved per event.
+    from brag import config, registry
+    from brag.watcher import DocumentHandler
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    rec = registry.register("Thesis", "/host/thesis", "asb_local_st_1024")
+    handler = DocumentHandler(rec["slug"])
+    registry.remove(rec["slug"])  # project removed while the observer keeps running
+    # OLD behaviour: project_context(slug) -> registry.get -> None -> default.
+    # Fixed: the handler pinned the record, so the collection stays the project's.
+    with config.project_context(handler.record):
+        assert config.COLLECTION_NAME == rec["collection"]
+
+
+def test_changed_since_ingest_detects_inplace_overwrite(tmp_path, monkeypatch):
+    # An in-place overwrite is detected by comparing the file's mtime/size against
+    # the values stored at ingest — even within the old 5s wall-clock window (ING-07).
+    from brag import config
+    from brag.watcher import _changed_since_ingest
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    f = tmp_path / "doc.pdf"
+    f.write_text("v1")
+    stat = f.stat()
+    states = {config.source_key_from_path(f): {
+        "ingested_at": "2026-06-22T00:00:00",
+        "source_mtime": stat.st_mtime, "source_size": stat.st_size}}
+    assert _changed_since_ingest(f, states) is False        # unchanged → no re-ingest
+    f.write_text("v2 — different content and length")        # overwritten in place
+    assert _changed_since_ingest(f, states) is True          # detected via size/mtime
+
+
+def test_changed_since_ingest_legacy_entry_falls_back(tmp_path, monkeypatch):
+    # A legacy log entry without source_mtime keeps the old wall-clock heuristic.
+    from brag import config
+    from brag.watcher import _changed_since_ingest
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    f = tmp_path / "doc.pdf"
+    f.write_text("x")
+    states = {config.source_key_from_path(f): {"ingested_at": "2000-01-01T00:00:00"}}
+    assert _changed_since_ingest(f, states) is True          # mtime ≫ ingested+5
+
+
+def test_is_corpus_path_keeps_in_tree_symlinks(tmp_path, monkeypatch):
+    # A corpus file reached through an in-tree symlinked folder whose target is
+    # OUTSIDE the vault must still count as corpus (ING-02); resolve() dropped it.
+    import os as _os
+    from brag import config
+    vault = tmp_path / "project"
+    vault.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "doc.pdf").write_text("x")
+    _os.symlink(outside, vault / "linked")               # in-tree link → outside target
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", vault)
+    assert config.is_corpus_path(vault / "linked" / "doc.pdf") is True
+    # a genuine lexical '..' escape is still rejected
+    assert config.is_corpus_path(vault / ".." / "outside" / "doc.pdf") is False
+    # WissensWIKI workspace + hidden/_inbox stay excluded
+    assert config.is_corpus_path(vault / "WissensWIKI" / "Notizen" / "n.md") is False
+    assert config.is_corpus_path(vault / "_inbox" / "x.pdf") is False
+
+
+def test_reconcile_skips_suspicious_bulk_loss():
+    # Most of a large corpus vanishing at once → skip the prune (likely a mount
+    # glitch); a few real deletions, or a small corpus, prune normally (ING-01).
+    from brag.watcher import _suspicious_bulk_loss
+    assert _suspicious_bulk_loss(list(range(60)), 100) is True   # 60 of 100 → skip
+    assert _suspicious_bulk_loss(["a", "b"], 100) is False        # 2 of 100 → prune
+    assert _suspicious_bulk_loss(["a", "b", "c"], 4) is False      # small corpus → prune
+
+
 def test_chunk_id_deterministic_for_identical_chunk():
     # Same content+location → same id, so an idempotent re-ingest overwrites in
     # place instead of duplicating.

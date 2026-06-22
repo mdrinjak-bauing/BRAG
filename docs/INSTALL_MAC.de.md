@@ -70,9 +70,15 @@ nichts weiter tun.
    umgeht die Quarantäne-Abfrage komplett.
 2. Öffne diesen Ordner im Finder und mache einen Doppelklick auf
    **`setup.command`**.
-   - Blockiert macOS mit „nicht verifizierter Entwickler": **Rechtsklick** auf
-     die Datei → **Öffnen** → im Dialog erneut **Öffnen**. (Das ist bei jedem
-     unsignierten heruntergeladenen Skript normal — du bestätigst es nur einmal.)
+   - Blockiert macOS („nicht verifizierter Entwickler" / „Apple konnte nicht
+     überprüfen…"): **nicht auf „In den Papierkorb legen" klicken** — die Datei ist
+     sicher. **Rechtsklick** auf die Datei → **Öffnen** → im Dialog erneut **Öffnen**.
+   - Bei neueren macOS-Versionen hat der Rechtsklick-Dialog evtl. keinen
+     „Öffnen"-Knopf. Dann  → **Systemeinstellungen** → **Datenschutz & Sicherheit**
+     öffnen, nach unten scrollen und neben *„setup.command wurde blockiert…"* auf
+     **„Trotzdem öffnen"** klicken; mit Touch ID bestätigen und `setup.command`
+     erneut doppelklicken. (Bei jedem unsignierten heruntergeladenen Skript normal —
+     du bestätigst es nur einmal.)
 
 **Das Setup fragt nacheinander zwei Dinge.** Zuerst fragt ein
 Ordner-Auswahlfenster, *wo das Programm `BRAG Assistent` liegen soll* (z. B. auf

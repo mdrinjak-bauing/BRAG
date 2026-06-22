@@ -1,0 +1,125 @@
+%PDF-1.3
+%“Œ‹ž ReportLab Generated PDF document (opensource)
+1 0 obj
+<<
+/F1 2 0 R /F2 3 0 R
+>>
+endobj
+2 0 obj
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
+endobj
+3 0 obj
+<<
+/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+>>
+endobj
+4 0 obj
+<<
+/Contents 9 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 8 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+5 0 obj
+<<
+/Contents 10 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 8 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+6 0 obj
+<<
+/PageMode /UseNone /Pages 8 0 R /Type /Catalog
+>>
+endobj
+7 0 obj
+<<
+/Author (anonymous) /CreationDate (D:20260622081104+00'00') /Creator (anonymous) /Keywords () /ModDate (D:20260622081104+00'00') /Producer (ReportLab PDF Library - \(opensource\)) 
+  /Subject (unspecified) /Title (BRAG Example Document) /Trapped /False
+>>
+endobj
+8 0 obj
+<<
+/Count 2 /Kids [ 4 0 R 5 0 R ] /Type /Pages
+>>
+endobj
+9 0 obj
+<<
+/Length 1024
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+BT /F2 15 Tf 18 TL ET
+BT 1 0 0 1 60 781.8898 Tm (BRAG - Example Document / Beispiel-Dokument) Tj T* ET
+BT /F1 11 Tf 13.2 TL ET
+BT 1 0 0 1 60 753.8898 Tm (This short example lets you test BRAG right away. Drag it into your project) Tj T* ET
+BT 1 0 0 1 60 737.8898 Tm (folder, wait for the first indexing to finish, then ask the questions shown) Tj T* ET
+BT 1 0 0 1 60 721.8898 Tm (on the BRAG setup screen.) Tj T* ET
+BT 1 0 0 1 60 705.8898 Tm  T* ET
+BT 1 0 0 1 60 689.8898 Tm (BRAG began as a research assistant for a doctoral \(PhD\) project. It indexes) Tj T* ET
+BT 1 0 0 1 60 673.8898 Tm (your documents on your own computer and answers with page-precise citations,) Tj T* ET
+BT 1 0 0 1 60 657.8898 Tm (so every answer links back to the exact page of the original document.) Tj T* ET
+BT 1 0 0 1 60 641.8898 Tm  T* ET
+BT 1 0 0 1 60 625.8898 Tm (\(Dieses Beispiel-Dokument dient nur zum Ausprobieren - du kannst es spaeter) Tj T* ET
+BT 1 0 0 1 60 609.8898 Tm (loeschen.\)) Tj T* ET
+ 
+endstream
+endobj
+10 0 obj
+<<
+/Length 1173
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+BT /F2 15 Tf 18 TL ET
+BT 1 0 0 1 60 781.8898 Tm (Key facts about BRAG) Tj T* ET
+BT /F1 11 Tf 13.2 TL ET
+BT 1 0 0 1 60 753.8898 Tm (BRAG builds its meaning index locally with the Snowflake Arctic embedding) Tj T* ET
+BT 1 0 0 1 60 737.8898 Tm (model \(arctic-embed version 2\), which produces 1024-dimensional vectors.) Tj T* ET
+BT 1 0 0 1 60 721.8898 Tm (Search results are re-ranked by the bge-reranker-v2-m3 model. Documents are) Tj T* ET
+BT 1 0 0 1 60 705.8898 Tm (split into chunks of about 2000 characters with 200 characters of overlap.) Tj T* ET
+BT 1 0 0 1 60 689.8898 Tm  T* ET
+BT 1 0 0 1 60 673.8898 Tm (Supported document types:) Tj T* ET
+BT 1 0 0 1 60 657.8898 Tm (   PDF - .pdf      Word - .docx      PowerPoint - .pptx) Tj T* ET
+BT 1 0 0 1 60 641.8898 Tm (   Markdown - .md      HTML - .html) Tj T* ET
+BT 1 0 0 1 60 625.8898 Tm  T* ET
+BT 1 0 0 1 60 609.8898 Tm (This page \(page 2\) intentionally states that BRAG's local embedding model is) Tj T* ET
+BT 1 0 0 1 60 593.8898 Tm (Snowflake Arctic, so you can verify that the citation link opens the PDF on) Tj T* ET
+BT 1 0 0 1 60 577.8898 Tm (the correct page.) Tj T* ET
+ 
+endstream
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000061 00000 n 
+0000000102 00000 n 
+0000000209 00000 n 
+0000000321 00000 n 
+0000000524 00000 n 
+0000000728 00000 n 
+0000000796 00000 n 
+0000001070 00000 n 
+0000001135 00000 n 
+0000002210 00000 n 
+trailer
+<<
+/ID 
+[<365165b5b1ba53918a3af059122eaee4><365165b5b1ba53918a3af059122eaee4>]
+% ReportLab generated PDF document -- digest (opensource)
+
+/Info 7 0 R
+/Root 6 0 R
+/Size 11
+>>
+startxref
+3435
+%%EOF

@@ -15,8 +15,11 @@ def test_crash_loop_guard_skips_after_limit(tmp_path, monkeypatch):
     assert pipeline._crash_loop_skip(src, p) is True
     assert pipeline._crash_loop_skip(src, p) is True
 
-    # A visible marker was written into the vault root.
-    assert list(tmp_path.glob("INDEX*.md")), "expected an indexing-stopped marker"
+    # A visible marker was written into the WissensWIKI/ workspace (NOT the
+    # corpus root, so the marker is never itself indexed).
+    assert list((tmp_path / config.WISSENSWIKI_NAME).glob("INDEX*.md")), \
+        "expected an indexing-stopped marker under WissensWIKI/"
+    assert not list(tmp_path.glob("INDEX*.md")), "marker must not sit in the corpus root"
 
     # Removing/redropping the source clears the counter -> it retries again.
     pipeline._clear_attempts(src)

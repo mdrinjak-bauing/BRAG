@@ -48,19 +48,23 @@ Claude quietly uses them through a connection called MCP.
 
 ## Where does this get installed on my computer?
 
-There are **two** places — and it really helps to keep them apart:
+There are **three** places — and it really helps to keep them apart:
 
-**1. The project folder — the one you created yourself.** When you unpacked the
-ZIP from GitHub, the unpacked BRAG folder appeared exactly where you unpacked it
-(e.g. under `~/` on a Mac or `C:\Users\<you>\` on Windows — its name comes from
-the ZIP). It holds: the setup
-files, the `docker-compose.yml`, your settings file `.env`, and by default the
-`WissensWIKI/` folder with your documents. You can see, back up and move this folder —
-it's yours.
+**1. The "BRAG Assistent" folder — the program.** When you unpacked the ZIP from
+GitHub, this folder appeared where you unpacked it (e.g. under `~/` on a Mac or
+`C:\Users\<you>\` on Windows — its name comes from the ZIP). It holds the setup
+files, the `docker-compose.yml`, your settings file `.env` and the projects
+registry. You never work inside it — just leave it where it is and don't delete
+it, so BRAG keeps running.
 
-**2. Docker's own storage — which you never touch directly.** On first launch
+**2. Your project folder — the one you picked during setup.** This is *your*
+documents folder: everything in it (any subfolder, any depth) is the searchable
+corpus, and the `WissensWIKI/` workspace (your notes and saved passages) lives
+inside it. You can see, back up and move this folder — it's yours.
+
+**3. Docker's own storage — which you never touch directly.** On first launch
 Docker downloads the program code and the AI models (~3 GB together) and puts
-them in its own managed area — *not* in your project folder. The Qdrant database
+them in its own managed area — *not* in either folder above. The Qdrant database
 lives there too (as a "named volume"). That's deliberate: the database never
 ends up in iCloud/OneDrive (where it would get corrupted), and the 3 GB of
 models don't clutter your project folder. Uninstall Docker and this area is

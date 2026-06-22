@@ -114,7 +114,11 @@ class _FakeClient:
 
 def test_orphaned_collections_is_registry_aware(monkeypatch):
     from brag import config, storage
-    monkeypatch.setattr(config, "COLLECTION_NAME", "asb_local_st_1024", raising=False)
+    # Monkeypatch the REAL module attr that COLLECTION_NAME resolves to, not the
+    # PEP-562 __getattr__-served name itself: setattr(config, "COLLECTION_NAME", …)
+    # leaks a static attribute that permanently shadows __getattr__ for every later
+    # test (monkeypatch "restores" the dynamic value as a static one).
+    monkeypatch.setattr(config, "_DEFAULT_COLLECTION", "asb_local_st_1024")
     # a registered sibling project must NOT be flagged as a droppable orphan
     registry.register("ProjektA", "D:/A", "asb_local_st_1024")  # -> ...__projekta
     client = _FakeClient([
@@ -125,3 +129,39 @@ def test_orphaned_collections_is_registry_aware(monkeypatch):
     ])
     orphans = storage.orphaned_collections(client)
     assert orphans == ["asb_old_768"]
+
+
+def test_registry_register_is_concurrency_safe(tmp_path, monkeypatch):
+    # Concurrent registrations must not lose an append (MP-F04): the file lock
+    # serializes the read-modify-write so every project lands.
+    import threading
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    threads = [threading.Thread(target=registry.register,
+                                args=(f"Project {i}", f"/host/{i}", "asb_x_1024"))
+               for i in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(registry.projects()) == 8
+
+
+def test_remove_keeps_the_shared_base_collection(tmp_path, monkeypatch, capsys):
+    # `remove --delete-index` on the default project must NOT drop the bare base
+    # collection (shared with the single-project fallback) (MP-F08).
+    from brag import projects
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    registry.synthesize_default("/host/x", "asb_local_st_1024")   # default → base
+    registry.register("Thesis", "/host/thesis", "asb_local_st_1024")  # → ...__thesis
+    rc = projects.cmd_remove("default", delete_index=True)
+    assert rc == 0
+    assert "shared base collection" in capsys.readouterr().err     # refused, data kept
+
+
+def test_validate_host_path_rejects_yaml_breaking_chars():
+    # A double-quote or newline would break the double-quoted compose mount line;
+    # reject them. A single quote is legal in folder names and stays allowed (MP-F06).
+    assert registry.validate_host_path('D:/a"b')[0] is False
+    assert registry.validate_host_path("D:/a\nb")[0] is False
+    assert registry.validate_host_path("D:/John's Thesis")[0] is True
+    assert registry.validate_host_path("C:/Users/me/Docs")[0] is True

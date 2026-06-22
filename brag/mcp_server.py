@@ -7,7 +7,7 @@ thin per-project MCP client calls); this module is just the FastMCP surface —
 the tool names, signatures and docstrings Claude sees.
 
 Tools: search, list_sources, inspect_chunks, remove_source, rename_source,
-save_passage, list_passages, list_notebook, read_note, write_note.
+save_passage, list_passages, list_notebook, read_note, write_note, save_report.
 """
 
 from mcp.server.fastmcp import FastMCP
@@ -49,8 +49,9 @@ def list_sources(doc_type: str = "") -> str:
 
 @mcp.tool()
 def inspect_chunks(source_file: str, page: int = 0, limit: int = 10) -> str:
-    """Show what is actually stored in the index for a source (debugging:
-    'why doesn't the search find X?'). Optionally filter by page number."""
+    """Diagnostic tool — show the raw chunks stored in the index for one source,
+    to debug retrieval ('why doesn't search find X?'). NOT for answering a
+    question (use search for that). Optionally filter by page number."""
     return tools.inspect_chunks(source_file, page=page, limit=limit)
 
 
@@ -81,6 +82,10 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
                  note: str = "") -> str:
     """Save a quotable passage under a topic (e.g. a chapter or theme).
 
+    WHEN to use which: a verbatim QUOTE from a source → save_passage (it becomes
+    searchable evidence); YOUR OWN text (notes, drafts, conclusions) → write_note;
+    a finished/compiled deliverable → save_report.
+
     Builds your evidence base in WissensWIKI/Passagen/<topic>.md AND indexes
     the passage for semantic search, so a later chat (even with a different
     provider) finds it again via `search` — it appears as a clearly marked
@@ -92,7 +97,9 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
 
 @mcp.tool()
 def list_passages(topic: str = "") -> str:
-    """List saved passages — for one topic, or an overview of all topics."""
+    """List saved passages: pass a topic to see the passages saved under it, or
+    leave it empty for an overview of all topics. (Saved passages also surface in
+    search, marked as a "saved passage" — this is the by-topic browse view.)"""
     return tools.list_passages(topic=topic)
 
 
@@ -122,12 +129,24 @@ def read_note(path: str) -> str:
 
 @mcp.tool()
 def write_note(path: str, content: str) -> str:
-    """Create or overwrite a NOTEBOOK note — YOUR own thinking (concepts, drafts,
-    conclusions). Saved as plain Markdown under WissensWIKI/ and deliberately
-    NEVER added to the search index. `path` is relative to WissensWIKI/, e.g.
-    'process-maturity.md' or 'Kapitel/2.md' (any subfolder you like). The corpus
-    and the search index are never touched."""
+    """Create a NOTEBOOK note, or APPEND a dated section to an existing one — it
+    never silently overwrites, so your accumulated thinking is safe. For YOUR OWN
+    text (concepts, drafts, conclusions); for a verbatim source quote that should
+    be searchable evidence use save_passage instead. Saved as plain Markdown under
+    WissensWIKI/ and deliberately NEVER added to the search index. `path` is
+    relative to WissensWIKI/, e.g. 'process-maturity.md' or 'Kapitel/2.md' (any
+    subfolder). The corpus and the search index are never touched."""
     return tools.write_note(path, content)
+
+
+@mcp.tool()
+def save_report(title: str, content: str) -> str:
+    """Compile a RESULT/REPORT into the notebook for cheap reuse — a table of
+    findings, a comparison, an analysis summary. Saved as Markdown under
+    WissensWIKI/Berichte/<title>.md and NOT search-indexed, so you can read it
+    back later with read_note('Berichte/<title>.md') instead of re-deriving it
+    (no extra tokens). Writing the same title again appends a dated section."""
+    return tools.save_report(title, content)
 
 
 def _warmup_reranker() -> None:

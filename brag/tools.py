@@ -13,12 +13,11 @@ use config's vault paths — the bridge scopes those per project via
 config.project_context in a later phase; today they target the single vault.
 """
 
-import re
 import shutil
 from datetime import date
 
 from brag import config, storage
-from brag.formatting import format_hit
+from brag.formatting import format_hit, parse_meta_filter
 from brag.search.query import search as run_search
 
 
@@ -27,12 +26,7 @@ def search_text(query: str, top_k: int = 15, doc_type: str = "",
                 source_file: str = "", meta_filter: str = "",
                 reranking: bool | None = None,
                 collection_name: str | None = None) -> str:
-    meta = {}
-    for part in meta_filter.split(","):
-        if "=" in part:
-            key, _, value = part.partition("=")
-            if key.strip() and value.strip():
-                meta[key.strip().lower().replace(" ", "_")] = value.strip()
+    meta = parse_meta_filter(meta_filter)
     hits = run_search(
         query, top_k=top_k, reranking=reranking, collection_name=collection_name,
         doc_type=doc_type or None, chunk_type=chunk_type or None,
@@ -214,7 +208,7 @@ def rename_source(source_file: str, new_name: str) -> str:
 
 
 def _passage_file(topic: str):
-    slug = re.sub(r"[^\w\-]+", "_", topic.strip()).strip("_") or "general"
+    slug = config.slugify_topic(topic)
     config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
     return config.PASSAGES_DIR / f"{slug}.md", slug
 
@@ -318,6 +312,31 @@ def write_note(path: str, content: str) -> str:
     if target.suffix.lower() != ".md":
         target = target.with_suffix(".md")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content, encoding="utf-8")
+    existed = target.exists()
+    if existed:
+        # Never silently overwrite — a running note, or an auto-generated
+        # literature note in Notizen/, must not be clobbered. Append a dated
+        # section so the user's accumulated thinking is preserved (WIK-01/TOOL-F02).
+        with open(target, "a", encoding="utf-8") as f:
+            f.write(f"\n\n---\n\n_added {date.today().isoformat()}_\n\n"
+                    f"{content.rstrip()}\n")
+    else:
+        target.write_text(content.rstrip() + "\n", encoding="utf-8")
     rel_out = target.relative_to(config.WISSENSWIKI_DIR).as_posix()
-    return f"Saved to WissensWIKI/{rel_out} — your notebook (not indexed)."
+    verb = "Appended a dated section to" if existed else "Saved"
+    return f"{verb} WissensWIKI/{rel_out} — your notebook (not indexed)."
+
+
+def save_report(title: str, content: str) -> str:
+    slug = config.slugify_topic(title)
+    base = config.WISSENSWIKI_DIR / "Berichte"
+    base.mkdir(parents=True, exist_ok=True)
+    target = base / f"{slug}.md"
+    existed = target.exists()
+    block = (f"\n\n---\n\n_added {date.today().isoformat()}_\n\n{content.rstrip()}\n"
+             if existed else f"# {title}\n\n{content.rstrip()}\n")
+    with open(target, "a", encoding="utf-8") as f:
+        f.write(block)
+    verb = "Appended to" if existed else "Saved report to"
+    return (f"{verb} WissensWIKI/Berichte/{slug}.md — reuse it later with "
+            f"read_note('Berichte/{slug}.md'); not indexed.")

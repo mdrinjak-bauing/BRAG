@@ -148,7 +148,12 @@ def is_corpus_path(path) -> bool:
     staging (_inbox) dir. The watcher never indexes WissensWIKI (the notebook
     would echo the corpus); Passagen is indexed via save_passage instead."""
     try:
-        rel = Path(path).resolve().relative_to(_vault().resolve())
+        # Compare WITHOUT resolving symlinks: a corpus file reached through an
+        # in-tree symlinked folder whose target lives outside the vault must still
+        # count as corpus (ING-02 — resolve() dropped it silently). abspath()
+        # collapses '.'/'..' lexically, so a literal '..' escape is still rejected.
+        # (The HTTP /file/ serving guard stays resolve-based — that is separate.)
+        rel = Path(os.path.abspath(path)).relative_to(os.path.abspath(_vault()))
     except (ValueError, OSError):
         return False
     parts = rel.parts
@@ -372,3 +377,15 @@ def source_key_variants(value) -> list[str]:
             seen.add(c)
             out.append(c)
     return out
+
+
+def slugify_topic(value) -> str:
+    """Slug for a passage/report topic — NFC-normalized, lowercased, non-word
+    chars collapsed to '_'. Case- and Unicode-form-insensitive, so 'Method',
+    'method' and a macOS-NFD variant all map to the SAME file + index key (a
+    case-sensitive slug silently created two files and made list_passages miss
+    its own passage)."""
+    import re
+    import unicodedata
+    t = unicodedata.normalize("NFC", "" if value is None else str(value)).strip().lower()
+    return re.sub(r"[^\w\-]+", "_", t).strip("_") or "general"

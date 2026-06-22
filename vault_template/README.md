@@ -3,8 +3,8 @@
 This folder is **your** space inside the project — and the one folder here that is
 **not** bulk-indexed (so your own notes never echo back into search):
 
-- **`Passagen/`** — verified passages you save with `/beleg` (save_passage). These
-  **are** indexed, so you can search your curated evidence.
+- **`Passagen/`** — verified passages you save with the `save_passage` tool (just ask
+  Claude to “save this passage”). These **are** indexed, so you can search your curated evidence.
 - **`Notizen/`** and any other subfolders you create — your own writing and notes.
   **Not indexed.** Claude can read and write here (read_note / write_note); name
   the subfolders however you like.

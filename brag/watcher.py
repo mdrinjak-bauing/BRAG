@@ -93,37 +93,56 @@ def _wait_for_stable_file(path: Path, min_wait=3, max_wait=120, poll=2) -> bool:
 
 
 def _changed_since_ingest(path: Path, states: dict) -> bool:
-    """True if `path` was modified AFTER its last ingest — i.e. the document was
-    overwritten in place and its indexed chunks are now stale. Missing files are
-    caught by the corpus check and under-limit partials by the retry check; this
-    ALSO catches a file edited in place after ANY prior ingest, including a
-    retry-exhausted partial the user re-saved to fix. (An unchanged partial is
-    not re-driven here, because its mtime has not advanced — so this never
-    reintroduces an unbounded retry of a permanently-failing document.) `states`
-    is the per-source ingest-log map (fetch once, reuse across files); the small
-    margin absorbs copy-time jitter so a file is never re-ingested right after
-    its first ingest."""
+    """True if `path` was overwritten IN PLACE since its last ingest, so its
+    indexed chunks are now stale. Compares the file's current mtime + size against
+    the values recorded at ingest, so an edit is detected exactly — even one made
+    within seconds of the previous ingest (the old wall-clock margin missed those,
+    ING-07). An UNCHANGED file (including a retry-exhausted partial the user has
+    not re-saved) returns False, so this never reintroduces an unbounded retry of
+    a permanently-failing document. `states` is the per-source ingest-log map
+    (fetch once, reuse across files)."""
     st = states.get(config.source_key_from_path(path))
     if not st or not st.get("ingested_at"):
         return False
     try:
+        cur = path.stat()
+    except OSError:
+        return False
+    if st.get("source_mtime") is not None:
+        return cur.st_mtime != st["source_mtime"] or cur.st_size != st.get("source_size")
+    # Legacy log entry (written before mtime/size were recorded): fall back to the
+    # wall-clock heuristic with a small margin for copy-time jitter.
+    try:
         ingested = datetime.fromisoformat(st["ingested_at"]).timestamp()
-        return path.stat().st_mtime > ingested + 5
+        return cur.st_mtime > ingested + 5
     except (ValueError, OSError):
         return False
+
+
+def _suspicious_bulk_loss(orphaned: list, indexed_count: int) -> bool:
+    """True if 'orphaned' is too large a share of the corpus to plausibly be a
+    real mass deletion (likelier a flaky/half-mounted bind mount): more than half
+    the indexed documents AND more than 10 disappearing in one reconcile. Used to
+    skip the startup prune in that case (ING-01); small corpora are unaffected."""
+    return len(orphaned) > max(10, indexed_count // 2)
 
 
 class DocumentHandler(FileSystemEventHandler):
     def __init__(self, slug=None):
         super().__init__()
-        # The project this observer watches; None = the single-project default.
         self.slug = slug
+        # Pin the project's registry RECORD at observer creation, so a mid-run
+        # registry change (a project removed/renamed) cannot make this still-
+        # running observer fall back to the DEFAULT vault/collection on its next
+        # event (ING-05). None = the single-project default.
+        from brag import registry
+        self.record = registry.get(slug) if slug else None
 
     def dispatch(self, event):
         # Run EVERY on_* callback inside this project's context (per-callback,
         # per-thread) so config's paths + collection resolve to THIS project —
         # one project's file events can never land in another's collection/vault.
-        with config.project_context(self.slug):
+        with config.project_context(self.record):
             super().dispatch(event)
 
     def on_created(self, event):
@@ -274,14 +293,21 @@ def reconcile_on_startup():
     # handler cannot see a deletion that happened with the container stopped (or
     # a delete event the poller missed), so reconcile removes corpus entries
     # whose source file is gone. Skip passages (passage:* keys have no file on
-    # disk). GUARD: never prune when the filesystem scan found ZERO files — a
+    # disk). GUARD 1: never prune when the filesystem scan found ZERO files — a
     # broken/unmounted bind mount would otherwise wipe the entire index.
     if files:
-        orphaned = sorted(
-            k for k in corpus
-            if k not in fs_keys and not k.startswith("passage:")
-        )
-        if orphaned:
+        indexed = [k for k in corpus if not k.startswith("passage:")]
+        orphaned = sorted(k for k in indexed if k not in fs_keys)
+        if orphaned and _suspicious_bulk_loss(orphaned, len(indexed)):
+            # GUARD 2: most of the corpus vanishing at once is far likelier a
+            # flaky/half-mounted bind mount than a real mass delete — skip the
+            # prune and let the live on_deleted handler take genuine deletions
+            # one by one (ING-01).
+            print(f"reconciliation: {len(orphaned)} of {len(indexed)} documents "
+                  "appear missing at once — likely a mount/sync glitch, not a mass "
+                  "delete; skipping the prune (remove documents while BRAG is "
+                  "running so each deletion is handled individually).")
+        elif orphaned:
             print(f"reconciliation: pruning {len(orphaned)} deleted document(s)")
             for key in orphaned:
                 try:
