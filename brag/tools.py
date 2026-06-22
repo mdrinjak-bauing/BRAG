@@ -21,14 +21,15 @@ from brag.formatting import format_hit, parse_meta_filter
 from brag.search.query import search as run_search
 
 
-def search_text(query: str, top_k: int = 15, doc_type: str = "",
+def search_text(query: str, top_k: int = 0, doc_type: str = "",
                 chunk_type: str = "", year_min: int = 0, year_max: int = 0,
                 source_file: str = "", meta_filter: str = "",
                 reranking: bool | None = None, max_per_source: int = 0,
-                collection_name: str | None = None) -> str:
+                mode: str = "normal", collection_name: str | None = None) -> str:
     meta = parse_meta_filter(meta_filter)
     hits = run_search(
-        query, top_k=top_k, reranking=reranking, collection_name=collection_name,
+        query, top_k=(top_k or None), mode=mode, reranking=reranking,
+        collection_name=collection_name,
         max_chunks_per_source=(max_per_source or None),
         doc_type=doc_type or None, chunk_type=chunk_type or None,
         year_min=year_min or None, year_max=year_max or None,
@@ -126,6 +127,56 @@ def inspect_chunks(source_file: str, page: int = 0, limit: int = 10,
             f"context: {pl.get('context') or '(empty)'}\n"
             f"text: {(pl.get('text') or '')[:600]}\n"
         )
+    return "\n".join(out)
+
+
+def read_source(source_file: str, page_from: int = 0, page_to: int = 0,
+                limit: int = 25, collection_name: str | None = None) -> str:
+    """Return a source's chunks in reading order (by page) — no query, no rerank.
+    For reading/evaluating a whole document; optional page_from..page_to range."""
+    from qdrant_client.models import FieldCondition, Filter, MatchAny, Range
+
+    collection_name = collection_name or config.COLLECTION_NAME
+    must = [FieldCondition(
+        key="source_file",
+        match=MatchAny(any=config.source_key_variants(source_file)),
+    )]
+    if page_from:
+        must.append(FieldCondition(key="page_end", range=Range(gte=page_from)))
+    if page_to:
+        must.append(FieldCondition(key="page_start", range=Range(lte=page_to)))
+    client = storage.get_client()
+    try:
+        points, offset = [], None
+        while True:
+            batch, offset = client.scroll(
+                collection_name, limit=1000, offset=offset,
+                scroll_filter=Filter(must=must),
+                with_payload=True, with_vectors=False,
+            )
+            points.extend(batch)
+            if not offset:
+                break
+    finally:
+        client.close()
+    rng = f" (Seiten {page_from}-{page_to})" if (page_from or page_to) else ""
+    if not points:
+        return (f"Kein Inhalt für '{source_file}'{rng} gefunden. "
+                "Prüfe den genauen Namen über list_sources().")
+    points.sort(key=lambda p: ((p.payload or {}).get("page_start", 0),
+                               (p.payload or {}).get("page_end", 0)))
+    total = len(points)
+    shown = points[:limit] if limit and limit > 0 else points
+    head = (f"**{source_file}** — {total} Abschnitte in Lesereihenfolge{rng}"
+            + (f", erste {len(shown)} gezeigt" if len(shown) < total else "") + "\n")
+    out = [head]
+    for p in shown:
+        pl = p.payload or {}
+        out.append(f"--- S. {pl.get('page_start')} | {pl.get('chunk_type')} "
+                   f"| {pl.get('chapter') or '—'}\n{pl.get('text') or ''}\n")
+    if len(shown) < total:
+        out.append(f"\n… {total - len(shown)} weitere Abschnitte. Mit "
+                   "page_from/page_to eingrenzen oder limit erhöhen.")
     return "\n".join(out)
 
 

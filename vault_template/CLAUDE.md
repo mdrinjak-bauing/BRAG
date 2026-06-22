@@ -24,7 +24,7 @@ students and teach two courses." -->
 ## How to search my corpus
 
 - Always use the `search` tool before answering content questions — never answer from memory about my documents.
-- **Scale retrieval to the task** with `top_k` (breadth) and `max_per_source` (depth per document): a precise fact → `top_k` 5–8; a normal question → 12–15; a **literature review / broad survey** → `top_k` 30–50 across several differently-phrased searches; to **evaluate a specific report in depth** → set `source_file=` and raise `max_per_source` (e.g. 8–15).
+- **Scale retrieval to the task** with `search`'s `mode`: `'precise'` for a single fact, `'normal'` (default), `'review'` for a literature survey across many sources (run several differently-phrased searches), `'deep'` (with `source_file=`) to dig into one report. To read or evaluate a whole document end-to-end, use `read_source`. (Advanced: override `top_k`/`max_per_source`.)
 - Try multiple phrasings: my native-language term, the English term, a paraphrase.
 - Use `chunk_type="table"` when I ask for numbers or statistics, `chunk_type="figure"` for diagrams.
 - Every hit has a clickable PDF link — carry it into your answer when citing.

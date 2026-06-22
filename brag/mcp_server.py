@@ -6,8 +6,9 @@ tool LOGIC lives in brag/tools.py (shared with the HTTP-bridge dispatcher that a
 thin per-project MCP client calls); this module is just the FastMCP surface —
 the tool names, signatures and docstrings Claude sees.
 
-Tools: search, list_sources, inspect_chunks, remove_source, rename_source,
-save_passage, list_passages, list_notebook, read_note, write_note, save_report.
+Tools: search, list_sources, inspect_chunks, read_source, remove_source,
+rename_source, save_passage, list_passages, list_notebook, read_note, write_note,
+save_report.
 """
 
 from mcp.server.fastmcp import FastMCP
@@ -18,72 +19,89 @@ mcp = FastMCP("brag")
 
 
 @mcp.tool()
-def search(query: str, top_k: int = 15, doc_type: str = "",
+def search(query: str, top_k: int = 0, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
            source_file: str = "", meta_filter: str = "",
-           reranking: bool | None = None, max_per_source: int = 0) -> str:
-    """Hybrid search (semantic + keyword) over the document corpus.
+           reranking: bool | None = None, max_per_source: int = 0,
+           mode: str = "normal") -> str:
+    """Hybride Suche (Bedeutung + Stichwort) über den Dokumenten-Korpus.
 
-    Scale retrieval to the TASK via top_k (how many passages you get back) and
-    max_per_source (how many may come from the SAME document; 0 = default 3):
-    - a precise / single-fact question → top_k 5-8;
-    - a normal question → top_k 12-15 (default);
-    - a LITERATURE REVIEW / broad survey across many sources → top_k 30-50, keep
-      max_per_source small for breadth, and run several searches with different
-      phrasings, then synthesise;
-    - to evaluate one or a few specific REPORTS in depth → set source_file= and
-      raise max_per_source (e.g. 8-15) so you get many passages from each.
+    Wähle `mode` passend zur Aufgabe (setzt sinnvolle Breite/Tiefe):
+    - 'precise' punktgenaue Einzelfrage (wenige, fokussierte Treffer);
+    - 'normal'  normale Frage (Standard);
+    - 'review'  Literaturrecherche / breite Übersicht über viele Quellen (weites
+      Netz; dazu mehrere Suchen mit verschiedenen Formulierungen, dann zusammenführen);
+    - 'deep'    einen/wenige konkrete Berichte vertieft lesen — mit source_file= kombinieren.
+    Feineinstellung (optional): top_k = genaue Trefferzahl; max_per_source = wie viele
+    Treffer aus derselben Quelle kommen dürfen.
 
-    Try multiple phrasings (synonyms, English/native-language variants).
-    Use chunk_type='table' for numbers/statistics, 'figure' for diagrams.
-    meta_filter restricts hits by the user's own metadata fields (defined
-    in _meta.txt files in the knowledge store), format 'key=value' with commas for
-    several, e.g. meta_filter='project=School Center' or
-    'course=Construction Management, semester=WS25'. If the user names a
-    project/course/client context, ALWAYS set this filter — otherwise hits
-    from unrelated projects mix into the results.
-    Every hit header is a clickable link that opens the PDF at the right
-    page — ALWAYS carry that link into your answer when citing the source.
+    Probiere mehrere Formulierungen (Synonyme, deutsch/englisch).
+    chunk_type='table' für Zahlen/Statistiken, 'figure' für Abbildungen.
+    meta_filter schränkt auf eigene Metadaten-Felder ein (in _meta.txt im
+    Wissensspeicher definiert), Format 'schlüssel=wert', mehrere mit Komma, z. B.
+    meta_filter='projekt=Schulzentrum' oder 'kurs=Baumanagement, semester=WS25'.
+    Nennt der Nutzer einen Projekt-/Kurs-/Mandanten-Kontext, setze diesen Filter
+    IMMER — sonst mischen sich Treffer aus fremden Projekten in die Ergebnisse.
+    Jede Treffer-Überschrift ist ein anklickbarer Link, der das PDF an der richtigen
+    Seite öffnet — übernimm ihn IMMER in deine Antwort, wenn du die Quelle zitierst.
     """
     return tools.search_text(
         query, top_k=top_k, doc_type=doc_type, chunk_type=chunk_type,
         year_min=year_min, year_max=year_max, source_file=source_file,
-        meta_filter=meta_filter, reranking=reranking, max_per_source=max_per_source)
+        meta_filter=meta_filter, reranking=reranking, max_per_source=max_per_source,
+        mode=mode)
 
 
 @mcp.tool()
 def list_sources(doc_type: str = "") -> str:
-    """List all indexed documents with chunk counts, grouped by type."""
+    """Listet alle indexierten Dokumente (nach Typ gruppiert, mit Chunk-Anzahl).
+    Nutze dies ZUERST, um vor einer Literaturrecherche den Korpus zu sichten und
+    die genauen `source_file`-Schlüssel zu sehen, die search/read_source erwarten."""
     return tools.list_sources(doc_type=doc_type)
 
 
 @mcp.tool()
 def inspect_chunks(source_file: str, page: int = 0, limit: int = 10) -> str:
-    """Diagnostic tool — show the raw chunks stored in the index for one source,
-    to debug retrieval ('why doesn't search find X?'). NOT for answering a
-    question (use search for that). Optionally filter by page number."""
+    """Diagnose-Werkzeug — zeigt die roh gespeicherten Chunks einer Quelle, um die
+    Suche zu debuggen („warum findet search X nicht?"). NICHT zum Beantworten einer
+    Frage (dafür search bzw. read_source). Optional nach Seitenzahl filtern."""
     return tools.inspect_chunks(source_file, page=page, limit=limit)
 
 
 @mcp.tool()
-def remove_source(source_file: str) -> str:
-    """Remove a document from the SEARCH INDEX — use it to drop a wrong,
-    duplicate or outdated source the user no longer wants in results.
+def read_source(source_file: str, page_from: int = 0, page_to: int = 0,
+                limit: int = 25) -> str:
+    """Liest ein Dokument in LESEREIHENFOLGE (nach Seite) — um einen ganzen Bericht
+    zusammenzufassen oder zu bewerten, nicht zum Suchen. Keine Suchanfrage, kein
+    Reranking; gibt die Abschnitte in Seitenreihenfolge zurück. `source_file` ist der
+    Schlüssel aus list_sources. Optional grenzen page_from/page_to einen Seitenbereich
+    ein; `limit` begrenzt die Zahl der Abschnitte (für lange Dokumente erhöhen oder
+    einen Seitenbereich nutzen)."""
+    return tools.read_source(source_file, page_from=page_from, page_to=page_to,
+                             limit=limit)
 
-    Safe and reversible: the file is NOT deleted, it is moved into an
-    _inbox/ (a staging area the watcher ignores) so it can't be re-indexed, and
-    its chunks + literature note are removed from the index. `source_file` is the
-    key shown by list_sources (e.g. 'projects/Bericht'). Call once per source."""
+
+@mcp.tool()
+def remove_source(source_file: str) -> str:
+    """Entfernt ein Dokument aus dem SUCHINDEX — um eine falsche, doppelte oder
+    veraltete Quelle loszuwerden, die der Nutzer nicht mehr in den Treffern will.
+
+    Sicher und umkehrbar: Die Datei wird NICHT gelöscht, sondern in einen _inbox/
+    verschoben (ein Bereich, den der Watcher ignoriert), damit sie nicht neu indexiert
+    wird; ihre Chunks + Literaturnotiz werden aus dem Index entfernt. `source_file` ist
+    der von list_sources gezeigte Schlüssel (z. B. 'projekte/Bericht'). Pro Quelle
+    einmal aufrufen."""
     return tools.remove_source(source_file)
 
 
 @mcp.tool()
 def rename_source(source_file: str, new_name: str) -> str:
-    """Rename / re-file an indexed document and update its index metadata IN
-    PLACE (no re-embedding). Renames/moves the FILE in your project folder;
-    `new_name` may include a relative folder to also move it (e.g.
-    'projects/School_Center/Final_Report'). The original file suffix is kept if
-    you omit it. `source_file` is the current key from list_sources."""
+    """Benennt ein indexiertes Dokument um / legt es neu ab und aktualisiert seine
+    Index-Metadaten AN ORT UND STELLE (kein erneutes Embedding). Benennt/verschiebt
+    die DATEI im Projektordner; `new_name` darf einen relativen Ordner enthalten, um
+    sie auch zu verschieben (z. B. 'projekte/Schulzentrum/Endbericht'). Die
+    ursprüngliche Dateiendung bleibt erhalten, wenn du sie weglässt. `source_file` ist
+    der aktuelle Schlüssel aus list_sources."""
     return tools.rename_source(source_file, new_name)
 
 

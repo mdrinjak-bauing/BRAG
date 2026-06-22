@@ -136,28 +136,40 @@ def _diversify(candidates: list[dict], top_k: int, max_per_source: int) -> list[
     return hits
 
 
+# Task presets → (top_k, max_per_source). "normal" uses the config defaults; an
+# explicit top_k / max_chunks_per_source argument still overrides the preset.
+_MODE_PRESETS = {
+    "precise": (6, 2),    # a single pinpoint fact
+    "review": (40, 2),    # broad literature survey: wide net, few per source
+    "deep": (20, 12),     # read one/few specific reports in depth (with source_file)
+}
+
+
 def search(query: str, top_k: int | None = None, reranking: bool | None = None,
-           max_chunks_per_source: int | None = None,
+           max_chunks_per_source: int | None = None, mode: str = "normal",
            collection_name: str | None = None, **filters) -> list[dict]:
     """Run hybrid search, return ranked hits as plain dicts.
 
-    collection_name defaults to the single-project config.COLLECTION_NAME; the
-    multi-project bridge passes a per-project collection so each project searches
-    only its own data."""
+    `mode` picks task-appropriate breadth/depth (precise/normal/review/deep); an
+    explicit top_k or max_chunks_per_source overrides the preset. collection_name
+    defaults to the single-project config.COLLECTION_NAME; the multi-project bridge
+    passes a per-project collection so each project searches only its own data."""
     from qdrant_client.models import FusionQuery, Prefetch
     from brag import storage
 
     collection_name = collection_name or config.COLLECTION_NAME
-    top_k = top_k or config.DEFAULT_TOP_K
-    if top_k <= 0:
-        top_k = config.DEFAULT_TOP_K
+    preset = _MODE_PRESETS.get((mode or "normal").strip().lower())
+    base_top_k = preset[0] if preset else config.DEFAULT_TOP_K
+    base_mps = preset[1] if preset else config.MAX_CHUNKS_PER_SOURCE
+    if not top_k or top_k <= 0:
+        top_k = base_top_k
     # Large top_k stays deliberately supported (prefetch/fusion scale with it);
     # clamp only against an absurd value that would make Qdrant pathological.
     top_k = min(top_k, config.MAX_TOP_K)
     if reranking is None:
         reranking = config.RERANK_ENABLED
-    if max_chunks_per_source is None:
-        max_chunks_per_source = config.MAX_CHUNKS_PER_SOURCE
+    if max_chunks_per_source is None or max_chunks_per_source <= 0:
+        max_chunks_per_source = base_mps
 
     embedder = get_embedder()
     dense_q = embedder.embed_query(query)

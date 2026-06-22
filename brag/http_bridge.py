@@ -243,11 +243,13 @@ class BridgeHandler(BaseHTTPRequestHandler):
         top_k = raw_top if isinstance(raw_top, int) and raw_top > 0 else None
         raw_mps = body.get("max_per_source")
         max_per_source = raw_mps if isinstance(raw_mps, int) and raw_mps > 0 else None
+        mode = str(body.get("mode", "normal") or "normal")
         meta = body.get("meta")
         try:
             hits = run_search(
                 str(body.get("query", "")),
                 top_k=top_k,
+                mode=mode,
                 reranking=body.get("reranking"),
                 max_chunks_per_source=max_per_source,
                 collection_name=collection,
@@ -296,6 +298,10 @@ class BridgeHandler(BaseHTTPRequestHandler):
             "inspect_chunks": lambda: tools.inspect_chunks(
                 str(a.get("source_file", "")), page=_int(a.get("page")),
                 limit=_int(a.get("limit", 10), 10), collection_name=collection),
+            "read_source": lambda: tools.read_source(
+                str(a.get("source_file", "")), page_from=_int(a.get("page_from")),
+                page_to=_int(a.get("page_to")), limit=_int(a.get("limit", 25), 25),
+                collection_name=collection),
             "remove_source": lambda: tools.remove_source(str(a.get("source_file", ""))),
             "rename_source": lambda: tools.rename_source(
                 str(a.get("source_file", "")), str(a.get("new_name", ""))),
