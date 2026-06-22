@@ -24,11 +24,12 @@ from brag.search.query import search as run_search
 def search_text(query: str, top_k: int = 15, doc_type: str = "",
                 chunk_type: str = "", year_min: int = 0, year_max: int = 0,
                 source_file: str = "", meta_filter: str = "",
-                reranking: bool | None = None,
+                reranking: bool | None = None, max_per_source: int = 0,
                 collection_name: str | None = None) -> str:
     meta = parse_meta_filter(meta_filter)
     hits = run_search(
         query, top_k=top_k, reranking=reranking, collection_name=collection_name,
+        max_chunks_per_source=(max_per_source or None),
         doc_type=doc_type or None, chunk_type=chunk_type or None,
         year_min=year_min or None, year_max=year_max or None,
         source_file=source_file or None, meta=meta or None,

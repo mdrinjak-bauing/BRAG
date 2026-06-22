@@ -21,8 +21,18 @@ mcp = FastMCP("brag")
 def search(query: str, top_k: int = 15, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
            source_file: str = "", meta_filter: str = "",
-           reranking: bool | None = None) -> str:
+           reranking: bool | None = None, max_per_source: int = 0) -> str:
     """Hybrid search (semantic + keyword) over the document corpus.
+
+    Scale retrieval to the TASK via top_k (how many passages you get back) and
+    max_per_source (how many may come from the SAME document; 0 = default 3):
+    - a precise / single-fact question → top_k 5-8;
+    - a normal question → top_k 12-15 (default);
+    - a LITERATURE REVIEW / broad survey across many sources → top_k 30-50, keep
+      max_per_source small for breadth, and run several searches with different
+      phrasings, then synthesise;
+    - to evaluate one or a few specific REPORTS in depth → set source_file= and
+      raise max_per_source (e.g. 8-15) so you get many passages from each.
 
     Try multiple phrasings (synonyms, English/native-language variants).
     Use chunk_type='table' for numbers/statistics, 'figure' for diagrams.
@@ -38,7 +48,7 @@ def search(query: str, top_k: int = 15, doc_type: str = "",
     return tools.search_text(
         query, top_k=top_k, doc_type=doc_type, chunk_type=chunk_type,
         year_min=year_min, year_max=year_max, source_file=source_file,
-        meta_filter=meta_filter, reranking=reranking)
+        meta_filter=meta_filter, reranking=reranking, max_per_source=max_per_source)
 
 
 @mcp.tool()

@@ -241,12 +241,15 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 return
         raw_top = body.get("top_k")
         top_k = raw_top if isinstance(raw_top, int) and raw_top > 0 else None
+        raw_mps = body.get("max_per_source")
+        max_per_source = raw_mps if isinstance(raw_mps, int) and raw_mps > 0 else None
         meta = body.get("meta")
         try:
             hits = run_search(
                 str(body.get("query", "")),
                 top_k=top_k,
                 reranking=body.get("reranking"),
+                max_chunks_per_source=max_per_source,
                 collection_name=collection,
                 doc_type=str(body.get("doc_type", "")) or None,
                 chunk_type=str(body.get("chunk_type", "")) or None,

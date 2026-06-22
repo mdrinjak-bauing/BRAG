@@ -124,3 +124,20 @@ def test_format_hit_non_numeric_offset_is_ignored(monkeypatch):
     hit = {"source_file": "b.pdf", "rel_path": "sources/b.pdf", "page_start": 12,
            "page_offset": "abc", "text": "x"}
     assert "p. 12" in format_hit(1, hit)
+
+
+def test_search_text_threads_max_per_source(monkeypatch):
+    # The model-facing max_per_source lever must reach run_search; 0 means
+    # "use the config default" (passed as None).
+    captured = {}
+
+    def fake_run_search(*a, **k):
+        captured.clear()
+        captured.update(k)
+        return []
+
+    monkeypatch.setattr(tools, "run_search", fake_run_search)
+    tools.search_text("q", max_per_source=12)
+    assert captured.get("max_chunks_per_source") == 12
+    tools.search_text("q")  # default 0 -> None -> config.MAX_CHUNKS_PER_SOURCE
+    assert captured.get("max_chunks_per_source") is None
