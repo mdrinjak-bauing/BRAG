@@ -51,20 +51,26 @@ Claude, und Claude nutzt beides im Hintergrund über eine Verbindung namens MCP.
 
 ## Wo wird das auf meinem Rechner installiert?
 
-Es gibt **zwei** Orte — und es hilft sehr, sie auseinanderzuhalten:
+Es gibt **drei** Orte — und es hilft sehr, sie auseinanderzuhalten:
 
-**1. Der Projektordner — der, den du selbst angelegt hast.** Als du die
-ZIP-Datei von GitHub entpackt hast, ist der entpackte BRAG-Ordner entstanden —
-genau dort, wo du entpackt hast (z. B. unter `~/` auf dem Mac oder
-`C:\Users\<du>\` unter Windows; sein Name stammt aus der ZIP). Darin liegen: die
-Setup-Dateien, die `docker-compose.yml`, deine Einstellungsdatei `.env` und
-standardmäßig der `WissensWIKI/`-Ordner mit deinen Dokumenten. Diesen Ordner kannst du
-sehen, sichern, verschieben — er gehört dir.
+**1. Der „BRAG Assistent"-Ordner — das Programm.** Als du die ZIP-Datei von
+GitHub entpackt hast, ist dieser Ordner genau dort entstanden, wo du entpackt
+hast (z. B. unter `~/` auf dem Mac oder `C:\Users\<du>\` unter Windows; sein
+Name stammt aus der ZIP). Darin liegen die Setup-Dateien, die
+`docker-compose.yml`, deine Einstellungsdatei `.env` und die Projekt-Registry.
+Du arbeitest nie darin — lass ihn einfach liegen, wo er ist, und lösche ihn
+nicht, damit BRAG weiterläuft.
 
-**2. Dockers eigener Speicher — den du nie direkt anfasst.** Beim ersten Start
+**2. Dein Projektordner — der, den du beim Setup ausgewählt hast.** Das ist
+*dein* Dokumentenordner: Alles darin (jeder Unterordner, beliebig tief) ist der
+durchsuchbare Korpus, und der `WissensWIKI/`-Arbeitsbereich (deine Notizen und
+gespeicherten Passagen) liegt darin. Diesen Ordner kannst du sehen, sichern und
+verschieben — er gehört dir.
+
+**3. Dockers eigener Speicher — den du nie direkt anfasst.** Beim ersten Start
 lädt Docker den Programmcode und die KI-Modelle (zusammen ~3 GB) herunter und
-legt sie in seinem eigenen, verwalteten Bereich ab — *nicht* in deinem
-Projektordner. Dort lebt auch die Qdrant-Datenbank (als „benanntes Volume").
+legt sie in seinem eigenen, verwalteten Bereich ab — *nicht* in einem der beiden
+Ordner oben. Dort lebt auch die Qdrant-Datenbank (als „benanntes Volume").
 Das ist Absicht: So landet die Datenbank nie versehentlich in iCloud/OneDrive
 (wo sie beschädigt würde), und die 3 GB Modelle müllen deinen Projektordner
 nicht zu. Deinstallierst du Docker, verschwindet dieser Bereich wieder — dein
