@@ -136,6 +136,111 @@ def test_save_report_writes_a_reusable_note_outside_the_index(tmp_path, monkeypa
     assert tools.read_note("Berichte/q1_findings.md").startswith("# Q1 Findings")
 
 
+def test_list_reports_lists_saved_reports(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    assert "Noch keine Berichte" in tools.list_reports()
+    tools.save_report("Nachtrags-Status", "inhalt")
+    out = tools.list_reports()
+    assert "Nachtrags-Status" in out                  # title from the first heading
+    assert "Berichte/nachtrags-status.md" in out      # read_note hint
+
+
+def test_set_metadata_writes_and_merges_meta_txt(tmp_path, monkeypatch):
+    # set_metadata writes a corpus folder's _meta.txt (key normalised) and is
+    # non-destructive: same key is replaced, other keys are kept. (Index re-apply
+    # is best-effort and skipped here — no live Qdrant.)
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    folder = config.SOURCES_DIR / "Nachtraege"
+    folder.mkdir(parents=True, exist_ok=True)
+    out = tools.set_metadata("Nachtraege", "Projekt Name", "Schulzentrum")
+    meta = (folder / "_meta.txt").read_text(encoding="utf-8")
+    assert "projekt_name: Schulzentrum" in meta        # spaces -> _, lower-cased
+    assert "meta_filter='projekt_name=Schulzentrum'" in out
+    tools.set_metadata("Nachtraege", "kunde", "Stadt")          # second key added
+    tools.set_metadata("Nachtraege", "projekt_name", "Bruecke")  # same key replaced
+    meta2 = (folder / "_meta.txt").read_text(encoding="utf-8")
+    assert meta2.count("projekt_name:") == 1 and "Bruecke" in meta2
+    assert "kunde: Stadt" in meta2
+
+
+def test_set_metadata_refuses_outside_corpus(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    assert "Abgelehnt" in tools.set_metadata("../escape", "k", "v")
+    assert "Abgelehnt" in tools.set_metadata(config.WISSENSWIKI_NAME, "k", "v")
+
+
+def test_delete_note_two_step_and_scope(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    tools.write_note("Notizen/x.md", "hi")
+    p = tmp_path / config.WISSENSWIKI_NAME / "Notizen" / "x.md"
+    assert "Sicher?" in tools.delete_note("Notizen/x.md")     # no confirm → asks
+    assert p.exists()                                          # still there
+    assert "Gelöscht" in tools.delete_note("Notizen/x.md", confirm=True)
+    assert not p.exists()
+    # scope: Passagen and corpus escapes are refused even with confirm
+    assert "delete_passage" in tools.delete_note("Passagen/p.md", confirm=True)
+    assert "WissensWIKI" in tools.delete_note("../../evil.md", confirm=True)
+
+
+def test_delete_passage_removes_index_first_then_file(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
+    f = config.PASSAGES_DIR / "method.md"
+    f.write_text("# Passages: Method\n", encoding="utf-8")
+    seen = {}
+
+    def fake_unindex(slug):
+        seen["slug"] = slug
+        return 4
+
+    monkeypatch.setattr(tools, "_unindex_passage", fake_unindex)
+    assert "Sicher?" in tools.delete_passage("Method")         # no confirm → asks
+    assert f.exists()
+    out = tools.delete_passage("Method", confirm=True)
+    assert not f.exists() and "4 Chunks" in out and seen["slug"] == "method"
+
+
+def test_delete_passage_aborts_when_index_unreachable(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
+    f = config.PASSAGES_DIR / "method.md"
+    f.write_text("# Passages: Method\n", encoding="utf-8")
+
+    def boom(slug):
+        raise RuntimeError("no qdrant")
+
+    monkeypatch.setattr(tools, "_unindex_passage", boom)
+    out = tools.delete_passage("Method", confirm=True)
+    assert "NICHT" in out and f.exists()       # file preserved, no orphan index
+
+
+def test_move_note_moves_renames_and_guards(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    nb = tmp_path / config.WISSENSWIKI_NAME
+    tools.write_note("Notizen/x.md", "hi")
+    # move into a NEW subfolder (created automatically)
+    out = tools.move_note("Notizen/x.md", "Kapitel/2/x.md")
+    assert "Kapitel/2/x.md" in out
+    assert not (nb / "Notizen" / "x.md").exists()
+    assert (nb / "Kapitel" / "2" / "x.md").exists()
+    # rename in place
+    tools.move_note("Kapitel/2/x.md", "Kapitel/2/thema_final.md")
+    assert (nb / "Kapitel" / "2" / "thema_final.md").exists()
+    # guards: no overwrite, no Passagen target, no corpus escape
+    tools.write_note("Notizen/a.md", "a")
+    tools.write_note("Notizen/b.md", "b")
+    assert "existiert bereits" in tools.move_note("Notizen/a.md", "Notizen/b.md")
+    assert "Notizbuch" in tools.move_note("Notizen/a.md", "Passagen/a.md")
+    assert "Notizbuch" in tools.move_note("../evil.md", "Notizen/z.md")
+
+
 def test_diversify_backfills_instead_of_starving():
     # A source-skewed pool (one book dominates) must still return ~top_k, not a
     # short list: the over-cap, non-duplicate chunks backfill the empty slots.

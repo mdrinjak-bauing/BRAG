@@ -21,14 +21,16 @@ from brag.formatting import format_hit, parse_meta_filter
 from brag.search.query import search as run_search
 
 
-def search_text(query: str, top_k: int = 15, doc_type: str = "",
+def search_text(query: str, top_k: int = 0, doc_type: str = "",
                 chunk_type: str = "", year_min: int = 0, year_max: int = 0,
                 source_file: str = "", meta_filter: str = "",
-                reranking: bool | None = None,
-                collection_name: str | None = None) -> str:
+                reranking: bool | None = None, max_per_source: int = 0,
+                mode: str = "normal", collection_name: str | None = None) -> str:
     meta = parse_meta_filter(meta_filter)
     hits = run_search(
-        query, top_k=top_k, reranking=reranking, collection_name=collection_name,
+        query, top_k=(top_k or None), mode=mode, reranking=reranking,
+        collection_name=collection_name,
+        max_chunks_per_source=(max_per_source or None),
         doc_type=doc_type or None, chunk_type=chunk_type or None,
         year_min=year_min or None, year_max=year_max or None,
         source_file=source_file or None, meta=meta or None,
@@ -125,6 +127,56 @@ def inspect_chunks(source_file: str, page: int = 0, limit: int = 10,
             f"context: {pl.get('context') or '(empty)'}\n"
             f"text: {(pl.get('text') or '')[:600]}\n"
         )
+    return "\n".join(out)
+
+
+def read_source(source_file: str, page_from: int = 0, page_to: int = 0,
+                limit: int = 25, collection_name: str | None = None) -> str:
+    """Return a source's chunks in reading order (by page) — no query, no rerank.
+    For reading/evaluating a whole document; optional page_from..page_to range."""
+    from qdrant_client.models import FieldCondition, Filter, MatchAny, Range
+
+    collection_name = collection_name or config.COLLECTION_NAME
+    must = [FieldCondition(
+        key="source_file",
+        match=MatchAny(any=config.source_key_variants(source_file)),
+    )]
+    if page_from:
+        must.append(FieldCondition(key="page_end", range=Range(gte=page_from)))
+    if page_to:
+        must.append(FieldCondition(key="page_start", range=Range(lte=page_to)))
+    client = storage.get_client()
+    try:
+        points, offset = [], None
+        while True:
+            batch, offset = client.scroll(
+                collection_name, limit=1000, offset=offset,
+                scroll_filter=Filter(must=must),
+                with_payload=True, with_vectors=False,
+            )
+            points.extend(batch)
+            if not offset:
+                break
+    finally:
+        client.close()
+    rng = f" (Seiten {page_from}-{page_to})" if (page_from or page_to) else ""
+    if not points:
+        return (f"Kein Inhalt für '{source_file}'{rng} gefunden. "
+                "Prüfe den genauen Namen über list_sources().")
+    points.sort(key=lambda p: ((p.payload or {}).get("page_start", 0),
+                               (p.payload or {}).get("page_end", 0)))
+    total = len(points)
+    shown = points[:limit] if limit and limit > 0 else points
+    head = (f"**{source_file}** — {total} Abschnitte in Lesereihenfolge{rng}"
+            + (f", erste {len(shown)} gezeigt" if len(shown) < total else "") + "\n")
+    out = [head]
+    for p in shown:
+        pl = p.payload or {}
+        out.append(f"--- S. {pl.get('page_start')} | {pl.get('chunk_type')} "
+                   f"| {pl.get('chapter') or '—'}\n{pl.get('text') or ''}\n")
+    if len(shown) < total:
+        out.append(f"\n… {total - len(shown)} weitere Abschnitte. Mit "
+                   "page_from/page_to eingrenzen oder limit erhöhen.")
     return "\n".join(out)
 
 
@@ -340,3 +392,169 @@ def save_report(title: str, content: str) -> str:
     verb = "Appended to" if existed else "Saved report to"
     return (f"{verb} WissensWIKI/Berichte/{slug}.md — reuse it later with "
             f"read_note('Berichte/{slug}.md'); not indexed.")
+
+
+def list_reports() -> str:
+    base = config.WISSENSWIKI_DIR / "Berichte"
+    files = sorted(base.glob("*.md")) if base.exists() else []
+    if not files:
+        return ("Noch keine Berichte. Lege einen mit save_report an "
+                "(→ WissensWIKI/Berichte/, nicht indexiert).")
+    out = [f"**Gespeicherte Berichte ({len(files)}):**\n"]
+    for f in files:
+        first = f.read_text(encoding="utf-8").lstrip().splitlines()
+        title = first[0].lstrip("# ").strip() if first else f.stem
+        out.append(f"- `{title}` — lesen mit read_note('Berichte/{f.name}')")
+    return "\n".join(out)
+
+
+def recent_sources(limit: int = 15, collection_name: str | None = None) -> str:
+    collection_name = collection_name or config.COLLECTION_NAME
+    client = storage.get_client()
+    try:
+        latest: dict[str, tuple[str, str]] = {}  # source -> (timestamp, doc_type)
+        offset = None
+        while True:
+            points, offset = client.scroll(
+                collection_name, limit=1000, offset=offset,
+                with_payload=["source_file", "ingest_timestamp", "doc_type"],
+                with_vectors=False,
+            )
+            for p in points:
+                pl = p.payload or {}
+                src = pl.get("source_file", "?")
+                ts = pl.get("ingest_timestamp", "") or ""
+                if src not in latest or ts > latest[src][0]:
+                    latest[src] = (ts, pl.get("doc_type", "?"))
+            if not offset:
+                break
+    finally:
+        client.close()
+    if not latest:
+        return ("Der Index ist leer — lege Dokumente in deinen Projektordner.")
+    ranked = sorted(latest.items(), key=lambda kv: kv[1][0], reverse=True)
+    ranked = ranked[:limit] if limit and limit > 0 else ranked
+    out = [f"**Zuletzt aufgenommen ({len(ranked)}):**\n"]
+    for src, (ts, dtype) in ranked:
+        out.append(f"- `{src}` — {ts[:10] or '?'} ({dtype})")
+    return "\n".join(out)
+
+
+def set_metadata(folder: str, key: str, value: str) -> str:
+    """Write/merge `key: value` into a corpus folder's _meta.txt and re-apply it to
+    the already-indexed documents there (no re-embedding)."""
+    key = key.strip().lower().replace(" ", "_")
+    value = value.strip()
+    if not key or not value:
+        return ("Gib key UND value an, z. B. "
+                "set_metadata('Nachtraege', 'projekt', 'Schulzentrum').")
+    target_dir = _resolve_under(folder, config.SOURCES_DIR)
+    if target_dir is None or not config.is_corpus_path(target_dir):
+        return "Abgelehnt: Der Ordner muss im Korpus liegen (nicht WissensWIKI/)."
+    if not target_dir.is_dir():
+        return (f"Kein Ordner '{folder}' im Projektordner. "
+                "Prüfe die Ordner über list_sources().")
+    meta_file = target_dir / "_meta.txt"
+    lines, found = [], False
+    if meta_file.exists():
+        for line in meta_file.read_text(encoding="utf-8").splitlines():
+            s = line.strip()
+            if s and not s.startswith("#") and ":" in s:
+                k = s.split(":", 1)[0].strip().lower().replace(" ", "_")
+                if k == key:
+                    lines.append(f"{key}: {value}")
+                    found = True
+                    continue
+            lines.append(line)
+    if not found:
+        lines.append(f"{key}: {value}")
+    meta_file.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    n = -1
+    try:
+        from brag.ingest.pipeline import reapply_folder_metadata
+        n = reapply_folder_metadata(target_dir)
+    except Exception:  # noqa: BLE001 — index refresh is best-effort; the file is written
+        pass
+    tail = f"; {n} indexierte Chunks aktualisiert" if n >= 0 else ""
+    return (f"Metadaten '{key}={value}' für Ordner '{folder}' gesetzt{tail}. "
+            f"Jetzt filterbar mit meta_filter='{key}={value}'.")
+
+
+def delete_note(path: str, confirm: bool = False) -> str:
+    """Delete a WissensWIKI notebook file (Notizen/, Berichte/, … — NOT Passagen/
+    nor the corpus). Two-step: refuses unless confirm=True."""
+    target = _resolve_under(path, config.WISSENSWIKI_DIR)
+    if target is None or not _is_notebook_path(target):
+        return ("delete_note löscht nur im WissensWIKI-Notizbuch (Notizen/, Berichte/, "
+                "…) — nicht Passagen/ (dafür delete_passage) und nie den Korpus.")
+    if target.suffix.lower() != ".md":
+        target = target.with_suffix(".md")
+    if not target.is_file():
+        return f"Keine Notiz: {path}"
+    rel = target.relative_to(config.WISSENSWIKI_DIR).as_posix()
+    if not confirm:
+        return (f"Sicher? Das löscht WissensWIKI/{rel} unwiderruflich. "
+                "Zum Bestätigen erneut mit confirm=True aufrufen.")
+    target.unlink()
+    return f"Gelöscht: WissensWIKI/{rel}."
+
+
+def _unindex_passage(slug: str) -> int:
+    """Drop a saved passage's points from the search index (Qdrant)."""
+    from brag.ingest.pipeline import remove_source as _remove
+    return _remove(f"passage:{slug}")
+
+
+def delete_passage(topic: str, confirm: bool = False) -> str:
+    """Delete all saved passages of a topic (Passagen/<slug>.md) AND their index
+    points. Two-step: refuses unless confirm=True. Index is removed first, so a
+    failure leaves the file (and index) intact rather than orphaning entries."""
+    slug = config.slugify_topic(topic)
+    path = config.PASSAGES_DIR / f"{slug}.md"
+    if not path.is_file():
+        return (f"Keine Passagen-Datei für '{topic}'. "
+                "Themen siehst du über list_passages().")
+    if not confirm:
+        return (f"Sicher? Das löscht ALLE Passagen unter '{topic}' "
+                f"(WissensWIKI/Passagen/{slug}.md) UND entfernt sie aus dem Suchindex. "
+                "Zum Bestätigen erneut mit confirm=True aufrufen.")
+    try:
+        removed = _unindex_passage(slug)
+    except Exception:  # noqa: BLE001 — keep file+index consistent: abort if index down
+        return ("Der Suchindex ist gerade nicht erreichbar — die Passage wurde NICHT "
+                "gelöscht (sonst bliebe ein verwaister Index-Eintrag). Bitte erneut "
+                "versuchen, sobald BRAG läuft.")
+    path.unlink()
+    return (f"Gelöscht: WissensWIKI/Passagen/{slug}.md, "
+            f"{removed} Chunks aus dem Suchindex entfernt.")
+
+
+def move_note(path: str, new_path: str) -> str:
+    """Move or rename a notebook file within WissensWIKI (creates target subfolders;
+    never overwrites). Notebook only — not Passagen/ nor the corpus."""
+    src = _resolve_under(path, config.WISSENSWIKI_DIR)
+    if src is None or not _is_notebook_path(src):
+        return ("move_note bewegt nur Notizbuch-Dateien (Notizen/, Berichte/, …) — "
+                "nicht Passagen/ und nicht den Korpus.")
+    if src.suffix.lower() != ".md":
+        src = src.with_suffix(".md")
+    if not src.is_file():
+        return f"Keine Notiz: {path}"
+    dst = _resolve_under(new_path, config.WISSENSWIKI_DIR)
+    if dst is None or not _is_notebook_path(dst):
+        return ("Abgelehnt: Das Ziel muss im Notizbuch liegen "
+                "(nicht Passagen/ oder Korpus).")
+    if dst.suffix.lower() != ".md":
+        dst = dst.with_suffix(".md")
+    src_rel = src.relative_to(config.WISSENSWIKI_DIR).as_posix()
+    if dst.resolve() == src.resolve():
+        return "Quelle und Ziel sind identisch."
+    if dst.exists():
+        return f"Am Ziel existiert bereits {dst.name} — wähle einen anderen Namen."
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        shutil.move(str(src), str(dst))
+    except OSError as e:
+        return f"Konnte die Notiz nicht verschieben: {e}"
+    dst_rel = dst.relative_to(config.WISSENSWIKI_DIR).as_posix()
+    return f"Verschoben: WissensWIKI/{src_rel} → WissensWIKI/{dst_rel}."

@@ -1,9 +1,11 @@
 # My knowledge store — Instructions for Claude
 
-<!-- This file teaches Claude how to work with YOUR research. Claude Desktop
-(in a Project) and Claude Code read it automatically. Fill in the
-placeholders — concrete beats generic. Keep it updated: whenever you correct
-Claude twice about the same thing, the correction belongs in here. -->
+<!-- This file teaches Claude how to work with YOUR research. Claude Code reads it
+automatically; in Claude Desktop it is NOT read on its own — create a Project and
+paste this file's content into the Project's custom instructions (see the README,
+"Use BRAG with a Claude Project"). Fill in the placeholders — concrete beats
+generic. Keep it updated: whenever you correct Claude twice about the same thing,
+the correction belongs in here. -->
 
 ## Who I am and what I research
 
@@ -19,16 +21,47 @@ students and teach two courses." -->
 - `WissensWIKI/` is my workspace, and **nothing under it is indexed** (so my notes never echo back into search):
   - `Passagen/` — quotable passages I saved with the `save_passage` tool (I just ask Claude to “save this passage”). These ARE indexed.
   - `Notizen/` + any free subfolders I make — my notebook (concepts, drafts, decisions, thinking). Claude reads and writes here via `read_note`/`write_note`. **Never treat notebook content as external evidence** — these are my notes, not sources.
+  - `Routinen/` — my reusable task recipes (named workflows Claude follows; see "How you take work off my hands").
   - `CLAUDE.md`/`AGENTS.md` — these guides.
 
 ## How to search my corpus
 
 - Always use the `search` tool before answering content questions — never answer from memory about my documents.
+- **Scale retrieval to the task** with `search`'s `mode`: `'precise'` for a single fact, `'normal'` (default), `'review'` for a literature survey across many sources (run several differently-phrased searches), `'deep'` (with `source_file=`) to dig into one report. To read or evaluate a whole document end-to-end, use `read_source`. (Advanced: override `top_k`/`max_per_source`.)
+- **Big tasks → decompose (map-reduce).** Evaluating *many* reports/sources is NOT one search: enumerate them (`list_sources` / `recent_sources` / a `meta_filter`), then run one focused `read_source` or `search` **per item**, summarise each, and only then synthesise. A single search deliberately returns the *most relevant* passages — more chunks ≠ a better answer.
 - Try multiple phrasings: my native-language term, the English term, a paraphrase.
 - Use `chunk_type="table"` when I ask for numbers or statistics, `chunk_type="figure"` for diagrams.
 - Every hit has a clickable PDF link — carry it into your answer when citing.
 - If the corpus has nothing on a topic, say so plainly. Never invent sources or page numbers.
 - When a hit is genuinely useful for my work, offer to save it with `save_passage`.
+
+## How you take work off my hands (so I don't repeat context)
+
+My knowledge store is our shared memory — chats forget, the folder doesn't. Get
+context from there instead of asking me for it.
+
+- **"What's the status on X?"** → first read `Notizen/<X>.md` (and any `Berichte/`),
+  then top it up with `search`; summarise the state + open points. Don't ask me for
+  background — fetch it.
+- **"Let's continue on X."** → open the note/report for X, briefly recap where we
+  left off, then carry on there.
+- **"Save the results."** → file them yourself in the right place: state/decisions →
+  `write_note('Notizen/<X>.md', …)`; a finished deliverable → `save_report`; a
+  quotable source → `save_passage`. Append dated; never overwrite.
+- **At the end of a working session**, proactively write the new state + next steps
+  into the topic note, so the next chat picks up seamlessly.
+- **Convention:** one topic = one note `Notizen/<Topic>.md` (status on top, then
+  dated sections). Reorganise notes with `move_note` when needed.
+
+## My routines (treat these as commands — don't ask me to explain)
+
+When my message matches a trigger below, READ that file in `Routinen/` and run its
+steps with the tools, without asking me for background:
+
+- „hol mich auf den Stand" / „woran haben wir gearbeitet?" → `Routinen/Hol-mich-auf-den-Stand.md`
+- „aktualisier das Quellenverzeichnis" / „die Quellenliste" → `Routinen/Quellenverzeichnis-aktualisieren.md`
+
+To add a routine: drop a new `.md` in `Routinen/`, then add one trigger line here.
 
 ## Citation style
 

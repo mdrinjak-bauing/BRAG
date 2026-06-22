@@ -124,3 +124,32 @@ def test_format_hit_non_numeric_offset_is_ignored(monkeypatch):
     hit = {"source_file": "b.pdf", "rel_path": "sources/b.pdf", "page_start": 12,
            "page_offset": "abc", "text": "x"}
     assert "p. 12" in format_hit(1, hit)
+
+
+def test_search_text_threads_levers(monkeypatch):
+    # The model-facing levers must reach run_search; 0/empty mean "use defaults"
+    # (top_k -> None, max_per_source -> None, mode -> 'normal').
+    captured = {}
+
+    def fake_run_search(*a, **k):
+        captured.clear()
+        captured.update(k)
+        return []
+
+    monkeypatch.setattr(tools, "run_search", fake_run_search)
+    tools.search_text("q", max_per_source=12, mode="deep", top_k=40)
+    assert captured.get("max_chunks_per_source") == 12
+    assert captured.get("mode") == "deep"
+    assert captured.get("top_k") == 40
+    tools.search_text("q")  # defaults
+    assert captured.get("max_chunks_per_source") is None
+    assert captured.get("top_k") is None
+    assert captured.get("mode") == "normal"
+
+
+def test_mode_presets_resolve():
+    # mode maps to (top_k, max_per_source); an explicit value overrides the preset.
+    from brag.search import query
+    assert query._MODE_PRESETS["review"][0] >= 30      # broad survey = wide net
+    assert query._MODE_PRESETS["deep"][1] >= 8          # deep = many per source
+    assert query._MODE_PRESETS["precise"][0] <= 8       # precise = few hits
