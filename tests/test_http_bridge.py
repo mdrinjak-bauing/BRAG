@@ -157,6 +157,16 @@ def test_serve_vault_file_forces_download_for_non_pdf(tmp_path, monkeypatch):
     assert h.captured.extra.get("Content-Disposition") == "attachment"
 
 
+def test_serve_vault_file_sets_cross_origin_resource_policy(tmp_path, monkeypatch):
+    # Both the inline PDF and the forced download carry CORP: same-origin, so a
+    # cross-origin web page cannot embed/read the served bytes (SEC-01).
+    _vault(tmp_path, monkeypatch)
+    for rel in ("doc.pdf", "note.html"):
+        h = _make_handler()
+        h._serve_vault_file(rel)
+        assert h.captured.extra.get("Cross-Origin-Resource-Policy") == "same-origin", rel
+
+
 def test_serve_vault_file_blocks_dotdot_escape(tmp_path, monkeypatch):
     _vault(tmp_path, monkeypatch)
     for rel in ("../secret.txt", "../../secret.txt",

@@ -70,8 +70,10 @@ def cmd_remove(slug: str, delete_index: bool = False) -> int:
                 client.close()
             print(f"deleted index: {coll}")
         except Exception as e:  # noqa: BLE001 — index delete is best-effort
-            print(f"warning: could not delete index {coll}: {e}",
-                  file=sys.stderr)
+            print(f"WARNING: the connection was removed, but its search index "
+                  f"'{coll}' could NOT be deleted and still holds this project's "
+                  f"document text ({type(e).__name__}). Remove it later via the "
+                  f"Qdrant dashboard, or re-run with the stack up.", file=sys.stderr)
     return 0
 
 

@@ -32,3 +32,12 @@ def test_sync_invalid_json_degrades(tmp_path, monkeypatch):
     monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "p.json"))
     out = json.loads(claude_sync.sync("{ not valid"))
     assert "brag" in out["mcpServers"]  # resets to a fresh config + the default
+
+
+def test_sync_refuses_to_clobber_malformed_mcpservers(tmp_path, monkeypatch):
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "p.json"))
+    # mcpServers PRESENT but not an object (corrupt config): must NOT be
+    # overwritten — returned unchanged, no 'brag' key added (MP-F10).
+    out = json.loads(claude_sync.sync(json.dumps({"mcpServers": ["oops"], "keep": 1})))
+    assert out["mcpServers"] == ["oops"]   # preserved, not clobbered
+    assert out["keep"] == 1

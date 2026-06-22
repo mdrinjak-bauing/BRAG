@@ -22,9 +22,13 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 
 # Host-path characters that break Docker Compose interpolation ($) or batch /
-# shell quoting; rejected up front (superset of tools/pick_folder.ps1's set) so a
-# bad path never reaches a generated compose mount line.
-INVALID_PATH_CHARS = set("$&%^!")
+# shell quoting, plus the double-quote and newlines that would break the
+# double-quoted YAML scalar the compose mount line is emitted as (MP-F06).
+# Rejected up front (superset of tools/pick_folder.ps1's set) so a bad path never
+# reaches a generated compose mount line. NOTE: the single quote is allowed —
+# it is legal and common in folder names ("John's Thesis") and is safe inside a
+# double-quoted YAML scalar.
+INVALID_PATH_CHARS = set('$&%^!"\n\r')
 
 
 def registry_path() -> Path:

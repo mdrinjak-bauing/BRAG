@@ -156,3 +156,12 @@ def test_remove_keeps_the_shared_base_collection(tmp_path, monkeypatch, capsys):
     rc = projects.cmd_remove("default", delete_index=True)
     assert rc == 0
     assert "shared base collection" in capsys.readouterr().err     # refused, data kept
+
+
+def test_validate_host_path_rejects_yaml_breaking_chars():
+    # A double-quote or newline would break the double-quoted compose mount line;
+    # reject them. A single quote is legal in folder names and stays allowed (MP-F06).
+    assert registry.validate_host_path('D:/a"b')[0] is False
+    assert registry.validate_host_path("D:/a\nb")[0] is False
+    assert registry.validate_host_path("D:/John's Thesis")[0] is True
+    assert registry.validate_host_path("C:/Users/me/Docs")[0] is True

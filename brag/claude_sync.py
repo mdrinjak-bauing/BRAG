@@ -31,6 +31,11 @@ def sync(config_text: str) -> str:
     if not isinstance(root, dict):
         root = {}
     servers = root.get("mcpServers")
+    if "mcpServers" in root and not isinstance(servers, dict):
+        # Present but malformed (not an object): refuse to overwrite it — return
+        # the config unchanged so a recoverable config is never clobbered (MP-F10).
+        # BRAG's connector is simply not added until the user fixes the file.
+        return json.dumps(root, indent=2)
     if not isinstance(servers, dict):
         servers = {}
         root["mcpServers"] = servers

@@ -362,14 +362,19 @@ class BridgeHandler(BaseHTTPRequestHandler):
             if not target.is_file():
                 self._send(404, b"file not found", "text/plain")
                 return
+            # Cross-Origin-Resource-Policy stops a cross-origin web page from
+            # embedding/reading these bytes; with the Host allowlist and no CORS
+            # headers, the served file stays loopback-same-origin only (SEC-01).
             if target.suffix.lower() == ".pdf":
                 # PDFs render inline so the browser can jump to #page=N.
-                self._send(200, target.read_bytes(), "application/pdf")
+                self._send(200, target.read_bytes(), "application/pdf",
+                           extra={"Cross-Origin-Resource-Policy": "same-origin"})
             else:
                 # Never serve knowledge-store content (.html/.md/…) as active,
                 # same-origin HTML — hand it back as a download (stored-XSS hardening).
                 self._send(200, target.read_bytes(), "application/octet-stream",
-                           extra={"Content-Disposition": "attachment"})
+                           extra={"Content-Disposition": "attachment",
+                                  "Cross-Origin-Resource-Policy": "same-origin"})
 
     def _send(self, code: int, body: bytes, mime: str, extra: dict | None = None):
         self.send_response(code)
