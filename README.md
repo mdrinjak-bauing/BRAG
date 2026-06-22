@@ -198,6 +198,25 @@ Obsidian. Guide: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
 With both: *"Search definitions of process maturity (library), compare with my
 concept note (notebook), and fill in what's missing — with citations."*
 
+## Use BRAG with a Claude Project (recommended)
+
+Connecting BRAG gives Claude the **tools**; a Project gives it the **way of
+working** — so it searches before answering, cites with page links, and saves
+results to the right place **without you re-explaining context every time.**
+
+- **Claude Desktop:** create a **Project** for your knowledge base, open the
+  `WissensWIKI/CLAUDE.md` that BRAG put in your project folder, and **paste its
+  content into the Project's custom instructions** (fill in the placeholders:
+  your field, citation style, language). Claude Desktop does **not** read the file
+  on its own — the Project instructions are where it takes effect, in every chat.
+- **Claude Code** reads `CLAUDE.md` / `AGENTS.md` from the folder automatically —
+  nothing to paste.
+
+Once set up, the knowledge store becomes your shared memory: *"What's the status on
+X?"* → Claude reads your topic note and tops it up with search; *"save the results"*
+→ it files them itself. Keep `CLAUDE.md` updated — whenever you correct Claude twice
+about the same thing, put the rule in there.
+
 ## Choose your profile
 
 The profile only picks the **text AI** (writing context, describing figures).

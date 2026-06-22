@@ -1,9 +1,11 @@
 # My knowledge store — Instructions for Claude
 
-<!-- This file teaches Claude how to work with YOUR research. Claude Desktop
-(in a Project) and Claude Code read it automatically. Fill in the
-placeholders — concrete beats generic. Keep it updated: whenever you correct
-Claude twice about the same thing, the correction belongs in here. -->
+<!-- This file teaches Claude how to work with YOUR research. Claude Code reads it
+automatically; in Claude Desktop it is NOT read on its own — create a Project and
+paste this file's content into the Project's custom instructions (see the README,
+"Use BRAG with a Claude Project"). Fill in the placeholders — concrete beats
+generic. Keep it updated: whenever you correct Claude twice about the same thing,
+the correction belongs in here. -->
 
 ## Who I am and what I research
 
@@ -31,6 +33,24 @@ students and teach two courses." -->
 - Every hit has a clickable PDF link — carry it into your answer when citing.
 - If the corpus has nothing on a topic, say so plainly. Never invent sources or page numbers.
 - When a hit is genuinely useful for my work, offer to save it with `save_passage`.
+
+## How you take work off my hands (so I don't repeat context)
+
+My knowledge store is our shared memory — chats forget, the folder doesn't. Get
+context from there instead of asking me for it.
+
+- **"What's the status on X?"** → first read `Notizen/<X>.md` (and any `Berichte/`),
+  then top it up with `search`; summarise the state + open points. Don't ask me for
+  background — fetch it.
+- **"Let's continue on X."** → open the note/report for X, briefly recap where we
+  left off, then carry on there.
+- **"Save the results."** → file them yourself in the right place: state/decisions →
+  `write_note('Notizen/<X>.md', …)`; a finished deliverable → `save_report`; a
+  quotable source → `save_passage`. Append dated; never overwrite.
+- **At the end of a working session**, proactively write the new state + next steps
+  into the topic note, so the next chat picks up seamlessly.
+- **Convention:** one topic = one note `Notizen/<Topic>.md` (status on top, then
+  dated sections). Reorganise notes with `move_note` when needed.
 
 ## Citation style
 

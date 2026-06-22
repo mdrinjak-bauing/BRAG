@@ -207,6 +207,25 @@ Mit beiden zusammen: *„Such Definitionen von Prozessreife (Bibliothek),
 vergleiche mit meiner Konzeptnotiz (Notizbuch) und ergänze, was fehlt — mit
 Belegen."*
 
+## BRAG mit einem Claude-Projekt nutzen (empfohlen)
+
+Der BRAG-Anschluss gibt Claude die **Werkzeuge**; ein Projekt gibt ihm die
+**Arbeitsweise** — sodass es vor dem Antworten sucht, mit Seitenlinks zitiert und
+Ergebnisse am richtigen Ort ablegt, **ohne dass du jedes Mal Kontext nachlieferst.**
+
+- **Claude Desktop:** lege ein **Projekt** für deine Wissensbasis an, öffne die
+  `WissensWIKI/CLAUDE.md`, die BRAG in deinen Projektordner gelegt hat, und **kopiere
+  ihren Inhalt in die Projekt-Anweisungen** (Platzhalter ausfüllen: dein Fach,
+  Zitierstil, Sprache). Claude Desktop liest die Datei **nicht** von allein — die
+  Projekt-Anweisungen sind der Ort, an dem sie in **jedem** Chat wirkt.
+- **Claude Code** liest `CLAUDE.md` / `AGENTS.md` aus dem Ordner automatisch — nichts
+  zu kopieren.
+
+Einmal eingerichtet, wird der Wissensspeicher dein gemeinsames Gedächtnis: *„Was ist
+der Stand bei X?"* → Claude liest deine Themen-Notiz und ergänzt per Suche; *„speichere
+die Ergebnisse"* → es legt sie selbst ab. Halte die `CLAUDE.md` aktuell — was du Claude
+zweimal korrigierst, gehört als Regel hinein.
+
 ## Wähle dein Profil
 
 Das Profil wählt nur die **Text-KI** (Kontext schreiben, Abbildungen
