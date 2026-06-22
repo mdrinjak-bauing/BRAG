@@ -136,6 +136,42 @@ def test_save_report_writes_a_reusable_note_outside_the_index(tmp_path, monkeypa
     assert tools.read_note("Berichte/q1_findings.md").startswith("# Q1 Findings")
 
 
+def test_list_reports_lists_saved_reports(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    assert "Noch keine Berichte" in tools.list_reports()
+    tools.save_report("Nachtrags-Status", "inhalt")
+    out = tools.list_reports()
+    assert "Nachtrags-Status" in out                  # title from the first heading
+    assert "Berichte/nachtrags-status.md" in out      # read_note hint
+
+
+def test_set_metadata_writes_and_merges_meta_txt(tmp_path, monkeypatch):
+    # set_metadata writes a corpus folder's _meta.txt (key normalised) and is
+    # non-destructive: same key is replaced, other keys are kept. (Index re-apply
+    # is best-effort and skipped here — no live Qdrant.)
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    folder = config.SOURCES_DIR / "Nachtraege"
+    folder.mkdir(parents=True, exist_ok=True)
+    out = tools.set_metadata("Nachtraege", "Projekt Name", "Schulzentrum")
+    meta = (folder / "_meta.txt").read_text(encoding="utf-8")
+    assert "projekt_name: Schulzentrum" in meta        # spaces -> _, lower-cased
+    assert "meta_filter='projekt_name=Schulzentrum'" in out
+    tools.set_metadata("Nachtraege", "kunde", "Stadt")          # second key added
+    tools.set_metadata("Nachtraege", "projekt_name", "Bruecke")  # same key replaced
+    meta2 = (folder / "_meta.txt").read_text(encoding="utf-8")
+    assert meta2.count("projekt_name:") == 1 and "Bruecke" in meta2
+    assert "kunde: Stadt" in meta2
+
+
+def test_set_metadata_refuses_outside_corpus(tmp_path, monkeypatch):
+    from brag import tools
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path, raising=False)
+    assert "Abgelehnt" in tools.set_metadata("../escape", "k", "v")
+    assert "Abgelehnt" in tools.set_metadata(config.WISSENSWIKI_NAME, "k", "v")
+
+
 def test_diversify_backfills_instead_of_starving():
     # A source-skewed pool (one book dominates) must still return ~top_k, not a
     # short list: the over-cap, non-duplicate chunks backfill the empty slots.

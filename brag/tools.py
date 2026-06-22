@@ -392,3 +392,89 @@ def save_report(title: str, content: str) -> str:
     verb = "Appended to" if existed else "Saved report to"
     return (f"{verb} WissensWIKI/Berichte/{slug}.md — reuse it later with "
             f"read_note('Berichte/{slug}.md'); not indexed.")
+
+
+def list_reports() -> str:
+    base = config.WISSENSWIKI_DIR / "Berichte"
+    files = sorted(base.glob("*.md")) if base.exists() else []
+    if not files:
+        return ("Noch keine Berichte. Lege einen mit save_report an "
+                "(→ WissensWIKI/Berichte/, nicht indexiert).")
+    out = [f"**Gespeicherte Berichte ({len(files)}):**\n"]
+    for f in files:
+        first = f.read_text(encoding="utf-8").lstrip().splitlines()
+        title = first[0].lstrip("# ").strip() if first else f.stem
+        out.append(f"- `{title}` — lesen mit read_note('Berichte/{f.name}')")
+    return "\n".join(out)
+
+
+def recent_sources(limit: int = 15, collection_name: str | None = None) -> str:
+    collection_name = collection_name or config.COLLECTION_NAME
+    client = storage.get_client()
+    try:
+        latest: dict[str, tuple[str, str]] = {}  # source -> (timestamp, doc_type)
+        offset = None
+        while True:
+            points, offset = client.scroll(
+                collection_name, limit=1000, offset=offset,
+                with_payload=["source_file", "ingest_timestamp", "doc_type"],
+                with_vectors=False,
+            )
+            for p in points:
+                pl = p.payload or {}
+                src = pl.get("source_file", "?")
+                ts = pl.get("ingest_timestamp", "") or ""
+                if src not in latest or ts > latest[src][0]:
+                    latest[src] = (ts, pl.get("doc_type", "?"))
+            if not offset:
+                break
+    finally:
+        client.close()
+    if not latest:
+        return ("Der Index ist leer — lege Dokumente in deinen Projektordner.")
+    ranked = sorted(latest.items(), key=lambda kv: kv[1][0], reverse=True)
+    ranked = ranked[:limit] if limit and limit > 0 else ranked
+    out = [f"**Zuletzt aufgenommen ({len(ranked)}):**\n"]
+    for src, (ts, dtype) in ranked:
+        out.append(f"- `{src}` — {ts[:10] or '?'} ({dtype})")
+    return "\n".join(out)
+
+
+def set_metadata(folder: str, key: str, value: str) -> str:
+    """Write/merge `key: value` into a corpus folder's _meta.txt and re-apply it to
+    the already-indexed documents there (no re-embedding)."""
+    key = key.strip().lower().replace(" ", "_")
+    value = value.strip()
+    if not key or not value:
+        return ("Gib key UND value an, z. B. "
+                "set_metadata('Nachtraege', 'projekt', 'Schulzentrum').")
+    target_dir = _resolve_under(folder, config.SOURCES_DIR)
+    if target_dir is None or not config.is_corpus_path(target_dir):
+        return "Abgelehnt: Der Ordner muss im Korpus liegen (nicht WissensWIKI/)."
+    if not target_dir.is_dir():
+        return (f"Kein Ordner '{folder}' im Projektordner. "
+                "Prüfe die Ordner über list_sources().")
+    meta_file = target_dir / "_meta.txt"
+    lines, found = [], False
+    if meta_file.exists():
+        for line in meta_file.read_text(encoding="utf-8").splitlines():
+            s = line.strip()
+            if s and not s.startswith("#") and ":" in s:
+                k = s.split(":", 1)[0].strip().lower().replace(" ", "_")
+                if k == key:
+                    lines.append(f"{key}: {value}")
+                    found = True
+                    continue
+            lines.append(line)
+    if not found:
+        lines.append(f"{key}: {value}")
+    meta_file.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    n = -1
+    try:
+        from brag.ingest.pipeline import reapply_folder_metadata
+        n = reapply_folder_metadata(target_dir)
+    except Exception:  # noqa: BLE001 — index refresh is best-effort; the file is written
+        pass
+    tail = f"; {n} indexierte Chunks aktualisiert" if n >= 0 else ""
+    return (f"Metadaten '{key}={value}' für Ordner '{folder}' gesetzt{tail}. "
+            f"Jetzt filterbar mit meta_filter='{key}={value}'.")

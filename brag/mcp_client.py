@@ -225,5 +225,31 @@ def save_report(title: str, content: str) -> str:
     return _index_op("save_report", title=title, content=content)
 
 
+@mcp.tool()
+def list_reports() -> str:
+    """Listet deine gespeicherten BERICHTE (save_report → WissensWIKI/Berichte/).
+    Gegenstück zu list_passages/list_notebook für fertige Deliverables; einen Bericht
+    öffnest du mit read_note('Berichte/<datei>.md'). Nicht indexiert."""
+    return _index_op("list_reports")
+
+
+@mcp.tool()
+def recent_sources(limit: int = 15) -> str:
+    """Zeigt die ZULETZT aufgenommenen/aktualisierten Dokumente (nach Indexier-
+    Zeitpunkt absteigend) — um zu sehen, was neu im Projektordner gelandet ist.
+    `limit` begrenzt die Anzahl."""
+    return _index_op("recent_sources", limit=limit)
+
+
+@mcp.tool()
+def set_metadata(folder: str, key: str, value: str) -> str:
+    """Setzt ein eigenes Metadaten-Feld für einen KORPUS-Ordner (schreibt/ergänzt
+    dessen _meta.txt) und wendet es sofort auf die bereits indexierten Dokumente an
+    (kein erneutes Embedding). So taggst du z. B. einen Ordner mit projekt=…/kunde=…/
+    phase=… und filterst danach mit search(meta_filter='…'). `folder` ist relativ zum
+    Projektordner (z. B. 'Nachtraege' oder 'projekte/Schulzentrum')."""
+    return _index_op("set_metadata", folder=folder, key=key, value=value)
+
+
 if __name__ == "__main__":
     mcp.run()

@@ -316,6 +316,12 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 str(a.get("path", "")), str(a.get("content", ""))),
             "save_report": lambda: tools.save_report(
                 str(a.get("title", "")), str(a.get("content", ""))),
+            "list_reports": tools.list_reports,
+            "recent_sources": lambda: tools.recent_sources(
+                limit=_int(a.get("limit", 15), 15), collection_name=collection),
+            "set_metadata": lambda: tools.set_metadata(
+                str(a.get("folder", "")), str(a.get("key", "")),
+                str(a.get("value", ""))),
         }
         handler = ops.get(op)
         if handler is None:
