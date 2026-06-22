@@ -119,6 +119,14 @@ def _changed_since_ingest(path: Path, states: dict) -> bool:
         return False
 
 
+def _suspicious_bulk_loss(orphaned: list, indexed_count: int) -> bool:
+    """True if 'orphaned' is too large a share of the corpus to plausibly be a
+    real mass deletion (likelier a flaky/half-mounted bind mount): more than half
+    the indexed documents AND more than 10 disappearing in one reconcile. Used to
+    skip the startup prune in that case (ING-01); small corpora are unaffected."""
+    return len(orphaned) > max(10, indexed_count // 2)
+
+
 class DocumentHandler(FileSystemEventHandler):
     def __init__(self, slug=None):
         super().__init__()
@@ -285,14 +293,21 @@ def reconcile_on_startup():
     # handler cannot see a deletion that happened with the container stopped (or
     # a delete event the poller missed), so reconcile removes corpus entries
     # whose source file is gone. Skip passages (passage:* keys have no file on
-    # disk). GUARD: never prune when the filesystem scan found ZERO files — a
+    # disk). GUARD 1: never prune when the filesystem scan found ZERO files — a
     # broken/unmounted bind mount would otherwise wipe the entire index.
     if files:
-        orphaned = sorted(
-            k for k in corpus
-            if k not in fs_keys and not k.startswith("passage:")
-        )
-        if orphaned:
+        indexed = [k for k in corpus if not k.startswith("passage:")]
+        orphaned = sorted(k for k in indexed if k not in fs_keys)
+        if orphaned and _suspicious_bulk_loss(orphaned, len(indexed)):
+            # GUARD 2: most of the corpus vanishing at once is far likelier a
+            # flaky/half-mounted bind mount than a real mass delete — skip the
+            # prune and let the live on_deleted handler take genuine deletions
+            # one by one (ING-01).
+            print(f"reconciliation: {len(orphaned)} of {len(indexed)} documents "
+                  "appear missing at once — likely a mount/sync glitch, not a mass "
+                  "delete; skipping the prune (remove documents while BRAG is "
+                  "running so each deletion is handled individually).")
+        elif orphaned:
             print(f"reconciliation: pruning {len(orphaned)} deleted document(s)")
             for key in orphaned:
                 try:

@@ -207,6 +207,15 @@ def test_is_corpus_path_keeps_in_tree_symlinks(tmp_path, monkeypatch):
     assert config.is_corpus_path(vault / "_inbox" / "x.pdf") is False
 
 
+def test_reconcile_skips_suspicious_bulk_loss():
+    # Most of a large corpus vanishing at once → skip the prune (likely a mount
+    # glitch); a few real deletions, or a small corpus, prune normally (ING-01).
+    from brag.watcher import _suspicious_bulk_loss
+    assert _suspicious_bulk_loss(list(range(60)), 100) is True   # 60 of 100 → skip
+    assert _suspicious_bulk_loss(["a", "b"], 100) is False        # 2 of 100 → prune
+    assert _suspicious_bulk_loss(["a", "b", "c"], 4) is False      # small corpus → prune
+
+
 def test_chunk_id_deterministic_for_identical_chunk():
     # Same content+location → same id, so an idempotent re-ingest overwrites in
     # place instead of duplicating.
