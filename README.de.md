@@ -173,9 +173,12 @@ eigenen Notizen nie in den Suchergebnissen wider. Er enthält:
 - **`Wissen/`** (plus beliebige eigene Unterordner) — deine eigenen Notizen und
   Texte. Claude kann hier lesen und schreiben (`read_note` / `write_note`);
   **nicht** indexiert. BRAG legt hier zusätzlich je eingelesener Quelle eine
-  automatische Literaturnotiz ab (ebenfalls nicht indexiert).
+  automatische Literaturnotiz ab (ebenfalls nicht indexiert). Außerdem liegen hier
+  `Übersicht.md` (eine Landkarte, die Claude zuerst liest) und `Verlauf.md` (ein
+  datiertes Log), damit ein neuer Chat sofort weiß, wo ihr steht, und gute
+  Erkenntnisse in Themen-Notizen verdichtet werden statt zu zerfasern.
 - **`CLAUDE.md`** (bringt Claude dein Fachgebiet bei — hier trägst du es ein) und
-  **`AGENTS.md`** (Zusatzregeln für autonome Agenten-Aufgaben). Nicht indexiert.
+  **`AGENTS.md`** (Zusatzregeln für Code-Agenten — Claude Code / autonome Läufe). Nicht indexiert.
 
 **Die eine Regel, die alles erklärt:** Durchsucht wird der **ganze
 Projektordner**, **außer** dem Arbeitsbereich `WissensWIKI/` — und innerhalb von

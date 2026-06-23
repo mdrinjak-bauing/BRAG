@@ -168,9 +168,11 @@ echo back into search results. It holds:
 - **`Wissen/`** (plus any subfolders you create) — your own notes and writing.
   Claude can read and write here (`read_note` / `write_note`); **not** indexed.
   BRAG also drops an auto-generated literature note per ingested source here
-  (likewise not indexed).
+  (likewise not indexed). It also seeds `Übersicht.md` (a map Claude reads first)
+  and `Verlauf.md` (a dated log), so a new chat instantly knows where you are and
+  good findings compound into topic notes instead of scattering.
 - **`CLAUDE.md`** (teaches Claude about your field — you fill it in) and
-  **`AGENTS.md`** (extra rules for autonomous agent tasks). Not indexed.
+  **`AGENTS.md`** (extra rules for code agents — Claude Code / autonomous runs). Not indexed.
 
 **The one rule that explains everything:** the **whole project folder** is
 searched, **except** the `WissensWIKI/` workspace — and within `WissensWIKI/`,
