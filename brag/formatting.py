@@ -67,6 +67,11 @@ def format_hit(i: int, hit: dict, project: str = "") -> str:
     score = hit.get("rerank_score")
     if score is not None:
         meta += f" | rerank: {score:.3f}"
+    # Also expose the raw deep-link on its own line: clients that don't render a
+    # Markdown link (e.g. LM Studio) still show a clickable/copy-paste URL to the
+    # exact page; Claude Desktop just renders it as a second link to the same page.
+    if hit.get("rel_path"):
+        meta += f"\n🔗 {link}"
     text = hit.get("text", "")
     if hit.get("chunk_type") != "table" and len(text) > PREVIEW_CHARS:
         text = text[:PREVIEW_CHARS] + " …"

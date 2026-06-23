@@ -35,6 +35,29 @@ def test_is_corpus_path(tmp_path, monkeypatch):
     assert not config.is_corpus_path(tmp_path.parent / "elsewhere.pdf")  # outside vault
 
 
+def test_is_corpus_path_underscore_convention(tmp_path, monkeypatch):
+    # The visible "don't index" convention: any folder OR file whose name starts
+    # with "_" is skipped — at any depth — without touching .env.
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    monkeypatch.setattr(config, "EXCLUDE_DIRS", set())
+    assert not config.is_corpus_path(tmp_path / "_Archiv" / "old.pdf")
+    assert not config.is_corpus_path(tmp_path / "Projekt" / "_draft" / "x.pdf")
+    assert not config.is_corpus_path(tmp_path / "_scratch.pdf")
+    # a normal sibling stays indexed
+    assert config.is_corpus_path(tmp_path / "Archiv" / "keep.pdf")
+
+
+def test_is_corpus_path_explicit_exclude_dirs(tmp_path, monkeypatch):
+    # The wizard's explicit top-level exclude list (matched on the first segment).
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    monkeypatch.setattr(config, "EXCLUDE_DIRS", {"Rohdaten", "Privat"})
+    assert not config.is_corpus_path(tmp_path / "Rohdaten" / "raw.csv")
+    assert not config.is_corpus_path(tmp_path / "Privat" / "a" / "b.pdf")
+    # only the top level matches: a deeper "Rohdaten" folder is still corpus
+    assert config.is_corpus_path(tmp_path / "Projekt" / "Rohdaten" / "x.pdf")
+    assert config.is_corpus_path(tmp_path / "Berichte" / "x.pdf")
+
+
 def test_project_context_scopes_and_resets(monkeypatch):
     monkeypatch.setattr(config, "_DEFAULT_VAULT", Path("/vault"))
     monkeypatch.setattr(config, "_DEFAULT_COLLECTION", "asb_default")

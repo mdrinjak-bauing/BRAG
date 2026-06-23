@@ -119,6 +119,41 @@ def test_write_env_keeps_model_on_same_profile_rerun(tmp_path, monkeypatch):
     assert "LLM_MODEL=gemma-4-12b-it" in out
 
 
+def test_write_env_persists_and_preserves_exclude_dirs(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup_core, "WORKSPACE", tmp_path)
+    (tmp_path / ".env").write_text("PROFILE=gemini\nVAULT_PATH=/vault\n", encoding="utf-8")
+    # a value passed by the wizard is written ...
+    setup_core.write_env("gemini", "", "english", exclude_dirs="Archiv,Rohdaten")
+    assert "EXCLUDE_DIRS=Archiv,Rohdaten" in (tmp_path / ".env").read_text(encoding="utf-8")
+    # ... and a later settings-only re-run (no value) keeps the existing choice.
+    setup_core.write_env("gemini", "", "english")
+    assert "EXCLUDE_DIRS=Archiv,Rohdaten" in (tmp_path / ".env").read_text(encoding="utf-8")
+
+
+def test_write_env_rejects_newline_injection_in_exclude_dirs(tmp_path, monkeypatch):
+    monkeypatch.setattr(setup_core, "WORKSPACE", tmp_path)
+    setup_core.write_env("gemini", "", "english",
+                         exclude_dirs="Archiv\nGEMINI_API_KEY=leaked")
+    out = (tmp_path / ".env").read_text(encoding="utf-8")
+    # The newline is stripped, so the payload stays a (harmless) part of the
+    # EXCLUDE_DIRS value on ONE line — never a standalone injected KEY=value line.
+    assert "\nGEMINI_API_KEY=leaked" not in out
+    assert "EXCLUDE_DIRS=ArchivGEMINI_API_KEY=leaked" in out
+
+
+def test_filter_chat_models_filters_and_orders():
+    # OpenAI: drop non-chat families, keep gpt/o*, recommended first.
+    raw = ["text-embedding-3-small", "whisper-1", "gpt-4o", "gpt-4o-mini",
+           "dall-e-3", "o3-mini", "tts-1"]
+    out = setup_core._filter_chat_models("openai", raw)
+    assert out[0] == "gpt-4o-mini"                 # recommended preselected
+    assert set(out) == {"gpt-4o-mini", "gpt-4o", "o3-mini"}
+    # Anthropic: list is already chat-only; recommended floats to the top.
+    out = setup_core._filter_chat_models(
+        "anthropic", ["claude-sonnet-4-5", "claude-haiku-4-5"])
+    assert out[0] == "claude-haiku-4-5"
+
+
 def test_seed_vault_is_idempotent_and_nondestructive(tmp_path):
     wiki = tmp_path / "WissensWIKI"
     wiki.mkdir()

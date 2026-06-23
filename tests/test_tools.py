@@ -16,6 +16,17 @@ def test_format_hit_source_has_link_citation_and_rerank(monkeypatch):
     assert "p. 12" in out
     assert "localhost:8765/file/" in out
     assert "rerank: 0.500" in out
+    # The raw deep-link also appears on its own line so clients that don't render
+    # Markdown links (e.g. LM Studio) still show a clickable/copy-paste URL.
+    assert "🔗 http://localhost:8765/file/" in out
+
+
+def test_format_hit_passage_has_no_bare_link(monkeypatch):
+    # Saved passages have no source PDF, so they carry no deep-link line.
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    hit = {"chunk_type": "passage", "topic": "Method", "text": "quote"}
+    assert "🔗" not in format_hit(1, hit)
 
 
 def test_format_hit_page_offset_shows_printed_page(monkeypatch):

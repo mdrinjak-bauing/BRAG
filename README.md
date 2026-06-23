@@ -176,10 +176,13 @@ echo back into search results. It holds:
 
 **The one rule that explains everything:** the **whole project folder** is
 searched, **except** the `WissensWIKI/` workspace — and within `WissensWIKI/`,
-only `Quellenbelege/` is searched. Hidden folders and any `_inbox/` are ignored.
-Anything you add to the project folder is automatically put into the search
-database (the index); take a file back out or delete it and it disappears from
-the database too. Nothing else on your computer is touched.
+only `Quellenbelege/` is searched. **To keep a folder (or file) in the project but
+OUT of the search, give it a name starting with an underscore** — e.g. `_Archive/`,
+`_Raw data/`; hidden folders and the `_inbox/` staging dir are skipped the same
+way. You can also tick whole folders to exclude during setup (or set `EXCLUDE_DIRS`
+in `.env`). Anything else you add to the project folder is automatically put into
+the search database (the index); take a file back out or delete it and it
+disappears from the database too. Nothing else on your computer is touched.
 
 In practice that means: **documents go into the project folder** (or any
 subfolder) — **not** into `Wissen/` (that's your notebook and isn't searched) and

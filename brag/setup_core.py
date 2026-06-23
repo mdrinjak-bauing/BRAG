@@ -106,7 +106,8 @@ def read_existing_env() -> dict:
 
 def write_env(profile: str, api_key: str, language: str,
               vault_path: str = "", llm_model: str = "",
-              rerank_profile: str = "eco", vision_enabled: bool = True) -> None:
+              rerank_profile: str = "eco", vision_enabled: bool = True,
+              exclude_dirs: str = "") -> None:
     # vault_path defaults to "" (NOT a folder) so an empty wizard field falls
     # through to the existing VAULT_PATH in .env — the absolute path the host
     # launcher's folder picker / relocation wrote (e.g. <RAG folder>\WissensWIKI).
@@ -119,6 +120,7 @@ def write_env(profile: str, api_key: str, language: str,
     vault_path = _env_safe(vault_path)
     api_key = _env_safe(api_key)
     llm_model = _env_safe(llm_model)
+    exclude_dirs = _env_safe(exclude_dirs)
     rerank_profile = _env_safe(rerank_profile) or "eco"
     # Map the document language to the answer/notes language. Falls back to
     # English for anything outside the wizard's offered set, so a non-German,
@@ -152,6 +154,12 @@ def write_env(profile: str, api_key: str, language: str,
         lines.append(f"{key_env}={existing[key_env]}")
     if llm_model:
         lines.append(f"LLM_MODEL={llm_model}")
+    # Folders excluded from the index. Written when the wizard sends a value;
+    # otherwise the existing choice is preserved across a settings-only re-run.
+    if exclude_dirs:
+        lines.append(f"EXCLUDE_DIRS={exclude_dirs}")
+    elif existing.get("EXCLUDE_DIRS"):
+        lines.append(f"EXCLUDE_DIRS={existing['EXCLUDE_DIRS']}")
     # Preserve keys the wizard itself does NOT manage but the user may have set by
     # hand — a re-run must never silently drop them: the Claude config dir, a custom
     # bridge port / public URL, and the advanced embedding / retrieval .env dials.
@@ -295,20 +303,54 @@ def mark_setup_complete() -> None:
     SETUP_MARKER.write_text("done\n", encoding="utf-8")
 
 
-def validate_api_key(provider: str, api_key: str) -> tuple[bool, str]:
-    """Live check of a cloud provider's API key (REST, no SDK overhead).
-    provider: 'gemini' | 'openai' | 'anthropic'."""
+# Cheapest capable model per provider — preselected in the wizard's model list.
+_RECOMMENDED_MODEL = {
+    "gemini": "gemini-2.5-flash-lite",
+    "openai": "gpt-4o-mini",
+    "anthropic": "claude-haiku-4-5",
+}
+
+
+def _filter_chat_models(provider: str, ids: list) -> list:
+    """Reduce a provider's raw model list to the chat models worth offering, with
+    the recommended (cheapest) model first so the wizard preselects it."""
+    ids = [i for i in ids if i]
+    if provider == "openai":
+        # OpenAI's /v1/models is noisy (embeddings, audio, image, …). Keep the
+        # chat families and drop the rest by keyword.
+        bad = ("embedding", "whisper", "tts", "audio", "realtime", "dall-e",
+               "image", "moderation", "transcribe", "search", "babbage",
+               "davinci", "codex", "computer-use")
+        ids = [i for i in ids
+               if i.startswith(("gpt", "o1", "o3", "o4", "chatgpt"))
+               and not any(b in i for b in bad)]
+    # gemini is filtered upstream (generateContent only); anthropic returns only
+    # chat models — neither needs a keyword filter here.
+    out = sorted(set(ids))
+    rec = _RECOMMENDED_MODEL.get(provider)
+    if rec in out:
+        out.remove(rec)
+        out.insert(0, rec)
+    return out
+
+
+def list_models(provider: str, api_key: str) -> tuple[bool, str, list]:
+    """Validate a cloud key AND return its chat models (REST, no SDK). One request
+    does both: a 200 means the key works; the body gives the model list for the
+    wizard's dropdown. Returns (ok, message, models); models is [] when the key is
+    bad or the body can't be parsed (the wizard then falls back to a free-text
+    model field). provider: 'gemini' | 'openai' | 'anthropic'."""
     import urllib.error
     import urllib.request
 
     if not api_key or len(api_key) < 20:
-        return False, "That doesn't look like a complete API key."
+        return False, "That doesn't look like a complete API key.", []
 
     if provider == "gemini":
         # Pass the key in the header (x-goog-api-key), not the URL query, so it
         # cannot leak into proxy/server logs — consistent with OpenAI/Anthropic.
         req = urllib.request.Request(
-            "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1",
+            "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000",
             headers={"x-goog-api-key": api_key},
         )
         rejected_hint = ("The key was rejected by Google. Copy it again from "
@@ -322,26 +364,46 @@ def validate_api_key(provider: str, api_key: str) -> tuple[bool, str]:
                          "https://platform.openai.com/api-keys")
     elif provider == "anthropic":
         req = urllib.request.Request(
-            "https://api.anthropic.com/v1/models",
+            "https://api.anthropic.com/v1/models?limit=1000",
             headers={"x-api-key": api_key, "anthropic-version": "2023-06-01"},
         )
         rejected_hint = ("The key was rejected by Anthropic. Copy it again from "
                          "https://console.anthropic.com/")
     else:
-        return False, f"Unknown provider: {provider}"
+        return False, f"Unknown provider: {provider}", []
 
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
-            if resp.status == 200:
-                return True, "Key works!"
+            if resp.status != 200:
+                return False, "Unexpected response — please try again.", []
+            data = json.loads(resp.read() or b"{}")
     except urllib.error.HTTPError as e:
         if e.code in (400, 401, 403):
-            return False, rejected_hint
-        return False, f"The provider answered with an error (HTTP {e.code}). Try again."
-    except OSError:
+            return False, rejected_hint, []
+        return False, f"The provider answered with an error (HTTP {e.code}). Try again.", []
+    except (OSError, json.JSONDecodeError):
         return False, ("Could not reach the provider — check your internet "
-                       "connection and try again.")
-    return False, "Unexpected response — please try again."
+                       "connection and try again."), []
+
+    models: list = []
+    try:
+        if provider == "gemini":
+            for m in data.get("models", []):
+                name = str(m.get("name", ""))
+                methods = m.get("supportedGenerationMethods", []) or []
+                if "generateContent" in methods and "embedding" not in name:
+                    models.append(name.split("/")[-1])
+        else:  # openai / anthropic: a flat {"data": [{"id": ...}]} list
+            models = [str(m.get("id", "")) for m in data.get("data", [])]
+    except (AttributeError, TypeError):
+        models = []
+    return True, "Key works!", _filter_chat_models(provider, models)
+
+
+def validate_api_key(provider: str, api_key: str) -> tuple[bool, str]:
+    """Back-compat (ok, message) check used by the terminal wizard."""
+    ok, message, _ = list_models(provider, api_key)
+    return ok, message
 
 
 def validate_gemini_key(api_key: str) -> tuple[bool, str]:

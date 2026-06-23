@@ -46,7 +46,10 @@ My current focus is fatigue behavior of welded joints. I supervise 4 PhD student
 - **Big tasks → decompose (map-reduce).** Evaluating *many* reports/sources is NOT one search: enumerate them (`list_sources` / `recent_sources` / a `meta_filter`), then run one focused `read_source` or `search` **per item**, summarise each, and only then synthesise.
 - Try multiple phrasings: my native-language term, the English term, a paraphrase.
 - Use `chunk_type="table"` when I ask for numbers or statistics, `chunk_type="figure"` for diagrams.
-- Every hit has a clickable PDF link — carry it into your answer when citing.
+- Every hit carries a deep-link to the exact PDF page (both as a Markdown link and
+  as a plain `🔗 http://localhost:8765/…` URL). **Always reproduce that link
+  verbatim** in your answer when citing — keep the full URL so I can click straight
+  to the page (some chat apps, e.g. LM Studio, only make the plain URL clickable).
 - If the corpus has nothing on a topic, say so plainly. Never invent sources or page numbers.
 - When a hit is genuinely useful, offer to save it with `save_passage` (→ `Quellenbelege/`).
 

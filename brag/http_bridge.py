@@ -104,10 +104,12 @@ class BridgeHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/validate-key":
-            from brag.setup_core import validate_api_key
-            ok, message = validate_api_key(
+            from brag.setup_core import list_models
+            ok, message, models = list_models(
                 str(body.get("provider", "gemini")), str(body.get("key", "")))
-            self._send_json(200, {"ok": ok, "message": message})
+            self._send_json(200, {"ok": ok, "message": message, "models": models})
+        elif parsed.path == "/api/list-folders":
+            self._list_folders()
         elif parsed.path == "/api/check-local":
             self._check_local(body)
         elif parsed.path == "/api/setup":
@@ -134,6 +136,24 @@ class BridgeHandler(BaseHTTPRequestHandler):
             "llm_model": env.get("LLM_MODEL", ""),
             "has_key": bool(key_env and env.get(key_env)),
         })
+
+    def _list_folders(self):
+        """Top-level folders of the chosen project, for the wizard's optional
+        'exclude from index' picker. Best-effort: returns [] if the project is
+        not mounted/listable yet — the "_"-prefix convention works without it.
+        WissensWIKI, hidden and already-"_" dirs are never offered (they can't
+        be corpus anyway)."""
+        folders = []
+        try:
+            for p in sorted(config.VAULT.iterdir()):
+                name = p.name
+                if not p.is_dir() or name == config.WISSENSWIKI_NAME \
+                        or name.startswith((".", "_")):
+                    continue
+                folders.append({"name": name, "excluded": name in config.EXCLUDE_DIRS})
+        except OSError:
+            folders = []
+        self._send_json(200, {"folders": folders})
 
     def _check_local(self, body: dict):
         """Probe LM Studio on the host and list its loaded models."""
@@ -177,6 +197,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 llm_model=str(body.get("llm_model", "")).strip(),
                 rerank_profile=str(body.get("rerank_profile", "eco")).strip() or "eco",
                 vision_enabled=bool(body.get("vision_enabled", True)),
+                exclude_dirs=str(body.get("exclude_dirs", "")).strip(),
             )
             steps.append({"ok": True, "message": "Configuration saved"})
         except OSError as e:

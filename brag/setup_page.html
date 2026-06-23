@@ -157,14 +157,22 @@
     <input id="apikey" placeholder="sk-... / AIza..." autocomplete="off">
     <p id="keymsg" class="hint"></p>
     <p class="hint" data-i="key_privacy"></p>
-    <details>
-      <summary data-i="cloud_model_adv"></summary>
-      <p class="hint" data-i="cloud_model_p"></p>
-      <input id="cloudmodel" placeholder="" autocomplete="off">
-    </details>
+    <!-- Filled after the key validates: the provider's chat models as a dropdown
+         (cheapest preselected) so there is nothing to type. "Other" reveals a
+         free-text field for any id the provider didn't list. -->
+    <div id="cloudmodelblock" style="display:none; margin-top:14px;">
+      <p data-i="cloud_model_pick"></p>
+      <select id="cloudmodelsel" onchange="onCloudModelChange()"></select>
+      <div id="cloudmodelother" style="display:none; margin-top:8px;">
+        <input id="cloudmodel" placeholder="" autocomplete="off">
+        <p class="hint warn" id="cloudmodelwarn" style="display:none"></p>
+      </div>
+      <p class="hint" data-i="cloud_model_dd"></p>
+    </div>
     <div class="row">
       <button onclick="show('s2cloud')" data-i="back"></button><span class="spacer"></span>
       <button class="primary" id="keybtn" onclick="checkKey()" data-i="key_check"></button>
+      <button class="primary" id="cloudcontbtn" style="display:none" onclick="cloudContinue()" data-i="continue"></button>
     </div>
   </div>
 
@@ -213,6 +221,14 @@
       <option value="dutch">Dutch / Nederlands</option>
       <option value="portuguese">Portuguese / Português</option>
     </select>
+    <!-- Optional: tick top-level folders to keep OUT of the index. Only shown
+         when the project folder is mounted and has such folders; otherwise the
+         "_"-prefix convention (see hint) is the way. -->
+    <div id="excludeblock" style="display:none; margin-top:18px;">
+      <h3 data-i="exclude_h"></h3>
+      <p class="hint" data-i="exclude_p"></p>
+      <div id="excludelist"></div>
+    </div>
     <div class="row">
       <button onclick="back3()" data-i="back"></button><span class="spacer"></span>
       <button class="primary" onclick="show('sperf')" data-i="continue"></button>
@@ -341,6 +357,12 @@ const STR = {
     key_privacy:"What happens to your key: it is saved only in a local file (.env) on your computer — never sent to the makers of this app or any third party. It is used solely to authenticate your own requests to the provider you picked. Checking it sends one small test request to that provider to confirm it is valid.",
     cloud_model_adv:"Advanced: choose a specific model (optional)",
     cloud_model_p:"Leave empty to use the provider's recommended default. To switch to a stronger or cheaper model, enter its exact model id — e.g. for Google, gemini-2.5-flash (higher quality) or gemini-2.5-flash-lite (faster); for OpenAI/Anthropic, use an id from that provider's model list. You can change this later by re-running setup.",
+    cloud_model_pick:"Which model should do the analysis?",
+    cloud_model_other:"Other — enter an exact model id",
+    cloud_model_dd:"The cheapest capable model is preselected. Pick another from the list, or choose “Other” to type any exact id. You can change this later by re-running setup.",
+    cloud_model_unknown:"That id isn't in the provider's list — click Continue again to use it anyway.",
+    exclude_h:"Folders to keep out of the index (optional)",
+    exclude_p:"Everything in your project folder is searchable except the ones you tick here. You can also just rename a folder to start with “_” (e.g. _Archive) — folders starting with _ are never indexed.",
     key_check:"Check key & continue",
     lms_h:"Install LM Studio and load a model",
     lms_1:"Install LM Studio (free): lmstudio.ai → Download → open it once.",
@@ -422,6 +444,12 @@ const STR = {
     key_privacy:"Was mit deinem Schlüssel passiert: Er wird nur in einer lokalen Datei (.env) auf deinem Rechner gespeichert — nie an die Macher dieser App oder an Dritte gesendet. Er dient ausschließlich dazu, deine eigenen Anfragen beim gewählten Anbieter zu authentifizieren. Die Prüfung sendet eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu bestätigen.",
     cloud_model_adv:"Erweitert: bestimmtes Modell wählen (optional)",
     cloud_model_p:"Leer lassen für das empfohlene Standardmodell des Anbieters. Für ein stärkeres oder günstigeres Modell die genaue Modell-ID eintragen — z. B. bei Google gemini-2.5-flash (höhere Qualität) oder gemini-2.5-flash-lite (schneller); bei OpenAI/Anthropic eine ID aus der Modell-Liste des Anbieters. Später jederzeit per erneutem Setup änderbar.",
+    cloud_model_pick:"Welches Modell soll die Analyse machen?",
+    cloud_model_other:"Anderes — genaue Modell-ID eingeben",
+    cloud_model_dd:"Das günstigste leistungsfähige Modell ist vorausgewählt. Wähle ein anderes aus der Liste oder „Anderes“, um eine genaue ID einzugeben. Später per erneutem Setup änderbar.",
+    cloud_model_unknown:"Diese ID steht nicht in der Liste des Anbieters — zum Übernehmen erneut auf „Weiter“ klicken.",
+    exclude_h:"Ordner vom Index ausnehmen (optional)",
+    exclude_p:"Alles in deinem Projektordner ist durchsuchbar außer den hier angehakten. Du kannst einen Ordner auch einfach mit „_“ beginnen lassen (z. B. _Archiv) — Ordner mit _ am Anfang werden nie indexiert.",
     key_check:"Schlüssel prüfen & weiter",
     lms_h:"LM Studio installieren und ein Modell laden",
     lms_1:"LM Studio installieren (kostenlos): lmstudio.ai → Download → einmal öffnen.",
@@ -482,7 +510,7 @@ const KEYLINKS = {
   openai:"https://platform.openai.com/api-keys",
   anthropic:"https://console.anthropic.com/",
 };
-const state = { profile:"gemini", provider:"gemini", apikey:"", localModel:"", rerank:"eco", vision:true };
+const state = { profile:"gemini", provider:"gemini", apikey:"", localModel:"", cloudModel:"", rerank:"eco", vision:true };
 let lang = (navigator.language||"en").toLowerCase().startsWith("de") ? "de" : "en";
 
 function t(k){ return (STR[lang] && STR[lang][k]) || STR.en[k] || ""; }
@@ -521,10 +549,70 @@ async function checkKey(){
     const r = await fetch("/api/validate-key",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({provider:state.provider, key})});
     const d = await r.json();
-    if(d.ok){ state.apikey = key; msg.textContent="✓ "+d.message; msg.className="ok"; setTimeout(()=>show("s3"),600); }
+    if(d.ok){ state.apikey = key; msg.textContent="✓ "+d.message; msg.className="ok"; setupCloudModels(d.models||[]); }
     else { msg.textContent=d.message; msg.className="warn"; }
   }catch(e){ msg.textContent="Could not reach the setup service — is it still running?"; msg.className="warn"; }
   btn.disabled = false;
+}
+// After the key validates, offer the provider's chat models as a dropdown
+// (cheapest first). "Other" reveals a free-text field for any unlisted id; an
+// empty / no-list state falls back to that field so setup never gets stuck.
+let CLOUD_MODELS=[], cloudOtherConfirmed=false;
+function setupCloudModels(models){
+  CLOUD_MODELS = models || []; cloudOtherConfirmed=false;
+  const sel=document.getElementById("cloudmodelsel");
+  const other=new Option(t("cloud_model_other"), "__other__");
+  if(CLOUD_MODELS.length){
+    sel.replaceChildren(...CLOUD_MODELS.map(m=>new Option(m,m)), other);
+    sel.value=CLOUD_MODELS[0];
+    document.getElementById("cloudmodelother").style.display="none";
+  } else {
+    sel.replaceChildren(other); sel.value="__other__";
+    document.getElementById("cloudmodelother").style.display="block";
+  }
+  document.getElementById("cloudmodelwarn").style.display="none";
+  document.getElementById("cloudmodelblock").style.display="block";
+  document.getElementById("keybtn").style.display="none";
+  document.getElementById("cloudcontbtn").style.display="inline-block";
+}
+function onCloudModelChange(){
+  const other=document.getElementById("cloudmodelsel").value==="__other__";
+  document.getElementById("cloudmodelother").style.display=other?"block":"none";
+  document.getElementById("cloudmodelwarn").style.display="none"; cloudOtherConfirmed=false;
+}
+function cloudContinue(){
+  const sel=document.getElementById("cloudmodelsel");
+  let model = sel.value;
+  if(model==="__other__"){
+    model = document.getElementById("cloudmodel").value.trim();
+    // Soft check against the fetched list: warn once, then allow on a 2nd click.
+    if(model && CLOUD_MODELS.length && !CLOUD_MODELS.includes(model) && !cloudOtherConfirmed){
+      const warn=document.getElementById("cloudmodelwarn");
+      warn.textContent=t("cloud_model_unknown"); warn.style.display="block";
+      cloudOtherConfirmed=true; return;
+    }
+  }
+  state.cloudModel = model; show("s3");
+}
+// Optional exclude-folder picker: list the project's top-level folders so the
+// user can tick the ones to keep out of the index. Best-effort — silently does
+// nothing if the project isn't mounted (the "_"-prefix convention still works).
+async function loadFolders(){
+  try{
+    const r = await fetch("/api/list-folders",{method:"POST",
+      headers:{"Content-Type":"application/json"}, body:"{}"});
+    const d = await r.json();
+    if(!(d.folders && d.folders.length)) return;
+    const list=document.getElementById("excludelist");
+    list.replaceChildren(...d.folders.map(f=>{
+      const lab=document.createElement("label"); lab.className="check";
+      lab.style.display="block"; lab.style.margin="6px 0";
+      const cb=document.createElement("input"); cb.type="checkbox";
+      cb.value=f.name; cb.checked=!!f.excluded; cb.className="excl";
+      lab.appendChild(cb); lab.append(" "+f.name); return lab;
+    }));
+    document.getElementById("excludeblock").style.display="block";
+  }catch(e){ /* not in setup / project not mounted: rely on the _ convention */ }
 }
 async function checkLocal(profile){
   const msg = document.getElementById("localmsg-"+profile); msg.textContent="…"; msg.className="hint";
@@ -582,13 +670,16 @@ async function apply(){
   const rerank_profile = (rerankEl && rerankEl.value) || state.rerank || "eco";
   const visionEl = document.getElementById("vision");
   const vision_enabled = visionEl ? visionEl.checked : (state.vision !== false);
+  const excl = Array.from(document.querySelectorAll("input.excl:checked"))
+    .map(c=>c.value).join(",");
   await _submitSetup({
     profile: state.profile,
     api_key: cloud ? state.apikey : "",
     language: document.getElementById("language").value,
     vault_path: "",
-    llm_model: cloud ? document.getElementById("cloudmodel").value.trim() : state.localModel,
+    llm_model: cloud ? (state.cloudModel||"") : state.localModel,
     rerank_profile, vision_enabled,
+    exclude_dirs: excl,
   });
 }
 // ── "Change a setting" quick path (existing install only) ──────────────────
@@ -629,6 +720,7 @@ async function saveSettings(){
 }
 applyLang();
 loadCurrent();
+loadFolders();
 </script>
 </body>
 </html>
