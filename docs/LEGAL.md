@@ -9,11 +9,20 @@
 
 ## Disclaimer of warranty
 
+BRAG is a **privately built personal project** — created by one person alongside
+a doctorate and shared as open source, not a commercial product. There is **no
+support obligation, no service-level agreement and no warranty of any kind.**
+
 This software is provided under the [MIT License](../LICENSE) "as is", **without
 any warranty** and without any guarantee of fitness, correctness, data
 protection or legal compliance. You use it at your own risk and on your own
 responsibility. The authors and contributors are not liable for any damages,
 data loss or legal consequences arising from its use.
+
+**You alone decide which documents and data you process with it** — and,
+depending on the chosen profile, where that data is sent (see *Data protection /
+confidentiality* below). That choice, and its consequences, are your
+responsibility.
 
 AI-generated answers and citations can be incorrect or fabricated; always
 verify them against the linked original page before relying on or citing them.

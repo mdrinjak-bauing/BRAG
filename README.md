@@ -628,8 +628,18 @@ contributions back are very welcome.
 
 Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)**.
 
-- **No warranty.** Open source under [MIT](LICENSE), "as is", with no guarantee
-  of data protection or legal compliance. Use at your own responsibility.
+- **A private tool, used at your own risk.** BRAG is a **personal project** I
+  built alongside my doctorate and share as open source — not a commercial
+  product, with no warranty, no support promise and no service-level agreement.
+  It is provided under [MIT](LICENSE), **"as is"**, with no guarantee of
+  correctness, fitness, data protection or legal compliance, and the authors are
+  **not liable** for any damage, data loss or legal consequence from its use.
+- **You decide what you feed it.** BRAG processes whatever you drop in the folder
+  and — depending on your [profile](#choose-your-profile) — sends text excerpts
+  (and, with vision, figure images) to the model you chose. **Which data you
+  process, and where it may go, is your decision and your responsibility:** make
+  sure you hold the rights to your sources, and for confidential or personal
+  material prefer a local profile so nothing leaves your machine.
 - **Verify AI output.** AI-generated answers and citations can be incorrect or
   fabricated; always verify them against the linked original page before relying
   on or citing them.

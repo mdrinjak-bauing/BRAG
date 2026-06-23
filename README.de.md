@@ -656,9 +656,20 @@ diese Richtung baust, freue ich mich über Beiträge zurück ins Projekt.
 
 Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs/LEGAL.de.md)**.
 
-- **Ohne Gewähr.** Open Source unter [MIT](LICENSE), „wie besehen", ohne
-  Garantie für Datenschutz oder Rechtskonformität. Nutzung auf eigene
-  Verantwortung.
+- **Ein privates Werkzeug, Nutzung auf eigene Gefahr.** BRAG ist ein
+  **privates Projekt**, das ich neben meiner Promotion gebaut und als Open
+  Source veröffentlicht habe — kein kommerzielles Produkt, ohne Gewährleistung,
+  ohne Support-Zusage und ohne Service-Level. Bereitgestellt unter
+  [MIT](LICENSE), **„wie besehen"**, ohne Garantie für Richtigkeit, Eignung,
+  Datenschutz oder Rechtskonformität; die Autoren **haften nicht** für Schäden,
+  Datenverluste oder rechtliche Folgen aus der Nutzung.
+- **Du entscheidest, was hineinkommt.** BRAG verarbeitet, was du in den Ordner
+  legst, und sendet — je nach [Profil](#wähle-dein-profil) — Textauszüge (und
+  bei Vision die Abbildungsbilder) an das von dir gewählte Modell. **Welche Daten
+  du verarbeitest und wohin sie dürfen, ist deine Entscheidung und deine
+  Verantwortung:** Stelle sicher, dass du die Rechte an deinen Quellen hast, und
+  nutze für vertrauliche oder personenbezogene Inhalte ein lokales Profil, damit
+  nichts deinen Rechner verlässt.
 - **KI-Ausgaben prüfen.** KI-generierte Antworten und Zitate können falsch oder
   erfunden sein; prüfe sie stets anhand der verlinkten Originalseite, bevor du
   dich darauf verlässt oder sie zitierst.
