@@ -9,11 +9,21 @@
 
 ## Gewährleistungsausschluss
 
+BRAG ist ein **privat gebautes, persönliches Projekt** — von einer Person neben
+der Promotion entwickelt und als Open Source geteilt, kein kommerzielles
+Produkt. Es gibt **keine Support-Pflicht, kein Service-Level und keinerlei
+Gewährleistung.**
+
 Diese Software wird unter der [MIT-Lizenz](../LICENSE) „wie besehen" („as is")
 bereitgestellt, **ohne jede Gewährleistung** und ohne Garantie für Eignung,
 Fehlerfreiheit, Datenschutz oder Rechtskonformität. Die Nutzung erfolgt auf
 eigenes Risiko und in eigener Verantwortung. Die Autoren und Mitwirkenden haften
 nicht für Schäden, Datenverluste oder rechtliche Folgen aus der Nutzung.
+
+**Du allein entscheidest, welche Dokumente und Daten du damit verarbeitest** —
+und, je nach gewähltem Profil, wohin diese Daten gesendet werden (siehe
+*Datenschutz / Vertraulichkeit* unten). Diese Wahl und ihre Folgen liegen in
+deiner Verantwortung.
 
 KI-generierte Antworten und Zitate können falsch oder erfunden sein; prüfe sie
 stets anhand der verlinkten Originalseite, bevor du dich darauf verlässt oder
