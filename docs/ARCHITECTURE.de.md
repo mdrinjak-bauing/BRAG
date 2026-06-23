@@ -103,12 +103,11 @@ denselben Werkzeugsatz (byte-identisch gehalten).
 
 ## Zurückschreiben (Notizbuch & Belege)
 
-`save_passage` schreibt ein Zitat nach `WissensWIKI/Passagen/` **und indexiert es**
+`save_passage` schreibt ein Zitat nach `WissensWIKI/Quellenbelege/` **und indexiert es**
 — der eine indexierte Teil des Arbeitsbereichs, sodass kuratierte Belege in
-späteren Chats auffindbar sind. `write_note` / `save_report` schreiben nach
-`WissensWIKI/Notizen/` bzw. `Berichte/` und werden **nie** indexiert, sodass dein
-eigener Output nie als Beleg zurückkommt. (Der Ingest legt zusätzlich eine
-automatische Literaturnotiz je Quelle in `Notizen/` ab; ebenfalls nicht indexiert.)
+späteren Chats auffindbar sind. `write_note` schreibt nach `WissensWIKI/Wissen/` und wird **nie** indexiert,
+sodass dein eigener Output nie als Beleg zurückkommt. (Der Ingest legt zusätzlich eine
+automatische Literaturnotiz je Quelle in `Wissen/` ab; ebenfalls nicht indexiert.)
 
 ## Designentscheidungen
 

@@ -96,14 +96,14 @@ Praxis — hat zwei Hälften, und ihre strikte Trennung ist der Kern dieses Desi
 
 |  | 📚 **Deine Bibliothek** | 📓 **Dein Notizbuch** |
 |---|---|---|
-| Ordner | dein ganzer **Projektordner** | `WissensWIKI/Notizen/` (und beliebige eigene Unterordner) |
+| Ordner | dein ganzer **Projektordner** | `WissensWIKI/Wissen/` (und beliebige eigene Unterordner) |
 | Enthält | externe Quellen: Paper, Bücher, Berichte | **dein eigenes Denken**: Konzepte, Entwürfe, Lesenotizen |
 | Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | freie Notizen bewusst **nein** · gespeicherte **Passagen: ja** (die dritte Ebene, siehe unten) |
 | Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die Werkzeuge `read_note` / `write_note` (und optional Obsidian) |
 
 **Dazu eine dritte Ebene dazwischen — gespeicherte Passagen.** Wenn du Claude
 (in Claude Desktop) sagst *„speichere diese Passage"*, schreibt es das Zitat
-(mit Quelle und Seite) nach `WissensWIKI/Passagen/` **und indexiert es** —
+(mit Quelle und Seite) nach `WissensWIKI/Quellenbelege/` **und indexiert es** —
 sodass jeder spätere Chat, sogar bei einem anderen KI-Anbieter, es über `search`
 wiederfindet, klar als *deine gespeicherte Passage* markiert. Das ist kuratierte
 Evidenz, die du behalten wolltest (ein echtes Zitat aus einer echten Quelle),
@@ -119,7 +119,7 @@ Die Bibliothek beantwortet *„Was sagen meine Quellen?"*; das Notizbuch enthäl
 
 ### Dein Notizbuch — und warum einfache Markdown-Dateien
 
-Das Notizbuch (`WissensWIKI/Notizen/`) ist der Teil, der aus der Suche ein
+Das Notizbuch (`WissensWIKI/Wissen/`) ist der Teil, der aus der Suche ein
 *zweites Gehirn* macht: Hier steht **dein** Denken — Konzeptseiten,
 Argumentationslinien, offene Fragen, Entscheidungen. Nicht, was die Quellen
 sagen, sondern was *du* daraus machst.
@@ -168,26 +168,29 @@ Im Projektordner ist **ein besonderer Unterordner `WissensWIKI/` dein
 Arbeitsbereich** und wird bewusst **nicht** mit-indexiert — so hallen deine
 eigenen Notizen nie in den Suchergebnissen wider. Er enthält:
 
-- **`Passagen/`** — belegte Passagen, die du über Claude speicherst. Diese
+- **`Quellenbelege/`** — belegte Passagen, die du über Claude speicherst. Diese
   **werden** indexiert und sind durchsuchbar.
-- **`Notizen/`** (plus beliebige eigene Unterordner) — deine eigenen Notizen und
+- **`Wissen/`** (plus beliebige eigene Unterordner) — deine eigenen Notizen und
   Texte. Claude kann hier lesen und schreiben (`read_note` / `write_note`);
   **nicht** indexiert. BRAG legt hier zusätzlich je eingelesener Quelle eine
-  automatische Literaturnotiz ab (ebenfalls nicht indexiert).
+  automatische Literaturnotiz ab (ebenfalls nicht indexiert). Außerdem liegen hier
+  `Übersicht.md` (eine Landkarte, die Claude zuerst liest) und `Verlauf.md` (ein
+  datiertes Log), damit ein neuer Chat sofort weiß, wo ihr steht, und gute
+  Erkenntnisse in Themen-Notizen verdichtet werden statt zu zerfasern.
 - **`CLAUDE.md`** (bringt Claude dein Fachgebiet bei — hier trägst du es ein) und
-  **`AGENTS.md`** (Zusatzregeln für autonome Agenten-Aufgaben). Nicht indexiert.
+  **`AGENTS.md`** (Zusatzregeln für Code-Agenten — Claude Code / autonome Läufe). Nicht indexiert.
 
 **Die eine Regel, die alles erklärt:** Durchsucht wird der **ganze
 Projektordner**, **außer** dem Arbeitsbereich `WissensWIKI/` — und innerhalb von
-`WissensWIKI/` nur `Passagen/`. Versteckte Ordner und jeder `_inbox/` werden
+`WissensWIKI/` nur `Quellenbelege/`. Versteckte Ordner und jeder `_inbox/` werden
 ignoriert. Alles, was du in den Projektordner legst, wandert automatisch in die
 Suchdatenbank (den Index); nimmst du eine Datei wieder heraus oder löschst sie,
 verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem Rechner
 angefasst.
 
 Praktisch heißt das: **Dokumente kommen in den Projektordner** (oder einen
-beliebigen Unterordner) — **nicht** nach `Notizen/` (das ist dein Notizbuch und
-wird nicht durchsucht) und auch nicht von Hand nach `Passagen/` (dorthin legt nur
+beliebigen Unterordner) — **nicht** nach `Wissen/` (das ist dein Notizbuch und
+wird nicht durchsucht) und auch nicht von Hand nach `Quellenbelege/` (dorthin legt nur
 das Werkzeug `save_passage` belegte Zitate). Dass dein Assistent diese Aufteilung
 kennt — was Korpus ist, was Notizbuch, wohin er was schreibt —, kommt nicht von
 allein: Es steht in der `WissensWIKI/CLAUDE.md`, die du in deine
@@ -202,8 +205,8 @@ So sieht es auf der Festplatte aus:
 ├── Interviews/                      ← beliebige Unterordner; die ERSTE Ebene = Dokumenttyp
 │   └── Person_A.pdf
 └── WissensWIKI/                     ← 📓 dein Arbeitsbereich — NICHT mit-indexiert
-    ├── Passagen/                    ← über Claude gespeicherte belegte Passagen (DIESE werden durchsucht)
-    ├── Notizen/                     ← deine Notizen & Unterordner (Claude liest/schreibt; NICHT durchsucht)
+    ├── Quellenbelege/                    ← über Claude gespeicherte belegte Passagen (DIESE werden durchsucht)
+    ├── Wissen/                     ← deine Notizen & Unterordner (Claude liest/schreibt; NICHT durchsucht)
     ├── CLAUDE.md                    ← bringt Claude DEIN Fachgebiet bei
     └── AGENTS.md                    ← Regeln für autonome Agenten-Aufgaben
 
@@ -294,13 +297,12 @@ Modell ein — siehe [Suchqualität einstellen](#suchqualität-einstellen-der-re
 
 ```mermaid
 flowchart TD
-    SP["💬 „Speichere diese Passage“ → save_passage"] --> PA[("Passagen/*.md + Index<br/>durchsuchbar · lokal · CPU")]
-    WN["✍️ „Notiere …“ / „Bericht“ → write_note · save_report"] --> NO["Notizen/ · Berichte/*.md<br/>nicht indexiert · lokal · CPU"]
+    SP["💬 „Speichere diese Passage“ → save_passage"] --> PA[("Quellenbelege/*.md + Index<br/>durchsuchbar · lokal · CPU")]
+    WN["✍️ „Notiere …“ → write_note"] --> NO["Wissen/*.md<br/>nicht indexiert · lokal · CPU"]
 ```
 
 Ein gespeichertes Zitat (`save_passage`) wird zusätzlich eingebettet und ist damit
-durchsuchbar; eigene Notizen und Berichte (`write_note` / `save_report`) bleiben
-bewusst außerhalb des Suchindex.
+durchsuchbar; eigene Notizen (`write_note`) bleiben bewusst außerhalb des Suchindex.
 
 Mehr Tiefe (mit Zahlen) in [So funktioniert's](docs/HOW_IT_WORKS.de.md) und
 [Architektur](docs/ARCHITECTURE.de.md); alle Parameter in [`.env.example`](.env.example).
@@ -463,7 +465,7 @@ siehst": [Installation macOS](docs/INSTALL_MAC.de.md) ·
 Automatisch eingerichtet, gibt der **BRAG-MCP-Server** deinem Assistenten einen
 Anschluss mit Werkzeugen in vier Gruppen: **Suche** (durchsucht deinen Korpus),
 **Korpus** (Inventar pflegen, taggen, umbenennen), **Belege** (zitierfähige
-Passagen sammeln) und **Notizbuch/Berichte** (lesen/schreiben) — wobei die
+Passagen sammeln) und **Notizbuch** (lesen/schreiben) — wobei die
 Notizbuch-Werkzeuge den Suchindex nie anfassen. Das Setup trägt den Anschluss in
 **Claude Desktop** ein — und in **LM Studio**, falls installiert (LM Studios Chat
 ist ein MCP-Host). Die Werkzeuge im Einzelnen:
@@ -485,8 +487,6 @@ ist ein MCP-Host). Die Werkzeuge im Einzelnen:
 | `read_note` | Liest eine Notizbuch-Seite | *„Öffne meine Notiz zur Prozessreife."* |
 | `list_notebook` | Listet dein Notizbuch | *„Was steht in meinem Notizbuch?"* |
 | `move_note` | Verschiebt/benennt eine Notizbuch-Datei um (legt Unterordner an) | *„Verschieb diese Notiz nach Kapitel/2."* |
-| `save_report` | Stellt ein Ergebnis/einen Bericht ins Notizbuch zur günstigen Wiederverwendung (nie indexiert) | *„Speichere diese Vergleichstabelle als Bericht."* |
-| `list_reports` | Listet deine gespeicherten Berichte | *„Zeig meine Berichte."* |
 | `delete_note` | Löscht eine Notiz/einen Bericht (mit Rückfrage) | *„Lösch den alten Statusbericht."* |
 
 **Notizen auch in Obsidian bearbeiten (optional).** Claude kann dein Notizbuch
@@ -519,14 +519,14 @@ der Stand bei X?"* → Claude liest deine Themen-Notiz und ergänzt per Suche; *
 die Ergebnisse"* → es legt sie selbst ab. Halte die `CLAUDE.md` aktuell — was du Claude
 zweimal korrigierst, gehört als Regel hinein.
 
-### Routinen — wiederkehrende Aufgaben delegieren
+### Workflows — wiederkehrende Aufgaben delegieren
 
 Für Aufgaben, die immer gleich laufen — *„hol mich auf den Stand"*, *„aktualisier das
 Quellenverzeichnis"*, *„schreib den Tagebucheintrag"* — seedet BRAG einen Ordner
-`WissensWIKI/Routinen/` mit Beispiel-Rezepten: kurze Markdown-Dateien, denen Claude
+`WissensWIKI/Workflows/` mit Beispiel-Rezepten: kurze Markdown-Dateien, denen Claude
 folgt, wenn du sie beim Namen nennst. Ihre Auslöser stehen in der `CLAUDE.md` als
 Befehle — sobald die in deiner Projekt-Anweisung steht, startet ein bloßes Stichwort
-die Routine, ganz ohne Erklären. Eigene ergänzt du mit einer `.md` in `Routinen/` und
+die Routine, ganz ohne Erklären. Eigene ergänzt du mit einer `.md` in `Workflows/` und
 einer Auslöser-Zeile in der `CLAUDE.md`. *(Die separate `AGENTS.md` enthält die
 Sicherheitsregeln fürs autonome Arbeiten — keine Aufgaben.)*
 
@@ -674,10 +674,11 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 
 Aktuelle Version: **0.5.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
 
-- **0.5.x** — Eine audit-getriebene **Härtungs- und Feinschliff**-Runde: ein neues
-  `save_report`-Werkzeug, sicherere Ingest-/Watcher- und Multi-Projekt-Schutzmechanismen,
-  klarere Werkzeug-Doku, ein freundlicherer Installer (Port-belegt-Vorprüfung, macOS-
-  Gatekeeper-Hinweise) sowie Sicherheits- und Doku-Korrekturen.
+- **0.5.x** — Eine audit-getriebene **Härtungs-, Feinschliff- und Umbau**-Runde: ein
+  schlankeres WissensWIKI (`Quellenbelege/` · `Wissen/` · `Workflows/`), ein
+  wachsendes/fortsetzbares Notizbuch, sicherere Ingest-/Watcher- und Multi-Projekt-
+  Schutzmechanismen, klarere Werkzeug-Doku, ein freundlicherer Installer (Port-belegt-
+  Vorprüfung, macOS-Gatekeeper-Hinweise) sowie Sicherheits- und Doku-Korrekturen.
 - **0.4.x** — **Mehrere Projekte aus einer Engine**, der **Projektordner selbst ist
   der Korpus** (kein `sources/`-Unterordner mehr), eine freundlichere Installation
   und ein feinkörnigeres Deinstallieren (ein einzelnes Projekt oder das ganze

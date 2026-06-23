@@ -5,7 +5,7 @@
 Your knowledge store is a folder of plain Markdown files. Obsidian is an
 **optional** nicer way to read and write it — not a second copy, just a view
 onto the exact same `WissensWIKI/` folder. Edit or delete a file in Obsidian and
-it changes in the folder (and, for `Passagen/`, in the search index) too. Nothing
+it changes in the folder (and, for `Quellenbelege/`, in the search index) too. Nothing
 is imported or copied.
 
 ## Part 1: Open the knowledge store in Obsidian
@@ -13,9 +13,9 @@ is imported or copied.
 1. Install [Obsidian](https://obsidian.md) (free).
 2. "Open folder as vault" → choose the `WissensWIKI/` folder inside your
    project folder.
-3. Done. You'll see your workspace: `Notizen/` (your own notes, any free
-   subfolders, plus an auto-generated literature note per source), `Passagen/`
-   (passages you saved), `Berichte/` (reports you saved), `Routinen/` (task
+3. Done. You'll see your workspace: `Wissen/` (your own notes, any free
+   subfolders, plus an auto-generated literature note per source), `Quellenbelege/`
+   (passages you saved), `Workflows/` (task
    recipes), and `CLAUDE.md` / `AGENTS.md`.
 
 **Tip — wikilinks.** Write `[[NoteName]]` inside a note to link to the same-named
@@ -51,7 +51,7 @@ plugin "MCP Tools":
 
 Either way — built-in tools or the Obsidian plugin — the boundary holds: your own
 notes are never part of the search index, so your thinking never comes back
-disguised as evidence. The one deliberate exception is `Passagen/`: you index
+disguised as evidence. The one deliberate exception is `Quellenbelege/`: you index
 those on purpose with `save_passage`.
 
 > Obsidian must be running for the Obsidian-plugin tools to work. If they stop

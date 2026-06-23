@@ -22,21 +22,21 @@ unten).
 | Abschnitt | Warum es zählt |
 |---|---|
 | Wer ich bin / woran ich arbeite | Claude passt Tiefe und Terminologie an dein Fach **oder dein Projekt** an |
-| Ordner-Aufbau | Claude weiß, was Beleg ist (der Korpus: dein Projektordner außer `WissensWIKI/`) und was dein eigenes Denken (`WissensWIKI/Notizen/` — dein Notizbuch, nicht indexiert) |
+| Ordner-Aufbau | Claude weiß, was Beleg ist (der Korpus: dein Projektordner außer `WissensWIKI/`) und was dein eigenes Denken (`WissensWIKI/Wissen/` — dein Notizbuch, nicht indexiert) |
 | Wie gesucht wird | „Immer vor dem Antworten suchen, mehrere Formulierungen probieren" sorgt dafür, dass Antworten belegt sind statt erfunden |
 | Beleg-/Zitierstil | Claude verweist so, wie es dein Umfeld erwartet — Disziplin-Zitat *oder* **Norm + Abschnitt**, **Vertrag + Paragraf**, **Dokument + Datum** |
 | Projekt-/Mandatskontext (Praxis) | Mischt dein Korpus mehrere Projekte/Kunden? Sag Claude, immer per `meta_filter` auf das aktuelle Projekt einzugrenzen, damit keine fremden Vorgänge hineinrutschen |
 | Konventionen | Sprache, Notiz-Benennung, alles, was du sonst jede Sitzung wiederholen müsstest |
-| Routinen-Auslöser | Trag die Auslöser-Stichworte deiner wiederkehrenden Abläufe aus `WissensWIKI/Routinen/` hier ein, damit ein bloßes *„hol mich auf den Stand"* die Routine startet — ganz ohne Erklären |
+| Workflows-Auslöser | Trag die Auslöser-Stichworte deiner wiederkehrenden Abläufe aus `WissensWIKI/Workflows/` hier ein, damit ein bloßes *„hol mich auf den Stand"* die Routine startet — ganz ohne Erklären |
 
 **Faustregel:** Wenn du Claude zweimal dieselbe Sache korrigierst, gehört die
 Korrektur in die CLAUDE.md.
 
-**Routinen.** BRAG legt einen Ordner `WissensWIKI/Routinen/` mit Beispiel-Rezepten
+**Workflows.** BRAG legt einen Ordner `WissensWIKI/Workflows/` mit Beispiel-Rezepten
 an (kurze Markdown-Dateien, denen Claude folgt, wenn du sie beim Namen nennst).
 Trag das Auslöser-Stichwort jeder Routine als Befehl in die CLAUDE.md ein — sobald
 das in deiner Projekt-Anweisung steht, startet ein Stichwort die Routine. Eigene
-ergänzt du mit einer `.md` in `Routinen/` und einer Auslöser-Zeile hier.
+ergänzt du mit einer `.md` in `Workflows/` und einer Auslöser-Zeile hier.
 
 ## Was in die AGENTS.md gehört
 

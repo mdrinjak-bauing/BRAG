@@ -21,21 +21,21 @@ Desktop](#using-it-in-claude-desktop) below).
 | Section | Why it matters |
 |---|---|
 | Who I am / what I work on | Claude tailors depth and terminology to your field **or your project** |
-| Knowledge-store layout | Claude knows what is evidence (the corpus: your project folder except `WissensWIKI/`) vs. your own thinking (`WissensWIKI/Notizen/`, your notebook — not indexed) |
+| Knowledge-store layout | Claude knows what is evidence (the corpus: your project folder except `WissensWIKI/`) vs. your own thinking (`WissensWIKI/Wissen/`, your notebook — not indexed) |
 | How to search | "Always search before answering, try multiple phrasings" is what makes answers grounded instead of made up |
 | Reference / citation style | Claude cites the way your context expects — a discipline citation *or* **standard + clause**, **contract + section**, **document + date** |
 | Project / matter context (practice) | If your corpus mixes several projects/clients, tell Claude to always scope to the current project via `meta_filter` so unrelated matters don't leak in |
 | Conventions | Language, note naming, anything you'd otherwise repeat every session |
-| Routine triggers | List the trigger phrases for your reusable workflows in `WissensWIKI/Routinen/`, so a bare phrase like *"catch me up"* runs the routine without re-explaining |
+| Routine triggers | List the trigger phrases for your reusable workflows in `WissensWIKI/Workflows/`, so a bare phrase like *"catch me up"* runs the routine without re-explaining |
 
 **Rule of thumb:** whenever you correct Claude twice about the same thing,
 that correction belongs in CLAUDE.md.
 
-**Routines.** BRAG seeds a `WissensWIKI/Routinen/` folder with example recipes
+**Workflows.** BRAG seeds a `WissensWIKI/Workflows/` folder with example recipes
 (short Markdown files Claude follows when you name them). Put each routine's
 trigger phrase in CLAUDE.md as a command — once that's in your Project
 instructions, naming it runs the routine. Add your own by dropping a `.md` into
-`Routinen/` and a trigger line here.
+`Workflows/` and a trigger line here.
 
 ## What goes into AGENTS.md
 

@@ -83,13 +83,13 @@ To check everything is running, open a terminal in the project folder and type
 | What | Where | Notes |
 |---|---|---|
 | Your documents | anywhere in the project folder (outside `WissensWIKI/`) | plain PDF and other files — yours, back them up like any folder |
-| Your notes & passages | `WissensWIKI/Notizen/` and `WissensWIKI/Passagen/` | Markdown files — yours, back them up like any folder |
+| Your notes & passages | `WissensWIKI/Wissen/` and `WissensWIKI/Quellenbelege/` | Markdown files — yours, back them up like any folder |
 | The search index (Qdrant) | inside Docker, in a managed storage area | rebuildable anytime from your knowledge store; never put it in iCloud/OneDrive |
 | The program code & AI models | inside the Docker image | downloaded once at first build (~3 GB); you never touch it |
 | Your settings & API key | the `.env` file in the project folder | written by the setup assistant; the key stays here (owner-readable), is used only to authenticate your own requests to your chosen provider, and is never sent to the app's makers or any third party |
 
 The important point: **your documents (in the project folder, outside
-`WissensWIKI/`) and your notebook (`WissensWIKI/Notizen/`) are normal files you
+`WissensWIKI/`) and your notebook (`WissensWIKI/Wissen/`) are normal files you
 own.** The database is just a derived index — if it were ever lost, the system
 rebuilds it from your files.
 
@@ -127,8 +127,8 @@ Within seconds the app notices it and runs five steps:
 5. **Store it in Qdrant.** The fingerprints and the passage go into the meaning
    database, and the document is now searchable. BRAG also writes a short,
    Obsidian-compatible **literature note** for the source into
-   `WissensWIKI/Notizen/` (your own *"My notes"* part of it survives re-ingest).
-   Like everything in `Notizen/`, that note is **not** indexed.
+   `WissensWIKI/Wissen/` (your own *"My notes"* part of it survives re-ingest).
+   Like everything in `Wissen/`, that note is **not** indexed.
 
 ### What about figures?
 

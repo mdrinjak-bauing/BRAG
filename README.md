@@ -94,14 +94,14 @@ alike — has two halves, and keeping them strictly apart is the heart of the de
 
 |  | 📚 **Your library** | 📓 **Your notebook** |
 |---|---|---|
-| Folder | your whole **project folder** | `WissensWIKI/Notizen/` (and any subfolders you create) |
+| Folder | your whole **project folder** | `WissensWIKI/Wissen/` (and any subfolders you create) |
 | Contains | external sources: papers, books, reports | **your own thinking**: concepts, drafts, reading notes |
 | Searchable by Claude? | yes — hybrid search with page-precise citations | free notes deliberately **no** · saved **passages: yes** (the third layer, see below) |
 | Claude can read/write it? | read-only (via search) | yes — via the `read_note` / `write_note` tools (and optionally Obsidian) |
 
 **Plus a third, in-between layer — saved passages.** When you tell Claude (in
 Claude Desktop) *"save this passage,"* it writes the quote (with its source and
-page) into `WissensWIKI/Passagen/` **and indexes it** — so any later chat,
+page) into `WissensWIKI/Quellenbelege/` **and indexes it** — so any later chat,
 even with a different AI provider, finds it again via `search`, clearly marked as
 *your saved passage*. This is curated evidence you chose to keep (a real quote
 from a real source), not the AI's own output — which is exactly why it is
@@ -116,7 +116,7 @@ the other.
 
 ### Your notebook — and why plain Markdown files
 
-The notebook (`WissensWIKI/Notizen/`) is the part that turns search into a *second
+The notebook (`WissensWIKI/Wissen/`) is the part that turns search into a *second
 brain*: this is **your** thinking — concept pages, lines of argument, open
 questions, decisions. Not what the sources say, but what *you* make of it.
 
@@ -163,25 +163,27 @@ Inside the project folder, **one special subfolder `WissensWIKI/` is your
 workspace** and is deliberately **not** bulk-indexed — so your own notes never
 echo back into search results. It holds:
 
-- **`Passagen/`** — verified passages you save via Claude. These **are** indexed
+- **`Quellenbelege/`** — verified passages you save via Claude. These **are** indexed
   and searchable.
-- **`Notizen/`** (plus any subfolders you create) — your own notes and writing.
+- **`Wissen/`** (plus any subfolders you create) — your own notes and writing.
   Claude can read and write here (`read_note` / `write_note`); **not** indexed.
   BRAG also drops an auto-generated literature note per ingested source here
-  (likewise not indexed).
+  (likewise not indexed). It also seeds `Übersicht.md` (a map Claude reads first)
+  and `Verlauf.md` (a dated log), so a new chat instantly knows where you are and
+  good findings compound into topic notes instead of scattering.
 - **`CLAUDE.md`** (teaches Claude about your field — you fill it in) and
-  **`AGENTS.md`** (extra rules for autonomous agent tasks). Not indexed.
+  **`AGENTS.md`** (extra rules for code agents — Claude Code / autonomous runs). Not indexed.
 
 **The one rule that explains everything:** the **whole project folder** is
 searched, **except** the `WissensWIKI/` workspace — and within `WissensWIKI/`,
-only `Passagen/` is searched. Hidden folders and any `_inbox/` are ignored.
+only `Quellenbelege/` is searched. Hidden folders and any `_inbox/` are ignored.
 Anything you add to the project folder is automatically put into the search
 database (the index); take a file back out or delete it and it disappears from
 the database too. Nothing else on your computer is touched.
 
 In practice that means: **documents go into the project folder** (or any
-subfolder) — **not** into `Notizen/` (that's your notebook and isn't searched) and
-not by hand into `Passagen/` either (only the `save_passage` tool files quotes
+subfolder) — **not** into `Wissen/` (that's your notebook and isn't searched) and
+not by hand into `Quellenbelege/` either (only the `save_passage` tool files quotes
 there). Your assistant doesn't know this split — what's corpus, what's notebook,
 where it writes what — on its own: it's spelled out in the `WissensWIKI/CLAUDE.md`
 you paste into your **Project instructions** (see [Use BRAG with a Claude
@@ -195,8 +197,8 @@ On your disk it looks like this:
 ├── Interviews/                     ← any subfolders; the FIRST level = document type
 │   └── Person_A.pdf
 └── WissensWIKI/                    ← 📓 your workspace — NOT bulk-indexed
-    ├── Passagen/                   ← verified passages saved via Claude (these ARE searched)
-    ├── Notizen/                    ← your notes & subfolders (Claude reads/writes; NOT searched)
+    ├── Quellenbelege/                   ← verified passages saved via Claude (these ARE searched)
+    ├── Wissen/                    ← your notes & subfolders (Claude reads/writes; NOT searched)
     ├── CLAUDE.md                   ← teaches Claude about YOUR field
     └── AGENTS.md                   ← rules for autonomous agent tasks
 
@@ -287,13 +289,12 @@ quality](#tuning-search-quality-the-reranker).
 
 ```mermaid
 flowchart TD
-    SP["💬 “save this passage” → save_passage"] --> PA[("Passagen/*.md + index<br/>searchable · local · CPU")]
-    WN["✍️ “make a note …” / “report” → write_note · save_report"] --> NO["Notizen/ · Berichte/*.md<br/>not indexed · local · CPU"]
+    SP["💬 “save this passage” → save_passage"] --> PA[("Quellenbelege/*.md + index<br/>searchable · local · CPU")]
+    WN["✍️ “make a note …” → write_note"] --> NO["Wissen/*.md<br/>not indexed · local · CPU"]
 ```
 
 A saved quote (`save_passage`) is additionally embedded and thus searchable; your
-own notes and reports (`write_note` / `save_report`) deliberately stay outside the
-search index.
+own notes (`write_note`) deliberately stay outside the search index.
 
 More depth (with numbers) in [How it works](docs/HOW_IT_WORKS.md) and
 [Architecture](docs/ARCHITECTURE.md); every parameter in [`.env.example`](.env.example).
@@ -445,7 +446,7 @@ see": [Install macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md)
 Set up automatically, the **BRAG MCP server** gives your assistant one
 connection with tools in four groups: **Search** (queries your corpus), **Corpus**
 (maintain the inventory, tag, rename), **Evidence** (collect quotable passages)
-and **Notebook/Reports** (read/write) — where the notebook tools never touch the
+and **Notebook** (read/write) — where the notebook tools never touch the
 search index. Setup wires the connection into **Claude Desktop**, and into **LM
 Studio** as well if it is installed (LM Studio's chat is an MCP host). The tools
 in detail:
@@ -467,8 +468,6 @@ in detail:
 | `read_note` | Reads a notebook page | *"Open my note on process maturity."* |
 | `list_notebook` | Lists your notebook | *"What's in my notebook?"* |
 | `move_note` | Moves or renames a notebook file (creates subfolders) | *"Move this note into Kapitel/2."* |
-| `save_report` | Compiles a result/report into the notebook for cheap reuse (never indexed) | *"Save this comparison table as a report."* |
-| `list_reports` | Lists your saved reports | *"Show my reports."* |
 | `delete_note` | Deletes a note/report (asks to confirm) | *"Delete the old status report."* |
 
 **Edit notes in Obsidian too (optional).** Claude can already read and write your
@@ -499,14 +498,14 @@ X?"* → Claude reads your topic note and tops it up with search; *"save the res
 → it files them itself. Keep `CLAUDE.md` updated — whenever you correct Claude twice
 about the same thing, put the rule in there.
 
-### Routines — delegate recurring tasks
+### Workflows — delegate recurring tasks
 
 For tasks that are always the same — *"catch me up"*, *"update the bibliography"*,
-*"write the journal entry"* — BRAG seeds a `WissensWIKI/Routinen/` folder with example
+*"write the journal entry"* — BRAG seeds a `WissensWIKI/Workflows/` folder with example
 recipes: short Markdown files Claude follows when you name them. Their triggers are
 listed in `CLAUDE.md` as commands, so once that's in your Project instructions, a bare
 phrase runs the routine — no re-explaining. Add your own by dropping a `.md` into
-`Routinen/` and a trigger line into `CLAUDE.md`. *(The separate `AGENTS.md` holds the
+`Workflows/` and a trigger line into `CLAUDE.md`. *(The separate `AGENTS.md` holds the
 safety rules for autonomous/agent runs — not tasks.)*
 
 ## Multiple projects & your own metadata
@@ -643,10 +642,11 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 Current version: **0.5.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
-- **0.5.x** — An audit-driven **hardening & polish** pass: a new `save_report`
-  tool, safer ingest/watcher and multi-project guards, clearer tool docs, a
-  friendlier installer (port-in-use preflight, macOS Gatekeeper guidance) and
-  security/documentation fixes.
+- **0.5.x** — An audit-driven **hardening, polish & restructure** pass: a leaner
+  WissensWIKI layout (`Quellenbelege/` · `Wissen/` · `Workflows/`), a
+  growing/continuable notebook, safer ingest/watcher and multi-project guards,
+  clearer tool docs, a friendlier installer (port-in-use preflight, macOS
+  Gatekeeper guidance) and security/documentation fixes.
 - **0.4.x** — **Multiple projects from one engine**, the **project folder itself is
   the corpus** (no more `sources/` subfolder), a friendlier install and a more
   granular uninstall (remove one project or the whole system).

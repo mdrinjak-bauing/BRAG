@@ -65,25 +65,25 @@ def test_read_note_rejects_escape_and_non_notebook(tmp_path, monkeypatch):
     config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
     (config.PASSAGES_DIR / "p.md").write_text("quote", encoding="utf-8")
     assert "notebook" in tools.read_note("../outside.md")    # escape -> refused
-    assert "notebook" in tools.read_note("Passagen/p.md")    # Passagen is indexed, not notebook
+    assert "notebook" in tools.read_note("Quellenbelege/p.md")  # indexed, not notebook
 
 
 def test_write_note_rejects_escape(tmp_path, monkeypatch):
     _vault(tmp_path, monkeypatch)
     assert "Refused" in tools.write_note("../../evil.md", "x")
-    assert "Refused" in tools.write_note("Passagen/sneak.md", "x")  # can't write the indexed area
+    assert "Refused" in tools.write_note("Quellenbelege/sneak.md", "x")  # indexed area
 
 
 def test_list_notebook_lists_wissenswiki(tmp_path, monkeypatch):
     _vault(tmp_path, monkeypatch)
     tools.write_note("a.md", "x")                          # -> WissensWIKI/a.md
-    tools.write_note("Notizen/Smith_2020.md", "note")      # -> WissensWIKI/Notizen/...
+    tools.write_note("Wissen/Smith_2020.md", "note")      # -> WissensWIKI/Wissen/...
     config.PASSAGES_DIR.mkdir(parents=True, exist_ok=True)
     (config.PASSAGES_DIR / "topic.md").write_text("p", encoding="utf-8")
     out = tools.list_notebook()
     assert "a.md" in out
-    assert "Notizen/Smith_2020.md" in out
-    assert "Passagen" not in out                           # indexed, not part of the notebook
+    assert "Wissen/Smith_2020.md" in out
+    assert "Quellenbelege" not in out                           # indexed, not part of the notebook
 
 
 def test_list_passages_empty_and_listing(tmp_path, monkeypatch):

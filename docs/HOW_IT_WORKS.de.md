@@ -91,13 +91,13 @@ auftauchen.
 | Was | Wo | Hinweis |
 |---|---|---|
 | Deine Dokumente | irgendwo im Projektordner (außerhalb von `WissensWIKI/`) | einfache PDF- und andere Dateien — gehören dir, sichern wie jeden Ordner |
-| Deine Notizen & Passagen | `WissensWIKI/Notizen/` und `WissensWIKI/Passagen/` | Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
+| Deine Notizen & Passagen | `WissensWIKI/Wissen/` und `WissensWIKI/Quellenbelege/` | Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
 | Der Suchindex (Qdrant) | in Docker, in einem verwalteten Speicherbereich | jederzeit aus deinem Wissensspeicher neu aufbaubar; nie in iCloud/OneDrive legen |
 | Programmcode & KI-Modelle | im Docker-Image | einmal beim ersten Build geladen (~3 GB); fasst du nie an |
 | Einstellungen & API-Schlüssel | die Datei `.env` im Projektordner | vom Setup-Assistenten geschrieben; der Schlüssel bleibt hier (nur für dich lesbar), dient nur der Authentifizierung deiner eigenen Anfragen beim gewählten Anbieter und wird nie an die Macher der App oder an Dritte gesendet |
 
 Der wichtige Punkt: **deine Dokumente (im Projektordner, außerhalb von
-`WissensWIKI/`) und dein Notizbuch (`WissensWIKI/Notizen/`) sind ganz normale
+`WissensWIKI/`) und dein Notizbuch (`WissensWIKI/Wissen/`) sind ganz normale
 Dateien, die dir gehören.** Die Datenbank ist nur ein abgeleiteter Index — ginge
 er verloren, baut ihn das System aus deinen Dateien neu auf.
 
@@ -138,8 +138,8 @@ Sekunden bemerkt die App es und durchläuft fünf Schritte:
 5. **In Qdrant ablegen.** Die Fingerabdrücke und die Passage wandern in die
    Bedeutungsdatenbank, und das Dokument ist nun durchsuchbar. BRAG schreibt
    außerdem eine kurze, Obsidian-kompatible **Literaturnotiz** zur Quelle nach
-   `WissensWIKI/Notizen/` (dein eigener *„Meine Notizen"*-Teil darin bleibt beim
-   Neu-Einlesen erhalten). Wie alles in `Notizen/` ist diese Notiz **nicht** indexiert.
+   `WissensWIKI/Wissen/` (dein eigener *„Meine Notizen"*-Teil darin bleibt beim
+   Neu-Einlesen erhalten). Wie alles in `Wissen/` ist diese Notiz **nicht** indexiert.
 
 ### Und was ist mit Abbildungen?
 

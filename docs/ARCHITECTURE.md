@@ -98,11 +98,10 @@ HTTP bridge — both surfaces expose the **same tool set** (kept byte-identical)
 
 ## Saving back (notebook & evidence)
 
-`save_passage` writes a quote into `WissensWIKI/Passagen/` **and indexes it** —
+`save_passage` writes a quote into `WissensWIKI/Quellenbelege/` **and indexes it** —
 the one indexed part of the workspace, so curated evidence is searchable in later
-chats. `write_note` / `save_report` write to `WissensWIKI/Notizen/` and
-`Berichte/` and are **never** indexed, so your own output never echoes back as
-evidence. (Ingest also drops an auto literature note per source into `Notizen/`;
+chats. `write_note` writes to `WissensWIKI/Wissen/` and is **never** indexed, so your
+own output never echoes back as evidence. (Ingest also drops an auto literature note per source into `Wissen/`;
 likewise not indexed.)
 
 ## Design decisions
