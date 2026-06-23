@@ -288,7 +288,7 @@ Beispiel — *„Welche Frist nennt der Bauvertrag für die Mängelrüge?"*: Bed
 Stichwortsuche liefern je ~80 Kandidaten, Qdrant fusioniert sie (RRF) auf ~40, der
 **Reranker** liest deine Frage gemeinsam mit jeder Stelle und sortiert nach echter
 Passung (der Unterschied zwischen „enthält die Suchworte" und „beantwortet die
-Frage"). Die besten (Standard 15, max. 3 je Quelle) gehen an die Antwort-KI, die
+Frage"). Die besten (im Modus `normal`: 15, max. 3 je Quelle) gehen an die Antwort-KI, die
 seitengenau belegt formuliert. **Du hast die Wahl:** *wie viele* Stellen der Reranker
 bewertet (der **k-Wert**) und *ob* er überhaupt läuft, stellst du je nach Rechner und
 Modell ein — siehe [Suchqualität einstellen](#suchqualität-einstellen-der-reranker).
@@ -369,6 +369,32 @@ Einzelwerte direkt in `.env` — sie überschreiben das Profil:
 Beispiel: `RERANK_FUSION_LIMIT=80` lässt den Reranker 80 statt der Standard-40
 Stellen bewerten. Wie viele Treffer am Ende zurückkommen, steuerst du davon
 unabhängig über `mode`/`top_k` direkt im Suchaufruf.
+
+**Wie viele Treffer zurückkommen — `mode`, `top_k`, max je Quelle.** Zwei „k" nicht
+verwechseln: der **k-Wert oben** ist, wie viele Stellen *bewertet* werden;
+**`top_k`** ist, wie viele am Ende *zurückkommen*. Statt `top_k` von Hand zu setzen,
+wählst du meist einen `mode` — er setzt beides passend zur Aufgabe:
+
+| `mode` | Treffer (`top_k`) | max je Quelle | wofür |
+|---|---|---|---|
+| `precise` | 8 | 2 | punktgenaue Einzelfrage |
+| `normal` *(Standard)* | 15 | 3 | normale Frage |
+| `review` | 50 | 2 | breiter Literaturüberblick |
+| `deep` | 30 | 15 | in *ein* Dokument vertiefen (mit `source_file`) |
+
+„15 / max 3" gilt also nur für **`normal`**. Drei ehrliche Hinweise:
+- **„max je Quelle" ist eine *Präferenz*, kein harter Deckel.** Reichen die diversen
+  Treffer nicht für `top_k`, füllt BRAG aus derselben Quelle auf, statt eine kurze
+  Liste zu liefern. `deep` hebt den Wert bewusst auf 15, um *eine* Quelle auszuschöpfen.
+- **Großes `top_k` lastet die Antwort-KI stark.** `review` (50) sind grob ~25k Token
+  allein an Passagen — für Cloud-Modelle ok, für ein **lokales 7B-Modell** oft zu
+  viel. Im lokalen Profil eher `normal`/`precise`.
+- **Echte Überblicke = mehrere Suchen.** `review` ist für *eine von mehreren*
+  verschieden formulierten Suchen gedacht, die du zusammenführst — nicht für „alles
+  in einem 50-Treffer-Schwung" (siehe Map-Reduce-Hinweis in der `CLAUDE.md`).
+
+Einzeln überschreiben geht immer: ein explizites `top_k` / `max_per_source` im
+Suchaufruf schlägt das Preset.
 
 Bei einem Cloud-Profil geht der **Textauszug** jedes Abschnitts an den Anbieter —
 bei aktivem Vision-Pass (Standard) zusätzlich die **Bilder deiner Abbildungen**.

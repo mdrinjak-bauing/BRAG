@@ -279,7 +279,7 @@ Example — *"What deadline does the construction contract set for a defect
 notice?"*: meaning and keyword search return ~80 candidates each, Qdrant fuses
 them (RRF) down to ~40, the **reranker** reads your question together with each
 passage and sorts by true fit (the difference between "contains the search terms"
-and "answers the question"). The best ones (15 by default, max 3 per source) go
+and "answers the question"). The best ones (in `normal` mode: 15, max 3 per source) go
 to the answer AI, which writes with page-precise citations. **You have the
 choice:** *how many* passages the reranker scores (the **k-value**) and *whether*
 it runs at all, you set depending on your machine and model — see [Tuning search
@@ -358,6 +358,32 @@ individual values directly in `.env` — they override the profile:
 Example: `RERANK_FUSION_LIMIT=80` makes the reranker score 80 passages instead of
 the default 40. How many hits ultimately come back you control independently via
 `mode`/`top_k` in the search call itself.
+
+**How many hits come back — `mode`, `top_k`, max per source.** Don't conflate the
+two "k"s: the **k-value above** is how many passages get *scored*; **`top_k`** is
+how many *come back*. Rather than set `top_k` by hand, you usually pick a `mode` —
+it sets both to fit the task:
+
+| `mode` | hits (`top_k`) | max per source | for |
+|---|---|---|---|
+| `precise` | 8 | 2 | a pinpoint fact |
+| `normal` *(default)* | 15 | 3 | a normal question |
+| `review` | 50 | 2 | a broad literature survey |
+| `deep` | 30 | 15 | dig into *one* document (with `source_file`) |
+
+So "15 / max 3" only applies to **`normal`**. Three honest notes:
+- **"Max per source" is a *preference*, not a hard cap.** If diverse hits don't
+  reach `top_k`, BRAG backfills from the same source rather than return a short
+  list. `deep` deliberately raises it to 15 to exhaust *one* source.
+- **A large `top_k` loads the answer model heavily.** `review` (50) is roughly ~25k
+  tokens of passages alone — fine for cloud models, often too much for a **local 7B
+  model**. On a local profile, prefer `normal`/`precise`.
+- **A real survey = several searches.** `review` is meant as *one of several*
+  differently-phrased searches you then synthesise — not "everything in one 50-hit
+  shot" (see the map-reduce note in `CLAUDE.md`).
+
+You can always override: an explicit `top_k` / `max_per_source` in the search call
+beats the preset.
 
 With a cloud profile the **text excerpt** of each chunk goes to the provider —
 plus, with the vision pass on (the default), the **images of your figures**.
