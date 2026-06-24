@@ -80,7 +80,12 @@ aber ohne Seiten-Link zitiert. **Excel (`.xlsx`) wird noch nicht unterstützt.**
 - ~30 Sekunden warten (der Ordner wird alle 10 Sekunden geprüft, Dateien müssen
   erst fertig kopiert sein).
 - Die Logs prüfen: `docker compose logs -f app`.
-- Dateien in einem `_inbox/` werden absichtlich ignoriert (Staging-Bereich).
+- Ordner (und Dateien), deren Name mit `_` beginnt, werden absichtlich **nicht
+  indexiert** — ein sichtbarer „raushalten"-Marker (z. B. ein `_inbox/` als
+  Staging-Bereich oder ein `_Archiv/`, das du nebenan, aber nicht in der Suche
+  haben willst). Beim Setup kannst du außerdem ganze Top-Ordner zum Ausschluss
+  anhaken (gespeichert als `EXCLUDE_DIRS` in der `.env`). Alles Übrige im
+  Projektordner wird indexiert.
 
 **„Gescanntes PDF ohne Textebene."**
 Das PDF enthält nur Bilder von Text. OCR-Unterstützung ist auf der Roadmap;
@@ -161,6 +166,16 @@ Chrome, Edge und Firefox** befolgen ihn, **Safari nicht** — dort öffnet Seite
 der zur Seite springt, und setze ihn als PDF-Standard: **Skim** (macOS) oder
 **SumatraPDF** (Windows). Die zitierte Seitenzahl steht außerdem im Suchtreffer.
 
+**Der PDF-Link meldet „file not found" / Datei nicht gefunden.**
+Der Link öffnet über BRAGs lokale Bridge (`localhost:8765`). Sie löst die Datei
+jetzt tolerant gegenüber macOS-Akzentnamen (NFD vs. NFC) und sogar gegenüber
+einem älteren Link auf, der seinen Unterordner verloren hat — die meisten
+„file not found"-Fälle sind damit in 0.5.1 behoben: **aktualisieren** (siehe
+*Wie aktualisiere ich?* unten) und den Link erneut probieren. Bleibt es: Die
+Datei wurde aus dem Projektordner verschoben oder gelöscht — zurücklegen (oder
+Claude neu indexieren lassen). Die 404-Seite nennt jetzt den exakt gesuchten
+Pfad, der zeigt, was sich verschoben hat.
+
 **Im Chat wird die PDF-Seite zitiert, nicht die gedruckte (Buch-)Seite.**
 Standardmäßig ist der Beleg die physische PDF-Seite. Bei Dokumenten mit
 abweichender Zählung (Buch mit Vorspann, Zeitschriften-Sonderdruck) setz einen
@@ -182,16 +197,26 @@ Projektordner. Der Check meldet ✓/✗ für: Docker läuft, die Container `brag
 und `brag-qdrant` sind oben, Qdrant erreichbar, der Korpus ist indexiert (mit
 Anzahl Quellen/Chunks), der Watcher läuft, das KI-Textmodell ist erreichbar, und
 Claude Desktop ist angebunden. Bei einem ✗ steht direkt dabei, was zu tun ist.
+Außerdem zeigt er eine **Ordner-Übersicht** — jeder Top-Ordner als *indexiert*
+(mit Anzahl Quellen) oder *ausgeschlossen* (mit Grund: Arbeitsbereich, versteckt,
+beginnt mit `_`, oder `EXCLUDE_DIRS`) — so siehst du auf einen Blick, welche
+Ordner es in den Index geschafft haben.
 
 **Wie stoppe / starte ich alles?**
 `docker compose down` / `docker compose up -d` im Projektordner. Der Autostart
 von Docker Desktop bringt es nach einem Neustart zurück.
 
 **Wie aktualisiere ich auf eine neue Version?**
-Die neue Version herunterladen und den Inhalt des **BRAG Assistent**-
-Programmordners ersetzen (deine `.env` behalten), dann `docker compose build &&
-docker compose up -d`. Dein Projektordner mit deinen Dokumenten und dem
-WissensWIKI-Arbeitsbereich bleibt unangetastet.
+**Am einfachsten (ab 0.5.1):** die neuen Dateien in deinen **BRAG Assistent**-
+Programmordner legen (deine `.env` behalten), dann Doppelklick auf
+**`update.command`** (Mac) bzw. **`update.bat`** (Windows). Das baut die App neu
+und startet sie **ohne Neuinstallation** — `.env`, Suchindex, Connectors und
+deine Dokumente bleiben erhalten. (Ein Git-Klon holt den neuesten Stand selbst;
+bei einer ZIP-Installation vorher die neuen Dateien hineinkopieren.) Sobald ein
+neueres Image veröffentlicht ist, geht stattdessen `docker compose pull &&
+docker compose up -d`; das manuelle Äquivalent des Updaters ist `docker compose
+build && docker compose up -d`. Dein Projektordner (Dokumente + WissensWIKI)
+bleibt in jedem Fall unangetastet.
 
 **Wie sichere ich meine Daten?**
 Deine Dokumente liegen in deinem Projektordner, deine Notizen und belegten

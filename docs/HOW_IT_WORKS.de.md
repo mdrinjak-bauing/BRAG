@@ -65,7 +65,9 @@ nicht, damit BRAG weiterläuft.
 *dein* Dokumentenordner: Alles darin (jeder Unterordner, beliebig tief) ist der
 durchsuchbare Korpus, und der `WissensWIKI/`-Arbeitsbereich (deine Notizen und
 gespeicherten Passagen) liegt darin. Diesen Ordner kannst du sehen, sichern und
-verschieben — er gehört dir.
+verschieben — er gehört dir. Was du nebenan, aber **nicht** in der Suche haben
+willst, benennst du einfach mit `_` am Anfang (z. B. `_Archiv/`) — solche Ordner
+(und `WissensWIKI/`) werden nie indexiert.
 
 **3. Dockers eigener Speicher — den du nie direkt anfasst.** Beim ersten Start
 lädt Docker den Programmcode und die KI-Modelle (zusammen ~3 GB) herunter und

@@ -103,15 +103,20 @@ unpacked folder; the project folder in the second step is required.)*
 browser opens automatically** with the setup assistant. There you answer, in
 plain language:
 - **Where should the AI run?** (cloud or local) — pick "Cloud" to start.
-- **Provider & key:** choose Gemini and paste the copied key. The assistant
-  checks it **live** and shows a green check when it's valid. Your key is stored
-  only in a local `.env` file on your computer (owner-readable only) and is used
-  solely to authenticate your own requests to the provider you chose — it is
-  never sent to the makers of this app or any third party; the live check just
-  sends one small test request to that provider to confirm the key works. The
-  local profile (LM Studio) needs no key at all.
+- **Provider & key:** pick your provider (**Gemini** recommended, or OpenAI /
+  Anthropic) and paste the copied key. The assistant checks it **live** (green
+  check when valid) and then offers that provider's models as a **dropdown** with
+  the cheapest preselected — so you don't have to type an exact model id ("Other"
+  lets you enter one anyway). Your key is stored only in a local `.env` file on
+  your computer (owner-readable only) and is used solely to authenticate your own
+  requests to the provider you chose — never sent to the makers of this app or any
+  third party; the live check just sends one small test request. The local profile
+  (LM Studio) needs no key at all.
 - **Your document language.** (Your project folder was already chosen by the
   folder picker above.)
+- **Folders to exclude (optional).** Tick any top-level folders you want kept
+  **out** of the search — or just name a folder starting with `_` (e.g.
+  `_Archiv/`), which is never indexed.
 
 At the end the assistant writes the whole configuration itself — including the
 Claude Desktop entry. **You never edit a single file.** The window then builds
@@ -126,7 +131,7 @@ minutes, first time only).
 
 **What to do:** Drop a PDF straight into your project folder (any subfolder works
 too) — everything in the project folder is searched, except the `WissensWIKI`
-workspace.
+workspace, hidden folders, and anything whose name starts with `_`.
 
 **What you see:** Nothing visible — processing runs in the background. Note that
 the **very first** document also downloads the Docling layout models, so this one
@@ -162,6 +167,12 @@ Now ask Claude:
   lives inside Docker, safely outside any sync folder.
 - **Stopping/starting:** To stop, open a Command Prompt in the project folder and
   run `docker compose down`. To start: `docker compose up -d`.
+- **Updating (no reinstall):** put the new files into your **BRAG Assistent**
+  folder (keep your `.env`), then double-click **`update.bat`** — it rebuilds and
+  restarts the app while keeping your `.env`, the search index, the connectors and
+  your documents. To just **change the model/reranker**, double-click `setup.bat`
+  from this folder and pick **"⚙ Change a setting"** — no folder questions, no
+  re-indexing.
 - **Hybrid profile (LM Studio):** install [LM Studio](https://lmstudio.ai) first, then
   run setup. Setup auto-connects the BRAG tools (the connector is named `brag` for
   your first project) to LM Studio's chat too (not just Claude); if you install LM

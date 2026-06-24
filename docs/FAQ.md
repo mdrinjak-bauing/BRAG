@@ -73,7 +73,11 @@ page link. **Excel (`.xlsx`) is not supported yet.**
 - Wait ~30 seconds (the folder is checked every 10 seconds, files must
   finish copying first).
 - Check the logs: `docker compose logs -f app`.
-- Files inside any `_inbox/` are deliberately ignored (staging area).
+- Folders (and files) whose name starts with `_` are deliberately **not
+  indexed** — a visible "keep out" marker (e.g. an `_inbox/` staging area, or an
+  `_Archiv/` you want nearby but out of search). You can also tick whole
+  top-level folders to exclude during setup (stored as `EXCLUDE_DIRS` in `.env`).
+  Everything else in the project folder is indexed.
 
 **"Scanned PDF without text layer."**
 The PDF contains only images of text. OCR support is on the roadmap; for now, run
@@ -148,6 +152,15 @@ dedicated viewer that jumps to the page and set it as your PDF handler:
 **Skim** (macOS) or **SumatraPDF** (Windows). The cited page number is always in
 the hit text too, so you can navigate by hand if needed.
 
+**The PDF link says "file not found".**
+The link opens through BRAG's local bridge (`localhost:8765`). It now resolves
+the file tolerant of macOS accented names (NFD vs NFC) and even of an older link
+that lost its subfolder, so most "file not found" cases were fixed in 0.5.1 —
+**update** (see *How do I update?* below) and try the link again. If it persists,
+the file was moved or deleted out of the project folder: put it back (or ask
+Claude to re-index). The 404 page now names the exact path it looked for, which
+tells you what moved.
+
 **The chat cites the PDF page, not the printed (book) page.**
 By default the citation is the physical PDF page. For documents whose printed
 numbering differs (a book with front matter, a journal offprint), set a
@@ -167,17 +180,25 @@ Double-click **`status.command`** (Mac) or **`status.bat`** (Windows) in the
 project folder. It reports ✓/✗ for: Docker running, the `brag-app` and
 `brag-qdrant` containers up, Qdrant reachable, the corpus indexed (with source/
 chunk counts), the watcher running, the AI text model reachable, and Claude
-Desktop wired up. Each ✗ tells you what to do.
+Desktop wired up. Each ✗ tells you what to do. It also prints a **per-folder
+overview** — every top-level folder marked *indexed* (with its source count) or
+*excluded* (with the reason: workspace, hidden, starts with `_`, or
+`EXCLUDE_DIRS`) — so you can see at a glance which folders made it into the index.
 
 **How do I stop / start everything?**
 `docker compose down` / `docker compose up -d` in the project folder.
 Docker Desktop's autostart brings it back after a reboot.
 
 **How do I update to a new version?**
-Download the new release and replace the contents of the **BRAG Assistent**
-program folder (keep your `.env`), then `docker compose build && docker compose
-up -d`. Your project folder with your documents and the WissensWIKI workspace
-stays untouched.
+**Easiest (0.5.1+):** put the new files into your **BRAG Assistent** program
+folder (keep your `.env`), then double-click **`update.command`** (Mac) /
+**`update.bat`** (Windows). It rebuilds the app and restarts it **without a
+reinstall** — your `.env`, the search index, the connectors and your documents
+are all kept. (A git checkout pulls the latest itself; a ZIP install just needs
+the new files copied in first.) Once a newer image is published you can instead
+run `docker compose pull && docker compose up -d`; the manual equivalent of the
+updater is `docker compose build && docker compose up -d`. Your project folder
+(documents + the WissensWIKI workspace) stays untouched either way.
 
 **How do I back up?**
 Your documents live in your project folder, with your notes and verified passages

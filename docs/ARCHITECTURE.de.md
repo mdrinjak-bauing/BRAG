@@ -124,4 +124,13 @@ automatische Literaturnotiz je Quelle in `Wissen/` ab; ebenfalls nicht indexiert
   Konfiguration und Modell-Caches.
 - **NFC-Normalisierung** aller Quell-Schlüssel: macOS-Dateinamen kommen als NFD
   an; Vergleiche mit gespeicherten Payloads dürfen nicht von der Plattform
-  abhängen.
+  abhängen. Die `/file/`-Auflösung der HTTP-Bridge ist ebenso
+  normalisierungs-tolerant — sie probiert die literale, NFC- und NFD-Form, dann
+  einen korpus-begrenzten Scan über Relativpfad / Dateiname — sodass ein
+  gespeicherter `rel_path`, dessen Normalisierung oder Unterordner abgewichen
+  ist, weiterhin auf das PDF auflöst (der Seiten-Deeplink läuft nicht in 404).
+  Der Schutz gegen Pfad-Traversal / Symlink-Ausbruch bleibt bestehen.
+- **Korpus = der ganze Projektordner** AUSSER `WissensWIKI/`, versteckten
+  Ordnern, allem mit `_` am Anfang (sichtbarer „nicht indexieren"-Marker, inkl.
+  `_inbox`) und den Top-Namen in `EXCLUDE_DIRS` — alles über die eine Funktion
+  `config.is_corpus_path` (genutzt von Watcher, Ingest und den Datei-Werkzeugen).
