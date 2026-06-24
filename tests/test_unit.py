@@ -32,6 +32,17 @@ def test_normalize_source_key_idempotent():
     assert config.normalize_source_key(n) == n
 
 
+def test_derive_rel_path_keeps_subfolder(tmp_path, monkeypatch):
+    # rel_path drives the PDF deep-link; it must keep the real subfolder (POSIX)
+    # and never degrade to the bare name (which 404s every file in a subfolder).
+    from brag.ingest.extract import derive_file_metadata
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    f = tmp_path / "Vertraege" / "Mueller_2023_Titel.pdf"
+    f.parent.mkdir(parents=True)
+    f.write_bytes(b"%PDF")
+    assert derive_file_metadata(f)["rel_path"] == "Vertraege/Mueller_2023_Titel.pdf"
+
+
 def test_source_key_variants_nonempty():
     assert config.source_key_variants("projectA/Bericht")
 

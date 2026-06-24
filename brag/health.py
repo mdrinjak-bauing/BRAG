@@ -58,6 +58,64 @@ def check_corpus() -> bool:
         return _fail("Corpus index", str(e)[:60])
 
 
+def _exclude_reason(name: str) -> str:
+    """Why a top-level entry is kept out of the index, or '' if it is corpus."""
+    if name == config.WISSENSWIKI_NAME:
+        return "your workspace (never indexed)"
+    if name.startswith("."):
+        return "hidden"
+    if name.startswith("_"):
+        return 'starts with "_" (kept out of the index)'
+    if name in config.EXCLUDE_DIRS:
+        return "in EXCLUDE_DIRS (your setup choice)"
+    return ""
+
+
+def show_corpus_folders() -> bool:
+    """Plain-language overview: which top-level folders are indexed and which are
+    kept out (and why). Informational — always returns True so it never fails the
+    overall health check."""
+    try:
+        vault = config.VAULT
+        if not vault.exists():
+            return True
+        # Indexed-source counts per top-level folder. Source keys are POSIX,
+        # suffix-dropped and vault-relative, so the first segment IS the folder.
+        counts: dict = {}
+        try:
+            from brag import storage
+            client = storage.get_client()
+            try:
+                names = {c.name for c in client.get_collections().collections}
+                if config.COLLECTION_NAME in names:
+                    for s in storage.list_corpus_sources(client):
+                        top = s.split("/", 1)[0] if "/" in s else "(root)"
+                        counts[top] = counts.get(top, 0) + 1
+            finally:
+                client.close()
+        except Exception:  # noqa: BLE001 — counts are best-effort
+            pass
+        print("  Folders in your project — what lands in the index:")
+        root_files = 0
+        for p in sorted(vault.iterdir(), key=lambda q: q.name.lower()):
+            reason = _exclude_reason(p.name)
+            if not p.is_dir():
+                if not reason:
+                    root_files += 1
+                continue
+            if reason:
+                print(f"    [ excluded ]  {p.name}/  — {reason}")
+            else:
+                print(f"    [ indexed  ]  {p.name}/  — {counts.get(p.name, 0)} source(s)")
+        if root_files:
+            print(f"    [ indexed  ]  (files in the project root)  — "
+                  f"{counts.get('(root)', 0)} source(s)")
+        print('  Tip: rename a folder to start with "_" to keep it out of the index.')
+        return True
+    except Exception as e:  # noqa: BLE001
+        return _fail("Folder overview", str(e)[:60])
+
+
 def check_app_watcher() -> bool:
     # The HTTP bridge runs in the same process as the folder watcher; if the
     # bridge answers, the watcher loop is alive too.
@@ -108,6 +166,8 @@ def main() -> int:
         check_corpus(),
         check_llm(),
     ]
+    print()
+    show_corpus_folders()   # informational — not part of the pass/fail tally
     print()
     if all(results):
         print("All checks passed — your RAG system is working. ✅")

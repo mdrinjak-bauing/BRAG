@@ -58,6 +58,17 @@ def test_is_corpus_path_explicit_exclude_dirs(tmp_path, monkeypatch):
     assert config.is_corpus_path(tmp_path / "Berichte" / "x.pdf")
 
 
+def test_health_exclude_reason(monkeypatch):
+    # The status check classifies each top-level folder; this is the rule it uses.
+    from brag import health
+    monkeypatch.setattr(config, "EXCLUDE_DIRS", {"Rohdaten"})
+    assert health._exclude_reason(config.WISSENSWIKI_NAME)   # workspace
+    assert health._exclude_reason(".git")                    # hidden
+    assert health._exclude_reason("_Archiv")                 # underscore
+    assert health._exclude_reason("Rohdaten")                # EXCLUDE_DIRS
+    assert health._exclude_reason("Vertraege") == ""         # normal -> indexed
+
+
 def test_project_context_scopes_and_resets(monkeypatch):
     monkeypatch.setattr(config, "_DEFAULT_VAULT", Path("/vault"))
     monkeypatch.setattr(config, "_DEFAULT_COLLECTION", "asb_default")

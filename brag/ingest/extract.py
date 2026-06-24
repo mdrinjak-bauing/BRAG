@@ -154,9 +154,13 @@ def derive_file_metadata(path: Path) -> dict:
     author = custom_meta.pop("author", author)
     year = custom_meta.pop("year", year)
     doc_type = custom_meta.pop("doc_type", doc_type)
+    # rel_path is what the PDF deep-link resolves against. Resolve BOTH sides
+    # (like source_key_from_path) so a symlinked/realpath'd vault still yields the
+    # real subfolder path — never silently degrade to the bare name, which would
+    # 404 every file that lives in a subfolder. POSIX separators for stable URLs.
     try:
-        rel_path = str(path.relative_to(config.VAULT))
-    except ValueError:
+        rel_path = path.resolve().relative_to(config.VAULT.resolve()).as_posix()
+    except (ValueError, OSError):
         rel_path = path.name
     return {
         "source_file": source_file, "author": author, "year": year,
