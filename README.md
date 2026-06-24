@@ -445,6 +445,12 @@ Prefer fully local? That works too — with [LM Studio](https://lmstudio.ai).
 (Windows) for a one-click check of Docker, Qdrant, the watcher, the corpus and
 the AI connection — ✓/✗ per item.
 
+**Update to a newer version?** Double-click `update.command` (Mac) /
+`update.bat` (Windows). It rebuilds the app and restarts it **without a
+reinstall** — your `.env`, the search index, the connectors and your documents
+are kept. (git checkout → it pulls the latest itself; ZIP install → re-download
+the new ZIP over this folder, keeping your `.env`, first.)
+
 **Want to remove BRAG?** Double-click `uninstall.command` (Mac) / `uninstall.bat`
 (Windows). It opens a small menu: **[1]** remove **one project's connection** —
 unhooks that project from Claude / LM Studio but keeps BRAG and your other

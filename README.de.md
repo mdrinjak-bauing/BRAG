@@ -461,6 +461,12 @@ mit [LM Studio](https://lmstudio.ai).
 (Windows) prüft mit einem Klick Docker, Qdrant, den Watcher, den Korpus und den
 KI-Anschluss — ✓/✗ pro Punkt.
 
+**Auf eine neuere Version aktualisieren?** Doppelklick auf `update.command` (Mac)
+bzw. `update.bat` (Windows). Das baut die App neu und startet sie — **ohne
+Neuinstallation**: deine `.env`, der Suchindex, die Connectors und deine Dokumente
+bleiben erhalten. (Git-Klon → holt den neuesten Stand selbst; ZIP-Installation →
+vorher die neue ZIP über diesen Ordner entpacken, deine `.env` behalten.)
+
 **BRAG entfernen?** Doppelklick auf `uninstall.command` (Mac) bzw. `uninstall.bat`
 (Windows) öffnet ein kleines Menü: **[1]** **die Verbindung eines Projekts**
 entfernen — koppelt dieses Projekt von Claude / LM Studio ab, lässt aber BRAG und
