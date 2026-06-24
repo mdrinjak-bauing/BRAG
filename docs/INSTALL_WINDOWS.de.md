@@ -109,16 +109,21 @@ entpackten Ordner; der Projektordner im zweiten Schritt ist erforderlich.)*
 kurz darauf **automatisch dein Browser** mit dem Einrichtungs-Assistenten. Dort
 beantwortest du in einfacher Sprache:
 - **Wo soll die KI rechnen?** (Cloud oder lokal) — für den Start „Cloud".
-- **Anbieter & Schlüssel:** Gemini wählen und den kopierten Schlüssel einfügen.
-  Der Assistent prüft ihn **live** und zeigt einen grünen Haken, wenn er gültig
-  ist. Dein API-Schlüssel wird nur in einer lokalen `.env`-Datei auf deinem
-  Rechner gespeichert (nur für dich lesbar) und dient ausschließlich dazu, deine
-  eigenen Anfragen beim gewählten Anbieter zu authentifizieren — er wird nie an
-  die Macher dieser App oder an Dritte gesendet; die Live-Prüfung sendet
-  lediglich eine kleine Testanfrage an diesen Anbieter, um die Gültigkeit zu
-  bestätigen. Lokale Profile (LM Studio) brauchen gar keinen Schlüssel.
+- **Anbieter & Schlüssel:** deinen Anbieter wählen (**Gemini** empfohlen, oder
+  OpenAI / Anthropic) und den kopierten Schlüssel einfügen. Der Assistent prüft
+  ihn **live** (grüner Haken bei Gültigkeit) und bietet dann die Modelle dieses
+  Anbieters als **Auswahlliste** an, das günstigste vorausgewählt — du musst also
+  keine genaue Modell-ID tippen („Anderes" erlaubt es trotzdem). Dein
+  API-Schlüssel wird nur in einer lokalen `.env`-Datei auf deinem Rechner
+  gespeichert (nur für dich lesbar) und dient ausschließlich dazu, deine eigenen
+  Anfragen beim gewählten Anbieter zu authentifizieren — nie an die Macher dieser
+  App oder an Dritte gesendet; die Live-Prüfung sendet nur eine kleine
+  Testanfrage. Lokale Profile (LM Studio) brauchen gar keinen Schlüssel.
 - **Sprache deiner Dokumente.** (Dein Projektordner wurde oben bereits über die
   Ordnerauswahl festgelegt.)
+- **Ordner ausnehmen (optional).** Hake Top-Ordner an, die **nicht** durchsucht
+  werden sollen — oder benenne einen Ordner mit `_` am Anfang (z. B. `_Archiv/`),
+  der nie indexiert wird.
 
 Am Ende schreibt der Assistent die gesamte Konfiguration selbst — inklusive des
 Eintrags in Claude Desktop. **Du editierst keine einzige Datei.** Das Fenster
@@ -134,7 +139,8 @@ baut nun im Hintergrund die Docker-Container und lädt einmalig ~3 GB Modelle
 
 **Was du tust:** Lege eine PDF-Datei direkt in deinen Projektordner (auch jeder
 Unterordner geht) — alles im Projektordner wird durchsucht, außer dem
-Arbeitsbereich `WissensWIKI`.
+Arbeitsbereich `WissensWIKI`, versteckten Ordnern und allem, dessen Name mit `_`
+beginnt.
 
 **Was du siehst:** Nichts Sichtbares — die Verarbeitung läuft im Hintergrund.
 Beachte: Das **allererste** Dokument lädt zusätzlich die Docling-Layout-Modelle
@@ -172,6 +178,12 @@ Stelle Claude jetzt eine Frage:
   Datenbank liegt in Docker, sicher außerhalb jedes Sync-Ordners.
 - **Stoppen/Starten:** Zum Stoppen eine Eingabeaufforderung im Projektordner
   öffnen, `docker compose down`. Zum Starten: `docker compose up -d`.
+- **Aktualisieren (ohne Neuinstallation):** die neuen Dateien in deinen **BRAG
+  Assistent**-Ordner legen (deine `.env` behalten), dann Doppelklick auf
+  **`update.bat`** — das baut die App neu und startet sie, wobei `.env`,
+  Suchindex, Connectors und deine Dokumente erhalten bleiben. Nur **Modell/
+  Reranker ändern**? `setup.bat` aus diesem Ordner starten und **„⚙ Einstellung
+  ändern"** wählen — keine Ordnerfragen, keine Neu-Indexierung.
 - **Hybrid-Profil (LM Studio):** zuerst [LM Studio](https://lmstudio.ai)
   installieren, dann das Setup ausführen. Das Setup verbindet die BRAG-Werkzeuge
   (der Connector heißt beim ersten Projekt `brag`) automatisch auch mit dem

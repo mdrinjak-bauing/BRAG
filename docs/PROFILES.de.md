@@ -45,6 +45,12 @@ Bilder deiner Abbildungen — nie die ganzen Dateien, nie die Embeddings.
 | **OpenAI** | OpenAI / ChatGPT | `gpt-4o-mini` | <https://platform.openai.com/api-keys> |
 | **Claude** | Anthropic Claude | `claude-haiku-4-5` | <https://console.anthropic.com/> |
 
+Die „günstigste Voreinstellung" ist das, was der Setup-Assistent **vorauswählt**:
+nach der Schlüssel-Prüfung holt er die Modelle des Anbieters und zeigt sie als
+Auswahlliste mit diesem Modell ausgewählt — wähle bei Bedarf ein anderes aus der
+Liste (keine genaue ID nötig). Anbieter oder Modell lassen sich später ohne
+Neu-Indexierung wechseln (Setup erneut → „⚙ Einstellung ändern").
+
 Dein Schlüssel bleibt auf deinem Rechner: Er wird nur in der lokalen
 `.env`-Datei gespeichert (nur für dich lesbar) und dient ausschließlich dazu,
 deine eigenen Anfragen beim gewählten Anbieter zu authentifizieren — nie an die

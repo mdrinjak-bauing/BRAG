@@ -42,6 +42,12 @@ figures too — never the whole files, never the embeddings.
 | **OpenAI** | OpenAI / ChatGPT | `gpt-4o-mini` | <https://platform.openai.com/api-keys> |
 | **Claude** | Anthropic Claude | `claude-haiku-4-5` | <https://console.anthropic.com/> |
 
+The "cheapest preset" is what the setup wizard **preselects**: after your key
+validates, the wizard fetches that provider's models and shows them as a
+dropdown with this model chosen — pick another from the list if you like (no
+need to type an exact id). You can switch provider or model later without
+re-indexing (re-run setup → "⚙ Change a setting").
+
 Your key stays on your machine: it is stored only in the local `.env` file
 (owner-readable) and used solely to authenticate your own requests to the
 provider you chose — never sent to the makers of this app or any third party.

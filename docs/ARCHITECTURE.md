@@ -117,4 +117,13 @@ likewise not indexed.)
   process (`docker exec`) inside the same container as the watcher, sharing
   config and model caches.
 - **NFC normalization** of all source keys: macOS file names arrive NFD;
-  comparisons against stored payloads must not depend on the platform.
+  comparisons against stored payloads must not depend on the platform. The HTTP
+  bridge's `/file/` lookup is likewise normalization-tolerant — it tries the
+  literal, NFC and NFD forms, then a corpus-scoped scan by relative path / bare
+  name — so a stored `rel_path` whose normalization or subfolder drifted still
+  resolves to the PDF (the page deep-link doesn't 404). The path-traversal /
+  symlink-escape guard still applies.
+- **Corpus = the whole project folder** EXCEPT `WissensWIKI/`, hidden dirs,
+  anything whose name starts with `_` (a visible "don't index" marker, incl.
+  `_inbox`), and the top-level names in `EXCLUDE_DIRS` — all gated by the single
+  `config.is_corpus_path` (used by the watcher, ingest and the file tools).

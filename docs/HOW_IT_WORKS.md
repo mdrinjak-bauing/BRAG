@@ -60,7 +60,9 @@ it, so BRAG keeps running.
 **2. Your project folder — the one you picked during setup.** This is *your*
 documents folder: everything in it (any subfolder, any depth) is the searchable
 corpus, and the `WissensWIKI/` workspace (your notes and saved passages) lives
-inside it. You can see, back up and move this folder — it's yours.
+inside it. You can see, back up and move this folder — it's yours. Anything you
+want to keep nearby but **out** of the search, just name it starting with `_`
+(e.g. `_Archiv/`) — those (and `WissensWIKI/`) are never indexed.
 
 **3. Docker's own storage — which you never touch directly.** On first launch
 Docker downloads the program code and the AI models (~3 GB together) and puts
