@@ -12,6 +12,12 @@ echo
 
 # ============ FIRST RUN: install the program + pick a project folder ============
 if [ ! -f ".ragsetup_home" ] && [ ! -f ".setup_complete" ]; then
+  echo "First-time install — this asks you for TWO folders (program + documents)."
+  echo "ALREADY have BRAG installed (e.g. you just unpacked an update ZIP)?"
+  echo "Then DON'T continue here: copy these files into your existing"
+  echo "'BRAG Assistent' folder and double-click setup.command THERE — it skips"
+  echo "the folder questions and goes straight to the settings."
+  echo
   if ! command -v docker >/dev/null 2>&1; then
     echo "Docker is not installed."
     echo "Please install Docker Desktop first: https://www.docker.com/products/docker-desktop/"

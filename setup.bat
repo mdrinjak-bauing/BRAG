@@ -21,6 +21,13 @@ if exist ".setup_complete" goto real_setup
 
 REM ============ FIRST RUN: install the program + pick a project folder ============
 
+echo First-time install - this asks you for TWO folders (program + documents).
+echo ALREADY have BRAG installed (e.g. you just unpacked an update ZIP)?
+echo Then DON'T continue here: copy these files into your existing
+echo "BRAG Assistent" folder and double-click setup.bat THERE - it skips the
+echo folder questions and goes straight to the settings.
+echo.
+
 where docker >nul 2>nul
 if errorlevel 1 (
   echo Docker is not installed.

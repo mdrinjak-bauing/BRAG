@@ -110,6 +110,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send_json(200, {"ok": ok, "message": message, "models": models})
         elif parsed.path == "/api/list-folders":
             self._list_folders()
+        elif parsed.path == "/api/list-models-current":
+            self._list_models_current()
         elif parsed.path == "/api/check-local":
             self._check_local(body)
         elif parsed.path == "/api/setup":
@@ -136,6 +138,23 @@ class BridgeHandler(BaseHTTPRequestHandler):
             "llm_model": env.get("LLM_MODEL", ""),
             "has_key": bool(key_env and env.get(key_env)),
         })
+
+    def _list_models_current(self):
+        """Chat models for the CURRENTLY configured cloud provider, using the key
+        already stored in .env (read server-side, NEVER sent to the browser). Lets
+        the 'change a setting' screen offer a model dropdown without re-pasting the
+        key. {ok:false, models:[]} for a local profile / no key — the screen then
+        keeps its free-text field."""
+        from brag import setup_core
+        env = setup_core.read_existing_env()
+        profile = env.get("PROFILE", "")
+        key_env = setup_core.PROFILES.get(profile, {}).get("key_env")
+        key = env.get(key_env, "") if key_env else ""
+        if not key:
+            self._send_json(200, {"ok": False, "models": []})
+            return
+        ok, _msg, models = setup_core.list_models(profile, key)
+        self._send_json(200, {"ok": ok, "models": models})
 
     def _list_folders(self):
         """Top-level folders of the chosen project, for the wizard's optional
