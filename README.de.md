@@ -182,11 +182,14 @@ eigenen Notizen nie in den Suchergebnissen wider. Er enthält:
 
 **Die eine Regel, die alles erklärt:** Durchsucht wird der **ganze
 Projektordner**, **außer** dem Arbeitsbereich `WissensWIKI/` — und innerhalb von
-`WissensWIKI/` nur `Quellenbelege/`. Versteckte Ordner und jeder `_inbox/` werden
-ignoriert. Alles, was du in den Projektordner legst, wandert automatisch in die
-Suchdatenbank (den Index); nimmst du eine Datei wieder heraus oder löschst sie,
-verschwindet sie auch aus der Datenbank. Sonst wird **nichts** auf deinem Rechner
-angefasst.
+`WissensWIKI/` nur `Quellenbelege/`. **Soll ein Ordner (oder eine Datei) im Projekt
+bleiben, aber NICHT durchsucht werden, gib ihm einen Namen, der mit Unterstrich
+beginnt** — z. B. `_Archiv/`, `_Rohdaten/`; versteckte Ordner und der `_inbox/`
+werden genauso übersprungen. Beim Setup kannst du auch ganze Ordner zum Ausschluss
+anhaken (oder `EXCLUDE_DIRS` in der `.env` setzen). Alles Übrige, was du in den
+Projektordner legst, wandert automatisch in die Suchdatenbank (den Index); nimmst
+du eine Datei wieder heraus oder löschst sie, verschwindet sie auch aus der
+Datenbank. Sonst wird **nichts** auf deinem Rechner angefasst.
 
 Praktisch heißt das: **Dokumente kommen in den Projektordner** (oder einen
 beliebigen Unterordner) — **nicht** nach `Wissen/` (das ist dein Notizbuch und
@@ -457,6 +460,12 @@ mit [LM Studio](https://lmstudio.ai).
 **Läuft alles?** Doppelklick auf `status.command` (Mac) bzw. `status.bat`
 (Windows) prüft mit einem Klick Docker, Qdrant, den Watcher, den Korpus und den
 KI-Anschluss — ✓/✗ pro Punkt.
+
+**Auf eine neuere Version aktualisieren?** Doppelklick auf `update.command` (Mac)
+bzw. `update.bat` (Windows). Das baut die App neu und startet sie — **ohne
+Neuinstallation**: deine `.env`, der Suchindex, die Connectors und deine Dokumente
+bleiben erhalten. (Git-Klon → holt den neuesten Stand selbst; ZIP-Installation →
+vorher die neue ZIP über diesen Ordner entpacken, deine `.env` behalten.)
 
 **BRAG entfernen?** Doppelklick auf `uninstall.command` (Mac) bzw. `uninstall.bat`
 (Windows) öffnet ein kleines Menü: **[1]** **die Verbindung eines Projekts**

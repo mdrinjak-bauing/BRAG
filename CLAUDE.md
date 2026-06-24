@@ -39,8 +39,11 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
 
 ## The vault layout (current model)
 - The **project folder** the user picks **IS** the searchable corpus — every
-  subfolder, any depth — EXCEPT `WissensWIKI/` and hidden/`_inbox` dirs
-  (`config.is_corpus_path`). The first subfolder level = the document *type*.
+  subfolder, any depth — EXCEPT `WissensWIKI/`, hidden dirs, anything whose name
+  starts with `_` (the visible "don't index" convention — covers `_inbox` and any
+  `_Archiv/`), and the top-level names in `config.EXCLUDE_DIRS` (env `EXCLUDE_DIRS`,
+  set by the wizard's exclude-folder picker). All gated by `config.is_corpus_path`.
+  The first subfolder level = the document *type*.
 - `WissensWIKI/` is the user's workspace: `Quellenbelege/` (verified passages saved via the
   `save_passage` tool — **indexed**), `Wissen/` + any free subfolders (the
   notebook — MCP read/write via `read_note`/`write_note`, **NOT** indexed, so notes

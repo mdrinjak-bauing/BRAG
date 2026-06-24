@@ -52,6 +52,16 @@ def _vault() -> Path:
 # Subfolders of sources/ that the watcher ignores (staging area)
 WATCH_IGNORE_DIRS = {"_inbox"}
 
+# Folders to keep OUT of the index while still living inside the project folder.
+# Two complementary mechanisms (see is_corpus_path):
+#   1. ZERO-CONFIG CONVENTION — any folder OR file whose name starts with "_"
+#      is skipped (a *visible* "don't index" marker, e.g. _Archiv/, _Rohdaten/;
+#      this also subsumes the _inbox staging dir). Hidden dot-names are skipped
+#      too, but "_" stays visible in Finder/Explorer so the user sees their files.
+#   2. EXPLICIT LIST — top-level folder names the user ticked in the setup wizard
+#      (or set by hand), comma-separated. Matched against the first path segment.
+EXCLUDE_DIRS = {d.strip() for d in _env("EXCLUDE_DIRS", "").split(",") if d.strip()}
+
 # ── Language ────────────────────────────────────────────────────
 # Controls BM25 stemming and the language of generated chunk contexts/notes.
 VAULT_LANGUAGE = _env("VAULT_LANGUAGE", "english")   # snowball stemmer name
@@ -144,9 +154,11 @@ _SCOPED_ATTRS = {
 
 def is_corpus_path(path) -> bool:
     """True if `path` is part of the active project's searchable corpus: anywhere
-    under the project root EXCEPT the WissensWIKI/ workspace and any hidden /
-    staging (_inbox) dir. The watcher never indexes WissensWIKI (the notebook
-    would echo the corpus); Passagen is indexed via save_passage instead."""
+    under the project root EXCEPT the WissensWIKI/ workspace, any hidden dir,
+    anything whose name starts with "_" (the visible "don't index" convention,
+    incl. the _inbox staging dir), and any top-level folder in EXCLUDE_DIRS. The
+    watcher never indexes WissensWIKI (the notebook would echo the corpus);
+    Quellenbelege is indexed via save_passage instead."""
     try:
         # Compare WITHOUT resolving symlinks: a corpus file reached through an
         # in-tree symlinked folder whose target lives outside the vault must still
@@ -157,7 +169,13 @@ def is_corpus_path(path) -> bool:
     except (ValueError, OSError):
         return False
     parts = rel.parts
-    if any(p in WATCH_IGNORE_DIRS or p.startswith(".") for p in parts):
+    # Skip hidden dot-names, the "_"-prefixed "don't index" convention (covers
+    # _inbox and any user _Archiv/ etc.), and the legacy WATCH_IGNORE_DIRS set.
+    if any(p in WATCH_IGNORE_DIRS or p.startswith(".") or p.startswith("_")
+           for p in parts):
+        return False
+    # Explicit top-level folders the user chose to exclude (wizard / .env).
+    if parts and parts[0] in EXCLUDE_DIRS:
         return False
     return not (parts and parts[0] == WISSENSWIKI_NAME)
 

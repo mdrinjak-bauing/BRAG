@@ -196,6 +196,45 @@ def test_serve_vault_file_missing_in_vault_is_404(tmp_path, monkeypatch):
     assert h.captured.code == 404
 
 
+def test_serve_vault_file_tolerates_unicode_normalization(tmp_path, monkeypatch):
+    # macOS writes file names NFD; an index/link may hold NFC (or vice versa). A
+    # literal `base / rel` join would 404 — the link must still open the file.
+    import unicodedata
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    monkeypatch.setattr(config, "EXCLUDE_DIRS", set())
+    (tmp_path / unicodedata.normalize("NFC", "Bericht_Café.pdf")).write_bytes(b"%PDF cafe")
+    h = _make_handler()
+    h._serve_vault_file(unicodedata.normalize("NFD", "Bericht_Café.pdf"))
+    assert h.captured.code == 200
+    assert h.captured.body == b"%PDF cafe"
+
+
+def test_serve_vault_file_basename_fallback_into_subfolder(tmp_path, monkeypatch):
+    # An older ingest stored just the file name while the file lives in a
+    # subfolder; the deep link must still resolve it (no 404 for every subfolder).
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    monkeypatch.setattr(config, "EXCLUDE_DIRS", set())
+    (tmp_path / "Vertraege").mkdir()
+    (tmp_path / "Vertraege" / "report.pdf").write_bytes(b"%PDF sub")
+    h = _make_handler()
+    h._serve_vault_file("report.pdf")             # request carries no folder
+    assert h.captured.code == 200
+    assert h.captured.body == b"%PDF sub"
+
+
+def test_serve_vault_file_fallback_never_serves_excluded(tmp_path, monkeypatch):
+    # The fallback scan is scoped to is_corpus_path: a file in an excluded
+    # ("_"-prefixed) folder must NOT be surfaced by a bare-name request.
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    monkeypatch.setattr(config, "EXCLUDE_DIRS", set())
+    (tmp_path / "_Archiv").mkdir()
+    (tmp_path / "_Archiv" / "secret.pdf").write_bytes(b"%PDF secret")
+    h = _make_handler()
+    h._serve_vault_file("secret.pdf")             # only copy lives in _Archiv
+    assert h.captured.code == 404
+    assert h.captured.body != b"%PDF secret"
+
+
 # ── Body-size cap on POST (do_POST) ─────────────────────────
 def test_do_post_rejects_oversized_body(monkeypatch):
     # Pass Host + SETUP_MODE so control reaches the Content-Length cap.

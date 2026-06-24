@@ -104,10 +104,12 @@ class BridgeHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/validate-key":
-            from brag.setup_core import validate_api_key
-            ok, message = validate_api_key(
+            from brag.setup_core import list_models
+            ok, message, models = list_models(
                 str(body.get("provider", "gemini")), str(body.get("key", "")))
-            self._send_json(200, {"ok": ok, "message": message})
+            self._send_json(200, {"ok": ok, "message": message, "models": models})
+        elif parsed.path == "/api/list-folders":
+            self._list_folders()
         elif parsed.path == "/api/check-local":
             self._check_local(body)
         elif parsed.path == "/api/setup":
@@ -134,6 +136,24 @@ class BridgeHandler(BaseHTTPRequestHandler):
             "llm_model": env.get("LLM_MODEL", ""),
             "has_key": bool(key_env and env.get(key_env)),
         })
+
+    def _list_folders(self):
+        """Top-level folders of the chosen project, for the wizard's optional
+        'exclude from index' picker. Best-effort: returns [] if the project is
+        not mounted/listable yet — the "_"-prefix convention works without it.
+        WissensWIKI, hidden and already-"_" dirs are never offered (they can't
+        be corpus anyway)."""
+        folders = []
+        try:
+            for p in sorted(config.VAULT.iterdir()):
+                name = p.name
+                if not p.is_dir() or name == config.WISSENSWIKI_NAME \
+                        or name.startswith((".", "_")):
+                    continue
+                folders.append({"name": name, "excluded": name in config.EXCLUDE_DIRS})
+        except OSError:
+            folders = []
+        self._send_json(200, {"folders": folders})
 
     def _check_local(self, body: dict):
         """Probe LM Studio on the host and list its loaded models."""
@@ -177,6 +197,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 llm_model=str(body.get("llm_model", "")).strip(),
                 rerank_profile=str(body.get("rerank_profile", "eco")).strip() or "eco",
                 vision_enabled=bool(body.get("vision_enabled", True)),
+                exclude_dirs=str(body.get("exclude_dirs", "")).strip(),
             )
             steps.append({"ok": True, "message": "Configuration saved"})
         except OSError as e:
@@ -364,21 +385,33 @@ class BridgeHandler(BaseHTTPRequestHandler):
     def _serve_vault_file(self, rel: str, project: str = ""):
         # A deep link from a non-default project carries ?project=<slug>; resolve
         # the path against THAT project's vault (not the default one), reusing the
-        # same per-request context as the tool dispatcher. The traversal guard
-        # runs INSIDE the context so it validates against the correct vault.
+        # same per-request context as the tool dispatcher. Resolution runs INSIDE
+        # the context so it validates against the correct vault.
         rec = None
         if project:
             from brag import registry
             rec = registry.get(project)
         with config.project_context(rec):
-            target = (config.VAULT / rel).resolve()
+            base = config.VAULT
+            # An explicit traversal / absolute-path escape is forbidden outright,
+            # BEFORE any tolerant lookup, so it stays a clear 403 (not a 404).
             try:
-                target.relative_to(config.VAULT.resolve())
+                (base / rel).resolve().relative_to(base.resolve())
             except ValueError:
                 self._send(403, b"forbidden", "text/plain")
                 return
-            if not target.is_file():
-                self._send(404, b"file not found", "text/plain")
+            except OSError:
+                pass
+            target = resolve_corpus_file(base, rel)
+            if target is None:
+                import sys
+                print(f"[bridge] /file 404 — no corpus file matched {rel!r} "
+                      f"under {base}", file=sys.stderr)
+                self._send(404, ("file not found — this document is not where the "
+                                 "index expects it under your project folder "
+                                 f"(looked for: {rel}). If you moved or renamed it, "
+                                 "ask BRAG to re-index, then try the link again."
+                                 ).encode("utf-8"), "text/plain; charset=utf-8")
                 return
             # Cross-Origin-Resource-Policy stops a cross-origin web page from
             # embedding/reading these bytes; with the Host allowlist and no CORS
@@ -407,6 +440,71 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
     def _send_json(self, code: int, payload: dict):
         self._send(code, json.dumps(payload).encode(), "application/json")
+
+
+def resolve_corpus_file(base, rel: str):
+    """Map a /file/<rel> request to a real file under `base`, robustly. Returns a
+    Path inside `base`, or None — and NEVER escapes `base` (the traversal guard
+    rejects '..' and symlinks pointing outside).
+
+    Why this is tolerant rather than a single `base / rel` lookup: a stored
+    rel_path can mismatch the on-disk name in two real-world ways —
+      1. Unicode normalization (macOS writes file names as NFD; an index built
+         elsewhere, or an older BRAG, may hold NFC) — so a literal join misses;
+      2. a rel_path that lost its subfolder (older ingest stored just the
+         basename) — so `base/name.pdf` 404s while the file sits in `Sub/`.
+    We therefore try the literal + NFC + NFD forms first, then fall back to a
+    corpus scan that matches the normalized relative path, else the bare file
+    name. The scan is scoped to is_corpus_path so nothing outside the corpus is
+    served, and only runs when the fast path misses (rare once rel_path is sound).
+    """
+    import unicodedata
+    from pathlib import Path
+
+    base = Path(base)
+    base_resolved = base.resolve()
+
+    def _guarded(cand: Path):
+        try:
+            t = cand.resolve()
+            t.relative_to(base_resolved)   # blocks ../ and symlink-escape
+        except (ValueError, OSError):
+            return None
+        return t if t.is_file() else None
+
+    # 1. Fast path: literal + Unicode-normalized variants of the whole rel path.
+    seen = set()
+    for form in (rel, unicodedata.normalize("NFC", rel), unicodedata.normalize("NFD", rel)):
+        if form in seen:
+            continue
+        seen.add(form)
+        hit = _guarded(base / form)
+        if hit is not None:
+            return hit
+
+    # 2. Fallback scan: normalization-insensitive match on the relative path,
+    #    else on the bare file name (covers a rel_path that lost its folder).
+    want_rel = unicodedata.normalize("NFC", rel).lower()
+    want_name = unicodedata.normalize("NFC", rel.rsplit("/", 1)[-1]).lower()
+    by_name = None
+    try:
+        for p in base.rglob("*"):
+            try:
+                if not p.is_file() or not config.is_corpus_path(p):
+                    continue
+            except OSError:
+                continue
+            rp = unicodedata.normalize("NFC", p.relative_to(base).as_posix()).lower()
+            if rp == want_rel:
+                hit = _guarded(p)
+                if hit is not None:
+                    return hit
+            if by_name is None and \
+                    unicodedata.normalize("NFC", p.name).lower() == want_name:
+                by_name = _guarded(p)
+    except OSError:
+        pass
+    return by_name
 
 
 def pdf_link(rel_path: str, page: int | None = None, project: str = "") -> str:
