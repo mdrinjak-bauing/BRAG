@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.5.0** ([changes](#versions))
+**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.5.1** ([changes](#versions))
 
 > **An AI assistant that actually knows your sources.** Drop your documents — PDFs, Word, PowerPoint, your own notes — into a folder. BRAG **reads them on your own machine, makes them searchable down to the page**, and hands the AI exactly the matching passages for every question — **cited, one click to the original**. Whether that AI runs locally or in the cloud is your call; at most your question and the matching passages are sent — never the whole corpus.
 
@@ -685,7 +685,7 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 ## Versions
 
-Current version: **0.5.0** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.5.1** (June 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
 - **0.5.x** — An audit-driven **hardening, polish & restructure** pass: a leaner
   WissensWIKI layout (`Quellenbelege/` · `Wissen/` · `Workflows/`), a

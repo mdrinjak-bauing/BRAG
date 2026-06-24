@@ -391,6 +391,36 @@ def test_serve_vault_file_scopes_to_project(tmp_path, monkeypatch):
     assert h2.captured.body == b"%PDF default"   # no project -> default vault
 
 
+def test_list_models_current_no_key_returns_empty(monkeypatch):
+    # A local profile (or no saved key) -> no list; the settings screen keeps its
+    # free-text model field.
+    from brag import setup_core
+    monkeypatch.setattr(setup_core, "read_existing_env", lambda: {"PROFILE": "hybrid"})
+    h = _make_handler()
+    h._list_models_current()
+    assert h.captured.json == {"ok": False, "models": []}
+
+
+def test_list_models_current_uses_saved_key(monkeypatch):
+    # A cloud profile with a saved key -> models, fetched WITHOUT the browser ever
+    # seeing the key (read from .env server-side).
+    from brag import setup_core
+    monkeypatch.setattr(setup_core, "read_existing_env",
+                        lambda: {"PROFILE": "gemini", "GEMINI_API_KEY": "k" * 25})
+    seen = {}
+
+    def fake_list_models(provider, key):
+        seen["provider"], seen["key"] = provider, key
+        return True, "ok", ["gemini-2.5-flash-lite", "gemini-2.5-flash"]
+
+    monkeypatch.setattr(setup_core, "list_models", fake_list_models)
+    h = _make_handler()
+    h._list_models_current()
+    assert h.captured.json["ok"] is True
+    assert h.captured.json["models"][0] == "gemini-2.5-flash-lite"
+    assert seen["provider"] == "gemini" and seen["key"] == "k" * 25
+
+
 # Keep a reference to http_bridge so the import is obviously load-bearing
 # (the module must import cleanly with no heavy deps).
 assert http_bridge.BridgeHandler is BridgeHandler

@@ -4,6 +4,47 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.5.1] — 2026-06-24
+
+A usability + robustness patch on top of 0.5.0. No data migration; existing
+installs update in place (rebuild the app image — see `update.command` /
+`update.bat`) and keep their index, configuration and documents.
+
+### Added
+- **One-click updater** (`update.command` / `update.bat`): rebuilds the app and
+  restarts it **without a reinstall** — `.env`, the search index, connectors and
+  documents are all kept.
+- **Cloud model dropdown in setup** — the provider's chat models are fetched
+  (reusing the key-validation call) and offered as a list with the cheapest
+  preselected, plus an "Other" validated free-text fallback. Also available in
+  the "change a setting" screen, using the saved key (read server-side, never
+  sent to the browser).
+- **Keep folders in the project but out of the index** — any folder/file whose
+  name starts with `_` is skipped (a visible marker, e.g. `_Archiv/`), plus an
+  explicit `EXCLUDE_DIRS` list set by an optional wizard folder-picker.
+- **Folder overview in the status check** — `status.command` / `status.bat` now
+  lists each top-level folder as indexed (with its source count) or excluded
+  (with the reason).
+
+### Changed
+- **Search modes documented** in both READMEs (the `mode` → `top_k` /
+  max-per-source table), separating the rerank k-value from `top_k`.
+- **Fuller disclaimer** (READMEs + `docs/LEGAL`): a privately built personal
+  project, used at your own risk; you alone decide — and are responsible for —
+  which data you process.
+- **Setup first-run note** — the launcher now states that the two-folder
+  questions are for a NEW install and points existing users to run setup from
+  their "BRAG Assistent" folder.
+
+### Fixed
+- **PDF page-link "file not found"** — the bridge now resolves `/file/<rel>`
+  tolerant of macOS NFD/NFC file names and of a `rel_path` that lost its
+  subfolder (repairs already-indexed documents with **no re-ingest**); ingest
+  records the real subfolder path going forward. Traversal / symlink-escape
+  stays blocked.
+- **Page links in non-Markdown clients (LM Studio)** — each hit also carries the
+  raw deep-link URL on its own line, so it stays clickable / copy-pasteable.
+
 ## [0.5.0] — 2026-06-22
 
 An audit-driven hardening, polish and onboarding release. No data migration —
@@ -474,6 +515,7 @@ re-index).
 - Knowledge store (library vs. notebook) and the search MCP server for
   Claude Desktop.
 
+[0.5.1]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.5.1
 [0.5.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.5.0
 [0.4.1]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.4.1
 [0.4.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.4.0

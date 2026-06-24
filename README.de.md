@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.5.0** ([Änderungen](#versionen))
+**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.5.1** ([Änderungen](#versionen))
 
 > **Ein KI-Assistent, der deine eigenen Quellen wirklich kennt.** Leg deine Dokumente — PDFs, Word, PowerPoint, deine eigenen Notizen — in einen Ordner. BRAG **liest sie auf deinem Rechner ein, macht sie seitengenau durchsuchbar** und reicht der KI bei jeder Frage genau die passenden Stellen — **belegt, ein Klick führt aufs Original**. Ob die KI dabei lokal oder in der Cloud rechnet, entscheidest du; gesendet werden höchstens deine Frage und die passenden Stellen — nie der ganze Korpus.
 
@@ -718,7 +718,7 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 
 ## Versionen
 
-Aktuelle Version: **0.5.0** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
+Aktuelle Version: **0.5.1** (Juni 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
 
 - **0.5.x** — Eine audit-getriebene **Härtungs-, Feinschliff- und Umbau**-Runde: ein
   schlankeres WissensWIKI (`Quellenbelege/` · `Wissen/` · `Workflows/`), ein

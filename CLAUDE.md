@@ -57,7 +57,7 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   install rework — all merged to `main`.
 - **0.4.1 shipped:** per-connector uninstall now removes the connector (incl. the
   default project) plus a full Docker clean — also merged to `main`.
-- **0.5.0 (in review on `claude/compassionate-brahmagupta-egb1jq`):** audit-driven
+- **0.5.0 shipped (merged to `main`):** audit-driven
   hardening/polish + a **lean WissensWIKI restructure** — folders renamed
   (`Passagen`→`Quellenbelege`, `Notizen`→`Wissen`, `Routinen`→`Workflows`),
   `save_report`/`Berichte` dropped (18→16 tools), AGENTS.md reframed for code agents,
@@ -67,7 +67,14 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   installer port-in-use preflight + macOS Gatekeeper "Open Anyway" guidance,
   security/doc fixes. Verified end-to-end on macOS (install → connector → query →
   uninstall). Fresh-installs-only, so the rename needs no migration.
-- **Current version: 0.5.0.** The repo + the GHCR `brag` package are kept **PRIVATE**
+- **0.5.1 (on `claude/compassionate-brahmagupta-egb1jq`):** usability + robustness
+  patch — one-click `update.command`/`update.bat`; cloud **model dropdown** in setup
+  (and in "change a setting", via the saved key server-side); **exclude folders from
+  the index** (`_`-prefix convention + `EXCLUDE_DIRS` + wizard picker); **folder
+  overview** in the status check; **PDF deep-link 404 hardened** (NFD/NFC + lost-
+  subfolder tolerant, repairs existing indexes without re-ingest) + raw link line for
+  LM Studio; search-modes docs + fuller disclaimer; setup first-run note.
+- **Current version: 0.5.1.** The repo + the GHCR `brag` package are kept **PRIVATE**
   for now. No data migration — fresh installs only. **Windows install still
   unverified live** (Gatekeeper/SmartScreen + the new `.bat` port preflight need a
   real Windows run).

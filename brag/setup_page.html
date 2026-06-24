@@ -104,6 +104,9 @@
       <input type="checkbox" id="set_vision"><span data-i="vision_label"></span></label>
     <details>
       <summary data-i="settings_model_adv"></summary>
+      <!-- Populated from the saved provider key (server-side) for cloud profiles;
+           falls back to the free-text field below for local / no list. -->
+      <select id="set_modelsel" onchange="onSetModelChange()" style="display:none; margin-bottom:8px;"></select>
       <p class="hint" data-i="cloud_model_p"></p>
       <input id="set_model" placeholder="" autocomplete="off">
     </details>
@@ -704,7 +707,41 @@ function openSettings(){
     el.checked = (el.value === (CURRENT.rerank_profile || "eco")); });
   document.getElementById("set_vision").checked = CURRENT.vision_enabled !== false;
   document.getElementById("set_model").value = CURRENT.llm_model || "";
+  // Default: free-text only. For a cloud profile, try to turn it into a dropdown
+  // using the SAVED key (server-side) so the model can be picked, not typed.
+  const sel = document.getElementById("set_modelsel");
+  sel.style.display = "none";
+  document.getElementById("set_model").style.display = "block";
   show("ssettings");
+  loadCurrentModels();
+}
+async function loadCurrentModels(){
+  const sel = document.getElementById("set_modelsel");
+  const txt = document.getElementById("set_model");
+  try{
+    const r = await fetch("/api/list-models-current",{method:"POST",
+      headers:{"Content-Type":"application/json"}, body:"{}"});
+    const d = await r.json();
+    if(!(d.ok && d.models && d.models.length)) return;   // keep free-text
+    const cur = (CURRENT && CURRENT.llm_model) || "";
+    const opts = d.models.map(m=>new Option(m,m));
+    opts.push(new Option(t("cloud_model_other"), "__other__"));
+    sel.replaceChildren(...opts);
+    // Preselect the saved model if it is in the list, else "Other" (keep its text).
+    if(cur && d.models.includes(cur)){ sel.value = cur; txt.style.display="none"; }
+    else if(cur){ sel.value = "__other__"; txt.style.display="block"; }
+    else { sel.value = d.models[0]; txt.style.display="none"; }
+    sel.style.display = "block";
+  }catch(e){ /* offline / no key: free-text field stays */ }
+}
+function onSetModelChange(){
+  const other = document.getElementById("set_modelsel").value === "__other__";
+  document.getElementById("set_model").style.display = other ? "block" : "none";
+}
+function _chosenSetModel(){
+  const sel = document.getElementById("set_modelsel");
+  if(sel.style.display !== "none" && sel.value && sel.value !== "__other__") return sel.value;
+  return document.getElementById("set_model").value.trim();
 }
 async function saveSettings(){
   const rr = document.querySelector('input[name="set_rerank"]:checked');
@@ -713,7 +750,7 @@ async function saveSettings(){
     api_key: "",                 // empty -> server keeps the existing key (same provider)
     language: document.getElementById("set_language").value,
     vault_path: "",
-    llm_model: document.getElementById("set_model").value.trim(),
+    llm_model: _chosenSetModel(),
     rerank_profile: (rr && rr.value) || "eco",
     vision_enabled: document.getElementById("set_vision").checked,
   });
