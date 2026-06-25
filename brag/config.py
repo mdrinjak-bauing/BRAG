@@ -62,6 +62,31 @@ WATCH_IGNORE_DIRS = {"_inbox"}
 #      (or set by hand), comma-separated. Matched against the first path segment.
 EXCLUDE_DIRS = {d.strip() for d in _env("EXCLUDE_DIRS", "").split(",") if d.strip()}
 
+# ── Zusätzliche Vault-Wurzeln (nur Datei-Zugriff über vault_*, KEIN Korpus) ──
+# Format: "alias=/abs/pfad,alias2=/abs/pfad2". Erlaubt den vault_*-Werkzeugen,
+# neben dem Default-Vault weitere benannte Ordner zu erreichen (z. B. ein zweites
+# Notizverzeichnis: fh=/pfad/zu/ordner). Adressiert wird über ein Pfad-Präfix
+# "alias:rest". Die Korpus-SUCHE bleibt unberührt — nur der Default-Vault wird
+# indexiert; Extra-Wurzeln sind reiner Dateizugriff (read/write je nach Schutz).
+def _parse_roots(spec: str) -> dict:
+    roots = {}
+    for part in spec.split(","):
+        if "=" in part:
+            alias, _, p = part.partition("=")
+            alias, p = alias.strip(), p.strip()
+            if alias and p:
+                roots[alias] = p
+    return roots
+
+
+EXTRA_VAULT_ROOTS = _parse_roots(_env("VAULT_EXTRA_ROOTS", ""))
+
+# Top-level folders the vault_* WRITE tools refuse to touch and that vault_search
+# skips — e.g. a read-only corpus folder or a code/system area. Comma-separated
+# folder names at the vault root; EMPTY by default (configure per deployment).
+VAULT_WRITE_PROTECT = {p.strip() for p in _env("VAULT_WRITE_PROTECT", "").split(",") if p.strip()}
+VAULT_SEARCH_SKIP = {p.strip() for p in _env("VAULT_SEARCH_SKIP", "").split(",") if p.strip()}
+
 # ── Language ────────────────────────────────────────────────────
 # Controls BM25 stemming and the language of generated chunk contexts/notes.
 VAULT_LANGUAGE = _env("VAULT_LANGUAGE", "english")   # snowball stemmer name
@@ -335,6 +360,30 @@ MAX_TOP_K = int(_env("MAX_TOP_K", 2000))
 # Never loaded synchronously in the start path (that could outlast Claude
 # Desktop's MCP handshake). Only warms when reranking is enabled.
 RERANK_WARMUP = _env("RERANK_WARMUP", "true").lower() == "true"
+
+# ── Cross-lingual query expansion (optional, language-configurable) ──
+# Appends established English domain terms to a (German) query so it also retrieves
+# sources in the other language. "local" = deterministic DE->EN table only, no LLM
+# (default, reproducible, zero cost); "hybrid" = table + LLM fallback for terms
+# outside the table (graceful: any failure -> table result); "off" = disabled.
+QUERY_EXPANSION_BACKEND = _env("QUERY_EXPANSION_BACKEND", "local").lower()
+# In hybrid mode, only call the LLM when the table contributes FEWER than this many
+# added terms (the table is the cheap workhorse; the LLM fills genuine gaps).
+QE_HYBRID_MIN_TERMS = int(_env("QE_HYBRID_MIN_TERMS", 2))
+
+# ── Language gate (EN-boost second rerank pass, ported from the local RAG) ──
+# After the main rerank, EN chunks are re-scored against the ENGLISH suffix of the
+# expanded query and the MAX is kept — rescues English passages that a German query
+# systematically under-ranks. Gated to chunks with payload language=="en" so generic
+# English hits cannot overtake solid German ones. Only fires when expansion produced
+# at least two English suffix tokens.
+LANGUAGE_GATE_ENABLED = _env("LANGUAGE_GATE_ENABLED", "true").lower() == "true"
+EN_BOOST_ALPHA = float(_env("EN_BOOST_ALPHA", "1.0"))
+
+# Reranker INPUT text: "context_text" = BRAG original (the chunk's anchoring context
+# + its text); "text" = chunk text only. Kept as
+# a dial so the two can be A/B-compared against the corpus before settling the default.
+RERANK_INPUT = _env("RERANK_INPUT", "context_text").lower()
 
 # ── HTTP bridge ─────────────────────────────────────────────────
 # The browser setup wizard (and its config-writing API) is served ONLY when the

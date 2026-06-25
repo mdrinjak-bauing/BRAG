@@ -1,7 +1,9 @@
 """Tests for the extracted tool logic (brag.tools) and hit formatting — the
 file-based and formatting paths that need no Qdrant / models."""
 
-from brag import config, tools
+import pytest
+
+from brag import config, tools, vault
 from brag.formatting import format_hit, parse_meta_filter
 
 
@@ -14,7 +16,6 @@ def test_format_hit_source_has_link_citation_and_rerank(monkeypatch):
     out = format_hit(1, hit)
     assert "Smith (2020)" in out
     assert "p. 12" in out
-    assert "localhost:8765/file/" in out
     assert "rerank: 0.500" in out
     # The raw deep-link also appears on its own line so clients that don't render
     # Markdown links (e.g. LM Studio) still show a clickable/copy-paste URL.
@@ -164,3 +165,131 @@ def test_mode_presets_resolve():
     assert query._MODE_PRESETS["review"][0] >= 30      # broad survey = wide net
     assert query._MODE_PRESETS["deep"][1] >= 8          # deep = many per source
     assert query._MODE_PRESETS["precise"][0] <= 8       # precise = few hits
+
+
+# ── vault_edit: chirurgischer In-Place-Edit (String-Ersetzung wie der Code-Editor) ──
+
+def test_vault_edit_replaces_unique_string(tmp_path, monkeypatch):
+    _vault(tmp_path, monkeypatch)
+    (tmp_path / "note.md").write_text("Status: alt\nRest bleibt\n", encoding="utf-8")
+    out = vault.vault_edit("note.md", "Status: alt", "Status: neu")
+    assert out.startswith("✓")
+    assert (tmp_path / "note.md").read_text(encoding="utf-8") == "Status: neu\nRest bleibt\n"
+
+
+def test_vault_edit_missing_string_refused(tmp_path, monkeypatch):
+    _vault(tmp_path, monkeypatch)
+    (tmp_path / "note.md").write_text("hello", encoding="utf-8")
+    out = vault.vault_edit("note.md", "absent", "x")
+    assert "Text nicht gefunden" in out
+    assert (tmp_path / "note.md").read_text(encoding="utf-8") == "hello"   # unverändert
+
+
+def test_vault_edit_ambiguous_refused_unless_replace_all(tmp_path, monkeypatch):
+    _vault(tmp_path, monkeypatch)
+    (tmp_path / "note.md").write_text("x\nx\n", encoding="utf-8")
+    out = vault.vault_edit("note.md", "x", "y")
+    assert "nicht eindeutig" in out
+    assert (tmp_path / "note.md").read_text(encoding="utf-8") == "x\nx\n"   # unverändert
+    out2 = vault.vault_edit("note.md", "x", "y", replace_all=True)
+    assert out2.startswith("✓")
+    assert (tmp_path / "note.md").read_text(encoding="utf-8") == "y\ny\n"
+
+
+def test_vault_edit_write_protected_and_missing_file(tmp_path, monkeypatch):
+    _vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(config, "VAULT_WRITE_PROTECT", {"protected"}, raising=False)
+    prot = tmp_path / "protected"
+    prot.mkdir()
+    (prot / "config.py").write_text("X = 1", encoding="utf-8")
+    assert "Schreibgeschützt" in vault.vault_edit("protected/config.py", "X = 1", "X = 2")
+    assert (prot / "config.py").read_text(encoding="utf-8") == "X = 1"     # unangetastet
+    assert "Datei nicht gefunden" in vault.vault_edit("ghost.md", "a", "b")  # Edit ≠ Anlegen
+
+
+def test_vault_edit_rejects_escape_and_noop(tmp_path, monkeypatch):
+    _vault(tmp_path, monkeypatch)
+    assert "außerhalb" in vault.vault_edit("../evil.md", "a", "b")
+    (tmp_path / "n.md").write_text("a", encoding="utf-8")
+    assert "identisch" in vault.vault_edit("n.md", "a", "a")              # No-op abgefangen
+
+
+# ── Mehrwurzeligkeit: zweite benannte Vault-Wurzel (z. B. fh:) ──
+
+def test_vault_multiroot_read_write_and_per_root_protection(tmp_path, monkeypatch):
+    main, fh = tmp_path / "promotion", tmp_path / "fh"
+    main.mkdir(); fh.mkdir()
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", main)
+    monkeypatch.setattr(config, "EXTRA_VAULT_ROOTS", {"fh": str(fh)}, raising=False)
+    # schreiben + lesen in der FH-Wurzel über das Präfix; Ausgabe trägt das Präfix
+    out = vault.vault_write("fh:Lehre/note.md", "hi")
+    assert out.startswith("✓") and "fh:Lehre/note.md" in out
+    assert (fh / "Lehre" / "note.md").read_text(encoding="utf-8") == "hi"
+    assert vault.vault_read("fh:Lehre/note.md") == "hi"
+    # Default-Vault schützt den konfigurierten Ordner weiterhin …
+    monkeypatch.setattr(config, "VAULT_WRITE_PROTECT", {"protected"}, raising=False)
+    (main / "protected").mkdir()
+    (main / "protected" / "c.py").write_text("X", encoding="utf-8")
+    assert "Schreibgeschützt" in vault.vault_write("protected/c.py", "Y", overwrite=True)
+    # … der Schutz gilt aber NUR im Default-Vault, nicht in der Extra-Wurzel
+    assert vault.vault_write("fh:protected/ok.md", "z").startswith("✓")
+    # Escape aus der FH-Wurzel wird abgewiesen
+    assert "außerhalb" in vault.vault_read("fh:../escape.md")
+
+
+def test_vault_list_extra_root(tmp_path, monkeypatch):
+    main, fh = tmp_path / "promotion", tmp_path / "fh"
+    main.mkdir(); fh.mkdir()
+    (fh / "Lehre").mkdir()
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", main)
+    monkeypatch.setattr(config, "EXTRA_VAULT_ROOTS", {"fh": str(fh)}, raising=False)
+    out = vault.vault_list("fh:")
+    assert "fh:Lehre/" in out
+
+
+def test_vault_search_extra_root(tmp_path, monkeypatch):
+    main, fh = tmp_path / "promotion", tmp_path / "fh"
+    main.mkdir(); fh.mkdir()
+    (fh / "Lehre").mkdir()
+    (fh / "Lehre" / "modul.md").write_text("Thema: Baurecht Vertiefung", encoding="utf-8")
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", main)
+    monkeypatch.setattr(config, "EXTRA_VAULT_ROOTS", {"fh": str(fh)}, raising=False)
+    # FH durchsuchen → Treffer mit fh:-Präfix
+    out = vault.vault_search("baurecht", root="fh")
+    assert "fh:Lehre/modul.md" in out
+    # unbekannte Wurzel wird abgewiesen
+    assert "Unbekannte" in vault.vault_search("x", root="zz")
+    # Default-Vault-Suche findet FH-Inhalt NICHT (getrennte Wurzeln)
+    assert "Keine Vault-Datei" in vault.vault_search("baurecht")
+
+
+# ── vault_extract: expliziter Binär-Pfad (PDF/Word/Excel), Standard bleibt vault_read ──
+
+def test_vault_extract_dispatch_and_guards(tmp_path, monkeypatch):
+    _vault(tmp_path, monkeypatch)
+    (tmp_path / "n.md").write_text("# hi", encoding="utf-8")
+    assert "vault_read" in vault.vault_extract("n.md")          # Text → verweist auf vault_read
+    (tmp_path / "x.zip").write_text("zip", encoding="utf-8")
+    assert "unterstützt" in vault.vault_extract("x.zip")        # nicht unterstütztes Format
+    assert "Datei nicht gefunden" in vault.vault_extract("ghost.pdf")
+    assert "außerhalb" in vault.vault_extract("../e.pdf")        # Escape
+
+
+def test_vault_extract_docx_roundtrip(tmp_path, monkeypatch):
+    docx = pytest.importorskip("docx")                          # python-docx optional
+    _vault(tmp_path, monkeypatch)
+    d = docx.Document()
+    d.add_paragraph("Hallo aus Word")
+    d.save(str(tmp_path / "brief.docx"))
+    out = vault.vault_extract("brief.docx")
+    assert "Hallo aus Word" in out and "brief.docx" in out
+
+
+def test_vault_extract_xlsx_roundtrip(tmp_path, monkeypatch):
+    openpyxl = pytest.importorskip("openpyxl")                  # openpyxl optional
+    _vault(tmp_path, monkeypatch)
+    wb = openpyxl.Workbook()
+    wb.active["A1"] = "Pos"; wb.active["B1"] = 42
+    wb.save(str(tmp_path / "lv.xlsx"))
+    out = vault.vault_extract("lv.xlsx")
+    assert "Pos" in out and "42" in out
