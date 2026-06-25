@@ -13,7 +13,7 @@ recent_sources, set_metadata, delete_note, delete_passage, move_note.
 
 from mcp.server.fastmcp import FastMCP
 
-from brag import config, tools
+from brag import config, pdf_open, tools, vault
 
 mcp = FastMCP("brag")
 
@@ -58,6 +58,125 @@ def list_sources(doc_type: str = "") -> str:
     Nutze dies ZUERST, um vor einer Literaturrecherche den Korpus zu sichten und
     die genauen `source_file`-Schlüssel zu sehen, die search/read_source erwarten."""
     return tools.list_sources(doc_type=doc_type)
+
+
+@mcp.tool()
+def coverage(query: str, top_k: int = 50, min_score: float = 0.4,
+             mode: str = "broad") -> str:
+    """Stand der Forschung / „Wer schreibt zu X?" — aggregiert die Treffer PRO QUELLE
+    (statt einer flachen Trefferliste) und teilt sie in substanziell vs. peripheral.
+    `mode`: 'broad' (Quellen mit ≥3 Treffern, „wer schreibt VIEL"), 'specific'
+    (fokussierte Spezialquellen mit einem starken Treffer zuerst) oder 'both'.
+    Für eine Literaturübersicht/„Stand der Forschung" zu einem Thema."""
+    return tools.coverage(query, top_k=top_k, min_score=min_score, mode=mode)
+
+
+@mcp.tool()
+def clusters(query: str, top_k: int = 40, n_clusters: int = 5) -> str:
+    """Themen-Map: clustert die Treffer via K-Means im Embedding-Raum in Sub-Themen
+    und gibt pro Cluster einen Repräsentanten + die Quellen-/Kapitel-Verteilung aus.
+    Für „Welche Sub-Aspekte/Teilthemen hat Y?" — explorativ statt einer Rangliste."""
+    return tools.clusters(query, top_k=top_k, n_clusters=n_clusters)
+
+
+@mcp.tool()
+def compare_positions(query: str, sources: list[str], top_k_per_source: int = 3) -> str:
+    """Stellt 2–7 KONKRETE Quellen zu einer Frage SIDE-BY-SIDE gegenüber — je Quelle die
+    Top-Treffer. `sources` = Liste von `source_file`-Schlüsseln (siehe list_sources).
+    Für „Wie definieren/bewerten Quelle A und B das Thema X?"."""
+    return tools.compare_positions(query, sources, top_k_per_source=top_k_per_source)
+
+
+@mcp.tool()
+def open_pdf(source_file: str, pdf_page: int = 0, book_page: str = "",
+             page: int = 0) -> str:
+    """Öffnet eine Korpus-PDF an einer bestimmten Seite in Skim (deterministisch via
+    AppleScript — zuverlässiger als Browser/Vorschau, die `#page=N` oft ignorieren).
+    Nutze dies, wenn der Nutzer einen Treffer im PDF nachlesen will.
+
+    `source_file` = der Quelle-Schlüssel aus den Suchergebnissen (ohne .pdf).
+    Seitenangabe (EINE genügt): `book_page` = die in der Suche angezeigte gedruckte
+    Seite „S. X" (wird via /PageLabels in die physische Seite übersetzt — der Normalfall);
+    `pdf_page` = bereits die physische PDF-Seite, falls bekannt. Ohne Angabe: Seite 1."""
+    return pdf_open.open_pdf(
+        source_file,
+        pdf_page=(pdf_page or None),
+        book_page=(book_page or None),
+        page=(page or None),
+    )
+
+
+# ── Vault-Dateien — BRAG als EIN MCP für Korpus UND echte Notiz-Ordner ──
+# Diese Werkzeuge lesen/schreiben die echten Ordner des Nutzers direkt — sie ersetzen
+# ein separates Filesystem-/Obsidian-MCP. Welche Ordner schreibgeschützt sind, steuert
+# VAULT_WRITE_PROTECT (z. B. ein read-only Korpus oder ein Code-Bereich).
+
+@mcp.tool()
+def vault_read(path: str) -> str:
+    """Liest eine **Text/Markdown**-Datei (.md/.txt/.csv) aus dem Vault (Pfad relativ zur
+    Wurzel, z. B. `notes/Topic.md`). Standard-Werkzeug für Notizen und eigene Dateien —
+    alles, was KEINE Korpus-Suche ist (dafür search/read_source). Für PDF/Word/Excel
+    `vault_extract` (nur auf ausdrückliche Aufforderung). Eine zweite, benannte Wurzel wird
+    mit Präfix angesprochen (z. B. `alt:reports/x.md`); ohne Präfix = Default-Vault.
+    (Gilt für alle `vault_*`-Werkzeuge.)"""
+    return vault.vault_read(path)
+
+
+@mcp.tool()
+def vault_list(subdir: str = "") -> str:
+    """Listet Dateien/Ordner unter einem Vault-Pfad (leer = Vault-Wurzel). Zum
+    Orientieren in der Ordnerstruktur, bevor du liest oder schreibst."""
+    return vault.vault_list(subdir)
+
+
+@mcp.tool()
+def vault_search(query: str, content: bool = True, limit: int = 40, root: str = "") -> str:
+    """Sucht Vault-DATEIEN (Notizen, Exposé, Belege, Konzepte …) nach Datei-Name und
+    optional Inhalt — NICHT den Literatur-Korpus (dafür `search`). Standard = Haupt-Vault;
+    `root="fh"` durchsucht stattdessen die so benannte Extra-Wurzel. Für „wo liegt meine
+    Notiz/Datei zu X". Überspringt im Haupt-Vault die in VAULT_SEARCH_SKIP gesetzten Bereiche."""
+    return vault.vault_search(query, content=content, limit=limit, root=root)
+
+
+@mcp.tool()
+def vault_write(path: str, content: str, overwrite: bool = False) -> str:
+    """Schreibt/erstellt eine Vault-Datei am angegebenen Pfad. Überschreibt eine bereits
+    vorhandene Datei NUR mit `overwrite=True` (sonst Hinweis; vorher abklären).
+    Schreibgeschützt sind die in `VAULT_WRITE_PROTECT` konfigurierten Top-Level-Ordner."""
+    return vault.vault_write(path, content, overwrite=overwrite)
+
+
+@mcp.tool()
+def vault_append(path: str, content: str) -> str:
+    """Hängt Text an eine Vault-Datei an (legt sie an, falls nicht vorhanden). Der Weg
+    für Belege, Tagebucheinträge, Logs u. Ä. Gleicher Schreibschutz wie vault_write."""
+    return vault.vault_append(path, content)
+
+
+@mcp.tool()
+def vault_edit(path: str, old_string: str, new_string: str,
+               replace_all: bool = False) -> str:
+    """Ändert einen exakten Textausschnitt in einer BESTEHENDEN Vault-Datei in place —
+    das chirurgische Gegenstück zu vault_write (ganze Datei) und vault_append (nur ans
+    Ende). Für „Status oben auffrischen" in einer Notiz, eine einzelne Zeile in einer
+    Übersicht/Liste nachziehen oder einen Tippfehler korrigieren — ohne die ganze Datei
+    neu zu schreiben. Wie der Code-Editor:
+    `old_string` muss EXAKT passen (inkl. Einrückung/Zeilenumbrüche) und EINDEUTIG sein,
+    sonst wird der Edit verweigert — dann mehr Kontext aufnehmen oder `replace_all=True`
+    für alle Vorkommen. Gleicher Schreibschutz wie vault_write; legt keine neue Datei an."""
+    return vault.vault_edit(path, old_string, new_string, replace_all=replace_all)
+
+
+@mcp.tool()
+def vault_extract(path: str, page_from: int = 0, page_to: int = 0) -> str:
+    """Extrahiert **Text aus einer Vault-PDF/-Word/-Excel** (`.pdf`/`.docx`/`.xlsx`) —
+    **nur auf ausdrückliche Aufforderung** („lies die Word-Datei …", „extrahier das PDF").
+    Standard für Notizen bleibt `vault_read` (Markdown/Text); dieses Tool ist der explizite
+    Pfad für Binär-Dokumente, read-only. Erkennt das Format an der Endung; PDF optional auf
+    `page_from`/`page_to` (1-basiert) einschränken; lange Dokumente werden gedeckelt. Greift
+    auch auf Extra-Wurzeln zu (`alt:reports/…`). Scans ohne Textebene liefern keinen Text
+    (OCR ist nicht enthalten)."""
+    return vault.vault_extract(path, page_from=page_from, page_to=page_to)
 
 
 @mcp.tool()
@@ -112,23 +231,18 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
     """Sichert eine zitierfähige Passage unter einem Thema (z. B. ein Kapitel/Motiv).
 
     WANN was: ein wörtliches ZITAT aus einer Quelle → save_passage (wird durchsuchbarer
-    Beleg); EIGENER Text (Notizen, Entwürfe, Schlüsse, auch ein zusammengestelltes
-    Ergebnis) → write_note.
+    Beleg); EIGENER Text (Notizen, Entwürfe, Schlüsse) → write_note bzw. vault_write.
 
-    Baut deine Belegsammlung in WissensWIKI/Quellenbelege/<thema>.md auf UND indexiert die
-    Passage für die semantische Suche, sodass ein späterer Chat (auch mit einem anderen
-    Anbieter) sie über `search` wiederfindet — sie erscheint klar markiert als
-    „gespeicherte Passage", getrennt von Primärquellen. So hältst du Erkenntnisse,
-    Entscheidungen und Definitionen einer Arbeitssitzung fest, damit das Wissen im
-    Ordner lebt und nicht in einem Chat-Verlauf."""
+    Baut die Belegsammlung in WissensWIKI/Quellenbelege/<thema>.md auf UND indexiert die
+    Passage für die semantische Suche, sodass ein späterer Chat sie über `search`
+    wiederfindet — klar markiert als „gespeicherte Passage", getrennt von Primärquellen."""
     return tools.save_passage(topic, text, source, page=page, note=note)
 
 
 @mcp.tool()
 def list_passages(topic: str = "") -> str:
-    """Listet gespeicherte Passagen: mit Thema die darunter gesicherten Passagen,
-    ohne Thema eine Übersicht aller Themen. (Gespeicherte Passagen erscheinen auch in
-    der Suche, markiert als „gespeicherte Passage" — dies ist die Themen-Übersicht.)"""
+    """Listet gespeicherte Passagen: mit Thema die darunter gesicherten Passagen, ohne
+    Thema eine Übersicht aller Themen (markiert als „gespeicherte Passage")."""
     return tools.list_passages(topic=topic)
 
 
