@@ -1,5 +1,5 @@
 # BRAG — Building Retrieval-Augmented Generation — pinned versions (proven combination)
-docling==2.103.0
+docling==2.108.0
 qdrant-client==1.18.0
 google-genai==2.8.0
 fastembed==0.8.0
