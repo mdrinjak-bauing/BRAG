@@ -18,6 +18,7 @@ from datetime import date
 
 from brag import config, storage
 from brag.formatting import format_hit, parse_meta_filter
+from brag.search import analytics
 from brag.search.query import search as run_search
 
 
@@ -40,6 +41,85 @@ def search_text(query: str, top_k: int = 0, doc_type: str = "",
                 "list_sources() whether the document is indexed at all.")
     out = [f"**{len(hits)} hits** for: {query}\n"]
     out += [format_hit(i + 1, h) for i, h in enumerate(hits)]
+    return "\n".join(out)
+
+
+def coverage(query: str, top_k: int = 50, min_score: float = 0.4,
+             mode: str = "broad", collection_name: str | None = None) -> str:
+    """Stand der Forschung: aggregiert die Treffer pro Quelle (substanziell/peripheral)."""
+    agg = analytics.source_coverage(query, top_k=top_k, min_score=min_score,
+                                    mode=mode, collection_name=collection_name)
+    if agg.get("error"):
+        return f"Coverage fehlgeschlagen: {agg['error']}"
+    label = {
+        "broad": f"Substanziell — ≥3 Treffer mit max-Score ≥{min_score}",
+        "specific": f"Spezifisch — max-Score ≥{min_score}, fokussierte Quellen zuerst",
+        "both": f"Substanziell (breit) — ≥3 Treffer mit max-Score ≥{min_score}",
+    }.get(mode, f"Substanziell — ≥3 Treffer mit max-Score ≥{min_score}")
+    out = [f"**Coverage zu:** {query}",
+           f"Analysiert: **{agg['total_chunks_analyzed']} Treffer aus "
+           f"{agg['total_sources']} Quellen** (top_k={top_k}, min_score={min_score})\n",
+           f"### {label} ({len(agg['substantial'])})"]
+    if agg["substantial"]:
+        for sf, count, maxs, _sample, page, chapters in agg["substantial"]:
+            ch = f" · Kapitel: {', '.join(chapters[:3])}" if chapters else ""
+            out.append(f"- `{sf}` — {count} Treffer, max {maxs:.3f} (S. {page}){ch}")
+    else:
+        out.append("_(keine)_")
+    if mode == "both" and agg.get("substantial_specific"):
+        out.append(f"\n### Spezifisch — fokussierte Quellen ({len(agg['substantial_specific'])})")
+        for sf, count, maxs, _sample, page, _ch in agg["substantial_specific"][:15]:
+            out.append(f"- `{sf}` — {count} Treffer, max {maxs:.3f} (S. {page})")
+    out.append(f"\n### Peripheral — Randbezug ({len(agg['peripheral'])})")
+    if agg["peripheral"]:
+        for sf, count, maxs, _s, _p, _c in agg["peripheral"][:20]:
+            out.append(f"- `{sf}` — {count} Treffer, max {maxs:.3f}")
+        if len(agg["peripheral"]) > 20:
+            out.append(f"… und {len(agg['peripheral']) - 20} weitere")
+    else:
+        out.append("_(keine)_")
+    return "\n".join(out)
+
+
+def clusters(query: str, top_k: int = 40, n_clusters: int = 5,
+             collection_name: str | None = None) -> str:
+    """Themen-Map: clustert die Treffer im Embedding-Raum (K-Means) in Sub-Themen."""
+    res = analytics.topic_clusters(query, top_k=top_k, n_clusters=n_clusters,
+                                   collection_name=collection_name)
+    if res.get("error"):
+        return f"Cluster-Analyse fehlgeschlagen: {res['error']}"
+    out = [f"**Themen-Map zu:** {query}",
+           f"{res['total_chunks']} Treffer in {len(res['clusters'])} Cluster\n"]
+    for n, c in enumerate(res["clusters"], 1):
+        rep = c["representative"]
+        srcs = ", ".join(f"`{s}` ({k})" for s, k in c["sources"][:4])
+        out.append(f"### Cluster {n} — {c['n_chunks']} Chunks aus {c['n_sources']} Quellen")
+        out.append(f"Quellen: {srcs}")
+        if c["chapters"]:
+            out.append(f"Kapitel: {', '.join(c['chapters'][:5])}")
+        sc = rep.get("score")
+        sc_s = f" (Score {sc:.3f})" if isinstance(sc, (int, float)) else ""
+        out.append(f"Repräsentant: `{rep['source_file']}` S. {rep['page']}{sc_s}")
+        out.append(f"> {(rep['text'] or '').strip()[:220]}…\n")
+    return "\n".join(out)
+
+
+def compare_positions(query: str, sources: list[str], top_k_per_source: int = 3,
+                      collection_name: str | None = None) -> str:
+    """Stellt mehrere Quellen zu einer Frage side-by-side gegenüber."""
+    res = analytics.compare_positions(query, sources, top_k_per_source=top_k_per_source,
+                                      collection_name=collection_name)
+    out = [f"**Side-by-side zu:** {query}\n"]
+    for src, hits in res["results_by_source"].items():
+        out.append(f"### {src}")
+        for h in hits:
+            sc = h.get("rerank_score") or h.get("score")
+            sc_s = f"{sc:.3f}" if isinstance(sc, (int, float)) else "—"
+            text = (h.get("text") or "").strip().replace("\n", " ")[:240]
+            out.append(f"- S. {h.get('page_start', '?')} (Score {sc_s}): {text}…")
+        out.append("")
+    if res["missing"]:
+        out.append(f"_Nicht im Korpus gefunden: {', '.join(res['missing'])}_")
     return "\n".join(out)
 
 

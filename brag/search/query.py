@@ -139,10 +139,20 @@ def _diversify(candidates: list[dict], top_k: int, max_per_source: int) -> list[
 # Task presets → (top_k, max_per_source). "normal" uses the config defaults; an
 # explicit top_k / max_chunks_per_source argument still overrides the preset.
 _MODE_PRESETS = {
+    "facts": (3, 1),      # cross-check a fact across 3 INDEPENDENT sources (1 per source)
     "precise": (8, 2),    # a pinpoint fact (+ a little cross-checking)
     "review": (50, 2),    # broad literature survey: wide net, few per source
     "deep": (30, 15),     # dig into one/few specific reports (with source_file)
 }
+
+
+def _rerank_text(c: dict) -> str:
+    """Text handed to the cross-encoder for a candidate. config.RERANK_INPUT selects
+    'text' (chunk text only) or 'context_text' (BRAG original:
+    the chunk's anchoring context + its text)."""
+    if config.RERANK_INPUT == "text":
+        return c.get("text", "")
+    return c.get("context", "") + "\n" + c.get("text", "")
 
 
 def search(query: str, top_k: int | None = None, reranking: bool | None = None,
@@ -176,21 +186,42 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
     sparse_q = embed_sparse_query(query)
     qfilter = _build_filter(**filters)
 
+    # Cross-lingual query expansion: append
+    # established English domain terms so a German query also retrieves English
+    # sources. `expanded`, when set, ALWAYS starts with the original query — the
+    # language gate below relies on that. Best-effort: any failure -> None.
+    expanded = None
+    if config.QUERY_EXPANSION_BACKEND != "off":
+        from brag.search.expand import expand_query
+        try:
+            expanded = expand_query(query)
+        except Exception:  # noqa: BLE001 — expansion never crashes search
+            expanded = None
+
     # A large top_k must not be silently capped by the rerank/fusion presets:
     # fetch at least top_k candidates per vector and fuse at least top_k.
     prefetch_limit = max(top_k, config.RERANK_PREFETCH)
     fusion_limit = max(top_k, config.RERANK_FUSION_LIMIT)
 
+    # Prefetch streams: dense + sparse on the original query, plus a third dense
+    # stream on the expanded (DE+EN) query when expansion fired. RRF fuses them.
+    prefetch = [
+        Prefetch(query=dense_q, using=config.DENSE_VECTOR,
+                 limit=prefetch_limit, filter=qfilter),
+        Prefetch(query=sparse_q, using=config.SPARSE_VECTOR,
+                 limit=prefetch_limit, filter=qfilter),
+    ]
+    if expanded:
+        prefetch.append(
+            Prefetch(query=embedder.embed_query(expanded), using=config.DENSE_VECTOR,
+                     limit=prefetch_limit, filter=qfilter)
+        )
+
     client = storage.get_client()
     try:
         result = client.query_points(
             collection_name=collection_name,
-            prefetch=[
-                Prefetch(query=dense_q, using=config.DENSE_VECTOR,
-                         limit=prefetch_limit, filter=qfilter),
-                Prefetch(query=sparse_q, using=config.SPARSE_VECTOR,
-                         limit=prefetch_limit, filter=qfilter),
-            ],
+            prefetch=prefetch,
             query=FusionQuery(fusion="rrf"),
             limit=fusion_limit,
             with_payload=True,
@@ -199,17 +230,39 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
         client.close()
 
     candidates = [
-        {"score": float(p.score), "rerank_score": None, **(p.payload or {})}
+        # `id` (the Qdrant point id) is exposed so analytic modes (topic_clusters)
+        # can retrieve the stored dense vectors by id. Placed AFTER the payload spread
+        # so the point id always wins over any stray payload key of the same name.
+        {"score": float(p.score), "rerank_score": None, **(p.payload or {}), "id": p.id}
         for p in result.points
     ]
 
     if reranking and candidates:
-        pairs = [(query, c.get("context", "") + "\n" + c.get("text", ""))
-                 for c in candidates]
+        reranker = _get_reranker()
+        pairs = [(query, _rerank_text(c)) for c in candidates]
         with _RERANK_LOCK:
-            scores = _get_reranker().predict(pairs, batch_size=config.RERANK_BATCH_SIZE)
+            scores = [float(s) for s in
+                      reranker.predict(pairs, batch_size=config.RERANK_BATCH_SIZE)]
+        # Language gate (ported from the local RAG): re-score EN chunks against the
+        # ENGLISH suffix of the expanded query and keep the max, so a German query no
+        # longer systematically under-ranks English sources. Gated to language=="en"
+        # candidates (generic EN hits must not overtake solid German ones); needs >=2
+        # English suffix tokens.
+        if (config.LANGUAGE_GATE_ENABLED and expanded
+                and expanded.startswith(query) and len(expanded) > len(query)):
+            en_suffix = expanded[len(query):].strip()
+            if len(en_suffix.split()) >= 2:
+                en_idx = [i for i, c in enumerate(candidates)
+                          if (c.get("language") or "").lower() == "en"]
+                if en_idx:
+                    with _RERANK_LOCK:
+                        scores2 = reranker.predict(
+                            [(en_suffix, _rerank_text(candidates[i])) for i in en_idx],
+                            batch_size=config.RERANK_BATCH_SIZE)
+                    for j, i in enumerate(en_idx):
+                        scores[i] = max(scores[i], config.EN_BOOST_ALPHA * float(scores2[j]))
         for c, s in zip(candidates, scores):
-            c["rerank_score"] = float(s)
+            c["rerank_score"] = s
         candidates.sort(key=lambda c: c["rerank_score"], reverse=True)
 
     # Source diversity: cap hits per source so one book cannot fill the list and

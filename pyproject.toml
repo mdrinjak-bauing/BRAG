@@ -20,6 +20,12 @@ extend-exclude = ["vault_template"]
 # touch intentional choices (e.g. EnvironmentError, bare-except guards).
 select = ["E9", "F63", "F7", "F82", "F401", "F811", "E501", "W"]
 
+[tool.ruff.lint.per-file-ignores]
+# The cross-lingual query-expansion vocabulary in expand.py is a data table; several
+# DE->EN tuples legitimately exceed the 100-char line length. Ignore E501 there only —
+# all other checks still apply.
+"brag/search/expand.py" = ["E501"]
+
 [tool.pytest.ini_options]
 # Default discovery = the whole tests/ dir (e2e_smoke.py is not a test_*.py and
 # is run by the e2e workflow). The CI `unit` job runs exactly this set.
