@@ -74,13 +74,18 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   overview** in the status check; **PDF deep-link 404 hardened** (NFD/NFC + lost-
   subfolder tolerant, repairs existing indexes without re-ingest) + raw link line for
   LM Studio; search-modes docs + fuller disclaimer; setup first-run note.
-- **Unreleased (on `claude/image-analysis-adaptation-7hgwut`): research package** —
-  query-side features ported from the author's tuned local sister pipeline:
-  **figures as images in search** (compact local JPEGs stored at ingest → up to 3
-  hit figures attached as MCP images; `SEARCH_IMAGES_ENABLED`),
+- **Unreleased (on `claude/image-analysis-adaptation-7hgwut`, PR #64): research
+  package** — features ported from the author's tuned local sister pipeline.
+  Query side: **figures as images in search** (compact local JPEGs stored at
+  ingest → up to 3 hit figures attached as MCP images; `SEARCH_IMAGES_ENABLED`),
   **`search(mode='coverage')`** (per-source state-of-research split),
   **`search(mode='clusters')`** (numpy k-means topic map), **`compare_positions`**
-  (17th tool). Details: CHANGELOG "Unreleased".
+  (17th tool). Ingest quality: **junk-figure filter** (logos/icons/seals — 40%
+  of figure chunks in the audited corpus; `JUNK_FILTER_ENABLED`), **printed
+  page numbers via PDF `/PageLabels`** (beats manual `page_offset`, links stay
+  physical), **"Related sources" wikilinks** in the auto literature notes
+  (`RELATED_SOURCES_TOP`), **plain-language `SYSTEM-STATUS.md`** rewritten by
+  the watcher (`STATUS_NOTE_INTERVAL_HOURS`). Details: CHANGELOG "Unreleased".
 - **Current version: 0.5.1.** The repo + the GHCR `brag` package are kept **PRIVATE**
   for now. No data migration — fresh installs only. **Windows install still
   unverified live** (Gatekeeper/SmartScreen + the new `.bat` port preflight need a

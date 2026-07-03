@@ -30,6 +30,8 @@ class Chunk:
     context: str = ""        # LLM-generated context (contextual retrieval)
     image_b64: str = ""      # base64 PNG of a figure (vision pass); not stored
     image_file: str = ""     # DATA_DIR-relative compact JPEG of a figure (stored)
+    page_label_start: str = ""  # printed page label (PDF /PageLabels), e.g. "xii"
+    page_label_end: str = ""
     custom_meta: dict = field(default_factory=dict)  # user fields from _meta.txt
     chunk_id: str = field(default="")
 
@@ -64,6 +66,9 @@ class Chunk:
             "language": self.language, "chunk_id": self.chunk_id,
             "ingest_timestamp": datetime.now().isoformat(timespec="seconds"),
         } | ({"image_file": self.image_file} if self.image_file else {}) \
+          | ({"page_label_start": self.page_label_start,
+              "page_label_end": self.page_label_end}
+             if self.page_label_start else {}) \
           | {k: v for k, v in self.custom_meta.items()
              if k not in RESERVED_KEYS and k not in OVERRIDABLE_KEYS}
 
@@ -74,6 +79,7 @@ RESERVED_KEYS = {
     "text", "context", "chunk_type", "source_file", "rel_path",
     "page_start", "page_end", "chapter", "section", "year_num",
     "language", "chunk_id", "ingest_timestamp", "image_file",
+    "page_label_start", "page_label_end",
 }
 OVERRIDABLE_KEYS = {"author", "year", "doc_type"}
 
@@ -345,8 +351,55 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
                 buffer.append((txt, page))
 
     flush()
+    # Printed page labels (books with cover/roman front matter): citations then
+    # show the PRINTED page while page_start/end and the deep links stay
+    # physical. Post-pass over all chunks; empty map = no change.
+    labels = _page_label_map(path)
+    if labels:
+        for c in chunks:
+            start = labels.get(c.page_start, "")
+            if start and start != str(c.page_start):
+                c.page_label_start = start
+                c.page_label_end = labels.get(c.page_end, "") or start
     # Return the FULL markdown (bounded only against a pathological export) — it
     # feeds the table-of-contents and chapter/section matching in contextualize,
     # which must see the WHOLE document. The grounding fallback is capped
     # separately (CONTEXT_DOC_CHARS) inside _doc_context.
     return chunks, full_markdown[: config.MARKDOWN_FULL_MAX_CHARS]
+
+
+def _page_label_map(path: Path) -> dict[int, str]:
+    """{physical_page_1based: printed_label} from the PDF's /PageLabels, or {}.
+
+    Books with a cover and roman-numbered front matter print page numbers that
+    differ systematically from the physical PDF page (sister-pipeline corpus:
+    51 of 133 PDFs carry /PageLabels). pypdfium2 ships with Docling, so this
+    costs no new dependency; fully best-effort — any failure means no labels,
+    never a failed ingest."""
+    if path.suffix.lower() != ".pdf":
+        return {}
+    try:
+        import ctypes
+
+        import pypdfium2 as pdfium
+        import pypdfium2.raw as pdfium_c
+
+        pdf = pdfium.PdfDocument(str(path))
+        try:
+            out: dict[int, str] = {}
+            for i in range(len(pdf)):
+                # FPDF_GetPageLabel: first call sizes the UTF-16LE buffer
+                # (<= 2 bytes = only the terminator = no label for this page).
+                needed = pdfium_c.FPDF_GetPageLabel(pdf.raw, i, None, 0)
+                if needed <= 2:
+                    continue
+                buf = ctypes.create_string_buffer(needed)
+                pdfium_c.FPDF_GetPageLabel(pdf.raw, i, buf, needed)
+                label = buf.raw[: needed - 2].decode("utf-16le", errors="ignore")
+                if label:
+                    out[i + 1] = label
+            return out
+        finally:
+            pdf.close()
+    except Exception:  # noqa: BLE001 — labels are an enhancement, never a blocker
+        return {}

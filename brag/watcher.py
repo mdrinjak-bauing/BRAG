@@ -372,9 +372,21 @@ def run_watcher():
     # backlog does not delay watching/ingesting the others.
     for slug in slugs:
         threading.Thread(target=_reconcile_project, args=(slug,), daemon=True).start()
+    # Periodic plain-language status note (SYSTEM-STATUS.md per project) so a
+    # silent failure becomes visible in the user's own workspace. The first
+    # write is delayed a little so the startup reconciliation has begun;
+    # afterwards every STATUS_NOTE_INTERVAL_HOURS (0 = off). Best-effort.
+    interval = config.STATUS_NOTE_INTERVAL_HOURS * 3600
+    next_status = (time.time() + min(120.0, interval)) if interval > 0 else float("inf")
     try:
         while True:
             time.sleep(1)
+            if time.time() >= next_status:
+                next_status = time.time() + interval
+                from brag.status_note import write_status_note
+                for slug in slugs:
+                    with config.project_context(slug):
+                        write_status_note()
     except KeyboardInterrupt:
         for observer in observers:
             observer.stop()

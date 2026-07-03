@@ -172,3 +172,34 @@ def list_corpus_sources(client, collection_name: str | None = None) -> set[str]:
         if not offset:
             break
     return sources
+
+
+def related_sources(client, vector: list, own_source: str, top: int = 5,
+                    collection_name: str | None = None) -> list[tuple[str, float]]:
+    """Semantic neighbours of a document: dense-search the collection with the
+    document's representative vector, keep the best score per OTHER source and
+    return the top `top` as (source_file, score). Used for the "Related
+    sources" section of the auto literature notes. Best-effort: any failure
+    returns [] — the note is then simply written without the section."""
+    collection_name = collection_name or config.COLLECTION_NAME
+    try:
+        result = client.query_points(
+            collection_name=collection_name,
+            query=vector,
+            using=config.DENSE_VECTOR,
+            limit=max(top * 10, 30),
+            with_payload=["source_file"],
+            with_vectors=False,
+        )
+        best: dict[str, float] = {}
+        for p in result.points:
+            src = (p.payload or {}).get("source_file", "")
+            if not src or src == own_source or src.startswith("passage:"):
+                continue
+            score = round(float(p.score), 3)
+            if score > best.get(src, -1.0):
+                best[src] = score
+        ranked = sorted(best.items(), key=lambda kv: -kv[1])
+        return ranked[:top]
+    except Exception:  # noqa: BLE001 — neighbours are an enhancement only
+        return []

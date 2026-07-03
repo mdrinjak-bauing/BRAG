@@ -49,11 +49,11 @@ def _figure_chunk(png: bytes) -> Chunk:
 
 def test_save_figure_image_writes_jpeg_and_payload_key(tmp_path, monkeypatch):
     pytest.importorskip("PIL")
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path, raising=False)
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
     chunk = _figure_chunk(_png_bytes())
     rel = images.save_figure_image(chunk)
     assert rel == f"figures/{chunk.chunk_id}.jpg"
-    assert (tmp_path / rel).is_file()
+    assert (config.DATA_DIR / rel).is_file()
     chunk.image_file = rel
     assert chunk.payload()["image_file"] == rel
     # A chunk without a stored image carries NO image_file key (payload stays
@@ -62,7 +62,7 @@ def test_save_figure_image_writes_jpeg_and_payload_key(tmp_path, monkeypatch):
 
 
 def test_save_figure_image_bad_b64_returns_empty(tmp_path, monkeypatch):
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path, raising=False)
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
     chunk = _figure_chunk(b"")
     chunk.image_b64 = "%%%not-base64%%%"
     assert images.save_figure_image(chunk) == ""
@@ -70,10 +70,10 @@ def test_save_figure_image_bad_b64_returns_empty(tmp_path, monkeypatch):
 
 def test_collect_hit_images_caps_dedupes_and_skips_missing(tmp_path, monkeypatch):
     pytest.importorskip("PIL")
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path, raising=False)
-    (tmp_path / "figures").mkdir()
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    (config.DATA_DIR / "figures").mkdir(parents=True)
     for name in ("a", "b", "c", "d"):
-        (tmp_path / "figures" / f"{name}.jpg").write_bytes(
+        (config.DATA_DIR / "figures" / f"{name}.jpg").write_bytes(
             images.encode_compact(_png_bytes(size=(50, 50), mode="RGB")))
     hits = [
         {"chunk_id": "1", "image_file": "figures/a.jpg"},
@@ -91,9 +91,9 @@ def test_collect_hit_images_caps_dedupes_and_skips_missing(tmp_path, monkeypatch
 
 
 def test_collect_hit_images_blocks_path_traversal(tmp_path, monkeypatch):
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path / "data", raising=False)
-    (tmp_path / "data").mkdir()
-    (tmp_path / "secret.jpg").write_bytes(b"outside")
+    monkeypatch.setattr(config, "_DEFAULT_VAULT", tmp_path)
+    config.DATA_DIR.mkdir(parents=True)
+    (config.DATA_DIR.parent / "secret.jpg").write_bytes(b"outside")
     hits = [{"chunk_id": "1", "image_file": "../secret.jpg"}]
     imgs, attached = images.collect_hit_images(hits)
     assert imgs == [] and attached == set()

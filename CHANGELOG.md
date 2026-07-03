@@ -34,6 +34,28 @@ gold-standard query set.
   missing sources are listed with a diagnosis when nothing matches.
 - `search/query.py` gained an opt-in `with_vectors` flag (dense vectors on the
   hits, used by clusters).
+- **Ingest quality (round 2):**
+  - **Junk-figure filter** (`brag/ingest/junk_filter.py`): logos, UI icons, QR
+    codes and license seals are dropped at ingest — a sister-pipeline audit
+    found **40% of figure chunks** were such junk. Conservative two-tier
+    heuristic (strong patterns beat captions, weak patterns and tiny-image
+    detection only apply without a caption), DE+EN patterns.
+    `JUNK_FILTER_ENABLED` (default on).
+  - **Printed page numbers via PDF `/PageLabels`**: books with cover/roman
+    front matter get exact printed-page citations (`page_label_start/_end`
+    payload keys, captured at ingest via pypdfium2 — already a Docling
+    dependency). Citation precedence: PageLabels > manual `page_offset`
+    (_meta.txt, unchanged fallback) > physical page; deep links stay physical.
+  - **"Related sources" in literature notes**: each auto note now links the
+    document's closest semantic neighbours as Obsidian wikilinks (best score
+    per source over a dense-vector query with the longest text chunk's
+    already-computed embedding — no extra model work). `RELATED_SOURCES_TOP`
+    (default 5, 0 = off).
+  - **Plain-language status note**: the watcher rewrites
+    `WissensWIKI/SYSTEM-STATUS.md` every `STATUS_NOTE_INTERVAL_HOURS`
+    (default 24, 0 = off) per project — search-DB/corpus state, last ingest,
+    partial ingests, crash/not-indexed markers, active profile — in
+    `VAULT_LANGUAGE`, no LLM/API calls.
 
 ### Notes
 - Analysis modes deliberately take no content filters (matching the tuned

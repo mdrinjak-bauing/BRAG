@@ -415,6 +415,22 @@ schaltet das Speichern ab; `include_images=false` lässt sie je Aufruf weg. Vor
 0.6 indexierte Abbildungen haben noch kein gespeichertes Bild (erst nach
 Neu-Einlesen) — die Suche funktioniert ohne sie unverändert.
 
+**Einlese-Qualität.** Drei Dinge passieren beim Einlesen automatisch: ein
+**Junk-Abbildungs-Filter** wirft Logos, UI-Symbole, QR-Codes und Lizenzsiegel
+raus (ein Audit auf einem echten Korpus fand *40 % der Abbildungs-Chunks*
+waren solcher Müll; konservativ — Abbildungen mit Bildunterschrift fallen nur
+bei eindeutigen Signalen; `JUNK_FILTER_ENABLED=false` schaltet ab).
+**Gedruckte Seitenzahlen**: trägt das PDF `/PageLabels` (Bücher mit Cover/
+römischen Vorseiten), zeigen Zitate die *gedruckte* Seite, während Links
+weiter auf die physische PDF-Seite springen — das manuelle `page_offset` in
+`_meta.txt` bleibt als Fallback. Und jede automatische Literaturnotiz bekommt
+einen Abschnitt **„Related sources"**: die semantisch nächsten Nachbarn des
+Dokuments als Obsidian-Wikilinks (`RELATED_SOURCES_TOP`, 0 = aus) — dein
+Wissensgraph bekommt Kanten ohne Handarbeit. Der Watcher schreibt zudem alle
+24 h eine Klartext-Statusdatei **`WissensWIKI/SYSTEM-STATUS.md`**
+(`STATUS_NOTE_INTERVAL_HOURS`), damit ein stiller Ausfall auf einen Blick
+sichtbar wird.
+
 Bei einem Cloud-Profil geht der **Textauszug** jedes Abschnitts an den Anbieter —
 bei aktivem Vision-Pass (Standard) zusätzlich die **Bilder deiner Abbildungen**.
 Nie übermittelt werden ganze Dateien und die Embeddings. Bei lokalen Profilen

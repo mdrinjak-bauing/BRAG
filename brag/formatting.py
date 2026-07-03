@@ -46,16 +46,18 @@ def format_hit(i: int, hit: dict, project: str = "") -> str:
     author, year = hit.get("author", ""), hit.get("year", "")
     phys_page = hit.get("page_start", "")  # physical PDF page — used for the link
     # If a document's printed page numbers differ from the PDF's physical page
-    # count (a book with front matter, a journal offprint), the user sets
-    # `page_offset` in a _meta.txt: printed page = physical page − offset. The
-    # CITATION then shows the printed/book page, while the LINK still jumps to
-    # the physical PDF page so the viewer lands on the right one.
+    # count (a book with front matter, a journal offprint), the CITATION shows
+    # the printed page while the LINK still jumps to the physical PDF page.
+    # Precedence: the PDF's own /PageLabels (captured at ingest, exact even for
+    # roman front matter) beat the manual `page_offset` from _meta.txt, which
+    # remains the fallback for PDFs without labels.
     try:
         offset = int(hit.get("page_offset", 0) or 0)
     except (TypeError, ValueError):
         offset = 0
-    book_page = phys_page
-    if isinstance(phys_page, int) and offset and phys_page - offset >= 1:
+    book_page = hit.get("page_label_start", "") or phys_page
+    if (book_page == phys_page and isinstance(phys_page, int)
+            and offset and phys_page - offset >= 1):
         book_page = phys_page - offset  # printed page; guard against a bad offset
     link = pdf_link(hit.get("rel_path", ""), phys_page, project)
     cite = f"{author} ({year})" if author and author != "Unknown" else src

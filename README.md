@@ -403,6 +403,20 @@ ingest-time description. `SEARCH_IMAGES_ENABLED=false` turns storage off;
 `include_images=false` skips them per call. Figures indexed before 0.6 carry no
 stored image until re-ingested — search works unchanged without them.
 
+**Ingest quality.** Three things happen automatically at ingest: a
+**junk-figure filter** drops logos, UI icons, QR codes and license seals (an
+audit on a real corpus found *40% of figure chunks* were such junk;
+conservative — captioned figures only fall on unambiguous signals;
+`JUNK_FILTER_ENABLED=false` to disable). **Printed page numbers**: if the PDF
+carries `/PageLabels` (books with cover/roman front matter), citations show
+the *printed* page while links still jump to the physical PDF page — the
+manual `page_offset` in `_meta.txt` stays as fallback. And each auto
+literature note gains a **"Related sources"** section: the document's closest
+semantic neighbours as Obsidian wikilinks (`RELATED_SOURCES_TOP`, 0 = off), so
+your knowledge graph grows edges without manual linking. The watcher also
+rewrites a plain-language **`WissensWIKI/SYSTEM-STATUS.md`** every 24 h
+(`STATUS_NOTE_INTERVAL_HOURS`) so a silent failure is visible at a glance.
+
 With a cloud profile the **text excerpt** of each chunk goes to the provider —
 plus, with the vision pass on (the default), the **images of your figures**.
 Whole files and the embeddings are never sent. With local profiles nothing
