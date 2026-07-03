@@ -272,8 +272,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
         from brag.search.query import search as run_search
 
         project = str(body.get("project", "")).strip()
-        collection = None
+        collection, rec = None, None
         if project:
+            rec = registry.get(project)
             collection = registry.get_collection(project)
             if collection is None:
                 self._send_json(404, {"ok": False, "message":
@@ -304,7 +305,21 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._send_json(500, {"ok": False,
                                   "message": f"search failed: {str(e)[:200]}"})
             return
-        self._send_json(200, {"ok": True, "hits": hits})
+        response = {"ok": True, "hits": hits}
+        # Attach the hits' stored figure images (compact JPEGs) when the thin
+        # client asked for them, so the model behind the connector SEES the
+        # figures. Encoded here — the client stays model- and Pillow-free. The
+        # project context scopes DATA_DIR to the right project's vault.
+        if body.get("include_images"):
+            from brag.images import collect_hit_images
+            try:
+                with config.project_context(rec):
+                    images, attached = collect_hit_images(hits)
+                response["images"] = images
+                response["attached_ids"] = sorted(attached)
+            except Exception:  # noqa: BLE001 — images are best-effort, hits already stand
+                pass
+        self._send_json(200, response)
 
     def _api_index_op(self, body: dict):
         """Tool dispatcher for the thin MCP client: runs an index/file tool in
@@ -365,6 +380,23 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 str(a.get("topic", "")), confirm=bool(a.get("confirm", False))),
             "move_note": lambda: tools.move_note(
                 str(a.get("path", "")), str(a.get("new_path", ""))),
+            # Research analyses (search mode='coverage'/'clusters' and the
+            # compare_positions tool of the thin client). `project` threads into
+            # the deep links so they carry the right /file/<project>/ prefix.
+            "coverage": lambda: tools.coverage_text(
+                str(a.get("query", "")), top_k=_int(a.get("top_k")),
+                coverage_mode=str(a.get("coverage_mode", "broad") or "broad"),
+                project=project, collection_name=collection),
+            "clusters": lambda: tools.clusters_text(
+                str(a.get("query", "")), top_k=_int(a.get("top_k")),
+                n_clusters=_int(a.get("n_clusters", 5), 5),
+                project=project, collection_name=collection),
+            "compare_positions": lambda: tools.compare_positions_text(
+                str(a.get("query", "")),
+                [str(s) for s in a.get("sources", [])
+                 if str(s).strip()] if isinstance(a.get("sources"), list) else [],
+                top_k_per_source=_int(a.get("top_k_per_source", 3), 3),
+                project=project, collection_name=collection),
         }
         handler = ops.get(op)
         if handler is None:

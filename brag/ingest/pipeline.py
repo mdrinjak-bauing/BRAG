@@ -278,6 +278,21 @@ def _ingest_inner(path: Path) -> bool:
     # visible per source.
     n_contextualized = sum(1 for c in chunks if c.context)
 
+    # Store each figure's rendered image as a compact local JPEG so search()
+    # can attach the actual figure to its results (query-time visual Q&A).
+    # After the vision pass (which consumes image_b64), before embedding (so the
+    # payload carries image_file). Best-effort: save_figure_image never raises,
+    # a failed save just means this figure has no query-time image.
+    if config.SEARCH_IMAGES_ENABLED:
+        from brag.images import save_figure_image
+        n_saved = 0
+        for c in chunks:
+            if c.chunk_type == "figure" and c.image_b64:
+                c.image_file = save_figure_image(c)
+                n_saved += 1 if c.image_file else 0
+        if n_saved:
+            print(f"  {n_saved} figure images stored for search display")
+
     print("  [3/4] embedding (dense + sparse)...")
     embedder = get_embedder()
     # Batch the dense embeddings (far better CPU/BLAS use than one call per

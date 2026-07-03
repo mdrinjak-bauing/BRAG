@@ -29,6 +29,7 @@ class Chunk:
     language: str = "en"
     context: str = ""        # LLM-generated context (contextual retrieval)
     image_b64: str = ""      # base64 PNG of a figure (vision pass); not stored
+    image_file: str = ""     # DATA_DIR-relative compact JPEG of a figure (stored)
     custom_meta: dict = field(default_factory=dict)  # user fields from _meta.txt
     chunk_id: str = field(default="")
 
@@ -62,7 +63,8 @@ class Chunk:
             "year_num": int(self.year) if self.year.isdigit() else 0,
             "language": self.language, "chunk_id": self.chunk_id,
             "ingest_timestamp": datetime.now().isoformat(timespec="seconds"),
-        } | {k: v for k, v in self.custom_meta.items()
+        } | ({"image_file": self.image_file} if self.image_file else {}) \
+          | {k: v for k, v in self.custom_meta.items()
              if k not in RESERVED_KEYS and k not in OVERRIDABLE_KEYS}
 
 
@@ -71,7 +73,7 @@ class Chunk:
 RESERVED_KEYS = {
     "text", "context", "chunk_type", "source_file", "rel_path",
     "page_start", "page_end", "chapter", "section", "year_num",
-    "language", "chunk_id", "ingest_timestamp",
+    "language", "chunk_id", "ingest_timestamp", "image_file",
 }
 OVERRIDABLE_KEYS = {"author", "year", "doc_type"}
 
@@ -242,9 +244,10 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
     opts.do_table_structure = True
     opts.table_structure_options.mode = TableFormerMode.ACCURATE
     opts.table_structure_options.do_cell_matching = True
-    # Render figure images only when the vision pass needs them — keeps
-    # extraction fast and memory-light when vision is disabled.
-    if config.VISION_ENABLED:
+    # Render figure images only when a consumer needs them — the vision pass
+    # (descriptions) or the stored search images (query-time figure display).
+    # Keeps extraction fast and memory-light when both are disabled.
+    if config.VISION_ENABLED or config.SEARCH_IMAGES_ENABLED:
         opts.generate_picture_images = True
         opts.images_scale = config.VISION_IMAGE_SCALE
     converter = DocumentConverter(
@@ -327,7 +330,9 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
                 pass
             header = f"[Chapter: {chapter}] [Section: {section}]\n" if chapter else ""
             display = caption or "No caption available"
-            image_b64 = _picture_image_b64(item, doc) if config.VISION_ENABLED else ""
+            image_b64 = (_picture_image_b64(item, doc)
+                         if (config.VISION_ENABLED or config.SEARCH_IMAGES_ENABLED)
+                         else "")
             chunks.append(Chunk(
                 text=f"{header}**Figure (p. {page}):** {display}",
                 chunk_type="figure", page_start=page_start, page_end=page_end,

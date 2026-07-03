@@ -67,13 +67,20 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   installer port-in-use preflight + macOS Gatekeeper "Open Anyway" guidance,
   security/doc fixes. Verified end-to-end on macOS (install → connector → query →
   uninstall). Fresh-installs-only, so the rename needs no migration.
-- **0.5.1 (on `claude/compassionate-brahmagupta-egb1jq`):** usability + robustness
+- **0.5.1 shipped (merged to `main`, PRs #51–#53):** usability + robustness
   patch — one-click `update.command`/`update.bat`; cloud **model dropdown** in setup
   (and in "change a setting", via the saved key server-side); **exclude folders from
   the index** (`_`-prefix convention + `EXCLUDE_DIRS` + wizard picker); **folder
   overview** in the status check; **PDF deep-link 404 hardened** (NFD/NFC + lost-
   subfolder tolerant, repairs existing indexes without re-ingest) + raw link line for
   LM Studio; search-modes docs + fuller disclaimer; setup first-run note.
+- **Unreleased (on `claude/image-analysis-adaptation-7hgwut`): research package** —
+  query-side features ported from the author's tuned local sister pipeline:
+  **figures as images in search** (compact local JPEGs stored at ingest → up to 3
+  hit figures attached as MCP images; `SEARCH_IMAGES_ENABLED`),
+  **`search(mode='coverage')`** (per-source state-of-research split),
+  **`search(mode='clusters')`** (numpy k-means topic map), **`compare_positions`**
+  (17th tool). Details: CHANGELOG "Unreleased".
 - **Current version: 0.5.1.** The repo + the GHCR `brag` package are kept **PRIVATE**
   for now. No data migration — fresh installs only. **Windows install still
   unverified live** (Gatekeeper/SmartScreen + the new `.bat` port preflight need a

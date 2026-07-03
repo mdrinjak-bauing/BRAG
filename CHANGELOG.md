@@ -4,6 +4,44 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased] — research package
+
+Query-side research features ported from the author's sister pipeline
+("Promotion", 2026-05/06), where thresholds and pool sizes were tuned against a
+gold-standard query set.
+
+### Added
+- **Figures as images in search (query-time visual Q&A).** At ingest each
+  figure's rendered image is additionally stored as a compact local JPEG
+  (`WissensWIKI/.brag/figures/`, ~150 KB, `image_file` payload key); `search()`
+  attaches up to 3 hit figures as MCP image items, so the answer model sees the
+  actual diagram and can read values off it. Compact re-encoding matters:
+  full-size figure PNGs (0.4–1.7 MB) base64-encoded blow the ~1 MB per-response
+  limit of Claude Desktop, which then silently drops ALL images of the
+  response. Off-switches: `SEARCH_IMAGES_ENABLED=false` (storage) and
+  `include_images=false` (per call). Old indexes degrade gracefully (no image
+  until re-ingest). New module `brag/images.py`; multi-project path: the bridge
+  encodes (`/api/search` + `include_images`), the thin client stays model-free.
+- **`search(mode='coverage')`** — "who writes about X / state of research":
+  aggregates hits per source and splits substantial vs. peripheral coverage;
+  `coverage_mode='broad'|'specific'|'both'` ('specific' promotes narrow
+  specialist sources via a focus factor).
+- **`search(mode='clusters')`** — explorative topic map: spherical k-means over
+  the hits' dense vectors (numpy-only, deterministic, auto-k), one
+  representative hit + source/chapter distribution per cluster.
+- **`compare_positions` tool** (17th tool) — 2–7 explicitly chosen sources side
+  by side on one question, one call instead of N source-filtered searches;
+  missing sources are listed with a diagnosis when nothing matches.
+- `search/query.py` gained an opt-in `with_vectors` flag (dense vectors on the
+  hits, used by clusters).
+
+### Notes
+- Analysis modes deliberately take no content filters (matching the tuned
+  originals); the search modes are unchanged.
+- Coverage/cluster pool sizes and thresholds (`top_k` 50/40, `min_score` 0.4,
+  per-source caps 10/4) carry A/B-tested values from the sister pipeline — do
+  not change casually.
+
 ## [0.5.1] — 2026-06-24
 
 A usability + robustness patch on top of 0.5.0. No data migration; existing

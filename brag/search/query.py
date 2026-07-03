@@ -147,13 +147,16 @@ _MODE_PRESETS = {
 
 def search(query: str, top_k: int | None = None, reranking: bool | None = None,
            max_chunks_per_source: int | None = None, mode: str = "normal",
-           collection_name: str | None = None, **filters) -> list[dict]:
+           collection_name: str | None = None, with_vectors: bool = False,
+           **filters) -> list[dict]:
     """Run hybrid search, return ranked hits as plain dicts.
 
     `mode` picks task-appropriate breadth/depth (precise/normal/review/deep); an
     explicit top_k or max_chunks_per_source overrides the preset. collection_name
     defaults to the single-project config.COLLECTION_NAME; the multi-project bridge
-    passes a per-project collection so each project searches only its own data."""
+    passes a per-project collection so each project searches only its own data.
+    with_vectors=True additionally attaches each hit's dense vector under the
+    "_vector" key (used by the clusters analysis; costs bandwidth, so opt-in)."""
     from qdrant_client.models import FusionQuery, Prefetch
     from brag import storage
 
@@ -194,12 +197,15 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
             query=FusionQuery(fusion="rrf"),
             limit=fusion_limit,
             with_payload=True,
+            with_vectors=[config.DENSE_VECTOR] if with_vectors else False,
         )
     finally:
         client.close()
 
     candidates = [
         {"score": float(p.score), "rerank_score": None, **(p.payload or {})}
+        | ({"_vector": (p.vector or {}).get(config.DENSE_VECTOR)}
+           if with_vectors else {})
         for p in result.points
     ]
 

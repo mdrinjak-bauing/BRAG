@@ -20,6 +20,7 @@ import urllib.error
 import urllib.request
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ImageContent, TextContent
 
 from brag import config
 from brag.formatting import format_hit, parse_meta_filter
@@ -62,28 +63,47 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
            source_file: str = "", meta_filter: str = "",
            reranking: bool | None = None, max_per_source: int = 0,
-           mode: str = "normal") -> str:
+           mode: str = "normal", include_images: bool = True,
+           coverage_mode: str = "broad", n_clusters: int = 5):
     """Hybride Suche (Bedeutung + Stichwort) über den Dokumenten-Korpus.
 
-    Wähle `mode` passend zur Aufgabe (setzt sinnvolle Breite/Tiefe):
+    Wähle `mode` passend zur Aufgabe:
     - 'precise' punktgenaue Einzelfrage (wenige, fokussierte Treffer);
     - 'normal'  normale Frage (Standard);
     - 'review'  Literaturrecherche / breite Übersicht über viele Quellen (weites
       Netz; dazu mehrere Suchen mit verschiedenen Formulierungen, dann zusammenführen);
     - 'deep'    einen/wenige konkrete Berichte vertieft lesen — mit source_file= kombinieren.
+    ANALYSE-Modi (liefern statt der Trefferliste eine Auswertung):
+    - 'coverage' „Wer schreibt zu X / Stand der Forschung": bündelt die Treffer PRO
+      QUELLE und teilt in substanziell vs. peripher. coverage_mode='broad' (wer
+      schreibt VIEL zu X, Standard) | 'specific' (wer schreibt FOKUSSIERT zu X)
+      | 'both'.
+    - 'clusters' explorative Themen-Map: gruppiert die Treffer nach semantischer
+      Nähe — welche Unter-Aspekte hat das Thema? n_clusters steuert die Anzahl.
     Feineinstellung (optional): top_k = genaue Trefferzahl; max_per_source = wie viele
-    Treffer aus derselben Quelle kommen dürfen.
+    Treffer aus derselben Quelle kommen dürfen (beide nur in den Such-Modi).
 
     Probiere mehrere Formulierungen (Synonyme, deutsch/englisch).
-    chunk_type='table' für Zahlen/Statistiken, 'figure' für Abbildungen.
+    chunk_type='table' für Zahlen/Statistiken, 'figure' für Abbildungen. Treffer
+    auf Abbildungen legen der Antwort BIS ZU 3 BILDER bei (include_images=False
+    schaltet das ab) — sieh sie dir an und lies konkrete Werte direkt daraus ab.
     meta_filter schränkt auf eigene Metadaten-Felder ein (in _meta.txt im
     Wissensspeicher definiert), Format 'schlüssel=wert', mehrere mit Komma, z. B.
     meta_filter='projekt=Schulzentrum' oder 'kurs=Baumanagement, semester=WS25'.
     Nennt der Nutzer einen Projekt-/Kurs-/Mandanten-Kontext, setze diesen Filter
     IMMER — sonst mischen sich Treffer aus fremden Projekten in die Ergebnisse.
+    Filter (doc_type, chunk_type, meta_filter, …) wirken nur in den Such-Modi,
+    nicht in 'coverage'/'clusters'.
     Jede Treffer-Überschrift ist ein anklickbarer Link, der das PDF an der richtigen
     Seite öffnet — übernimm ihn IMMER in deine Antwort, wenn du die Quelle zitierst.
     """
+    m = (mode or "normal").strip().lower()
+    if m == "coverage":
+        return _index_op("coverage", query=query, top_k=top_k,
+                         coverage_mode=coverage_mode)
+    if m == "clusters":
+        return _index_op("clusters", query=query, top_k=top_k,
+                         n_clusters=n_clusters)
     resp = _post("/api/search", {
         "project": PROJECT, "query": query, "top_k": top_k,
         "doc_type": doc_type, "chunk_type": chunk_type,
@@ -91,6 +111,7 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
         "source_file": source_file, "reranking": reranking,
         "max_per_source": max_per_source, "mode": mode,
         "meta": parse_meta_filter(meta_filter),
+        "include_images": bool(include_images),
     })
     if resp is None:
         return _BUSY
@@ -100,9 +121,40 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
     if not hits:
         return ("No hits. Try different phrasing, fewer filters, or check "
                 "list_sources() whether the document is indexed at all.")
+    images = resp.get("images") or []
+    attached = set(resp.get("attached_ids") or [])
     out = [f"**{len(hits)} hits** for: {query}\n"]
-    out += [format_hit(i + 1, h, project=PROJECT) for i, h in enumerate(hits)]
-    return "\n".join(out)
+    for i, h in enumerate(hits):
+        block = format_hit(i + 1, h, project=PROJECT)
+        if attached and str(h.get("chunk_id", "")) in attached:
+            block += "🖼️ Die Abbildung liegt dieser Antwort als Bild bei.\n"
+        out.append(block)
+    text = "\n".join(out)
+    if not images:
+        return text
+    return [TextContent(type="text", text=text)] + [
+        ImageContent(type="image", data=img.get("b64", ""),
+                     mimeType=img.get("mime", "image/jpeg"))
+        for img in images if img.get("b64")
+    ]
+
+
+@mcp.tool()
+def compare_positions(query: str, sources: list[str],
+                      top_k_per_source: int = 3) -> str:
+    """Side-by-side-Vergleich: Was sagen DIESE konkreten Quellen zu DIESEM Thema?
+
+    Wähle 2-7 Quellen explizit aus; pro Quelle kommen die `top_k_per_source`
+    relevantesten Treffer zurück — ideal für „Wie definieren Autor A und Autor B
+    den Begriff X?" oder „Vergleiche die Auffassungen dieser drei Berichte".
+    Vorteil gegenüber mehreren search()-Aufrufen mit source_file-Filter: EIN
+    Aufruf, direkt vergleichbares Layout. `sources` sind die source_file-Schlüssel
+    aus list_sources(). Die Treffer-Links bleiben klickbar — übernimm sie in
+    deine Antwort, wenn du zitierst; eine Synthese darf folgen, ersetzt die
+    belegten Treffer aber nicht.
+    """
+    return _index_op("compare_positions", query=query, sources=sources,
+                     top_k_per_source=top_k_per_source)
 
 
 @mcp.tool()
