@@ -20,6 +20,7 @@ import urllib.error
 import urllib.request
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ImageContent, TextContent
 
 from brag import config
 from brag.formatting import format_hit, parse_meta_filter
@@ -62,7 +63,7 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
            source_file: str = "", meta_filter: str = "",
            reranking: bool | None = None, max_per_source: int = 0,
-           mode: str = "normal") -> str:
+           mode: str = "normal", include_images: bool = True):
     """Hybride Suche (Bedeutung + Stichwort) über den Dokumenten-Korpus.
 
     Wähle `mode` passend zur Aufgabe (setzt sinnvolle Breite/Tiefe):
@@ -71,11 +72,15 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
     - 'review'  Literaturrecherche / breite Übersicht über viele Quellen (weites
       Netz; dazu mehrere Suchen mit verschiedenen Formulierungen, dann zusammenführen);
     - 'deep'    einen/wenige konkrete Berichte vertieft lesen — mit source_file= kombinieren.
+    Für AUSWERTUNGEN statt einer Trefferliste: coverage() („wer schreibt zu X"),
+    clusters() (Themen-Map) und compare_positions() (Quellen side-by-side).
     Feineinstellung (optional): top_k = genaue Trefferzahl; max_per_source = wie viele
     Treffer aus derselben Quelle kommen dürfen.
 
     Probiere mehrere Formulierungen (Synonyme, deutsch/englisch).
-    chunk_type='table' für Zahlen/Statistiken, 'figure' für Abbildungen.
+    chunk_type='table' für Zahlen/Statistiken, 'figure' für Abbildungen. Treffer
+    auf Abbildungen legen der Antwort BIS ZU 3 BILDER bei (include_images=False
+    schaltet das ab) — sieh sie dir an und lies konkrete Werte direkt daraus ab.
     meta_filter schränkt auf eigene Metadaten-Felder ein (in _meta.txt im
     Wissensspeicher definiert), Format 'schlüssel=wert', mehrere mit Komma, z. B.
     meta_filter='projekt=Schulzentrum' oder 'kurs=Baumanagement, semester=WS25'.
@@ -91,6 +96,7 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
         "source_file": source_file, "reranking": reranking,
         "max_per_source": max_per_source, "mode": mode,
         "meta": parse_meta_filter(meta_filter),
+        "include_images": bool(include_images),
     })
     if resp is None:
         return _BUSY
@@ -100,9 +106,52 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
     if not hits:
         return ("No hits. Try different phrasing, fewer filters, or check "
                 "list_sources() whether the document is indexed at all.")
+    images = resp.get("images") or []
+    attached = set(resp.get("attached_ids") or [])
     out = [f"**{len(hits)} hits** for: {query}\n"]
-    out += [format_hit(i + 1, h, project=PROJECT) for i, h in enumerate(hits)]
-    return "\n".join(out)
+    for i, h in enumerate(hits):
+        block = format_hit(i + 1, h, project=PROJECT)
+        if attached and str(h.get("chunk_id", "")) in attached:
+            block += "🖼️ Die Abbildung liegt dieser Antwort als Bild bei.\n"
+        out.append(block)
+    text = "\n".join(out)
+    if not images:
+        return text
+    return [TextContent(type="text", text=text)] + [
+        ImageContent(type="image", data=img.get("b64", ""),
+                     mimeType=img.get("mime", "image/jpeg"))
+        for img in images if img.get("b64")
+    ]
+
+
+@mcp.tool()
+def coverage(query: str, top_k: int = 50, min_score: float = 0.4,
+             mode: str = "broad") -> str:
+    """Stand der Forschung / „Wer schreibt zu X?" — aggregiert die Treffer PRO QUELLE
+    (statt einer flachen Trefferliste) und teilt sie in substanziell vs. peripheral.
+    `mode`: 'broad' (Quellen mit ≥3 Treffern, „wer schreibt VIEL"), 'specific'
+    (fokussierte Spezialquellen mit einem starken Treffer zuerst) oder 'both'.
+    Für eine Literaturübersicht/„Stand der Forschung" zu einem Thema."""
+    return _index_op("coverage", query=query, top_k=top_k,
+                     min_score=min_score, mode=mode)
+
+
+@mcp.tool()
+def clusters(query: str, top_k: int = 40, n_clusters: int = 5) -> str:
+    """Themen-Map: clustert die Treffer via K-Means im Embedding-Raum in Sub-Themen
+    und gibt pro Cluster einen Repräsentanten + die Quellen-/Kapitel-Verteilung aus.
+    Für „Welche Sub-Aspekte/Teilthemen hat Y?" — explorativ statt einer Rangliste."""
+    return _index_op("clusters", query=query, top_k=top_k,
+                     n_clusters=n_clusters)
+
+
+@mcp.tool()
+def compare_positions(query: str, sources: list[str], top_k_per_source: int = 3) -> str:
+    """Stellt 2–7 KONKRETE Quellen zu einer Frage SIDE-BY-SIDE gegenüber — je Quelle die
+    Top-Treffer. `sources` = Liste von `source_file`-Schlüsseln (siehe list_sources).
+    Für „Wie definieren/bewerten Quelle A und B das Thema X?"."""
+    return _index_op("compare_positions", query=query, sources=sources,
+                     top_k_per_source=top_k_per_source)
 
 
 @mcp.tool()

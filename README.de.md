@@ -399,10 +399,43 @@ wählst du meist einen `mode` — er setzt beides passend zur Aufgabe:
 Einzeln überschreiben geht immer: ein explizites `top_k` / `max_per_source` im
 Suchaufruf schlägt das Preset.
 
+**Analyse-Werkzeuge.** Drei Werkzeuge liefern statt der Trefferliste eine
+*Auswertung*: `coverage` bündelt die Treffer **pro Quelle** und trennt
+substanzielle von peripherer Abdeckung (*„wer schreibt zu X / Stand der
+Forschung"* — `mode='specific'` bevorzugt schmale Spezialquellen), `clusters`
+gruppiert die Treffer nach semantischer Nähe zu einer Themen-Landkarte
+(*„welche Unter-Aspekte hat X?"*), und `compare_positions` stellt 2–7 gewählte
+Quellen side-by-side zu einer Frage gegenüber (*„was sagen DIESE Quellen zu X"*).
+
+**Abbildungen als Bilder.** Treffer auf Abbildungen legen der Antwort bis zu 3
+der **echten Abbildungs-Bilder** bei (beim Einlesen lokal als kompakte JPEGs
+gespeichert) — die Antwort-KI liest Werte direkt aus dem Diagramm ab, statt sich
+auf die Beschreibung vom Einlesen zu verlassen. `SEARCH_IMAGES_ENABLED=false`
+schaltet das Speichern ab; `include_images=false` lässt sie je Aufruf weg. Vor
+0.6 indexierte Abbildungen haben noch kein gespeichertes Bild (erst nach
+Neu-Einlesen) — die Suche funktioniert ohne sie unverändert.
+
+**Einlese-Qualität.** Drei Dinge passieren beim Einlesen automatisch: ein
+**Junk-Abbildungs-Filter** wirft Logos, UI-Symbole, QR-Codes und Lizenzsiegel
+raus (ein Audit auf einem echten Korpus fand *40 % der Abbildungs-Chunks*
+waren solcher Müll; konservativ — Abbildungen mit Bildunterschrift fallen nur
+bei eindeutigen Signalen; `JUNK_FILTER_ENABLED=false` schaltet ab).
+**Gedruckte Seitenzahlen**: trägt das PDF `/PageLabels` (Bücher mit Cover/
+römischen Vorseiten), zeigen Zitate die *gedruckte* Seite, während Links
+weiter auf die physische PDF-Seite springen — das manuelle `page_offset` in
+`_meta.txt` bleibt als Fallback. Und jede automatische Literaturnotiz bekommt
+einen Abschnitt **„Related sources"**: die semantisch nächsten Nachbarn des
+Dokuments als Obsidian-Wikilinks (`RELATED_SOURCES_TOP`, 0 = aus) — dein
+Wissensgraph bekommt Kanten ohne Handarbeit. Der Watcher schreibt zudem alle
+24 h eine Klartext-Statusdatei **`WissensWIKI/SYSTEM-STATUS.md`**
+(`STATUS_NOTE_INTERVAL_HOURS`), damit ein stiller Ausfall auf einen Blick
+sichtbar wird.
+
 Bei einem Cloud-Profil geht der **Textauszug** jedes Abschnitts an den Anbieter —
 bei aktivem Vision-Pass (Standard) zusätzlich die **Bilder deiner Abbildungen**.
 Nie übermittelt werden ganze Dateien und die Embeddings. Bei lokalen Profilen
-verlässt nichts den Rechner.
+verlässt nichts den Rechner. (Abbildungs-Bilder in Suchtreffern gehen an die
+Chat-App/das Modell, in dem du fragst — wie jeder andere Suchtreffer auch.)
 
 > ⚠️ **Datenschutz, kurz und ehrlich:** Beim **kostenlosen Gemini-Tarif**
 > (Standard) darf Google die übermittelten Texte/Bilder auswerten. Faustregel:
@@ -507,7 +540,10 @@ ist ein MCP-Host). Die Werkzeuge im Einzelnen:
 
 | Werkzeug | Was es tut | Beispielfrage |
 |---|---|---|
-| `search` | Hybride Suche; `mode` (precise/normal/review/deep) + Filter (Typ, Jahr, Tabellen/Abbildungen, Quelle) | *„Was sagen alle Berichte zu Nachträgen?"* |
+| `search` | Hybride Suche; `mode` (precise/normal/review/deep) + Filter (Typ, Jahr, Tabellen/Abbildungen, Quelle); Abbildungs-Treffer legen die echten Bilder bei | *„Was sagen alle Berichte zu Nachträgen?"* |
+| `coverage` | „Wer schreibt zu X": Treffer pro Quelle gebündelt, substanziell vs. peripher | *„Was ist der Stand der Forschung zu Prozessreife?"* |
+| `clusters` | Themen-Map: Treffer nach semantischer Nähe gruppiert | *„Welche Unter-Aspekte hat KI im Bauwesen?"* |
+| `compare_positions` | 2–7 gewählte Quellen side-by-side zu einer Frage | *„Wie definieren Drittler und Hofstadler eine Bauablaufstörung?"* |
 | `list_sources` | Inventar aller indexierten Dokumente | *„Welche Dokumente sind in meiner Wissensbasis?"* |
 | `read_source` | Liest ein ganzes Dokument der Reihe nach — Bericht zusammenfassen/bewerten | *„Fass das Bodengutachten Müller zusammen."* |
 | `inspect_chunks` | Diagnose: was zu einer Quelle gespeichert ist | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |

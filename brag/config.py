@@ -298,6 +298,30 @@ MARKDOWN_FULL_MAX_CHARS = int(_env("MARKDOWN_FULL_MAX_CHARS", 2_000_000))
 VISION_ENABLED = _env("VISION_ENABLED", "true").lower() == "true"
 VISION_IMAGE_SCALE = float(_env("VISION_IMAGE_SCALE", 2.0))
 
+# ── Search images (query-time figure display) ───────────────────
+# When enabled, each figure's rendered image is ALSO stored locally as a compact
+# JPEG (WissensWIKI/.brag/figures/), and search() attaches up to 3 hit figures
+# as images to its response — so the chat model can SEE a diagram and read
+# values off it, instead of relying only on the ingest-time description.
+# Storing is fully local; independent of the vision pass, so privacy-minded
+# users can keep figure images in search with VISION_ENABLED=false. Figures
+# indexed BEFORE enabling this carry no stored image (re-ingest to add them);
+# search degrades gracefully without images.
+SEARCH_IMAGES_ENABLED = _env("SEARCH_IMAGES_ENABLED", "true").lower() == "true"
+
+# ── Ingest quality (research package, round 2) ──────────────────
+# Junk-figure filter: drop logos, UI icons, QR codes and license seals at
+# ingest (a sister-pipeline audit found 40% of figure chunks were such junk).
+# Conservative: captioned figures are only dropped on unambiguous signals.
+JUNK_FILTER_ENABLED = _env("JUNK_FILTER_ENABLED", "true").lower() == "true"
+# "Related sources" section in each auto literature note: semantic neighbours
+# of the ingested document as Obsidian wikilinks. 0 disables the section.
+RELATED_SOURCES_TOP = int(_env("RELATED_SOURCES_TOP", 5))
+# Plain-language system status note (WissensWIKI/SYSTEM-STATUS.md), rewritten
+# by the watcher every N hours so silent failures become visible to
+# non-technical users. 0 disables it.
+STATUS_NOTE_INTERVAL_HOURS = float(_env("STATUS_NOTE_INTERVAL_HOURS", 24))
+
 # ── Ingest safety on consumer hardware ──────────────────────────
 # Local LLM inference (LM Studio) puts sustained load on the user's GPU; on a
 # marginal PSU / cooling that can hard-reset the PC mid-ingest. Docker then

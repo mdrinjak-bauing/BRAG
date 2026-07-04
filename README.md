@@ -388,10 +388,40 @@ So "15 / max 3" only applies to **`normal`**. Three honest notes:
 You can always override: an explicit `top_k` / `max_per_source` in the search call
 beats the preset.
 
+**Analysis tools.** Three tools return an *analysis* instead of a hit list:
+`coverage` groups the hits **per source** and splits substantial from
+peripheral coverage (*"who writes about X / state of research"* —
+`mode='specific'` favours narrow specialist sources), `clusters` groups the
+hits by semantic similarity into a topic map (*"which sub-aspects does X
+have?"*), and `compare_positions` puts 2–7 chosen sources side by side on one
+question (*"what do THESE sources say about X"*).
+
+**Figures as images.** Hits on figures attach up to 3 of the **actual figure
+images** to the answer (stored locally as compact JPEGs at ingest), so the
+answer model can read values straight off a diagram instead of relying on the
+ingest-time description. `SEARCH_IMAGES_ENABLED=false` turns storage off;
+`include_images=false` skips them per call. Figures indexed before 0.6 carry no
+stored image until re-ingested — search works unchanged without them.
+
+**Ingest quality.** Three things happen automatically at ingest: a
+**junk-figure filter** drops logos, UI icons, QR codes and license seals (an
+audit on a real corpus found *40% of figure chunks* were such junk;
+conservative — captioned figures only fall on unambiguous signals;
+`JUNK_FILTER_ENABLED=false` to disable). **Printed page numbers**: if the PDF
+carries `/PageLabels` (books with cover/roman front matter), citations show
+the *printed* page while links still jump to the physical PDF page — the
+manual `page_offset` in `_meta.txt` stays as fallback. And each auto
+literature note gains a **"Related sources"** section: the document's closest
+semantic neighbours as Obsidian wikilinks (`RELATED_SOURCES_TOP`, 0 = off), so
+your knowledge graph grows edges without manual linking. The watcher also
+rewrites a plain-language **`WissensWIKI/SYSTEM-STATUS.md`** every 24 h
+(`STATUS_NOTE_INTERVAL_HOURS`) so a silent failure is visible at a glance.
+
 With a cloud profile the **text excerpt** of each chunk goes to the provider —
 plus, with the vision pass on (the default), the **images of your figures**.
 Whole files and the embeddings are never sent. With local profiles nothing
-leaves the machine.
+leaves the machine. (Figure images attached to search results go to whatever
+chat app/model you ask the question in — like every other search result.)
 
 > ⚠️ **Privacy, short and honest:** On the **free Gemini tier** (default) Google
 > may use the submitted text/images. Rule of thumb: what you wouldn't have shown
@@ -488,7 +518,10 @@ in detail:
 
 | Tool | What it does | Example question |
 |---|---|---|
-| `search` | Hybrid search; pick a `mode` (precise/normal/review/deep) + filters (type, year, tables/figures, source) | *"What do all the reports say about change orders?"* |
+| `search` | Hybrid search; pick a `mode` (precise/normal/review/deep) + filters (type, year, tables/figures, source); figure hits attach the actual images | *"What do all the reports say about change orders?"* |
+| `coverage` | "Who writes about X": hits grouped per source, substantial vs. peripheral | *"What's the state of research on process maturity?"* |
+| `clusters` | Topic map: hits clustered by semantic similarity | *"Which sub-aspects does AI in construction have?"* |
+| `compare_positions` | 2–7 chosen sources side by side on one question | *"How do Drittler and Hofstadler define a construction-sequence disruption?"* |
 | `list_sources` | Inventory of all indexed documents | *"What documents are in my knowledge base?"* |
 | `read_source` | Reads a whole document in reading order — summarise/evaluate a report | *"Summarise the Müller soil report."* |
 | `inspect_chunks` | Diagnostics: what is stored for a source | *"Show what was indexed from Smith 2023, p. 14."* |

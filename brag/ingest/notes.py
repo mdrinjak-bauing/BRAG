@@ -17,7 +17,11 @@ def _note_file(source_file: str) -> Path:
     return config.NOTES_DIR / f"{safe}.md"
 
 
-def write_note(chunks: list[Chunk]) -> None:
+def write_note(chunks: list[Chunk],
+               related: list[tuple[str, float]] | None = None) -> None:
+    """Write/refresh the source's literature note. `related` (optional) are
+    semantic neighbour sources as (source_file, score) — rendered as Obsidian
+    wikilinks so the knowledge graph grows edges automatically."""
     if not chunks:
         return
     c0 = chunks[0]
@@ -50,6 +54,18 @@ def write_note(chunks: list[Chunk]) -> None:
         lines.append("## Structure")
         lines.append("")
         lines.extend(f"- {ch}" for ch in chapters[:40])
+        lines.append("")
+    if related:
+        # Wikilinks target the neighbours' literature-note FILENAMES (the
+        # path-safe '__' form), displayed under their real source key — so the
+        # links resolve in Obsidian and the graph gets semantic edges without
+        # the user linking anything by hand.
+        lines.append("## Related sources")
+        lines.append("")
+        lines.extend(
+            f"- [[{_note_file(src).stem}|{src}]] — similarity {score:.3f}"
+            for src, score in related
+        )
         lines.append("")
     lines.append("## My notes")
     lines.append("")

@@ -278,6 +278,37 @@ def _ingest_inner(path: Path) -> bool:
     # visible per source.
     n_contextualized = sum(1 for c in chunks if c.context)
 
+    # Junk-figure filter: logos, UI icons, QR codes and license seals carry no
+    # retrieval value (a sister-pipeline audit measured 40% of figure chunks!)
+    # and would even be attached as images to answers. After the vision pass
+    # (its description is a detection signal), before images are stored and
+    # before embedding, so junk is neither kept nor paid for.
+    if config.JUNK_FILTER_ENABLED:
+        from brag.ingest.junk_filter import drop_junk_figures
+        chunks, n_junk = drop_junk_figures(chunks)
+        if n_junk:
+            print(f"  {n_junk} junk figure(s) dropped (logos/icons/seals)")
+        if not chunks:
+            print("  nothing left to index — the document contained only "
+                  "junk figures")
+            _mark_not_indexed(path)
+            return False
+
+    # Store each figure's rendered image as a compact local JPEG so search()
+    # can attach the actual figure to its results (query-time visual Q&A).
+    # After the vision pass (which consumes image_b64), before embedding (so the
+    # payload carries image_file). Best-effort: save_figure_image never raises,
+    # a failed save just means this figure has no query-time image.
+    if config.SEARCH_IMAGES_ENABLED:
+        from brag.images import save_figure_image
+        n_saved = 0
+        for c in chunks:
+            if c.chunk_type == "figure" and c.image_b64:
+                c.image_file = save_figure_image(c)
+                n_saved += 1 if c.image_file else 0
+        if n_saved:
+            print(f"  {n_saved} figure images stored for search display")
+
     print("  [3/4] embedding (dense + sparse)...")
     embedder = get_embedder()
     # Batch the dense embeddings (far better CPU/BLAS use than one call per
@@ -372,6 +403,20 @@ def _ingest_inner(path: Path) -> bool:
         )
         if removed:
             print(f"  removed {removed} stale chunks of this source (idempotent re-ingest)")
+        # Semantic neighbours for the literature note ("Related sources"):
+        # the longest text chunk's dense vector represents the document — its
+        # embedding is already computed, so this costs one Qdrant query, no
+        # extra model work. After the upsert, so a re-ingest sees fresh data.
+        related = []
+        if config.RELATED_SOURCES_TOP > 0:
+            rep_idx = max(
+                range(len(chunks)),
+                key=lambda i: (chunks[i].chunk_type == "text", len(chunks[i].text)),
+            )
+            related = storage.related_sources(
+                client, dense[rep_idx], chunks[0].source_file,
+                top=config.RELATED_SOURCES_TOP,
+            )
     finally:
         client.close()
 
@@ -382,7 +427,7 @@ def _ingest_inner(path: Path) -> bool:
     prev = _ingest_log_states().get(chunks[0].source_file)
     attempts = (prev.get("attempts", 1) + 1) if (partial and prev and prev.get("partial")) else 1
     try:
-        write_note(chunks)
+        write_note(chunks, related=related)
         _append_ingest_log(chunks[0].source_file, path, len(chunks),
                            partial=partial, attempts=attempts,
                            contextualized=n_contextualized)

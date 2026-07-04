@@ -22,13 +22,21 @@ from brag.search import analytics
 from brag.search.query import search as run_search
 
 
-def search_text(query: str, top_k: int = 0, doc_type: str = "",
+NO_HITS_MSG = ("No hits. Try different phrasing, fewer filters, or check "
+               "list_sources() whether the document is indexed at all.")
+
+
+def search_hits(query: str, top_k: int = 0, doc_type: str = "",
                 chunk_type: str = "", year_min: int = 0, year_max: int = 0,
                 source_file: str = "", meta_filter: str = "",
                 reranking: bool | None = None, max_per_source: int = 0,
-                mode: str = "normal", collection_name: str | None = None) -> str:
+                mode: str = "normal",
+                collection_name: str | None = None) -> list[dict]:
+    """Run the hybrid search with the tool-surface argument conventions
+    (0/"" = default) and return the raw hit dicts. Shared base of search_text
+    and the image-attaching MCP search."""
     meta = parse_meta_filter(meta_filter)
-    hits = run_search(
+    return run_search(
         query, top_k=(top_k or None), mode=mode, reranking=reranking,
         collection_name=collection_name,
         max_chunks_per_source=(max_per_source or None),
@@ -36,12 +44,37 @@ def search_text(query: str, top_k: int = 0, doc_type: str = "",
         year_min=year_min or None, year_max=year_max or None,
         source_file=source_file or None, meta=meta or None,
     )
-    if not hits:
-        return ("No hits. Try different phrasing, fewer filters, or check "
-                "list_sources() whether the document is indexed at all.")
+
+
+def format_hits(hits: list[dict], query: str, project: str = "",
+                attached_ids: set[str] | None = None) -> str:
+    """Render hits as the search tool's Markdown block. `attached_ids` marks the
+    chunks whose figure image is attached to the same response as an image, so
+    the model knows the picture directly below belongs to that hit."""
     out = [f"**{len(hits)} hits** for: {query}\n"]
-    out += [format_hit(i + 1, h) for i, h in enumerate(hits)]
+    for i, h in enumerate(hits):
+        block = format_hit(i + 1, h, project=project)
+        if attached_ids and str(h.get("chunk_id", "")) in attached_ids:
+            block += "🖼️ Die Abbildung liegt dieser Antwort als Bild bei.\n"
+        out.append(block)
     return "\n".join(out)
+
+
+def search_text(query: str, top_k: int = 0, doc_type: str = "",
+                chunk_type: str = "", year_min: int = 0, year_max: int = 0,
+                source_file: str = "", meta_filter: str = "",
+                reranking: bool | None = None, max_per_source: int = 0,
+                mode: str = "normal", collection_name: str | None = None) -> str:
+    hits = search_hits(
+        query, top_k=top_k, doc_type=doc_type, chunk_type=chunk_type,
+        year_min=year_min, year_max=year_max, source_file=source_file,
+        meta_filter=meta_filter, reranking=reranking,
+        max_per_source=max_per_source, mode=mode,
+        collection_name=collection_name,
+    )
+    if not hits:
+        return NO_HITS_MSG
+    return format_hits(hits, query)
 
 
 def coverage(query: str, top_k: int = 50, min_score: float = 0.4,

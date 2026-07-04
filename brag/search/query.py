@@ -157,13 +157,16 @@ def _rerank_text(c: dict) -> str:
 
 def search(query: str, top_k: int | None = None, reranking: bool | None = None,
            max_chunks_per_source: int | None = None, mode: str = "normal",
-           collection_name: str | None = None, **filters) -> list[dict]:
+           collection_name: str | None = None, with_vectors: bool = False,
+           **filters) -> list[dict]:
     """Run hybrid search, return ranked hits as plain dicts.
 
     `mode` picks task-appropriate breadth/depth (precise/normal/review/deep); an
     explicit top_k or max_chunks_per_source overrides the preset. collection_name
     defaults to the single-project config.COLLECTION_NAME; the multi-project bridge
-    passes a per-project collection so each project searches only its own data."""
+    passes a per-project collection so each project searches only its own data.
+    with_vectors=True additionally attaches each hit's dense vector under the
+    "_vector" key (used by the clusters analysis; costs bandwidth, so opt-in)."""
     from qdrant_client.models import FusionQuery, Prefetch
     from brag import storage
 
@@ -225,6 +228,7 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
             query=FusionQuery(fusion="rrf"),
             limit=fusion_limit,
             with_payload=True,
+            with_vectors=[config.DENSE_VECTOR] if with_vectors else False,
         )
     finally:
         client.close()
@@ -233,7 +237,11 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
         # `id` (the Qdrant point id) is exposed so analytic modes (topic_clusters)
         # can retrieve the stored dense vectors by id. Placed AFTER the payload spread
         # so the point id always wins over any stray payload key of the same name.
+        # `_vector` (opt-in) carries the dense vector directly, saving that
+        # second retrieve round-trip for callers that request it.
         {"score": float(p.score), "rerank_score": None, **(p.payload or {}), "id": p.id}
+        | ({"_vector": (p.vector or {}).get(config.DENSE_VECTOR)}
+           if with_vectors else {})
         for p in result.points
     ]
 

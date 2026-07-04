@@ -6,12 +6,15 @@ tool LOGIC lives in brag/tools.py (shared with the HTTP-bridge dispatcher that a
 thin per-project MCP client calls); this module is just the FastMCP surface —
 the tool names, signatures and docstrings Claude sees.
 
-Tools: search, list_sources, inspect_chunks, read_source, remove_source,
-rename_source, save_passage, list_passages, list_notebook, read_note, write_note,
-recent_sources, set_metadata, delete_note, delete_passage, move_note.
+Tools: search, coverage, clusters, compare_positions, open_pdf,
+vault_read/list/search/write/append/edit/extract, list_sources, inspect_chunks,
+read_source, remove_source, rename_source, save_passage, list_passages,
+list_notebook, read_note, write_note, recent_sources, set_metadata,
+delete_note, delete_passage, move_note.
 """
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ImageContent, TextContent
 
 from brag import config, pdf_open, tools, vault
 
@@ -23,7 +26,7 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
            source_file: str = "", meta_filter: str = "",
            reranking: bool | None = None, max_per_source: int = 0,
-           mode: str = "normal") -> str:
+           mode: str = "normal", include_images: bool = True):
     """Hybride Suche (Bedeutung + Stichwort) über den Dokumenten-Korpus.
 
     Wähle `mode` passend zur Aufgabe (setzt sinnvolle Breite/Tiefe):
@@ -32,11 +35,15 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
     - 'review'  Literaturrecherche / breite Übersicht über viele Quellen (weites
       Netz; dazu mehrere Suchen mit verschiedenen Formulierungen, dann zusammenführen);
     - 'deep'    einen/wenige konkrete Berichte vertieft lesen — mit source_file= kombinieren.
+    Für AUSWERTUNGEN statt einer Trefferliste: coverage() („wer schreibt zu X"),
+    clusters() (Themen-Map) und compare_positions() (Quellen side-by-side).
     Feineinstellung (optional): top_k = genaue Trefferzahl; max_per_source = wie viele
     Treffer aus derselben Quelle kommen dürfen.
 
     Probiere mehrere Formulierungen (Synonyme, deutsch/englisch).
-    chunk_type='table' für Zahlen/Statistiken, 'figure' für Abbildungen.
+    chunk_type='table' für Zahlen/Statistiken, 'figure' für Abbildungen. Treffer
+    auf Abbildungen legen der Antwort BIS ZU 3 BILDER bei (include_images=False
+    schaltet das ab) — sieh sie dir an und lies konkrete Werte direkt daraus ab.
     meta_filter schränkt auf eigene Metadaten-Felder ein (in _meta.txt im
     Wissensspeicher definiert), Format 'schlüssel=wert', mehrere mit Komma, z. B.
     meta_filter='projekt=Schulzentrum' oder 'kurs=Baumanagement, semester=WS25'.
@@ -45,11 +52,24 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
     Jede Treffer-Überschrift ist ein anklickbarer Link, der das PDF an der richtigen
     Seite öffnet — übernimm ihn IMMER in deine Antwort, wenn du die Quelle zitierst.
     """
-    return tools.search_text(
+    hits = tools.search_hits(
         query, top_k=top_k, doc_type=doc_type, chunk_type=chunk_type,
         year_min=year_min, year_max=year_max, source_file=source_file,
         meta_filter=meta_filter, reranking=reranking, max_per_source=max_per_source,
         mode=mode)
+    if not hits:
+        return tools.NO_HITS_MSG
+    images, attached = ([], set())
+    if include_images and config.SEARCH_IMAGES_ENABLED:
+        from brag.images import collect_hit_images
+        images, attached = collect_hit_images(hits)
+    text = tools.format_hits(hits, query, attached_ids=attached)
+    if not images:
+        return text
+    return [TextContent(type="text", text=text)] + [
+        ImageContent(type="image", data=img["b64"], mimeType=img["mime"])
+        for img in images
+    ]
 
 
 @mcp.tool()
