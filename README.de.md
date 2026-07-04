@@ -399,13 +399,13 @@ wählst du meist einen `mode` — er setzt beides passend zur Aufgabe:
 Einzeln überschreiben geht immer: ein explizites `top_k` / `max_per_source` im
 Suchaufruf schlägt das Preset.
 
-**Analyse-Modi.** Zwei weitere `mode`-Werte liefern statt der Trefferliste eine
+**Analyse-Werkzeuge.** Drei Werkzeuge liefern statt der Trefferliste eine
 *Auswertung*: `coverage` bündelt die Treffer **pro Quelle** und trennt
 substanzielle von peripherer Abdeckung (*„wer schreibt zu X / Stand der
-Forschung"* — `coverage_mode='specific'` bevorzugt schmale Spezialquellen), und
-`clusters` gruppiert die Treffer nach semantischer Nähe zu einer Themen-Landkarte
-(*„welche Unter-Aspekte hat X?"*). Für *„was sagen DIESE Quellen zu X"* gibt es
-das eigene Werkzeug `compare_positions` (2–7 Quellen side-by-side).
+Forschung"* — `mode='specific'` bevorzugt schmale Spezialquellen), `clusters`
+gruppiert die Treffer nach semantischer Nähe zu einer Themen-Landkarte
+(*„welche Unter-Aspekte hat X?"*), und `compare_positions` stellt 2–7 gewählte
+Quellen side-by-side zu einer Frage gegenüber (*„was sagen DIESE Quellen zu X"*).
 
 **Abbildungen als Bilder.** Treffer auf Abbildungen legen der Antwort bis zu 3
 der **echten Abbildungs-Bilder** bei (beim Einlesen lokal als kompakte JPEGs
@@ -540,7 +540,9 @@ ist ein MCP-Host). Die Werkzeuge im Einzelnen:
 
 | Werkzeug | Was es tut | Beispielfrage |
 |---|---|---|
-| `search` | Hybride Suche; `mode` (precise/normal/review/deep + die Analysen coverage/clusters) + Filter (Typ, Jahr, Tabellen/Abbildungen, Quelle); Abbildungs-Treffer legen die echten Bilder bei | *„Was sagen alle Berichte zu Nachträgen?"* |
+| `search` | Hybride Suche; `mode` (precise/normal/review/deep) + Filter (Typ, Jahr, Tabellen/Abbildungen, Quelle); Abbildungs-Treffer legen die echten Bilder bei | *„Was sagen alle Berichte zu Nachträgen?"* |
+| `coverage` | „Wer schreibt zu X": Treffer pro Quelle gebündelt, substanziell vs. peripher | *„Was ist der Stand der Forschung zu Prozessreife?"* |
+| `clusters` | Themen-Map: Treffer nach semantischer Nähe gruppiert | *„Welche Unter-Aspekte hat KI im Bauwesen?"* |
 | `compare_positions` | 2–7 gewählte Quellen side-by-side zu einer Frage | *„Wie definieren Drittler und Hofstadler eine Bauablaufstörung?"* |
 | `list_sources` | Inventar aller indexierten Dokumente | *„Welche Dokumente sind in meiner Wissensbasis?"* |
 | `read_source` | Liest ein ganzes Dokument der Reihe nach — Bericht zusammenfassen/bewerten | *„Fass das Bodengutachten Müller zusammen."* |

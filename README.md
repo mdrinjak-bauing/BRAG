@@ -388,13 +388,13 @@ So "15 / max 3" only applies to **`normal`**. Three honest notes:
 You can always override: an explicit `top_k` / `max_per_source` in the search call
 beats the preset.
 
-**Analysis modes.** Two further `mode` values return an *analysis* instead of a
-hit list: `coverage` groups the hits **per source** and splits substantial from
+**Analysis tools.** Three tools return an *analysis* instead of a hit list:
+`coverage` groups the hits **per source** and splits substantial from
 peripheral coverage (*"who writes about X / state of research"* —
-`coverage_mode='specific'` favours narrow specialist sources), and `clusters`
-groups the hits by semantic similarity into a topic map (*"which sub-aspects
-does X have?"*). For *"what do THESE sources say about X"* there is a dedicated
-`compare_positions` tool (2–7 sources side by side).
+`mode='specific'` favours narrow specialist sources), `clusters` groups the
+hits by semantic similarity into a topic map (*"which sub-aspects does X
+have?"*), and `compare_positions` puts 2–7 chosen sources side by side on one
+question (*"what do THESE sources say about X"*).
 
 **Figures as images.** Hits on figures attach up to 3 of the **actual figure
 images** to the answer (stored locally as compact JPEGs at ingest), so the
@@ -518,7 +518,9 @@ in detail:
 
 | Tool | What it does | Example question |
 |---|---|---|
-| `search` | Hybrid search; pick a `mode` (precise/normal/review/deep + the analyses coverage/clusters) + filters (type, year, tables/figures, source); figure hits attach the actual images | *"What do all the reports say about change orders?"* |
+| `search` | Hybrid search; pick a `mode` (precise/normal/review/deep) + filters (type, year, tables/figures, source); figure hits attach the actual images | *"What do all the reports say about change orders?"* |
+| `coverage` | "Who writes about X": hits grouped per source, substantial vs. peripheral | *"What's the state of research on process maturity?"* |
+| `clusters` | Topic map: hits clustered by semantic similarity | *"Which sub-aspects does AI in construction have?"* |
 | `compare_positions` | 2–7 chosen sources side by side on one question | *"How do Drittler and Hofstadler define a construction-sequence disruption?"* |
 | `list_sources` | Inventory of all indexed documents | *"What documents are in my knowledge base?"* |
 | `read_source` | Reads a whole document in reading order — summarise/evaluate a report | *"Summarise the Müller soil report."* |

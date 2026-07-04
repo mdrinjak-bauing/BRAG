@@ -22,18 +22,16 @@ gold-standard query set.
   `include_images=false` (per call). Old indexes degrade gracefully (no image
   until re-ingest). New module `brag/images.py`; multi-project path: the bridge
   encodes (`/api/search` + `include_images`), the thin client stays model-free.
-- **`search(mode='coverage')`** — "who writes about X / state of research":
-  aggregates hits per source and splits substantial vs. peripheral coverage;
-  `coverage_mode='broad'|'specific'|'both'` ('specific' promotes narrow
-  specialist sources via a focus factor).
-- **`search(mode='clusters')`** — explorative topic map: spherical k-means over
-  the hits' dense vectors (numpy-only, deterministic, auto-k), one
-  representative hit + source/chapter distribution per cluster.
-- **`compare_positions` tool** (17th tool) — 2–7 explicitly chosen sources side
-  by side on one question, one call instead of N source-filtered searches;
-  missing sources are listed with a diagnosis when nothing matches.
+- **Analysis tools for every project connector.** PR #54 introduced the
+  `coverage` ("who writes about X / state of research", per-source split),
+  `clusters` (k-means topic map) and `compare_positions` (2–7 sources side by
+  side) tools plus the `vault_*` file layer, `open_pdf` and cross-lingual
+  query expansion on the DEFAULT project. This branch wires the three
+  analysis tools through the HTTP-bridge dispatcher and the thin per-project
+  MCP client, so EXTRA projects get them too, and adds unit tests for the
+  analytics logic.
 - `search/query.py` gained an opt-in `with_vectors` flag (dense vectors on the
-  hits, used by clusters).
+  hits, saving the analytics' second retrieve round-trip when requested).
 - **Ingest quality (round 2):**
   - **Junk-figure filter** (`brag/ingest/junk_filter.py`): logos, UI icons, QR
     codes and license seals are dropped at ingest — a sister-pipeline audit

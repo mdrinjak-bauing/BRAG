@@ -108,118 +108,93 @@ def test_format_hits_marks_attached_images(monkeypatch):
     assert "🖼️" not in tools.format_hits(hits, "q", attached_ids=set())
 
 
-# ── coverage ─────────────────────────────────────────────────────────────────
+# ── analytics: coverage / clusters / compare (brag/search/analytics.py) ─────
 
-def _hit(src, score, chapter="", text="lorem", page=1):
+def _hit(src, score, chapter="", text="lorem", page=1, hid=None):
     return {"source_file": src, "rerank_score": score, "score": score,
             "chapter": chapter, "text": text, "page_start": page,
-            "rel_path": f"{src}.pdf"}
+            "rel_path": f"{src}.pdf", "id": hid or f"{src}-{score}-{page}"}
 
 
-def test_coverage_aggregate_broad_needs_count_and_score():
+def test_coverage_broad_needs_count_and_score(monkeypatch):
+    from brag.search import analytics
     hits = ([_hit("Big", 0.9)] * 3          # count 3, high score → substantial
             + [_hit("Thin", 0.95)]           # count 1 → peripheral in broad
             + [_hit("Weak", 0.1)] * 4)       # count 4 but low score → peripheral
-    agg = tools._coverage_aggregate(hits, min_score=0.4, coverage_mode="broad")
-    assert [e["source"] for e in agg["substantial"]] == ["Big"]
-    assert {e["source"] for e in agg["peripheral"]} == {"Thin", "Weak"}
-    assert agg["total_sources"] == 3 and agg["total_chunks"] == 8
+    monkeypatch.setattr(analytics, "run_search", lambda *a, **k: hits)
+    agg = analytics.source_coverage("x", min_score=0.4, mode="broad")
+    assert [e[0] for e in agg["substantial"]] == ["Big"]
+    assert {e[0] for e in agg["peripheral"]} == {"Thin", "Weak"}
+    assert agg["total_sources"] == 3
 
 
-def test_coverage_aggregate_specific_promotes_focused_source():
+def test_coverage_specific_promotes_focused_source(monkeypatch):
     # 'specific' drops the count gate and ranks by max_score × spec-factor:
     # the narrow source with ONE excellent hit outranks the broad one.
+    from brag.search import analytics
     hits = [_hit("Broad", 0.8)] * 10 + [_hit("Focused", 0.8)]
-    agg = tools._coverage_aggregate(hits, min_score=0.4,
-                                    coverage_mode="specific")
-    assert [e["source"] for e in agg["substantial"]][0] == "Focused"
+    monkeypatch.setattr(analytics, "run_search", lambda *a, **k: hits)
+    agg = analytics.source_coverage("x", min_score=0.4, mode="specific")
+    assert agg["substantial"][0][0] == "Focused"
 
 
-def test_coverage_aggregate_both_returns_second_table():
-    agg = tools._coverage_aggregate([_hit("A", 0.9)] * 3, min_score=0.4,
-                                    coverage_mode="both")
+def test_coverage_both_returns_second_table(monkeypatch):
+    from brag.search import analytics
+    monkeypatch.setattr(analytics, "run_search",
+                        lambda *a, **k: [_hit("A", 0.9)] * 3)
+    agg = analytics.source_coverage("x", min_score=0.4, mode="both")
     assert "substantial_specific" in agg
 
 
-def test_coverage_text_formats_and_validates(monkeypatch):
-    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
-                        raising=False)
-    monkeypatch.setattr(tools, "run_search",
+def test_coverage_tool_renders(monkeypatch):
+    from brag.search import analytics
+    monkeypatch.setattr(analytics, "run_search",
                         lambda *a, **k: [_hit("Big", 0.9, chapter="4 Methodik")] * 3)
-    out = tools.coverage_text("Reifegrad")
-    assert "Quellen-Abdeckung" in out and "Big" in out and "Methodik" in out
-    assert "localhost:8765/file/" in out          # deep link carried through
-    assert "coverage_mode" in tools.coverage_text("x", coverage_mode="bogus") \
-        or "Unbekannter coverage_mode" in tools.coverage_text("x", coverage_mode="bogus")
-    monkeypatch.setattr(tools, "run_search", lambda *a, **k: [])
-    assert tools.coverage_text("nichts") == tools.NO_HITS_MSG
+    out = tools.coverage("Reifegrad")
+    assert "Coverage zu:" in out and "Big" in out and "Methodik" in out
 
 
-# ── clusters ─────────────────────────────────────────────────────────────────
+def test_clusters_groups_two_obvious_clusters(monkeypatch):
+    pytest.importorskip("sklearn")
+    from brag.search import analytics
+    hits = ([_hit("A", 0.9, hid=f"a{i}") for i in range(6)]
+            + [_hit("B", 0.9, hid=f"b{i}") for i in range(6)])
+    monkeypatch.setattr(analytics, "run_search", lambda *a, **k: hits)
 
-def _vec_hit(src, vec, text="t", page=1):
-    return {"source_file": src, "_vector": vec, "text": text,
-            "page_start": page, "rel_path": f"{src}.pdf", "chapter": "K1"}
+    class _Pt:
+        def __init__(self, pid, vec):
+            self.id, self.vector = pid, {"dense": vec}
 
+    class _Client:
+        def retrieve(self, collection_name, ids, with_vectors, with_payload):
+            return [_Pt(i, [1.0, 0.0, 0.0] if str(i).startswith("a")
+                        else [0.0, 1.0, 0.0]) for i in ids]
 
-def test_clusters_text_groups_two_obvious_clusters(monkeypatch):
-    pytest.importorskip("numpy")
-    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
-                        raising=False)
-    hits = ([_vec_hit("A", [1.0, 0.0, 0.01 * i]) for i in range(6)]
-            + [_vec_hit("B", [0.0, 1.0, 0.01 * i]) for i in range(6)])
-    monkeypatch.setattr(tools, "run_search", lambda *a, **k: hits)
-    out = tools.clusters_text("thema", n_clusters=2)
-    assert "Themen-Map" in out
-    assert out.count("### Cluster") == 2
-    # Each cluster is dominated by one source — both sources appear.
-    assert "`A`" in out and "`B`" in out
+        def close(self):
+            pass
 
-
-def test_clusters_text_too_few_hits(monkeypatch):
-    monkeypatch.setattr(tools, "run_search",
-                        lambda *a, **k: [_vec_hit("A", [1.0, 0.0, 0.0])])
-    assert "zu wenig" in tools.clusters_text("x")
-
-
-def test_kmeans_deterministic():
-    np = pytest.importorskip("numpy")
-    X = np.array([[1.0, 0.0], [0.99, 0.01], [0.0, 1.0], [0.01, 0.99]])
-    X = X / np.linalg.norm(X, axis=1, keepdims=True)
-    l1, _ = tools._kmeans(X, 2)
-    l2, _ = tools._kmeans(X, 2)
-    assert (l1 == l2).all()
-    assert l1[0] == l1[1] and l1[2] == l1[3] and l1[0] != l1[2]
+    from brag import storage
+    monkeypatch.setattr(storage, "get_client", lambda: _Client())
+    res = analytics.topic_clusters("thema", n_clusters=2)
+    assert not res.get("error")
+    assert len(res["clusters"]) == 2
+    tops = {c["sources"][0][0] for c in res["clusters"]}
+    assert tops == {"A", "B"}
 
 
-# ── compare_positions ────────────────────────────────────────────────────────
+def test_compare_positions_found_and_missing(monkeypatch):
+    from brag.search import analytics
 
-def test_compare_positions_side_by_side_and_missing(monkeypatch):
-    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
-                        raising=False)
-
-    def fake_search(query, top_k=None, max_chunks_per_source=None,
-                    source_file=None, collection_name=None, **kw):
+    def fake_search(query, top_k=None, source_file=None, **kw):
         return [_hit(source_file, 0.8)] if source_file == "Drittler" else []
 
-    monkeypatch.setattr(tools, "run_search", fake_search)
-    out = tools.compare_positions_text("Bauablaufstörung",
-                                       ["Drittler", "Unbekannt"])
-    assert "Positions-Vergleich" in out
-    assert "[1] Drittler" in out
-    assert "Nicht gefunden (1)" in out and "Unbekannt" in out
-    assert "Diagnose" not in out                      # one source DID match
-
-
-def test_compare_positions_all_missing_adds_diagnosis(monkeypatch):
-    monkeypatch.setattr(tools, "run_search", lambda *a, **k: [])
-    out = tools.compare_positions_text("x", ["A", "B"])
-    assert "Diagnose" in out and "list_sources()" in out
-
-
-def test_compare_positions_validates_source_count():
-    assert "mindestens 2" in tools.compare_positions_text("x", ["nur-eine"])
-    assert "höchstens 7" in tools.compare_positions_text("x", [str(i) for i in range(8)])
+    monkeypatch.setattr(analytics, "run_search", fake_search)
+    res = analytics.compare_positions("Bauablaufstörung",
+                                      ["Drittler", "Unbekannt"])
+    assert list(res["results_by_source"]) == ["Drittler"]
+    assert res["missing"] == ["Unbekannt"]
+    out = tools.compare_positions("Bauablaufstörung", ["Drittler", "Unbekannt"])
+    assert "Drittler" in out and "Unbekannt" in out
 
 
 def test_search_text_unchanged_contract(monkeypatch):

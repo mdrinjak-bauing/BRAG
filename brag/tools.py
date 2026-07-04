@@ -18,6 +18,7 @@ from datetime import date
 
 from brag import config, storage
 from brag.formatting import format_hit, parse_meta_filter
+from brag.search import analytics
 from brag.search.query import search as run_search
 
 
@@ -76,275 +77,83 @@ def search_text(query: str, top_k: int = 0, doc_type: str = "",
     return format_hits(hits, query)
 
 
-# ── Research analyses: coverage / clusters / compare ────────────────────────
-# Ported from the sister pipeline (Promotion, 2026-05/06) where thresholds and
-# pool sizes were tuned against a gold-standard query set — the values below
-# carry those findings and should not be changed casually.
-
-# Coverage pool: max_chunks_per_source=10 was A/B-tested (2026-05-12): lowering
-# to 5 dropped a borderline source (count 3 → under the count>=3 gate) from
-# substantial to peripheral. min_score=0.4 matches the local reranker's score
-# distribution (0.5 consistently excluded topically relevant sources).
-COVERAGE_TOP_K = 50
-COVERAGE_MIN_SCORE = 0.4
-COVERAGE_PER_SOURCE = 10
-
-# Clusters pool: max_chunks_per_source=4 keeps one dominant source (a book with
-# hundreds of chunks) from filling 25% of the pool and skewing the cluster map.
-CLUSTERS_TOP_K = 40
-CLUSTERS_PER_SOURCE = 4
-
-
-def _coverage_aggregate(hits: list[dict], min_score: float,
-                        coverage_mode: str) -> dict:
-    """Group search hits per source and split substantial vs. peripheral.
-
-    coverage_mode: 'broad' — substantial = count>=3 AND max_score>=min_score
-    ("who writes A LOT about X?"); 'specific' — substantial = max_score>=
-    min_score, ranked by max_score × (0.5 + 0.5 × max_score/count) so a narrow
-    specialist source with one excellent hit outranks a broad one with many
-    mediocre hits ("who writes FOCUSED about X?"); 'both' — both tables."""
-    by_source: dict[str, dict] = {}
-    for h in hits:
-        src = h.get("source_file", "?")
-        info = by_source.setdefault(src, {
-            "count": 0, "max_score": 0.0, "sample": None, "chapters": set(),
-        })
-        score = h.get("rerank_score")
-        score = float(score if score is not None else h.get("score", 0.0))
-        info["count"] += 1
-        if score >= info["max_score"] or info["sample"] is None:
-            info["max_score"] = max(info["max_score"], score)
-            info["sample"] = h
-        chapter = (h.get("chapter") or "").strip()
-        if chapter:
-            info["chapters"].add(chapter)
-
-    def entry(src, info):
-        return {"source": src, "count": info["count"],
-                "max_score": info["max_score"], "sample": info["sample"],
-                "chapters": sorted(info["chapters"])}
-
-    broad_sub, broad_peri = [], []
-    for src, info in by_source.items():
-        e = entry(src, info)
-        if info["count"] >= 3 and info["max_score"] >= min_score:
-            broad_sub.append(e)
-        else:
-            broad_peri.append(e)
-    broad_sub.sort(key=lambda e: (-e["count"], -e["max_score"]))
-    broad_peri.sort(key=lambda e: (-e["max_score"], -e["count"]))
-
-    specific_sub, specific_peri = [], []
-    for src, info in by_source.items():
-        spec_factor = 0.5 + 0.5 * (info["max_score"] / max(info["count"], 1))
-        final = info["max_score"] * spec_factor
-        e = entry(src, info)
-        (specific_sub if info["max_score"] >= min_score
-         else specific_peri).append((final, e))
-    specific_sub.sort(key=lambda x: -x[0])
-    specific_peri.sort(key=lambda x: -x[0])
-
-    result = {"total_sources": len(by_source), "total_chunks": len(hits),
-              "coverage_mode": coverage_mode}
-    if coverage_mode == "specific":
-        result["substantial"] = [e for _, e in specific_sub]
-        result["peripheral"] = [e for _, e in specific_peri]
+def coverage(query: str, top_k: int = 50, min_score: float = 0.4,
+             mode: str = "broad", collection_name: str | None = None) -> str:
+    """Stand der Forschung: aggregiert die Treffer pro Quelle (substanziell/peripheral)."""
+    agg = analytics.source_coverage(query, top_k=top_k, min_score=min_score,
+                                    mode=mode, collection_name=collection_name)
+    if agg.get("error"):
+        return f"Coverage fehlgeschlagen: {agg['error']}"
+    label = {
+        "broad": f"Substanziell — ≥3 Treffer mit max-Score ≥{min_score}",
+        "specific": f"Spezifisch — max-Score ≥{min_score}, fokussierte Quellen zuerst",
+        "both": f"Substanziell (breit) — ≥3 Treffer mit max-Score ≥{min_score}",
+    }.get(mode, f"Substanziell — ≥3 Treffer mit max-Score ≥{min_score}")
+    out = [f"**Coverage zu:** {query}",
+           f"Analysiert: **{agg['total_chunks_analyzed']} Treffer aus "
+           f"{agg['total_sources']} Quellen** (top_k={top_k}, min_score={min_score})\n",
+           f"### {label} ({len(agg['substantial'])})"]
+    if agg["substantial"]:
+        for sf, count, maxs, _sample, page, chapters in agg["substantial"]:
+            ch = f" · Kapitel: {', '.join(chapters[:3])}" if chapters else ""
+            out.append(f"- `{sf}` — {count} Treffer, max {maxs:.3f} (S. {page}){ch}")
     else:
-        result["substantial"] = broad_sub
-        result["peripheral"] = broad_peri
-        if coverage_mode == "both":
-            result["substantial_specific"] = [e for _, e in specific_sub]
-    return result
+        out.append("_(keine)_")
+    if mode == "both" and agg.get("substantial_specific"):
+        out.append(f"\n### Spezifisch — fokussierte Quellen ({len(agg['substantial_specific'])})")
+        for sf, count, maxs, _sample, page, _ch in agg["substantial_specific"][:15]:
+            out.append(f"- `{sf}` — {count} Treffer, max {maxs:.3f} (S. {page})")
+    out.append(f"\n### Peripheral — Randbezug ({len(agg['peripheral'])})")
+    if agg["peripheral"]:
+        for sf, count, maxs, _s, _p, _c in agg["peripheral"][:20]:
+            out.append(f"- `{sf}` — {count} Treffer, max {maxs:.3f}")
+        if len(agg["peripheral"]) > 20:
+            out.append(f"… und {len(agg['peripheral']) - 20} weitere")
+    else:
+        out.append("_(keine)_")
+    return "\n".join(out)
 
 
-def _coverage_lines(title: str, entries: list[dict], project: str) -> list[str]:
-    from brag.http_bridge import pdf_link
-    lines = [f"### {title} ({len(entries)})", ""]
-    for e in entries:
-        s = e["sample"] or {}
-        page = s.get("page_start", "")
-        link = (pdf_link(s.get("rel_path", ""), page, project)
-                if s.get("rel_path") else "")
-        head = (f"- [**{e['source']}** — S. {page}](<{link}>)" if link
-                else f"- **{e['source']}**")
-        lines.append(f"{head} — {e['count']} Treffer, max. Score "
-                     f"{e['max_score']:.3f}")
-        if e["chapters"]:
-            lines.append(f"  Kapitel: {'; '.join(e['chapters'][:6])}")
-        sample_text = ((s.get("text") or "").replace("\n", " ").strip())[:220]
-        if sample_text:
-            lines.append(f"  > {sample_text}…")
-    lines.append("")
-    return lines
-
-
-def coverage_text(query: str, top_k: int = 0, min_score: float = 0.0,
-                  coverage_mode: str = "broad", project: str = "",
-                  collection_name: str | None = None) -> str:
-    """'Stand der Forschung': aggregate hits PER SOURCE instead of a flat list
-    and split substantial vs. peripheral coverage of the topic."""
-    coverage_mode = (coverage_mode or "broad").strip().lower()
-    if coverage_mode not in ("broad", "specific", "both"):
-        return ("Unbekannter coverage_mode — erwarte 'broad' (wer schreibt viel "
-                "zu X), 'specific' (wer schreibt fokussiert zu X) oder 'both'.")
-    hits = run_search(query, top_k=(top_k or COVERAGE_TOP_K),
-                      max_chunks_per_source=COVERAGE_PER_SOURCE,
-                      collection_name=collection_name)
-    if not hits:
-        return NO_HITS_MSG
-    agg = _coverage_aggregate(hits, min_score or COVERAGE_MIN_SCORE,
-                              coverage_mode)
-    lines = [f"## Quellen-Abdeckung: \"{query}\"", "",
-             f"{agg['total_chunks']} Treffer aus {agg['total_sources']} Quellen "
-             f"analysiert (Modus: {coverage_mode})", ""]
-    label = ("Substanziell (fokussiert)" if coverage_mode == "specific"
-             else "Substanziell (viel zum Thema)")
-    lines += _coverage_lines(label, agg["substantial"], project)
-    if "substantial_specific" in agg:
-        lines += _coverage_lines("Substanziell (fokussiert)",
-                                 agg["substantial_specific"], project)
-    lines += _coverage_lines("Peripher (Randtreffer)", agg["peripheral"],
-                             project)
-    return "\n".join(lines)
-
-
-def _kmeans(X, k: int, iters: int = 25, seed: int = 42):
-    """Deterministic spherical k-means (numpy only — no sklearn dependency).
-    X must be L2-normalized; k-means++ seeding with a fixed RandomState keeps
-    results reproducible across runs."""
-    import numpy as np
-    rng = np.random.RandomState(seed)
-    centers = [X[rng.randint(len(X))]]
-    for _ in range(1, k):
-        d2 = np.min([((X - c) ** 2).sum(axis=1) for c in centers], axis=0)
-        total = d2.sum()
-        idx = rng.choice(len(X), p=d2 / total) if total > 0 else rng.randint(len(X))
-        centers.append(X[idx])
-    C = np.array(centers)
-    labels = np.zeros(len(X), dtype=int)
-    for _ in range(iters):
-        labels = ((X[:, None, :] - C[None, :, :]) ** 2).sum(-1).argmin(axis=1)
-        newC = np.array([X[labels == j].mean(axis=0) if np.any(labels == j)
-                         else C[j] for j in range(k)])
-        if np.allclose(newC, C):
-            break
-        C = newC
-    return labels, C
-
-
-def clusters_text(query: str, top_k: int = 0, n_clusters: int = 5,
-                  project: str = "", collection_name: str | None = None) -> str:
-    """Explorative topic map: k-means over the hits' dense embeddings — which
-    sub-aspects does the corpus hold on this topic, and who writes on each?"""
-    import numpy as np
-    from brag.http_bridge import pdf_link
-    hits = run_search(query, top_k=(top_k or CLUSTERS_TOP_K),
-                      max_chunks_per_source=CLUSTERS_PER_SOURCE,
-                      collection_name=collection_name, with_vectors=True)
-    valid = [h for h in hits if h.get("_vector")]
-    if len(valid) < max(4, n_clusters):
-        return (f"Nur {len(valid)} Treffer mit Vektoren — zu wenig für eine "
-                f"Themen-Map. Query verbreitern oder n_clusters senken.")
-    X = np.array([h["_vector"] for h in valid], dtype=float)
-    X = X / np.linalg.norm(X, axis=1, keepdims=True)  # spherical k-means
-    # Auto-k: at least ~4 points per cluster, so 8 hits never yield 5 singletons.
-    k = min(n_clusters, max(2, len(valid) // 4))
-    labels, C = _kmeans(X, k)
-
-    clusters = []
-    for j in range(k):
-        members = [i for i in range(len(valid)) if labels[i] == j]
-        if not members:
-            continue
-        dists = [(i, float(((X[i] - C[j]) ** 2).sum())) for i in members]
-        rep = valid[min(dists, key=lambda t: t[1])[0]]
-        src_counts: dict[str, int] = {}
-        chapters: set[str] = set()
-        for i in members:
-            h = valid[i]
-            src_counts[h.get("source_file", "?")] = (
-                src_counts.get(h.get("source_file", "?"), 0) + 1)
-            ch = (h.get("chapter") or "").strip()
-            if ch:
-                chapters.add(ch)
-        clusters.append({"n": len(members), "sources": src_counts,
-                         "chapters": sorted(chapters), "rep": rep})
-    clusters.sort(key=lambda c: -c["n"])
-
-    lines = [f"## Themen-Map: \"{query}\"", "",
-             f"{len(valid)} Treffer in {len(clusters)} Cluster gruppiert "
-             "(semantische Nähe im Embedding-Raum)", ""]
-    for ci, c in enumerate(clusters, 1):
-        rep = c["rep"]
-        page = rep.get("page_start", "")
-        link = (pdf_link(rep.get("rel_path", ""), page, project)
-                if rep.get("rel_path") else "")
-        srcs = sorted(c["sources"].items(), key=lambda kv: -kv[1])
-        lines.append(f"### Cluster {ci} — {c['n']} Treffer aus "
-                     f"{len(c['sources'])} Quellen")
-        rep_head = f"**{rep.get('source_file', '?')}** — S. {page}"
-        lines.append(f"Repräsentativ: [{rep_head}](<{link}>)" if link
-                     else f"Repräsentativ: {rep_head}")
-        rep_text = ((rep.get("text") or "").replace("\n", " ").strip())[:260]
-        lines.append(f"> {rep_text}…")
-        lines.append("Quellen: " + ", ".join(f"`{s}` ({n})" for s, n in srcs[:6]))
+def clusters(query: str, top_k: int = 40, n_clusters: int = 5,
+             collection_name: str | None = None) -> str:
+    """Themen-Map: clustert die Treffer im Embedding-Raum (K-Means) in Sub-Themen."""
+    res = analytics.topic_clusters(query, top_k=top_k, n_clusters=n_clusters,
+                                   collection_name=collection_name)
+    if res.get("error"):
+        return f"Cluster-Analyse fehlgeschlagen: {res['error']}"
+    out = [f"**Themen-Map zu:** {query}",
+           f"{res['total_chunks']} Treffer in {len(res['clusters'])} Cluster\n"]
+    for n, c in enumerate(res["clusters"], 1):
+        rep = c["representative"]
+        srcs = ", ".join(f"`{s}` ({k})" for s, k in c["sources"][:4])
+        out.append(f"### Cluster {n} — {c['n_chunks']} Chunks aus {c['n_sources']} Quellen")
+        out.append(f"Quellen: {srcs}")
         if c["chapters"]:
-            lines.append("Kapitel: " + "; ".join(c["chapters"][:5]))
-        lines.append("")
-    return "\n".join(lines)
+            out.append(f"Kapitel: {', '.join(c['chapters'][:5])}")
+        sc = rep.get("score")
+        sc_s = f" (Score {sc:.3f})" if isinstance(sc, (int, float)) else ""
+        out.append(f"Repräsentant: `{rep['source_file']}` S. {rep['page']}{sc_s}")
+        out.append(f"> {(rep['text'] or '').strip()[:220]}…\n")
+    return "\n".join(out)
 
 
-def compare_positions_text(query: str, sources: list[str],
-                           top_k_per_source: int = 3, project: str = "",
-                           collection_name: str | None = None) -> str:
-    """Side-by-side: what do THESE specific sources say about THIS topic?
-    One search per source (source_file filter, NFC/NFD-robust via
-    source_key_variants), rendered as one comparison block."""
-    sources = [s for s in (sources or []) if str(s).strip()]
-    if len(sources) < 2:
-        return ("Gib mindestens 2 Quellen an (source_file-Schlüssel aus "
-                "list_sources()).")
-    if len(sources) > 7:
-        return (f"{len(sources)} Quellen — bitte höchstens 7 für einen "
-                "lesbaren Vergleich.")
-    found: dict[str, list[dict]] = {}
-    missing: list[str] = []
-    for src in sources:
-        try:
-            hits = run_search(query, top_k=top_k_per_source,
-                              max_chunks_per_source=top_k_per_source,
-                              source_file=str(src),
-                              collection_name=collection_name)
-        except Exception:  # noqa: BLE001 — one bad source must not kill the compare
-            hits = []
-        if hits:
-            found[src] = hits
-        else:
-            missing.append(src)
-
-    lines = [f"## Positions-Vergleich: \"{query}\"", "",
-             f"Gesucht in **{len(sources)} Quellen**, gefunden in "
-             f"**{len(found)}** (Top-{top_k_per_source} Treffer pro Quelle)", ""]
-    for i, src in enumerate(sources, 1):
-        if src not in found:
-            continue
-        lines.append(f"### [{i}] {str(src)[:80]}")
-        lines.append("")
-        for j, h in enumerate(found[src], 1):
-            lines.append(format_hit(j, h, project=project))
-    if missing:
-        lines.append(f"### Nicht gefunden ({len(missing)})")
-        lines += [f"- {src} — keine Treffer für '{query}' in dieser Quelle"
-                  for src in missing]
-        if not found:
-            lines.append("")
-            lines.append(
-                "> **Diagnose:** Keine der angefragten Quellen enthält Treffer. "
-                "Mögliche Ursachen: (a) Tippfehler im source_file-Schlüssel — "
-                "über list_sources() prüfen; (b) die Quellen behandeln das Thema "
-                "nicht — Query umformulieren oder andere Quellen wählen.")
-    return "\n".join(lines)
+def compare_positions(query: str, sources: list[str], top_k_per_source: int = 3,
+                      collection_name: str | None = None) -> str:
+    """Stellt mehrere Quellen zu einer Frage side-by-side gegenüber."""
+    res = analytics.compare_positions(query, sources, top_k_per_source=top_k_per_source,
+                                      collection_name=collection_name)
+    out = [f"**Side-by-side zu:** {query}\n"]
+    for src, hits in res["results_by_source"].items():
+        out.append(f"### {src}")
+        for h in hits:
+            sc = h.get("rerank_score") or h.get("score")
+            sc_s = f"{sc:.3f}" if isinstance(sc, (int, float)) else "—"
+            text = (h.get("text") or "").strip().replace("\n", " ")[:240]
+            out.append(f"- S. {h.get('page_start', '?')} (Score {sc_s}): {text}…")
+        out.append("")
+    if res["missing"]:
+        out.append(f"_Nicht im Korpus gefunden: {', '.join(res['missing'])}_")
+    return "\n".join(out)
 
 
 def list_sources(doc_type: str = "", collection_name: str | None = None) -> str:

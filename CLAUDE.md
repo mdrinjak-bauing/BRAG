@@ -78,9 +78,10 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   package** — features ported from the author's tuned local sister pipeline.
   Query side: **figures as images in search** (compact local JPEGs stored at
   ingest → up to 3 hit figures attached as MCP images; `SEARCH_IMAGES_ENABLED`),
-  **`search(mode='coverage')`** (per-source state-of-research split),
-  **`search(mode='clusters')`** (numpy k-means topic map), **`compare_positions`**
-  (17th tool). Ingest quality: **junk-figure filter** (logos/icons/seals — 40%
+  plus bridge/thin-client wiring + tests for the **`coverage`/`clusters`/
+  `compare_positions`** analysis tools that PR #54 (merged to `main` in
+  parallel, with the `vault_*` layer + `open_pdf` + query expansion) added to
+  the default project. Ingest quality: **junk-figure filter** (logos/icons/seals — 40%
   of figure chunks in the audited corpus; `JUNK_FILTER_ENABLED`), **printed
   page numbers via PDF `/PageLabels`** (beats manual `page_offset`, links stay
   physical), **"Related sources" wikilinks** in the auto literature notes

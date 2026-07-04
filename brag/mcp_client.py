@@ -63,25 +63,19 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
            source_file: str = "", meta_filter: str = "",
            reranking: bool | None = None, max_per_source: int = 0,
-           mode: str = "normal", include_images: bool = True,
-           coverage_mode: str = "broad", n_clusters: int = 5):
+           mode: str = "normal", include_images: bool = True):
     """Hybride Suche (Bedeutung + Stichwort) über den Dokumenten-Korpus.
 
-    Wähle `mode` passend zur Aufgabe:
+    Wähle `mode` passend zur Aufgabe (setzt sinnvolle Breite/Tiefe):
     - 'precise' punktgenaue Einzelfrage (wenige, fokussierte Treffer);
     - 'normal'  normale Frage (Standard);
     - 'review'  Literaturrecherche / breite Übersicht über viele Quellen (weites
       Netz; dazu mehrere Suchen mit verschiedenen Formulierungen, dann zusammenführen);
     - 'deep'    einen/wenige konkrete Berichte vertieft lesen — mit source_file= kombinieren.
-    ANALYSE-Modi (liefern statt der Trefferliste eine Auswertung):
-    - 'coverage' „Wer schreibt zu X / Stand der Forschung": bündelt die Treffer PRO
-      QUELLE und teilt in substanziell vs. peripher. coverage_mode='broad' (wer
-      schreibt VIEL zu X, Standard) | 'specific' (wer schreibt FOKUSSIERT zu X)
-      | 'both'.
-    - 'clusters' explorative Themen-Map: gruppiert die Treffer nach semantischer
-      Nähe — welche Unter-Aspekte hat das Thema? n_clusters steuert die Anzahl.
+    Für AUSWERTUNGEN statt einer Trefferliste: coverage() („wer schreibt zu X"),
+    clusters() (Themen-Map) und compare_positions() (Quellen side-by-side).
     Feineinstellung (optional): top_k = genaue Trefferzahl; max_per_source = wie viele
-    Treffer aus derselben Quelle kommen dürfen (beide nur in den Such-Modi).
+    Treffer aus derselben Quelle kommen dürfen.
 
     Probiere mehrere Formulierungen (Synonyme, deutsch/englisch).
     chunk_type='table' für Zahlen/Statistiken, 'figure' für Abbildungen. Treffer
@@ -92,18 +86,9 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
     meta_filter='projekt=Schulzentrum' oder 'kurs=Baumanagement, semester=WS25'.
     Nennt der Nutzer einen Projekt-/Kurs-/Mandanten-Kontext, setze diesen Filter
     IMMER — sonst mischen sich Treffer aus fremden Projekten in die Ergebnisse.
-    Filter (doc_type, chunk_type, meta_filter, …) wirken nur in den Such-Modi,
-    nicht in 'coverage'/'clusters'.
     Jede Treffer-Überschrift ist ein anklickbarer Link, der das PDF an der richtigen
     Seite öffnet — übernimm ihn IMMER in deine Antwort, wenn du die Quelle zitierst.
     """
-    m = (mode or "normal").strip().lower()
-    if m == "coverage":
-        return _index_op("coverage", query=query, top_k=top_k,
-                         coverage_mode=coverage_mode)
-    if m == "clusters":
-        return _index_op("clusters", query=query, top_k=top_k,
-                         n_clusters=n_clusters)
     resp = _post("/api/search", {
         "project": PROJECT, "query": query, "top_k": top_k,
         "doc_type": doc_type, "chunk_type": chunk_type,
@@ -140,19 +125,31 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
 
 
 @mcp.tool()
-def compare_positions(query: str, sources: list[str],
-                      top_k_per_source: int = 3) -> str:
-    """Side-by-side-Vergleich: Was sagen DIESE konkreten Quellen zu DIESEM Thema?
+def coverage(query: str, top_k: int = 50, min_score: float = 0.4,
+             mode: str = "broad") -> str:
+    """Stand der Forschung / „Wer schreibt zu X?" — aggregiert die Treffer PRO QUELLE
+    (statt einer flachen Trefferliste) und teilt sie in substanziell vs. peripheral.
+    `mode`: 'broad' (Quellen mit ≥3 Treffern, „wer schreibt VIEL"), 'specific'
+    (fokussierte Spezialquellen mit einem starken Treffer zuerst) oder 'both'.
+    Für eine Literaturübersicht/„Stand der Forschung" zu einem Thema."""
+    return _index_op("coverage", query=query, top_k=top_k,
+                     min_score=min_score, mode=mode)
 
-    Wähle 2-7 Quellen explizit aus; pro Quelle kommen die `top_k_per_source`
-    relevantesten Treffer zurück — ideal für „Wie definieren Autor A und Autor B
-    den Begriff X?" oder „Vergleiche die Auffassungen dieser drei Berichte".
-    Vorteil gegenüber mehreren search()-Aufrufen mit source_file-Filter: EIN
-    Aufruf, direkt vergleichbares Layout. `sources` sind die source_file-Schlüssel
-    aus list_sources(). Die Treffer-Links bleiben klickbar — übernimm sie in
-    deine Antwort, wenn du zitierst; eine Synthese darf folgen, ersetzt die
-    belegten Treffer aber nicht.
-    """
+
+@mcp.tool()
+def clusters(query: str, top_k: int = 40, n_clusters: int = 5) -> str:
+    """Themen-Map: clustert die Treffer via K-Means im Embedding-Raum in Sub-Themen
+    und gibt pro Cluster einen Repräsentanten + die Quellen-/Kapitel-Verteilung aus.
+    Für „Welche Sub-Aspekte/Teilthemen hat Y?" — explorativ statt einer Rangliste."""
+    return _index_op("clusters", query=query, top_k=top_k,
+                     n_clusters=n_clusters)
+
+
+@mcp.tool()
+def compare_positions(query: str, sources: list[str], top_k_per_source: int = 3) -> str:
+    """Stellt 2–7 KONKRETE Quellen zu einer Frage SIDE-BY-SIDE gegenüber — je Quelle die
+    Top-Treffer. `sources` = Liste von `source_file`-Schlüsseln (siehe list_sources).
+    Für „Wie definieren/bewerten Quelle A und B das Thema X?"."""
     return _index_op("compare_positions", query=query, sources=sources,
                      top_k_per_source=top_k_per_source)
 

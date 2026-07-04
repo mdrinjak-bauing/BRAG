@@ -380,23 +380,24 @@ class BridgeHandler(BaseHTTPRequestHandler):
                 str(a.get("topic", "")), confirm=bool(a.get("confirm", False))),
             "move_note": lambda: tools.move_note(
                 str(a.get("path", "")), str(a.get("new_path", ""))),
-            # Research analyses (search mode='coverage'/'clusters' and the
-            # compare_positions tool of the thin client). `project` threads into
-            # the deep links so they carry the right /file/<project>/ prefix.
-            "coverage": lambda: tools.coverage_text(
-                str(a.get("query", "")), top_k=_int(a.get("top_k")),
-                coverage_mode=str(a.get("coverage_mode", "broad") or "broad"),
-                project=project, collection_name=collection),
-            "clusters": lambda: tools.clusters_text(
-                str(a.get("query", "")), top_k=_int(a.get("top_k")),
+            # Research analyses (coverage/clusters/compare_positions tools of
+            # the thin client) — same analytics the default project's server
+            # uses, scoped to this project's collection.
+            "coverage": lambda: tools.coverage(
+                str(a.get("query", "")), top_k=_int(a.get("top_k", 50), 50),
+                min_score=float(a.get("min_score", 0.4) or 0.4),
+                mode=str(a.get("mode", "broad") or "broad"),
+                collection_name=collection),
+            "clusters": lambda: tools.clusters(
+                str(a.get("query", "")), top_k=_int(a.get("top_k", 40), 40),
                 n_clusters=_int(a.get("n_clusters", 5), 5),
-                project=project, collection_name=collection),
-            "compare_positions": lambda: tools.compare_positions_text(
+                collection_name=collection),
+            "compare_positions": lambda: tools.compare_positions(
                 str(a.get("query", "")),
                 [str(s) for s in a.get("sources", [])
                  if str(s).strip()] if isinstance(a.get("sources"), list) else [],
                 top_k_per_source=_int(a.get("top_k_per_source", 3), 3),
-                project=project, collection_name=collection),
+                collection_name=collection),
         }
         handler = ops.get(op)
         if handler is None:
