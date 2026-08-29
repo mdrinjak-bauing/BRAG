@@ -30,6 +30,41 @@ class OpenAICompatibleLLM(LLMBackend):
             raise EnvironmentError("LLM_BASE_URL is not set for the local profile.")
         self._url = config.LLM_BASE_URL.rstrip("/")
 
+    # A 1x1 transparent PNG — the smallest thing that is unambiguously an image.
+    _PROBE_PIXEL = (
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGNgAQ"
+        "AABQABDQottAAAAABJRU5ErkJggg=="
+    )
+
+    def can_see_images(self) -> tuple[bool | None, str]:
+        """Ask the loaded model one tiny image question. (capable, reason).
+
+        True  — it answered, so it accepts images.
+        False — it refused the request; expect caption-only context for figures.
+        None  — it could not be asked (server busy or down). NOT the same as
+                text-only: telling someone their multimodal model is text-only
+                because LM Studio was loading would send them off to change a
+                setting that was never the problem.
+
+        Whether a local model is multimodal cannot be read off its name, and the
+        ingest only finds out after two failed figures — by which point the run
+        is hours old. One request settles it up front.
+        """
+        import urllib.error
+
+        try:
+            antwort = self.chat("What is in this image? Answer in one word.",
+                                max_tokens=8, images=[self._PROBE_PIXEL])
+        except urllib.error.HTTPError as e:
+            return False, (f"the model rejected the image ({e.code}) — figures "
+                           "will be indexed by their caption only")
+        except OSError as e:
+            return None, f"could not reach the model server ({e})"
+        if antwort:
+            return True, "the model accepted an image"
+        return False, ("the model returned nothing for an image — figures will "
+                       "be indexed by their caption only")
+
     def server_alive(self) -> bool:
         try:
             with urllib.request.urlopen(f"{self._url}/models", timeout=5):
