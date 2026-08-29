@@ -53,6 +53,29 @@ class Chunk:
     def embedding_text(self) -> str:
         return f"{self.context}\n\n{self.text}" if self.context else self.text
 
+    def dense_text(self) -> str:
+        """What the DENSE vector actually sees: a short document header, then
+        the context + original text.
+
+        Without it a chunk's vector carries no trace of WHICH work it came from,
+        so "what does Hofstadler write about productivity" has to match on body
+        text alone.
+
+        Ported from the sister pipeline, which credits the idea to Snowflake's
+        own benchmark for arctic-embed. NOTE: that is a vendor measurement on a
+        vendor benchmark. Neither pipeline has measured the gain on its own
+        corpus, so treat "this improves retrieval" as reasoned, not proven.
+
+        Dense ONLY. In the BM25 index an identical header on every chunk of a
+        work would blur document discrimination — every chunk of the book would
+        match "Hofstadler" equally well — so the sparse side keeps
+        embedding_text().
+        """
+        kopf = document_header(self.author, self.year, self.doc_type,
+                               self.source_file)
+        koerper = self.embedding_text()
+        return f"{kopf}\n{koerper}" if kopf else koerper
+
     def payload(self) -> dict:
         from datetime import datetime
         return {
@@ -174,6 +197,91 @@ def derive_file_metadata(path: Path) -> dict:
         "source_file": source_file, "author": author, "year": year,
         "doc_type": doc_type, "rel_path": rel_path, "custom_meta": custom_meta,
     }
+
+
+_HEADER_RAND = " \t\n·|-–—:;,."
+
+# The two shapes parse_filename accepts. Captured here WITH the title group, so
+# the header can name the work rather than echoing the filename.
+_STEM_UNTERSTRICH = re.compile(r"^([A-Za-zÀ-ſ]+(?:-[A-Za-zÀ-ſ]+)*)_(\d{4})_(.+)$")
+_STEM_STRICH = re.compile(r"^([A-Za-zÀ-ſ]+)\s+(\d{4})\s*-\s*(.+)$")
+
+
+def _sauber(text: str) -> str:
+    """One field of the header, normalised.
+
+    Values arrive with runs of whitespace and sometimes lead with a separator of
+    their own, which would then render as an empty field ("Fachbuch · · …").
+    Observed on a real corpus, not assumed.
+    """
+    return " ".join(str(text or "").split()).strip(_HEADER_RAND)
+
+
+def work_title(source_file: str) -> str:
+    """The work's title as it can be read off the file's own name, or "".
+
+    parse_filename accepts "Author_YYYY_Title" and "Author YYYY - Title"; the
+    title is the remainder in both cases. Taking the whole stem instead would
+    drop the title for the first form (it always contains an underscore) and
+    repeat the author and year inside it for the second.
+
+    A stem matching neither is used as-is only when it reads like a title rather
+    than a filename — books are often filed under their real name ("Die
+    Bauleiterschule"), and those gain most from being findable under it.
+    """
+    stamm = _sauber((source_file or "").rsplit("/", 1)[-1])
+    for muster in (_STEM_UNTERSTRICH, _STEM_STRICH):
+        m = muster.match(stamm)
+        if m:
+            return _sauber(m.group(3).replace("_", " "))
+    return "" if "_" in stamm else stamm
+
+
+def document_header(author: str = "", year: str = "", doc_type: str = "",
+                    source_file: str = "") -> str:
+    """"Hofstadler 2007 · Bauablaufplanung und Logistik · Fachbuch"
+
+    Only fields that are actually set — a guessed "Unknown"/"????" in every
+    vector of a document is worse than saying nothing. Deterministic and free of
+    the chunk's own content, so the same header can be rebuilt from a stored
+    payload alone (see dense_text_from_payload and brag/ingest/reembed.py).
+
+    The CHAPTER is deliberately absent: every text chunk already opens with
+    "[Chapter: …]" (see the prefix built around line 396), so adding it here
+    would put the noisiest of the fields into the vector twice.
+    """
+    teile: list[str] = []
+    a = _sauber(author)
+    if a and a.lower() != "unknown":
+        j = _sauber(year).strip("?")
+        teile.append(f"{a} {j}" if j else a)
+    titel = work_title(source_file)
+    if titel:
+        teile.append(titel)
+    typ = _sauber(doc_type)
+    if typ:
+        teile.append(typ)
+    return " · ".join(teile)
+
+
+def dense_text_from_payload(payload: dict) -> str:
+    """The same dense text as Chunk.dense_text(), rebuilt from a stored payload.
+
+    Everything it needs is already in Qdrant, so an index built before the
+    document header existed can be brought up to date by re-embedding from
+    itself — no source file, no Docling, no contextualisation cost. Tolerates a
+    payload written by an older version that lacks some of the keys.
+
+    Keep this and Chunk.dense_text() in step; a test pins them together.
+    """
+    kopf = document_header(
+        payload.get("author", ""), payload.get("year", ""),
+        payload.get("doc_type", ""), payload.get("source_file", ""),
+    )
+    text = payload.get("text", "") or ""
+    context = payload.get("context", "") or ""
+    koerper = f"{context}\n\n{text}" if context else text
+    return f"{kopf}\n{koerper}" if kopf else koerper
 
 
 def metadata_payload(path: Path) -> dict:

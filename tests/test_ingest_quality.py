@@ -314,3 +314,119 @@ def test_an_empty_label_map_changes_nothing():
     c = _chunk(text="t", chunk_type="text", page_start=4, page_end=4)
     apply_page_labels([c], {})
     assert c.page_label_start == ""
+
+
+# ── The document header in the dense vector ──────────────────────────────────
+# A chunk's vector saw only its context and its text, so it carried no trace of
+# WHICH work it came from. "What does Hofstadler write about productivity" then
+# had to match on the body text alone. Prepending a short, deterministic header
+# (author year · title · type) is the port of the sister pipeline's dense_text.
+#
+# It goes into the DENSE vector only: an identical header on every chunk of a
+# work would blur document discrimination in the BM25 index, where every chunk
+# of the book would then match "Hofstadler".
+#
+# The CHAPTER is deliberately NOT in the header: every chunk's text already
+# opens with "[Chapter: …]" (extract.py:396-405), so repeating it would put the
+# noisiest field into the vector twice.
+
+def test_header_names_author_year_title_and_type():
+    from brag.ingest.extract import document_header
+    h = document_header(author="Hofstadler", year="2007", doc_type="Fachbuch",
+                        source_file="Fachbuch/Hofstadler_2007_Bauablaufplanung_und_Logistik")
+    assert h == "Hofstadler 2007 · Bauablaufplanung und Logistik · Fachbuch"
+
+
+def test_header_reads_the_title_out_of_the_other_filename_form():
+    from brag.ingest.extract import document_header
+    # parse_filename also accepts "Author YYYY - Title"; the title is what
+    # follows the dash, and the author/year must not be repeated inside it.
+    h = document_header(author="Hofstadler", year="2007", doc_type="Fachbuch",
+                        source_file="Fachbuch/Hofstadler 2007 - Bauablaufplanung")
+    assert h == "Hofstadler 2007 · Bauablaufplanung · Fachbuch"
+    assert h.count("Hofstadler") == 1 and h.count("2007") == 1
+
+
+def test_header_keeps_a_filename_that_IS_the_title():
+    from brag.ingest.extract import document_header
+    # Books are often filed under their own name — exactly the ones that gain
+    # most from being findable under it.
+    h = document_header(doc_type="Fachbuch", source_file="buecher/Die Bauleiterschule")
+    assert h == "Die Bauleiterschule · Fachbuch"
+
+
+def test_header_drops_a_stem_that_is_neither_parseable_nor_a_title():
+    from brag.ingest.extract import document_header
+    # "scan_04_final" has no four-digit year, so parse_filename reads no author
+    # from it either; the stem reads as a filename, not as a work title.
+    h = document_header(doc_type="Fachbuch", source_file="x/scan_04_final")
+    assert h == "Fachbuch"
+
+
+def test_header_omits_fields_that_are_not_set():
+    from brag.ingest.extract import document_header
+    # year empty -> omitted, but author, title and type still appear
+    assert document_header(author="Smith", year="", doc_type="paper",
+                           source_file="p/Smith_2020_X") == "Smith · X · paper"
+
+
+def test_header_never_invents_an_unknown_author():
+    from brag.ingest.extract import document_header
+    # parse_filename yields "Unknown"/"????" when it cannot read them; putting
+    # those into every vector of the document is worse than saying nothing.
+    h = document_header(author="Unknown", year="????", doc_type="paper",
+                        source_file="p/x_y")
+    assert "Unknown" not in h and "????" not in h and h == "paper"
+
+
+def test_empty_metadata_yields_no_header():
+    from brag.ingest.extract import document_header
+    assert document_header(source_file="x/a_b") == ""
+
+
+def test_header_parts_are_normalised():
+    """Observed on real data: extracted values arrive with runs of spaces and
+    sometimes lead with a separator of their own, which would then render as an
+    empty field ("Fachbuch · · …")."""
+    from brag.ingest.extract import document_header
+    h = document_header(author="  Leimböck ", year="2015", doc_type="· Fachbuch  ",
+                        source_file="b/Leimböck 2015 - Baukalkulation  und  Controlling")
+    assert h == "Leimböck 2015 · Baukalkulation und Controlling · Fachbuch"
+
+
+def test_a_part_that_is_only_punctuation_is_dropped():
+    from brag.ingest.extract import document_header
+    assert document_header(author="X", year="2020", doc_type="—",
+                           source_file="p/X 2020 - Y") == "X 2020 · Y"
+
+
+def test_the_chapter_is_not_repeated_in_the_header():
+    """extract.py:396-405 already prefixes every text chunk with
+    "[Chapter: …]", so the chapter is in the embedded text either way."""
+    c = _chunk(text="[Chapter: 4 Logistik]\nDer Text.", chunk_type="text",
+               author="Hofstadler", year="2007", doc_type="Fachbuch",
+               chapter="4 Logistik",
+               source_file="Fachbuch/Hofstadler 2007 - Bauablaufplanung")
+    kopf = c.dense_text().split("\n")[0]
+    assert kopf == "Hofstadler 2007 · Bauablaufplanung · Fachbuch"
+    assert c.dense_text().count("4 Logistik") == 1
+
+
+def test_dense_text_carries_the_header_and_sparse_text_does_not():
+    c = _chunk(text="Produktivität hängt von der Arbeitsvorbereitung ab.",
+               chunk_type="text", context="Kapitel 3 behandelt …",
+               author="Hofstadler", year="2007", doc_type="Fachbuch",
+               source_file="Fachbuch/Hofstadler 2007 - Bauablaufplanung")
+    dicht, bm25 = c.dense_text(), c.embedding_text()
+    assert dicht.startswith("Hofstadler 2007 · Bauablaufplanung · Fachbuch\n")
+    assert dicht.endswith(bm25)
+    assert "Hofstadler" not in bm25, (
+        "the header must stay out of the BM25 text — an identical header on every "
+        "chunk of a work destroys document discrimination there"
+    )
+
+
+def test_dense_text_without_metadata_equals_the_plain_text():
+    c = _chunk(text="x", chunk_type="text", author="Unknown", year="????",
+               doc_type="", source_file="a/b_c")
+    assert c.dense_text() == c.embedding_text()

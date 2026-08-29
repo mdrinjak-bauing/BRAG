@@ -53,8 +53,15 @@ echo
 echo "  [ OK ]  BRAG is up to date and running."
 echo
 echo "  Your .env, search index, connectors and documents were kept."
-echo "  Folder-exclusion and the page-link change work right away. To try the new"
-echo "  SETUP wizard (model dropdown · exclude-folder picker), run setup.command"
-echo "  once — it is data-safe (it does NOT delete your index)."
+echo
+echo "  ONE STEP LEFT — search quality:"
+echo "  Documents indexed before this update do not carry the new document"
+echo "  header in their search vectors, so your index is currently mixed."
+echo "  This brings it up to date (no PDFs are reopened, no AI is called):"
+echo
+echo "      docker exec brag-app python -m brag.ingest.reembed --dry-run"
+echo "      docker exec brag-app python -m brag.ingest.reembed"
+echo
+echo "  See \"do I have to index everything again\" in docs/FAQ.md."
 echo
 read -n1 -r -p "Press any key to close..."

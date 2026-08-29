@@ -6,6 +6,41 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **The dense vector now knows which work a chunk comes from.** A chunk's
+  embedding saw only its context and its text, so nothing in the vector said
+  *Hofstadler, Bauablaufplanung*. A short deterministic header is now
+  prepended — `Hofstadler 2007 · Bauablaufplanung und Logistik im Baubetrieb ·
+  Fachbuch` — built from fields that already exist. The idea is ported from the
+  author's sister pipeline, which credits Snowflake's own benchmark for
+  arctic-embed. **That is a vendor measurement on a vendor benchmark**: neither
+  pipeline has measured the gain on its own corpus, so this is a reasoned change,
+  not a proven one.
+
+  **Dense only.** The BM25 index keeps the plain text: an identical header on
+  every chunk of a work would blur document discrimination there, where every
+  chunk of the book would then match "Hofstadler" equally well. A test enforces
+  the split at the source.
+
+  The **chapter is deliberately not in the header** — every text chunk already
+  opens with `[Chapter: …]`, so repeating it would put the noisiest of the
+  fields into the vector twice. The **title** is parsed with the same two
+  patterns `parse_filename` uses (`Author_YYYY_Title` and `Author YYYY - Title`)
+  rather than taken from the raw stem: taking the stem dropped the title for the
+  first form, which always contains an underscore, and repeated the author and
+  year inside it for the second. Measured over a real 32-work corpus, the title
+  now appears for 32 of 32. A stem matching neither pattern is used as-is only
+  when it reads like a title rather than a filename; a guessed "Unknown"/"????"
+  never enters a vector.
+- **`python -m brag.ingest.reembed` — bring an existing index up to date.**
+  Because the header changes what a dense vector means, an index built before it
+  would be MIXED: old chunks without, new ones with. Everything the dense text
+  is built from already lives in the stored payload, so the repair costs one
+  pass of the embedding model over the index itself — **no source files, no
+  text extraction, no LLM call, no API cost**. `--dry-run` reports what it would
+  do and writes nothing. The sparse vector is never touched. Documented in both
+  FAQs. Verified against a real 26,682-chunk collection.
+
 ### Changed
 - **A citation now says WHICH page count it means.** A hit header read
   `p. 47` whether that 47 was the page printed on the paper or merely the 47th

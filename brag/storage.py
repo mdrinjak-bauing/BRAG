@@ -98,8 +98,14 @@ def patch_source_metadata(client, source_file: str, payload: dict,
                           collection_name: str | None = None) -> int:
     """Update the filename-derived payload fields (source_file, author, year,
     doc_type, rel_path, custom fields) for all chunks of a source IN PLACE —
-    no re-embedding. Used when a file is renamed/moved but its content is
-    unchanged. Returns the number of points updated."""
+    no reprocessing of the file. Used when a file is renamed/moved but its
+    content is unchanged. Returns the number of points updated.
+
+    CAUTION: author, year, doc_type and source_file are part of the DENSE
+    text (the document header, extract.py document_header). Patching them
+    here leaves the stored vector disagreeing with the payload, so a caller
+    must rebuild that source's dense vectors afterwards — pipeline.
+    rename_source does, via reembed_dense(source_file=…)."""
     from qdrant_client.models import FieldCondition, Filter, MatchAny
 
     collection_name = collection_name or config.COLLECTION_NAME
