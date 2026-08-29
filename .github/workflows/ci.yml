@@ -64,7 +64,12 @@ jobs:
           # entire multi-project suite (registry/compose_gen/claude_sync/config/
           # projects/tools/setup_core/crash_loop) never ran in CI. e2e_smoke.py is
           # not a test_*.py and is exercised by the separate e2e workflow.
-          pip install pytest pytest-cov mcp watchdog qdrant-client
+          pip install pytest pytest-cov watchdog qdrant-client
+          # mcp PINNED to what requirements.txt ships: installing it
+          # unpinned meant unit tests silently ran against a different
+          # major version than users get, which is how an import break
+          # reaches them through green CI.
+          pip install "$(grep -E '^mcp==' requirements.txt)"
           # Coverage is informational, NOT a gate (no --cov-fail-under). Promote
           # it to a hard threshold later once a baseline is known.
           python -m pytest tests/ -q --cov=brag --cov-report=term-missing

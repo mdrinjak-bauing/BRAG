@@ -19,13 +19,21 @@ import os
 import urllib.error
 import urllib.request
 
-from mcp.server.fastmcp import FastMCP
+# mcp 2.x renamed FastMCP to MCPServer and left a tombstone module behind that
+# raises ModuleNotFoundError with the migration hint. The constructor, the
+# .tool() decorator and .run() are call-compatible across both lines, so one
+# import covers 1.x and 2.x — and BRAG keeps working whichever version the user
+# ends up with, instead of the connector silently failing to start.
+try:  # mcp >= 2
+    from mcp.server.mcpserver import MCPServer as _MCPServer
+except ModuleNotFoundError:  # mcp 1.x
+    from mcp.server.fastmcp import FastMCP as _MCPServer
 from mcp.types import ImageContent, TextContent
 
 from brag import config
 from brag.formatting import format_hit, parse_meta_filter
 
-mcp = FastMCP("brag")
+mcp = _MCPServer("brag")
 
 PROJECT = os.environ.get("BRAG_PROJECT", "").strip()
 _BASE = f"http://localhost:{config.BRIDGE_PORT}"

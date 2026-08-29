@@ -13,12 +13,20 @@ list_notebook, read_note, write_note, recent_sources, set_metadata,
 delete_note, delete_passage, move_note.
 """
 
-from mcp.server.fastmcp import FastMCP
+# mcp 2.x renamed FastMCP to MCPServer and left a tombstone module behind that
+# raises ModuleNotFoundError with the migration hint. The constructor, the
+# .tool() decorator and .run() are call-compatible across both lines, so one
+# import covers 1.x and 2.x — and BRAG keeps working whichever version the user
+# ends up with, instead of the connector silently failing to start.
+try:  # mcp >= 2
+    from mcp.server.mcpserver import MCPServer as _MCPServer
+except ModuleNotFoundError:  # mcp 1.x
+    from mcp.server.fastmcp import FastMCP as _MCPServer
 from mcp.types import ImageContent, TextContent
 
 from brag import config, pdf_open, tools, vault
 
-mcp = FastMCP("brag")
+mcp = _MCPServer("brag")
 
 
 @mcp.tool()

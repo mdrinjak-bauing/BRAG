@@ -28,6 +28,25 @@ All notable changes to this project are documented here. The format follows
   re-enable runtime compilation in a container that cannot compile. Verified
   against a real docling install: the variable flips
   `settings.inference.compile_torch_models` from True to False.
+- **BRAG now imports on mcp 2.x as well as 1.x.** mcp 2.0 renamed `FastMCP` to
+  `MCPServer` and left a tombstone module behind: importing
+  `mcp.server.fastmcp` raises `ModuleNotFoundError` carrying the migration hint.
+  Two lines in BRAG pointed at it (`brag/mcp_server.py`, `brag/mcp_client.py`),
+  so on mcp 2.x **the connector never started at all** — not a degraded mode, no
+  tools.
+
+  The constructor, the `.tool()` decorator and `.run()` are call-compatible
+  across both lines, so a two-line `try`/`except` import covers 1.x and 2.x and
+  the pin in `requirements.txt` stops being load-bearing. Verified live against
+  this machine's mcp 2.1.1: 27 server tools and 19 thin-client tools register,
+  the same counts as on 1.x.
+
+  Why it went unnoticed: the unit CI job installed `mcp` **unpinned** while
+  users get `requirements.txt`'s pin, so CI and users were on different major
+  versions — and only the `e2e` job imports these modules. CI now installs the
+  pinned version, and a test fails if that drifts again. The pin itself stays at
+  1.28.1: there is no advisory pressure, and moving it needs an e2e run to clear
+  2.x's `pydantic>=2.12` and httpx2 against docling and sentence-transformers.
 
 ### Added
 - **Setup now TESTS whether the local model can see images, instead of assuming
