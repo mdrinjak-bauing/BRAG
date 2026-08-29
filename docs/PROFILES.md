@@ -65,7 +65,27 @@ cents for a typical corpus.
 | Text LLM | your model in [LM Studio](https://lmstudio.ai) |
 | Needs | LM Studio running on the host with a loaded model |
 | Hardware | ~16 GB RAM runs a ~7B model (`qwen2.5-7b-instruct`); 32 GB a 14B (`qwen2.5-14b-instruct`); 64 GB+ a 27B (`gemma-3-27b-it`) — give LM Studio the model's full path from its model browser (e.g. the Hugging Face id); a GPU helps a lot |
+| Images | **the model must be multimodal** — otherwise captions only (see below) |
 | Privacy | nothing leaves your machine |
+
+### The model has to be able to see images
+
+The same model writes the text context **and** describes figures. If it cannot
+see images, BRAG falls back to each figure's **caption** — the graphic itself is
+never described and cannot be found by its content. The run does tell you
+(`[vision] figure description unavailable — falling back to caption-only
+context`), but only mid-ingest and only after two failed attempts. Better to
+check beforehand.
+
+**Careful with the examples above:** `qwen2.5-7b-instruct` and
+`qwen2.5-14b-instruct` are **text-only**. Loading them costs you every figure
+description. In LM Studio a multimodal model carries an image icon next to its
+name; the model id often contains `VL`, `vision` or `multimodal`.
+
+If your machine cannot host a multimodal model, there are two clean ways out:
+set `VISION_ENABLED=false` (then you know figures are out of scope) — or index
+the corpus **once** with a cloud profile and work locally afterwards. The figure
+descriptions then live in the index and are never needed again.
 
 You **don't** pull an embedding model — arctic runs inside the container on its
 own. The app runs in Docker and reaches LM Studio on the host via
