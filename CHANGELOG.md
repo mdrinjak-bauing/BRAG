@@ -55,6 +55,25 @@ gold-standard query set.
     partial ingests, crash/not-indexed markers, active profile — in
     `VAULT_LANGUAGE`, no LLM/API calls.
 
+### Fixed
+- **A rename no longer wipes the printed page numbers.** `patch_source_metadata`
+  re-supplies the filename/`_meta.txt` fields and deletes every other payload key
+  it does not recognise, so that a stale custom field from the old folder cannot
+  survive a move. Its keep-list named the content fields — but not
+  `page_label_start`/`page_label_end` (the PDF's own printed page labels) or
+  `image_file` (the figure image). Renaming a document therefore stripped both
+  off **every chunk of that document**, after which citations silently fell back
+  from the printed page to the physical PDF page, with no visible change in the
+  hit and no error. The reach was wider than a manual rename: the watcher calls
+  the same path by itself when a `_meta.txt` is added or edited
+  (`watcher.py:70`), so setting any folder metadata wiped the labels for the
+  whole folder. It was also non-deterministic — the key set is sampled from a
+  single scrolled point, and page labels exist only on the subset of chunks
+  whose label differs from the physical page. Two tests now guard it: one pins
+  the three keys, one asserts the general invariant that every key
+  `Chunk.payload()` writes is either re-supplied or preserved, so a future
+  payload field cannot fall into the same trap.
+
 ### Notes
 - Analysis modes deliberately take no content filters (matching the tuned
   originals); the search modes are unchanged.
