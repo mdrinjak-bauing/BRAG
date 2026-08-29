@@ -15,7 +15,10 @@ def test_format_hit_source_has_link_citation_and_rerank(monkeypatch):
            "chunk_type": "text", "text": "hello", "rerank_score": 0.5}
     out = format_hit(1, hit)
     assert "Smith (2020)" in out
-    assert "p. 12" in out
+    # No /PageLabels and no page_offset, so 12 is the FILE's page count, not the
+    # page printed on the paper — and the citation has to say which one it is.
+    # ("p. 12" alone would also match "PDF p. 12" and pin nothing.)
+    assert "PDF p. 12" in out
     assert "rerank: 0.500" in out
     # The raw deep-link also appears on its own line so clients that don't render
     # Markdown links (e.g. LM Studio) still show a clickable/copy-paste URL.
@@ -293,3 +296,87 @@ def test_vault_extract_xlsx_roundtrip(tmp_path, monkeypatch):
     wb.save(str(tmp_path / "lv.xlsx"))
     out = vault.vault_extract("lv.xlsx")
     assert "Pos" in out and "42" in out
+
+
+# ── The citation must say WHICH page count it means ───────────────────────────
+# A hit header read "p. 47" whether that 47 was the page printed on the paper or
+# merely the 47th page of the file. Same word, same position, no way to tell —
+# and for a book with front matter the two differ by the whole front matter. The
+# number is now NAMED instead of marked: "p. 47" is the printed page, "PDF p. 47"
+# is the file's own count. A renaming survives being copied into a manuscript;
+# a trailing warning clause does not.
+
+def _fmt(monkeypatch, **hit):
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    basis = {"source_file": "b.pdf", "rel_path": "sources/b.pdf", "text": "x"}
+    basis.update(hit)
+    return format_hit(1, basis)
+
+
+def test_page_without_labels_or_offset_is_named_as_the_pdf_page(monkeypatch):
+    out = _fmt(monkeypatch, page_start=12)
+    assert "PDF p. 12" in out, out
+    # and NOT presented as the printed page
+    assert "— p. 12]" not in out, out
+
+
+def test_page_from_pdf_labels_is_the_printed_page(monkeypatch):
+    out = _fmt(monkeypatch, page_start=24, page_label_start="xii")
+    assert "— p. xii]" in out, out
+    assert "PDF p." not in out, out
+
+
+def test_page_from_offset_is_printed_but_says_where_it_came_from(monkeypatch):
+    out = _fmt(monkeypatch, page_start=20, page_offset=8)
+    assert "— p. 12]" in out, out       # 20 − 8, as before
+    assert "PDF p." not in out, out
+    assert "page_offset" in out, out    # named, so the reader can check it
+
+
+def test_unusable_offset_falls_back_to_the_pdf_page(monkeypatch):
+    # An offset larger than the page number cannot be right; showing "p. -5" or
+    # silently keeping "p. 3" as if it were printed would both be worse.
+    out = _fmt(monkeypatch, page_start=3, page_offset=20)
+    assert "PDF p. 3" in out, out
+
+
+def test_offset_value_never_reaches_the_markdown_link(monkeypatch):
+    # page_offset is free text from _meta.txt — it is not in RESERVED_KEYS and is
+    # never validated. A ')' or '>' in it must not be able to break the link.
+    out = _fmt(monkeypatch, page_start=20, page_offset="8) [x](http://evil")
+    kopf = out.splitlines()[0]
+    assert "evil" not in kopf, kopf
+
+
+def test_a_source_without_pages_is_cited_without_one(monkeypatch):
+    # Docling gives no provenance for DOCX/PPTX, so _page_range returns (1, 1)
+    # for every chunk. Printing "p. 1" on all of them invents a page number.
+    out = _fmt(monkeypatch, rel_path="sources/notes.docx", page_start=1)
+    assert "p. 1" not in out, out
+    assert "PDF p." not in out, out
+
+
+# ── The caveat must survive into the notebook, not be mangled ────────────────
+# A hit now reads "PDF p. 61" when the printed page is unknown. The model passes
+# what it read straight into save_passage's `page`, which prefixed it a second
+# time: "### source, p. PDF p. 61". The prefix has to be applied only when it is
+# not already there — and the caveat must be kept, because Quellenbelege is the
+# file footnotes get written from.
+
+def test_saved_passage_does_not_double_the_page_prefix():
+    from brag.tools import cite_reference
+    assert cite_reference("src", "PDF p. 61") == "src, PDF p. 61"
+    assert cite_reference("src", "p. 61") == "src, p. 61"
+
+
+def test_saved_passage_still_prefixes_a_bare_page():
+    from brag.tools import cite_reference
+    assert cite_reference("src", "61") == "src, p. 61"
+    assert cite_reference("src", "xii") == "src, p. xii"
+
+
+def test_saved_passage_without_a_page_is_unchanged():
+    from brag.tools import cite_reference
+    assert cite_reference("src", "") == "src"
+    assert cite_reference("src", "   ") == "src"

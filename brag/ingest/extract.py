@@ -351,21 +351,32 @@ def extract(path: Path) -> tuple[list[Chunk], str]:
                 buffer.append((txt, page))
 
     flush()
-    # Printed page labels (books with cover/roman front matter): citations then
-    # show the PRINTED page while page_start/end and the deep links stay
-    # physical. Post-pass over all chunks; empty map = no change.
-    labels = _page_label_map(path)
-    if labels:
-        for c in chunks:
-            start = labels.get(c.page_start, "")
-            if start and start != str(c.page_start):
-                c.page_label_start = start
-                c.page_label_end = labels.get(c.page_end, "") or start
+    apply_page_labels(chunks, _page_label_map(path))
     # Return the FULL markdown (bounded only against a pathological export) — it
     # feeds the table-of-contents and chapter/section matching in contextualize,
     # which must see the WHOLE document. The grounding fallback is capped
     # separately (CONTEXT_DOC_CHARS) inside _doc_context.
     return chunks, full_markdown[: config.MARKDOWN_FULL_MAX_CHARS]
+
+
+def apply_page_labels(chunks, labels: dict[int, str]) -> None:
+    """Stamp the PRINTED page onto each chunk from the PDF's own /PageLabels.
+
+    Citations then show the printed page while page_start/end and the deep links
+    stay physical. An empty map changes nothing.
+
+    A label that EQUALS the physical page is kept, not discarded. It is a
+    verification — the PDF states that its 12th page is printed "12" — and
+    dropping it made that case indistinguishable from "this file has no labels",
+    which forced the display to call an exactly-correct page "PDF p. 12".
+    """
+    if not labels:
+        return
+    for c in chunks:
+        start = labels.get(c.page_start, "")
+        if start:
+            c.page_label_start = start
+            c.page_label_end = labels.get(c.page_end, "") or start
 
 
 def _page_label_map(path: Path) -> dict[int, str]:

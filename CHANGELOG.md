@@ -4,6 +4,54 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **A citation now says WHICH page count it means.** A hit header read
+  `p. 47` whether that 47 was the page printed on the paper or merely the 47th
+  page of the file — same word, same position, nothing to tell them apart. For a
+  book with front matter the two differ by the whole front matter (measured in a
+  sister corpus at up to 25 pages). The number is now **named** rather than
+  marked:
+
+  | | |
+  |---|---|
+  | `p. xii` | the printed page, from the PDF's own /PageLabels |
+  | `p. 12` | the printed page, derived from the manual `page_offset` (the meta line names the key) |
+  | `PDF p. 61` | the file's own page count; the printed page is not known |
+  | *(no page)* | the source has no page numbers — Docling reports no provenance for DOCX/PPTX, so every chunk of such a file used to be cited as "p. 1" |
+
+  Naming beats warning: a caveat appended to `p. 61` is dropped the moment
+  someone copies the citation into a manuscript, while `PDF p. 61` travels with
+  it. The deep link always uses the physical page, whatever the citation says.
+  This is derived at display time from payload keys that already exist, so it
+  applies to every existing index without re-ingesting anything.
+- **`save_passage` keeps the caveat instead of mangling it.** The reference was
+  built as `f"{source}, p. {page}"`, so a page read off a hit as `PDF p. 61`
+  became `source, p. PDF p. 61`. The prefix is now applied only when the page
+  does not already carry one, and the caveat is preserved — Quellenbelege is the
+  file footnotes get written from. Same fix in the indexed copy of the passage.
+
+### Fixed
+- **A page label that confirms the physical page is no longer discarded.** The
+  ingest post-pass stored `page_label_start` only when the label DIFFERED from
+  the physical page, so "the PDF states its page 12 is printed 12" — a
+  verification — was thrown away and became indistinguishable from "this file
+  has no labels at all". The display then had to call an exactly correct page
+  `PDF p. 12`. The post-pass is also lifted out of `extract()` into
+  `apply_page_labels()`, which made it testable at all.
+
+### Notes
+- Existing indexes benefit from the display change immediately, but a document
+  ingested before this release still lacks labels that confirm the physical
+  page, so ordinary born-digital papers will read `PDF p. N` until they are
+  re-ingested. That is honest rather than wrong: without labels BRAG genuinely
+  does not know the printed page.
+- Not attempted: deriving the printed page automatically by reading page numbers
+  off the rendered page. Two independent reviews rejected it — the thresholds
+  such a scan needs were reasoned, not measured, and a wrongly-inferred page
+  number presented as verified is worse than an honestly unverified one.
+
 ## [0.6.0] — 2026-08-29 — research package
 
 Query-side research features ported from the author's sister pipeline

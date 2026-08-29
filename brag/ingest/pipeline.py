@@ -529,7 +529,8 @@ def index_passage(topic: str, text: str, source: str, page: str = "",
         body = text.strip()
         if note.strip():
             body += f"\n\nNote: {note.strip()}"
-        ref = source + (f", p. {page}" if str(page).strip() else "")
+        from brag.formatting import cite_reference
+        ref = cite_reference(source, page)
         page_no = int(page) if str(page).strip().isdigit() else 0
         chunk = Chunk(
             text=f"[Saved passage — {topic}] (from {ref})\n\n{body}",

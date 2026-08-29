@@ -255,7 +255,12 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
 
     Baut die Belegsammlung in WissensWIKI/Quellenbelege/<thema>.md auf UND indexiert die
     Passage für die semantische Suche, sodass ein späterer Chat sie über `search`
-    wiederfindet — klar markiert als „gespeicherte Passage", getrennt von Primärquellen."""
+    wiederfindet — klar markiert als „gespeicherte Passage", getrennt von Primärquellen.
+
+    `page`: GENAU so übergeben, wie der Treffer sie angezeigt hat. Steht dort
+    „PDF p. 61", dann „PDF p. 61" — das ist die Seite der DATEI, nicht die gedruckte,
+    und der Vorbehalt muss bis in den Beleg mitwandern. Steht dort „p. xii", dann
+    „xii" oder „p. xii". Nicht selbst umrechnen."""
     return tools.save_passage(topic, text, source, page=page, note=note)
 
 
