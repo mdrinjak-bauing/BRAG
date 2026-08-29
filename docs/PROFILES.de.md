@@ -70,7 +70,29 @@ wenigen Cent.
 | Text-LLM | dein Modell in [LM Studio](https://lmstudio.ai) |
 | Voraussetzung | LM Studio läuft auf dem Host mit geladenem Modell |
 | Hardware | ~16 GB RAM für ein ~7B-Modell (`qwen2.5-7b-instruct`), 32 GB für ein 14B (`qwen2.5-14b-instruct`), 64 GB+ für ein 27B (`gemma-3-27b-it`) — gib LM Studio den vollständigen Modellpfad aus seinem Modell-Browser (z. B. die Hugging-Face-ID); eine GPU hilft sehr |
+| Bilder | **das Modell muss multimodal sein** — sonst nur Bildunterschriften (siehe unten) |
 | Datenschutz | nichts verlässt den Rechner |
+
+### Das Modell muss Bilder sehen können
+
+Dasselbe Modell beschreibt Text **und** Abbildungen. Kann es keine Bilder sehen,
+fällt BRAG für jede Abbildung auf ihre **Bildunterschrift** zurück — die Grafik
+selbst wird nie beschrieben und ist damit über ihren Inhalt nicht auffindbar.
+Der Lauf sagt es dir (`[vision] figure description unavailable — falling back to
+caption-only context`), aber erst mitten im Einlesen und erst nach zwei
+vergeblichen Versuchen. Prüfe es besser vorher.
+
+**Achtung bei den Beispielen oben:** `qwen2.5-7b-instruct` und
+`qwen2.5-14b-instruct` sind **reine Textmodelle**. Wer sie lädt, verliert alle
+Bildbeschreibungen. In LM Studio erkennst du multimodale Modelle am Bild-Symbol
+neben dem Namen; in der Modellbezeichnung stecken oft `VL`, `vision` oder
+`multimodal`.
+
+Wenn dein Rechner kein multimodales Modell trägt, hast du zwei saubere Wege:
+`VISION_ENABLED=false` setzen (dann weißt du, dass Abbildungen außen vor
+bleiben) — oder den Korpus **einmal** mit einem Cloud-Profil einlesen und danach
+lokal weiterarbeiten. Die Bildbeschreibungen stehen dann im Index und werden nie
+wieder gebraucht.
 
 Du lädst **kein** Embedding-Modell — arctic läuft eigenständig im Container. Die
 App läuft in Docker und erreicht LM Studio auf dem Host über

@@ -168,3 +168,47 @@ def test_docs_do_not_locate_env_or_compose_in_the_project_folder():
         "These lines point users at the project folder for files that live in the "
         "BRAG Assistent folder:\n  " + "\n  ".join(treffer)
     )
+
+
+# ── Local profile: the model choice decides whether figures get described ─────
+# The profile's text model IS the vision model (contextualize.py:323 checks
+# llm.vision_capable). A text-only model makes every figure fall back to
+# caption-only context — the run says so, but only mid-ingest and only after two
+# failures. The place a user picks the model must say it up front.
+
+def _profiles_doc(sprache: str) -> str:
+    from pathlib import Path
+    name = "PROFILES.de.md" if sprache == "de" else "PROFILES.md"
+    return (Path(__file__).resolve().parents[1] / "docs" / name).read_text(encoding="utf-8")
+
+
+def test_profiles_doc_warns_that_the_local_model_must_be_multimodal_en():
+    text = _profiles_doc("en").lower()
+    assert "multimodal" in text, (
+        "docs/PROFILES.md never tells the reader that the local model must be "
+        "multimodal — a text-only model silently reduces every figure to its caption"
+    )
+
+
+def test_profiles_doc_warns_that_the_local_model_must_be_multimodal_de():
+    text = _profiles_doc("de").lower()
+    assert "multimodal" in text, (
+        "docs/PROFILES.de.md never tells the reader that the local model must be "
+        "multimodal — a text-only model silently reduces every figure to its caption"
+    )
+
+
+def test_readme_names_the_same_local_default_as_the_code():
+    # The README offered qwen2.5-7b-instruct as *the* example while profiles.py
+    # defaulted to google/gemma-3-27b-it. A reader following the README loads a
+    # model the profile never asks for — and a text-only one at that.
+    from pathlib import Path
+    from brag.profiles import PROFILES
+    modell = PROFILES["hybrid"]["llm_model"]
+    repo = Path(__file__).resolve().parents[1]
+    fehlt = [n for n in ("README.md", "README.de.md")
+             if modell not in (repo / n).read_text(encoding="utf-8")]
+    assert not fehlt, (
+        f"{', '.join(fehlt)} never mentions the local default {modell!r} from "
+        "profiles.py — docs and code have drifted apart"
+    )
