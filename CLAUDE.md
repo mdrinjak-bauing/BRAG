@@ -87,7 +87,7 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   physical), **"Related sources" wikilinks** in the auto literature notes
   (`RELATED_SOURCES_TOP`), **plain-language `SYSTEM-STATUS.md`** rewritten by
   the watcher (`STATUS_NOTE_INTERVAL_HOURS`). Details: CHANGELOG "Unreleased".
-- **Current version: 0.5.1.** The repo + the GHCR `brag` package are kept **PRIVATE**
+- **Current version: 0.6.0.** The repo + the GHCR `brag` package are kept **PRIVATE**
   for now. No data migration — fresh installs only. **Windows install still
   unverified live** (Gatekeeper/SmartScreen + the new `.bat` port preflight need a
   real Windows run).

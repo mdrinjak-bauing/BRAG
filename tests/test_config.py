@@ -212,3 +212,31 @@ def test_readme_names_the_same_local_default_as_the_code():
         f"{', '.join(fehlt)} never mentions the local default {modell!r} from "
         "profiles.py — docs and code have drifted apart"
     )
+
+
+def test_version_is_the_same_everywhere():
+    """pyproject.toml promises "keep in sync with brag/__init__.py:__version__"
+    but nothing enforced it, and the READMEs carry the number twice each. Six
+    places, no check — so a release could ship saying two different things."""
+    import re
+    from pathlib import Path
+    from brag import __version__
+    repo = Path(__file__).resolve().parents[1]
+
+    toml = (repo / "pyproject.toml").read_text(encoding="utf-8")
+    m = re.search(r'^version\s*=\s*"([^"]+)"', toml, re.M)
+    assert m and m.group(1) == __version__, (
+        f"pyproject.toml says {m.group(1) if m else None!r}, "
+        f"brag/__init__.py says {__version__!r}"
+    )
+    for name in ("README.md", "README.de.md"):
+        text = (repo / name).read_text(encoding="utf-8")
+        gefunden = set(re.findall(r"[Vv]ersion:?\*{0,2}\s*\*{0,2}(\d+\.\d+\.\d+)", text))
+        assert gefunden == {__version__}, (
+            f"{name} names version(s) {sorted(gefunden)}, code says {__version__!r}"
+        )
+    changelog = (repo / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert f"## [{__version__}]" in changelog, (
+        f"CHANGELOG.md has no released section for {__version__} — either the "
+        "bump is half-done or [Unreleased] was never closed"
+    )

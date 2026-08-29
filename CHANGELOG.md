@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased] — research package
+## [0.6.0] — 2026-08-29 — research package
 
 Query-side research features ported from the author's sister pipeline
 ("Promotion", 2026-05/06), where thresholds and pool sizes were tuned against a
@@ -592,6 +592,7 @@ re-index).
 - Knowledge store (library vs. notebook) and the search MCP server for
   Claude Desktop.
 
+[0.6.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.6.0
 [0.5.1]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.5.1
 [0.5.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.5.0
 [0.4.1]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.4.1
