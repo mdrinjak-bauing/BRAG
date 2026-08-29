@@ -147,7 +147,7 @@ Beachte: Das **allererste** Dokument lädt zusätzlich die Docling-Layout-Modell
 herunter, daher kann gerade dieses ein paar Minuten dauern (spätere Dokumente
 sind deutlich schneller). Prüfe die Pipeline am besten zuerst mit einer kleinen
 **1–2-seitigen PDF**; danach rechne mit etwa **1–3 Minuten** für ein normales
-50-seitiges Paper. Zum Zusehen eine Eingabeaufforderung im Projektordner öffnen
+50-seitiges Paper. Zum Zusehen eine Eingabeaufforderung im **BRAG-Assistent-Ordner** öffnen
 und eingeben:
 
 ```
@@ -167,7 +167,7 @@ Stelle Claude jetzt eine Frage:
   Docker, Qdrant, den Watcher, den Korpus und den KI-Anschluss und zeigt für
   jeden Punkt ✓/✗.
 - In **Docker Desktop** steht der Status auf „running".
-- `docker ps` (in der Eingabeaufforderung im Projektordner) zeigt die zwei
+- `docker ps` (in der Eingabeaufforderung, aus jedem Ordner) zeigt die zwei
   Container **`brag-app`** und **`brag-qdrant`**.
 - In Claude Desktop erscheinen die Werkzeuge (z. B. `search`, `list_sources`).
   Fehlen sie, hast du Claude vermutlich nur geschlossen statt **beendet**.
@@ -176,7 +176,7 @@ Stelle Claude jetzt eine Frage:
 
 - **OneDrive:** Den Projektordner in OneDrive zu halten ist in Ordnung — die
   Datenbank liegt in Docker, sicher außerhalb jedes Sync-Ordners.
-- **Stoppen/Starten:** Zum Stoppen eine Eingabeaufforderung im Projektordner
+- **Stoppen/Starten:** Zum Stoppen eine Eingabeaufforderung im **BRAG-Assistent-Ordner**
   öffnen, `docker compose down`. Zum Starten: `docker compose up -d`.
 - **Aktualisieren (ohne Neuinstallation):** die neuen Dateien in deinen **BRAG
   Assistent**-Ordner legen (deine `.env` behalten), dann Doppelklick auf

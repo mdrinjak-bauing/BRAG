@@ -75,7 +75,7 @@ gone — your project folder and knowledge store stay untouched.
 In short: **your files live in the project folder (visible, yours); the running
 system and the search index live in Docker (invisible, managed automatically).**
 
-To check everything is running, open a terminal in the project folder and type
+To check everything is running, open a terminal in the **BRAG Assistent folder** and type
 `docker ps` — you should see the two boxes `brag-app` and `brag-qdrant`.
 
 ---
@@ -88,7 +88,7 @@ To check everything is running, open a terminal in the project folder and type
 | Your notes & passages | `WissensWIKI/Wissen/` and `WissensWIKI/Quellenbelege/` | Markdown files — yours, back them up like any folder |
 | The search index (Qdrant) | inside Docker, in a managed storage area | rebuildable anytime from your knowledge store; never put it in iCloud/OneDrive |
 | The program code & AI models | inside the Docker image | downloaded once at first build (~3 GB); you never touch it |
-| Your settings & API key | the `.env` file in the project folder | written by the setup assistant; the key stays here (owner-readable), is used only to authenticate your own requests to your chosen provider, and is never sent to the app's makers or any third party |
+| Your settings & API key | the `.env` file in the **BRAG Assistent folder** | written by the setup assistant; the key stays here (owner-readable), is used only to authenticate your own requests to your chosen provider, and is never sent to the app's makers or any third party |
 
 The important point: **your documents (in the project folder, outside
 `WissensWIKI/`) and your notebook (`WissensWIKI/Wissen/`) are normal files you

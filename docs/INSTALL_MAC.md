@@ -136,7 +136,7 @@ Now ask Claude:
 - **Easiest:** double-click **`status.command`** — a one-click check of Docker,
   Qdrant, the watcher, the corpus and the AI connection, with a ✓/✗ per item.
 - The **whale icon** in the menu bar is steady → Docker is running.
-- `docker ps` (Terminal, in the project folder) lists the two containers
+- `docker ps` (Terminal, any folder) lists the two containers
   **`brag-app`** and **`brag-qdrant`**.
 - In Claude Desktop the tools (e.g. `search`, `list_sources`) appear via the
   tools/plug icon in the input box. If they're missing, you likely only closed
@@ -148,7 +148,7 @@ Now ask Claude:
   iCloud-synced location — the database itself lives inside Docker, safely
   outside any sync folder.
 - **Stopping/starting:** Docker Desktop starts the app automatically after boot.
-  To stop manually: open Terminal in the project folder, `docker compose down`.
+  To stop manually: open Terminal in the **BRAG Assistent folder**, `docker compose down`.
   To start: `docker compose up -d`.
 - **Updating (no reinstall):** put the new files into your **BRAG Assistent**
   folder (keep your `.env`), then double-click **`update.command`** — it rebuilds

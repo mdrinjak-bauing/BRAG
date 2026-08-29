@@ -14,7 +14,8 @@ folder and run `./setup.command` (Mac) or `setup.bat` (Windows).
 
 **The browser setup page doesn't open, or port 8765 is already in use.**
 Another program on your computer may already use port 8765. Open the `.env` file
-in the project folder and set a free port, for example:
+in the **BRAG Assistent folder** (the program folder, not your project folder) and
+set a free port, for example:
 
 ```
 BRIDGE_HOST_PORT=8780
@@ -44,7 +45,7 @@ Studio) needs no key at all.
 **macOS: double-clicking `setup.command` does nothing (no window opens).**
 This is different from the Gatekeeper "unidentified developer" warning (for that,
 right-click → Open). If *no* window appears at all, the file may have lost its
-executable bit. Open Terminal in the project folder and run:
+executable bit. Open Terminal in the **BRAG Assistent folder** and run:
 
 ```
 chmod +x setup.command status.command
@@ -186,7 +187,7 @@ overview** — every top-level folder marked *indexed* (with its source count) o
 `EXCLUDE_DIRS`) — so you can see at a glance which folders made it into the index.
 
 **How do I stop / start everything?**
-`docker compose down` / `docker compose up -d` in the project folder.
+`docker compose down` / `docker compose up -d` in the **BRAG Assistent folder**.
 Docker Desktop's autostart brings it back after a reboot.
 
 **How do I update to a new version?**

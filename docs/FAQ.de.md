@@ -16,7 +16,8 @@ ausführen.
 
 **Die Setup-Seite im Browser öffnet nicht, oder Port 8765 ist schon belegt.**
 Vielleicht nutzt ein anderes Programm auf deinem Rechner bereits Port 8765. Öffne
-die `.env`-Datei im Projektordner und trage einen freien Port ein, zum Beispiel:
+die `.env`-Datei im **BRAG-Assistent-Ordner** (dem Programmordner, nicht dem
+Projektordner) und trage einen freien Port ein, zum Beispiel:
 
 ```
 BRIDGE_HOST_PORT=8780
@@ -49,7 +50,7 @@ braucht gar keinen Schlüssel.
 **macOS: Ein Doppelklick auf `setup.command` bewirkt nichts (kein Fenster).**
 Das ist etwas anderes als die Gatekeeper-Warnung „nicht verifizierter Entwickler"
 (dafür: Rechtsklick → Öffnen). Wenn *gar kein* Fenster erscheint, hat die Datei
-womöglich ihr Ausführbar-Bit verloren. Öffne das Terminal im Projektordner und
+womöglich ihr Ausführbar-Bit verloren. Öffne das Terminal im **BRAG-Assistent-Ordner** und
 gib ein:
 
 ```
@@ -203,7 +204,7 @@ beginnt mit `_`, oder `EXCLUDE_DIRS`) — so siehst du auf einen Blick, welche
 Ordner es in den Index geschafft haben.
 
 **Wie stoppe / starte ich alles?**
-`docker compose down` / `docker compose up -d` im Projektordner. Der Autostart
+`docker compose down` / `docker compose up -d` im **BRAG-Assistent-Ordner**. Der Autostart
 von Docker Desktop bringt es nach einem Neustart zurück.
 
 **Wie aktualisiere ich auf eine neue Version?**

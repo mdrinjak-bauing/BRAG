@@ -156,7 +156,7 @@ Now ask Claude:
 - **Easiest:** double-click **`status.bat`** — a one-click check of Docker,
   Qdrant, the watcher, the corpus and the AI connection, with a ✓/✗ per item.
 - In **Docker Desktop** the status reads "running".
-- `docker ps` (Command Prompt, in the project folder) lists the two containers
+- `docker ps` (Command Prompt, any folder) lists the two containers
   **`brag-app`** and **`brag-qdrant`**.
 - In Claude Desktop the tools (e.g. `search`, `list_sources`) appear. If they're
   missing, you likely only closed Claude instead of **quitting** it.
@@ -165,7 +165,8 @@ Now ask Claude:
 
 - **OneDrive:** Keeping the project folder inside OneDrive is fine — the database
   lives inside Docker, safely outside any sync folder.
-- **Stopping/starting:** To stop, open a Command Prompt in the project folder and
+- **Stopping/starting:** To stop, open a Command Prompt in the **BRAG Assistent
+  folder** and
   run `docker compose down`. To start: `docker compose up -d`.
 - **Updating (no reinstall):** put the new files into your **BRAG Assistent**
   folder (keep your `.env`), then double-click **`update.bat`** — it rebuilds and
