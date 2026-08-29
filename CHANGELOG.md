@@ -4,9 +4,53 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.6.0] — 2026-08-29 — research tools, honest citations, better retrieval
 
 ### Added
+- **Figures as images in search (query-time visual Q&A).** At ingest each
+  figure's rendered image is additionally stored as a compact local JPEG
+  (`WissensWIKI/.brag/figures/`, ~150 KB, `image_file` payload key); `search()`
+  attaches up to 3 hit figures as MCP image items, so the answer model sees the
+  actual diagram and can read values off it. Compact re-encoding matters:
+  full-size figure PNGs (0.4–1.7 MB) base64-encoded blow the ~1 MB per-response
+  limit of Claude Desktop, which then silently drops ALL images of the
+  response. Off-switches: `SEARCH_IMAGES_ENABLED=false` (storage) and
+  `include_images=false` (per call). Old indexes degrade gracefully (no image
+  until re-ingest). New module `brag/images.py`; multi-project path: the bridge
+  encodes (`/api/search` + `include_images`), the thin client stays model-free.
+- **Analysis tools for every project connector.** PR #54 introduced the
+  `coverage` ("who writes about X / state of research", per-source split),
+  `clusters` (k-means topic map) and `compare_positions` (2–7 sources side by
+  side) tools plus the `vault_*` file layer, `open_pdf` and cross-lingual
+  query expansion on the DEFAULT project. This branch wires the three
+  analysis tools through the HTTP-bridge dispatcher and the thin per-project
+  MCP client, so EXTRA projects get them too, and adds unit tests for the
+  analytics logic.
+- `search/query.py` gained an opt-in `with_vectors` flag (dense vectors on the
+  hits, saving the analytics' second retrieve round-trip when requested).
+- **Ingest quality (round 2):**
+  - **Junk-figure filter** (`brag/ingest/junk_filter.py`): logos, UI icons, QR
+    codes and license seals are dropped at ingest — a sister-pipeline audit
+    found **40% of figure chunks** were such junk. Conservative two-tier
+    heuristic (strong patterns beat captions, weak patterns and tiny-image
+    detection only apply without a caption), DE+EN patterns.
+    `JUNK_FILTER_ENABLED` (default on).
+  - **Printed page numbers via PDF `/PageLabels`**: books with cover/roman
+    front matter get exact printed-page citations (`page_label_start/_end`
+    payload keys, captured at ingest via pypdfium2 — already a Docling
+    dependency). Citation precedence: PageLabels > manual `page_offset`
+    (_meta.txt, unchanged fallback) > physical page; deep links stay physical.
+  - **"Related sources" in literature notes**: each auto note now links the
+    document's closest semantic neighbours as Obsidian wikilinks (best score
+    per source over a dense-vector query with the longest text chunk's
+    already-computed embedding — no extra model work). `RELATED_SOURCES_TOP`
+    (default 5, 0 = off).
+  - **Plain-language status note**: the watcher rewrites
+    `WissensWIKI/SYSTEM-STATUS.md` every `STATUS_NOTE_INTERVAL_HOURS`
+    (default 24, 0 = off) per project — search-DB/corpus state, last ingest,
+    partial ingests, crash/not-indexed markers, active profile — in
+    `VAULT_LANGUAGE`, no LLM/API calls.
+
 - **The dense vector now knows which work a chunk comes from.** A chunk's
   embedding saw only its context and its text, so nothing in the vector said
   *Hofstadler, Bauablaufplanung*. A short deterministic header is now
@@ -68,77 +112,6 @@ All notable changes to this project are documented here. The format follows
   file footnotes get written from. Same fix in the indexed copy of the passage.
 
 ### Fixed
-- **A page label that confirms the physical page is no longer discarded.** The
-  ingest post-pass stored `page_label_start` only when the label DIFFERED from
-  the physical page, so "the PDF states its page 12 is printed 12" — a
-  verification — was thrown away and became indistinguishable from "this file
-  has no labels at all". The display then had to call an exactly correct page
-  `PDF p. 12`. The post-pass is also lifted out of `extract()` into
-  `apply_page_labels()`, which made it testable at all.
-
-### Notes
-- Existing indexes benefit from the display change immediately, but a document
-  ingested before this release still lacks labels that confirm the physical
-  page, so ordinary born-digital papers will read `PDF p. N` until they are
-  re-ingested. That is honest rather than wrong: without labels BRAG genuinely
-  does not know the printed page.
-- Not attempted: deriving the printed page automatically by reading page numbers
-  off the rendered page. Two independent reviews rejected it — the thresholds
-  such a scan needs were reasoned, not measured, and a wrongly-inferred page
-  number presented as verified is worse than an honestly unverified one.
-
-## [0.6.0] — 2026-08-29 — research package
-
-Query-side research features ported from the author's sister pipeline
-("Promotion", 2026-05/06), where thresholds and pool sizes were tuned against a
-gold-standard query set.
-
-### Added
-- **Figures as images in search (query-time visual Q&A).** At ingest each
-  figure's rendered image is additionally stored as a compact local JPEG
-  (`WissensWIKI/.brag/figures/`, ~150 KB, `image_file` payload key); `search()`
-  attaches up to 3 hit figures as MCP image items, so the answer model sees the
-  actual diagram and can read values off it. Compact re-encoding matters:
-  full-size figure PNGs (0.4–1.7 MB) base64-encoded blow the ~1 MB per-response
-  limit of Claude Desktop, which then silently drops ALL images of the
-  response. Off-switches: `SEARCH_IMAGES_ENABLED=false` (storage) and
-  `include_images=false` (per call). Old indexes degrade gracefully (no image
-  until re-ingest). New module `brag/images.py`; multi-project path: the bridge
-  encodes (`/api/search` + `include_images`), the thin client stays model-free.
-- **Analysis tools for every project connector.** PR #54 introduced the
-  `coverage` ("who writes about X / state of research", per-source split),
-  `clusters` (k-means topic map) and `compare_positions` (2–7 sources side by
-  side) tools plus the `vault_*` file layer, `open_pdf` and cross-lingual
-  query expansion on the DEFAULT project. This branch wires the three
-  analysis tools through the HTTP-bridge dispatcher and the thin per-project
-  MCP client, so EXTRA projects get them too, and adds unit tests for the
-  analytics logic.
-- `search/query.py` gained an opt-in `with_vectors` flag (dense vectors on the
-  hits, saving the analytics' second retrieve round-trip when requested).
-- **Ingest quality (round 2):**
-  - **Junk-figure filter** (`brag/ingest/junk_filter.py`): logos, UI icons, QR
-    codes and license seals are dropped at ingest — a sister-pipeline audit
-    found **40% of figure chunks** were such junk. Conservative two-tier
-    heuristic (strong patterns beat captions, weak patterns and tiny-image
-    detection only apply without a caption), DE+EN patterns.
-    `JUNK_FILTER_ENABLED` (default on).
-  - **Printed page numbers via PDF `/PageLabels`**: books with cover/roman
-    front matter get exact printed-page citations (`page_label_start/_end`
-    payload keys, captured at ingest via pypdfium2 — already a Docling
-    dependency). Citation precedence: PageLabels > manual `page_offset`
-    (_meta.txt, unchanged fallback) > physical page; deep links stay physical.
-  - **"Related sources" in literature notes**: each auto note now links the
-    document's closest semantic neighbours as Obsidian wikilinks (best score
-    per source over a dense-vector query with the longest text chunk's
-    already-computed embedding — no extra model work). `RELATED_SOURCES_TOP`
-    (default 5, 0 = off).
-  - **Plain-language status note**: the watcher rewrites
-    `WissensWIKI/SYSTEM-STATUS.md` every `STATUS_NOTE_INTERVAL_HOURS`
-    (default 24, 0 = off) per project — search-DB/corpus state, last ingest,
-    partial ingests, crash/not-indexed markers, active profile — in
-    `VAULT_LANGUAGE`, no LLM/API calls.
-
-### Fixed
 - **A rename no longer wipes the printed page numbers.** `patch_source_metadata`
   re-supplies the filename/`_meta.txt` fields and deletes every other payload key
   it does not recognise, so that a stale custom field from the old folder cannot
@@ -157,12 +130,30 @@ gold-standard query set.
   `Chunk.payload()` writes is either re-supplied or preserved, so a future
   payload field cannot fall into the same trap.
 
+- **A page label that confirms the physical page is no longer discarded.** The
+  ingest post-pass stored `page_label_start` only when the label DIFFERED from
+  the physical page, so "the PDF states its page 12 is printed 12" — a
+  verification — was thrown away and became indistinguishable from "this file
+  has no labels at all". The display then had to call an exactly correct page
+  `PDF p. 12`. The post-pass is also lifted out of `extract()` into
+  `apply_page_labels()`, which made it testable at all.
+
 ### Notes
 - Analysis modes deliberately take no content filters (matching the tuned
   originals); the search modes are unchanged.
 - Coverage/cluster pool sizes and thresholds (`top_k` 50/40, `min_score` 0.4,
   per-source caps 10/4) carry A/B-tested values from the sister pipeline — do
   not change casually.
+
+- Existing indexes benefit from the display change immediately, but a document
+  ingested before this release still lacks labels that confirm the physical
+  page, so ordinary born-digital papers will read `PDF p. N` until they are
+  re-ingested. That is honest rather than wrong: without labels BRAG genuinely
+  does not know the printed page.
+- Not attempted: deriving the printed page automatically by reading page numbers
+  off the rendered page. Two independent reviews rejected it — the thresholds
+  such a scan needs were reasoned, not measured, and a wrongly-inferred page
+  number presented as verified is worse than an honestly unverified one.
 
 ## [0.5.1] — 2026-06-24
 
