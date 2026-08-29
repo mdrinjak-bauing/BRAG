@@ -116,9 +116,18 @@ def patch_source_metadata(client, source_file: str, payload: dict,
     # that the new location no longer defines would otherwise survive the move
     # (e.g. a stale `project=A` after moving into project B, leaking across the
     # project/course filter). Remove those stale custom keys explicitly.
+    # Everything a chunk derives from the DOCUMENT rather than from its folder.
+    # metadata_payload() re-supplies only the filename/_meta.txt fields, so any
+    # content key missing here is deleted by the sweep below — silently, and for
+    # the whole document. page_label_* and image_file were missing: a rename, or
+    # merely editing a _meta.txt (the watcher re-applies folder metadata by
+    # itself), stripped the printed page numbers and the figure images off every
+    # chunk, after which citations degraded to the physical PDF page with no
+    # visible change in the hit. Add new payload keys here, not below.
     _PRESERVE = {
         "text", "context", "chunk_type", "page_start", "page_end",
         "chapter", "section", "language", "chunk_id", "ingest_timestamp",
+        "page_label_start", "page_label_end", "image_file",
     }
     points, _ = client.scroll(
         collection_name, scroll_filter=flt, limit=1,

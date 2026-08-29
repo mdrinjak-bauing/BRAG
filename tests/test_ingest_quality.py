@@ -192,3 +192,89 @@ def test_collision_report_names_the_loss():
 def test_collision_report_same_text_different_page_is_fine():
     # page_start is part of chunk_id, so a repeated header on two pages is safe.
     assert collision_report([_text_chunk("same"), _text_chunk("same", 2)]) is None
+
+
+# ── A rename must not wipe the printed page labels ────────────────────────────
+# patch_source_metadata deletes every payload key that is neither in the new
+# payload nor in its _PRESERVE set, so that a stale custom field from the old
+# folder's _meta.txt cannot survive a move. page_label_start/_end and image_file
+# are content, not folder metadata: metadata_payload() never carries them
+# (extract.py:179-192) and _PRESERVE did not list them — so renaming a file, or
+# merely editing a _meta.txt, silently stripped the printed pages and the figure
+# images from every chunk of that document. The watcher does both by itself
+# (watcher.py:70, :220). The citation then degrades from the printed page to the
+# physical PDF page with no visible change in the hit.
+
+class _PatchClient:
+    """Minimal stand-in for the Qdrant client used by patch_source_metadata."""
+
+    def __init__(self, payload_keys):
+        self._keys = list(payload_keys)
+        self.deleted = None
+        self.patched = None
+
+    def count(self, collection_name, count_filter, exact):
+        from types import SimpleNamespace
+        return SimpleNamespace(count=7)
+
+    def scroll(self, collection_name, scroll_filter, limit,
+               with_payload, with_vectors):
+        from types import SimpleNamespace
+        return [SimpleNamespace(payload={k: "x" for k in self._keys})], None
+
+    def delete_payload(self, collection_name, keys, points):
+        self.deleted = sorted(keys)
+
+    def set_payload(self, collection_name, payload, points):
+        self.patched = dict(payload)
+
+
+def test_rename_keeps_printed_page_labels_and_figure_images():
+    from brag import storage
+    client = _PatchClient([
+        "source_file", "page_start", "text",
+        "page_label_start", "page_label_end", "image_file",
+        "projekt",  # a genuinely stale custom field from the old folder
+    ])
+    storage.patch_source_metadata(
+        client, "alt.pdf", {"source_file": "neu.pdf"}, collection_name="c",
+    )
+    weg = set(client.deleted or [])
+    assert "page_label_start" not in weg and "page_label_end" not in weg, (
+        f"a rename deletes the printed page labels: {sorted(weg)}"
+    )
+    assert "image_file" not in weg, (
+        f"a rename deletes the figure image: {sorted(weg)}"
+    )
+    assert "projekt" in weg, "the genuinely stale custom field must still go"
+
+
+def test_every_chunk_payload_key_survives_a_rename():
+    """The bug class, not just the three keys that fell into it.
+
+    A rename patches the payload with metadata_payload() and deletes everything
+    else that _PRESERVE does not name. Any key a chunk writes must therefore be
+    covered by one of the two — otherwise adding a field to Chunk.payload()
+    silently makes a rename destroy it, months later and with no error.
+    """
+    from brag import storage
+    from brag.ingest.extract import metadata_payload
+    from pathlib import Path
+
+    geschrieben = set(_chunk(
+        text="t", context="c", image_file="figures/a.jpg",
+        page_label_start="xii", page_label_end="xiii",
+    ).payload())
+    ersetzt = set(metadata_payload(Path("papers/A_2024_X.pdf")))
+    # _PRESERVE is a local inside patch_source_metadata; read it from the source
+    # rather than duplicating the list here, so the test cannot drift from it.
+    import inspect, re
+    quelle = inspect.getsource(storage.patch_source_metadata)
+    bewahrt = set(re.findall(r'"(\w+)"', quelle.split("_PRESERVE = {")[1].split("}")[0]))
+
+    ungedeckt = geschrieben - ersetzt - bewahrt
+    assert not ungedeckt, (
+        "these payload keys are written at ingest but neither re-supplied by "
+        f"metadata_payload() nor listed in _PRESERVE, so a rename deletes them: "
+        f"{sorted(ungedeckt)}"
+    )
