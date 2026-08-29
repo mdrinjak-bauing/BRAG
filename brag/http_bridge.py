@@ -114,6 +114,8 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._list_models_current()
         elif parsed.path == "/api/check-local":
             self._check_local(body)
+        elif parsed.path == "/api/check-vision":
+            self._check_vision(body)
         elif parsed.path == "/api/setup":
             self._apply_setup(body)
         elif parsed.path == "/api/current-settings":
@@ -173,6 +175,34 @@ class BridgeHandler(BaseHTTPRequestHandler):
         except OSError:
             folders = []
         self._send_json(200, {"folders": folders})
+
+    def _check_vision(self, body: dict):
+        """Ask the model the user just picked whether it can see images.
+
+        The local backend cannot know this from a model name, so the ingest
+        finds out only after two failed figures — hours in, with every figure of
+        the corpus about to be reduced to its caption. One request settles it
+        while the user is still choosing.
+
+        Answers {"ok": true|false|null}: null means "could not be asked", which
+        is NOT the same as text-only.
+        """
+        from brag import config
+        from brag.llm_backends import get_llm
+
+        modell = (body.get("model") or "").strip()
+        vorher = config.LLM_MODEL
+        try:
+            if modell:
+                config.LLM_MODEL = modell
+            kann, grund = get_llm().can_see_images()
+        except Exception as e:  # noqa: BLE001 — never break setup over a probe
+            self._send_json(200, {"ok": None, "message": f"could not check ({e})"})
+            return
+        finally:
+            # Never leave setup pointing at a model the user has not confirmed.
+            config.LLM_MODEL = vorher
+        self._send_json(200, {"ok": kann, "message": grund})
 
     def _check_local(self, body: dict):
         """Probe LM Studio on the host and list its loaded models."""

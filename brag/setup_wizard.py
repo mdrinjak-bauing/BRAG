@@ -91,6 +91,12 @@ def main():
     print("3. Ask Claude: 'What documents are in my knowledge base?'")
     if profile == "hybrid":
         print("\nRemember: LM Studio must be running whenever documents are indexed.")
+        print("The model must also be able to SEE IMAGES. The same model writes")
+        print("the text context and describes figures, so a text-only model")
+        print("(e.g. qwen2.5-7b-instruct) leaves every figure stored by its")
+        print("caption alone — the graphic itself is never described. In LM")
+        print("Studio a multimodal model carries an image icon; the id often")
+        print("contains VL, vision or multimodal. See docs/PROFILES.md.")
 
 
 if __name__ == "__main__":

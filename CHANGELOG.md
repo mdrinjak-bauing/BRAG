@@ -4,6 +4,31 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project aims to follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Setup now TESTS whether the local model can see images, instead of assuming
+  it.** The local backend sets `vision_capable = True` unconditionally, because
+  whether a loaded model is multimodal cannot be read off its name: the ingest
+  attempts vision and falls back to caption-only context when the model rejects
+  the image. That fallback is right, but the user learned of it **mid-ingest**,
+  after two failed figures — hours in, with every figure of the corpus about to
+  be reduced to its caption.
+
+  Picking a model in the setup now sends one tiny request (a 1×1 pixel image,
+  eight tokens) to that exact model and reports the answer in place:
+  green "this model can see images", red "figures will be stored by their
+  caption only", or a neutral "could not check right now" — because a model that
+  could not be *asked* is unknown, not text-only, and telling someone their
+  multimodal model is text-only because LM Studio was still loading would send
+  them off to fix the wrong thing. The check never blocks setup; the user can
+  continue and accept caption-only figures.
+
+  The terminal wizard states the same requirement for the local profile, and
+  `OpenAICompatibleLLM.can_see_images()` is available to any caller that wants
+  to settle the question up front. Both languages, verified by rendering the
+  page and driving all three states.
+
 ## [0.6.0] — 2026-08-29 — research tools, honest citations, better retrieval
 
 ### Added
