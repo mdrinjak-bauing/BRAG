@@ -14,6 +14,11 @@ COPY brag/ /app/brag/
 COPY vault_template/ /app/vault_template/
 
 # Model caches (Docling layout models, reranker) persist via a named volume
+# docling 2.118.0-2.120.2 shipped a layout engine that calls torch.compile,
+# which needs a C++ compiler this slim image does not have — every PDF failed.
+# Upstream turned it off again in 2.121.0, so today it works by luck rather than
+# by design. Pin the behaviour: BRAG never wants runtime compilation here.
+ENV DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false
 ENV HF_HOME=/models
 ENV PYTHONUNBUFFERED=1
 
