@@ -17,7 +17,7 @@ import shutil
 from datetime import date
 
 from brag import config, storage
-from brag.formatting import format_hit, parse_meta_filter
+from brag.formatting import cite_reference, format_hit, parse_meta_filter
 from brag.search import analytics
 from brag.search.query import search as run_search
 
@@ -384,7 +384,7 @@ def save_passage(topic: str, text: str, source: str, page: str = "",
     is_new = not path.exists()
     block = [
         "" if is_new else "\n---\n",
-        f"### {source}" + (f", p. {page}" if page else ""),
+        f"### {cite_reference(source, page)}",
         f"_saved {date.today().isoformat()}_",
         "",
         f"> {text.strip()}",

@@ -278,3 +278,39 @@ def test_every_chunk_payload_key_survives_a_rename():
         f"metadata_payload() nor listed in _PRESERVE, so a rename deletes them: "
         f"{sorted(ungedeckt)}"
     )
+
+
+# ── A label that CONFIRMS the physical page is a result, not a non-result ─────
+# The post-pass stored page_label_start only when the label DIFFERED from the
+# physical page. So "the PDF says its page 12 is printed 12" — a verification —
+# was thrown away, and became indistinguishable from "this PDF has no labels at
+# all". The display then had to call an exactly-correct page "PDF p. 12".
+
+def test_a_label_equal_to_the_physical_page_is_still_recorded():
+    from brag.ingest.extract import apply_page_labels
+    c = _chunk(text="t", chunk_type="text", page_start=12, page_end=12)
+    apply_page_labels([c], {12: "12"})
+    assert c.page_label_start == "12", (
+        "a label confirming the physical page is a verification and must be kept"
+    )
+
+
+def test_a_roman_label_still_wins():
+    from brag.ingest.extract import apply_page_labels
+    c = _chunk(text="t", chunk_type="text", page_start=4, page_end=5)
+    apply_page_labels([c], {4: "xii", 5: "xiii"})
+    assert (c.page_label_start, c.page_label_end) == ("xii", "xiii")
+
+
+def test_a_chunk_on_an_unlabelled_page_gets_nothing():
+    from brag.ingest.extract import apply_page_labels
+    c = _chunk(text="t", chunk_type="text", page_start=99, page_end=99)
+    apply_page_labels([c], {4: "xii"})
+    assert c.page_label_start == "" and "page_label_start" not in c.payload()
+
+
+def test_an_empty_label_map_changes_nothing():
+    from brag.ingest.extract import apply_page_labels
+    c = _chunk(text="t", chunk_type="text", page_start=4, page_end=4)
+    apply_page_labels([c], {})
+    assert c.page_label_start == ""
