@@ -403,3 +403,25 @@ def _page_label_map(path: Path) -> dict[int, str]:
             pdf.close()
     except Exception:  # noqa: BLE001 — labels are an enhancement, never a blocker
         return {}
+
+
+def collision_report(chunks) -> str | None:
+    """Warn if two chunks share a Qdrant id — that is a SILENT loss.
+
+    Points are upserted by id, so a duplicate id means the second chunk
+    overwrites the first. Nothing raises; the document is simply indexed
+    incompletely, and every counter downstream still reports the number of
+    chunks we *built*. `Chunk.chunk_id` hashes the full text precisely to
+    prevent this, so the check should never fire — which is why it must be
+    checked rather than assumed. Returns None when all ids are distinct.
+    """
+    ids = [c.qdrant_id() for c in chunks]
+    lost = len(ids) - len(set(ids))
+    if lost <= 0:
+        return None
+    return (
+        f"{lost} of {len(ids)} chunks share an id with another chunk and "
+        f"overwrite each other on upsert — {len(set(ids))} would be stored, "
+        f"not {len(ids)}. Two chunks of this document have identical text on "
+        f"the same page. The document would be indexed incompletely."
+    )

@@ -9,7 +9,7 @@ import pytest
 
 from brag import config
 from brag.ingest import junk_filter, notes
-from brag.ingest.extract import Chunk, _page_label_map
+from brag.ingest.extract import Chunk, _page_label_map, collision_report
 from brag.formatting import format_hit
 
 
@@ -165,3 +165,30 @@ def test_status_note_english_and_never_raises(tmp_path, monkeypatch):
     status_note.write_status_note()
     out = (config.WISSENSWIKI_DIR / "SYSTEM-STATUS.md").read_text(encoding="utf-8")
     assert "System status" in out and "Profile:" in out
+
+
+# ── Collision guard ───────────────────────────────────────────────────────────
+# A duplicate Qdrant id is a SILENT loss: the second point overwrites the first,
+# nothing raises, and the counters keep reporting the number of chunks we built.
+# chunk_id hashes the full text so this should never happen — these tests keep
+# the guard honest if that ever changes.
+
+def _text_chunk(text, page=1):
+    return _chunk(text=text, chunk_type="text", page_start=page, page_end=page)
+
+
+def test_collision_report_silent_on_distinct_chunks():
+    chunks = [_text_chunk("first"), _text_chunk("second"), _text_chunk("third", 2)]
+    assert collision_report(chunks) is None
+
+
+def test_collision_report_names_the_loss():
+    chunks = [_text_chunk("same"), _text_chunk("same"), _text_chunk("other")]
+    msg = collision_report(chunks)
+    assert msg is not None
+    assert "1 of 3" in msg and "2 would be stored" in msg
+
+
+def test_collision_report_same_text_different_page_is_fine():
+    # page_start is part of chunk_id, so a repeated header on two pages is safe.
+    assert collision_report([_text_chunk("same"), _text_chunk("same", 2)]) is None
