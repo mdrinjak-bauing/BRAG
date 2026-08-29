@@ -20,7 +20,7 @@ from brag import config, storage
 from brag.embeddings import get_embedder
 from brag.embeddings.sparse import embed_sparse_documents
 from brag.ingest.contextualize import contextualize
-from brag.ingest.extract import extract
+from brag.ingest.extract import extract, collision_report
 from brag.ingest.notes import write_note
 
 UPSERT_BATCH = 100
@@ -397,6 +397,9 @@ def _ingest_inner(path: Path) -> bool:
                 points[start : start + UPSERT_BATCH],
                 wait=True,
             )
+        warnung = collision_report(chunks)
+        if warnung:
+            print(f"  WARNING: {warnung}", flush=True)
         new_ids = {p.id for p in points}
         removed = storage.delete_chunks_by_source(
             client, chunks[0].source_file, exclude_ids=new_ids
