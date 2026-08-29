@@ -82,7 +82,8 @@ Kurz gesagt: **Deine Dateien liegen im Projektordner (sichtbar, deins). Das
 laufende System und der Suchindex liegen in Docker (unsichtbar, automatisch
 verwaltet).**
 
-Willst du nachsehen, ob alles läuft, öffne im Projektordner ein Terminal und gib
+Willst du nachsehen, ob alles läuft, öffne im **BRAG-Assistent-Ordner** ein
+Terminal und gib
 `docker ps` ein — es sollten die beiden Boxen `brag-app` und `brag-qdrant`
 auftauchen.
 
@@ -96,7 +97,7 @@ auftauchen.
 | Deine Notizen & Passagen | `WissensWIKI/Wissen/` und `WissensWIKI/Quellenbelege/` | Markdown-Dateien — gehören dir, sichern wie jeden Ordner |
 | Der Suchindex (Qdrant) | in Docker, in einem verwalteten Speicherbereich | jederzeit aus deinem Wissensspeicher neu aufbaubar; nie in iCloud/OneDrive legen |
 | Programmcode & KI-Modelle | im Docker-Image | einmal beim ersten Build geladen (~3 GB); fasst du nie an |
-| Einstellungen & API-Schlüssel | die Datei `.env` im Projektordner | vom Setup-Assistenten geschrieben; der Schlüssel bleibt hier (nur für dich lesbar), dient nur der Authentifizierung deiner eigenen Anfragen beim gewählten Anbieter und wird nie an die Macher der App oder an Dritte gesendet |
+| Einstellungen & API-Schlüssel | die Datei `.env` im **BRAG-Assistent-Ordner** | vom Setup-Assistenten geschrieben; der Schlüssel bleibt hier (nur für dich lesbar), dient nur der Authentifizierung deiner eigenen Anfragen beim gewählten Anbieter und wird nie an die Macher der App oder an Dritte gesendet |
 
 Der wichtige Punkt: **deine Dokumente (im Projektordner, außerhalb von
 `WissensWIKI/`) und dein Notizbuch (`WissensWIKI/Wissen/`) sind ganz normale

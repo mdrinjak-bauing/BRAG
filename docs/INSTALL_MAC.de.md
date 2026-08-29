@@ -130,7 +130,7 @@ Beachte: Das **allererste** Dokument lädt zusätzlich die Docling-Layout-Modell
 herunter, daher kann gerade dieses ein paar Minuten dauern (spätere Dokumente
 sind deutlich schneller). Prüfe die Pipeline am besten zuerst mit einer kleinen
 **1–2-seitigen PDF**; danach rechne mit etwa **1–3 Minuten** für ein normales
-50-seitiges Paper. Wenn du zusehen willst, öffne das Terminal im Projektordner und
+50-seitiges Paper. Wenn du zusehen willst, öffne das Terminal im **BRAG-Assistent-Ordner** und
 gib ein:
 
 ```
@@ -150,7 +150,7 @@ Stelle Claude jetzt eine Frage:
   Docker, Qdrant, den Watcher, den Korpus und den KI-Anschluss und zeigt für
   jeden Punkt ✓/✗.
 - **Wal-Symbol** in der Menüleiste steht ruhig → Docker läuft.
-- Im Terminal im Projektordner zeigt `docker ps` die zwei Container **`brag-app`**
+- Im Terminal (aus jedem Ordner) zeigt `docker ps` die zwei Container **`brag-app`**
   und **`brag-qdrant`**.
 - In Claude Desktop erscheinen die Werkzeuge (z. B. `search`, `list_sources`) —
   sichtbar über das Werkzeug-/Steckersymbol im Eingabefeld. Fehlen sie, hast du
@@ -162,7 +162,7 @@ Stelle Claude jetzt eine Frage:
   iCloud-synchronisierten Ort liegen lassen — die Datenbank selbst liegt in
   Docker, sicher außerhalb jedes Sync-Ordners.
 - **Stoppen/Starten:** Docker Desktop startet die App nach dem Hochfahren
-  automatisch. Zum manuellen Stoppen: Terminal im Projektordner öffnen,
+  automatisch. Zum manuellen Stoppen: Terminal im **BRAG-Assistent-Ordner** öffnen,
   `docker compose down`. Zum Starten: `docker compose up -d`.
 - **Aktualisieren (ohne Neuinstallation):** die neuen Dateien in deinen **BRAG
   Assistent**-Ordner legen (deine `.env` behalten), dann Doppelklick auf

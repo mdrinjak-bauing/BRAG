@@ -122,3 +122,49 @@ def test_nested_project_context(monkeypatch):
             assert config.COLLECTION_NAME == "asb_b"
         assert config.COLLECTION_NAME == "asb_a"  # inner reset restores outer
     assert config.COLLECTION_NAME == "asb_default"
+
+
+# ── Docs must not send users to the wrong folder ──────────────────────────────
+# setup.command/.bat write .env, docker-compose.yml and the *.command helpers
+# into the "BRAG Assistent" PROGRAM folder; into the project folder they write
+# only WissensWIKI/. Eight docs in both languages nevertheless told the user to
+# open .env "in the project folder" — including the fix for the most common
+# setup failure (port already in use), which therefore could not work.
+
+def test_setup_writes_env_into_the_program_folder_not_the_project_folder():
+    from pathlib import Path
+    repo = Path(__file__).resolve().parents[1]
+    setup = (repo / "setup.command").read_text(encoding="utf-8")
+    assert '> "$ENGINE/.env"' in setup, "setup writes .env into the engine folder"
+    assert '> "$PROJDIR/.env"' not in setup, "nothing writes .env into the project folder"
+
+
+def test_docs_do_not_locate_env_or_compose_in_the_project_folder():
+    import re
+    from pathlib import Path
+    repo = Path(__file__).resolve().parents[1]
+    # Both directions, both languages, on a single line.
+    muster = re.compile(
+        r"(\.env|docker\s+compose\s+(?:down|up|build|logs))[^\n]{0,40}"
+        r"(project folder|Projektordner)"
+        r"|(project folder|Projektordner)[^\n]{0,40}"
+        r"(\.env|docker\s+compose\s+(?:down|up|build|logs))",
+        re.IGNORECASE,
+    )
+    # "your project folder (documents + wiki) stays untouched" is a correct
+    # statement about the project folder, not an instruction to go there. The
+    # sentence wraps, so the exemption has to look at the following line too.
+    erlaubt = re.compile(r"(stays untouched|bleibt .{0,25}unangetastet)", re.I)
+    treffer = []
+    for datei in sorted((repo / "docs").glob("*.md")):
+        zeilen = datei.read_text(encoding="utf-8").splitlines()
+        for nr, zeile in enumerate(zeilen, 1):
+            umfeld = " ".join(zeilen[nr - 1 : nr + 1])
+            if erlaubt.search(umfeld):
+                continue
+            if muster.search(zeile):
+                treffer.append(f"{datei.name}:{nr}: {zeile.strip()[:70]}")
+    assert not treffer, (
+        "These lines point users at the project folder for files that live in the "
+        "BRAG Assistent folder:\n  " + "\n  ".join(treffer)
+    )
