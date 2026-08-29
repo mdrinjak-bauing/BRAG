@@ -46,7 +46,7 @@ Drei Dinge machen den Unterschied:
 
 > *Der Name ist ein Wortspiel — mit meinem Fach, dem Bauingenieurwesen, in dem man Dinge* ***baut***, *und mit dem, was das Werkzeug tut: Es baut dein Wissen auf und ruft es bei Bedarf wieder ab.*
 
-*Zum Funktionsumfang (v0.5.0): Das Fragen läuft standardmäßig über Claude Desktop; das Setup trägt die Such- und Notizbuch-Werkzeuge zusätzlich automatisch in **LM Studio** ein, falls installiert — für einen vollständig lokalen Pfad. Weitere MCP-fähige Clients lassen sich ebenfalls anbinden — Claude Code baut dir die Brücke; siehe [Ausbau](#ausbau--automatisierung-mit-claude-code--co). ChatGPT ist als Frage-Oberfläche noch nicht vorkonfiguriert. Zitate werden automatisch in den Ordner zurückgeschrieben; eigene Schlussfolgerungen als freie Notizen festzuhalten ist eine optionale Obsidian-Erweiterung (siehe [Doku](docs/OBSIDIAN.de.md)).*
+*Zum Funktionsumfang (v0.6.0): Das Fragen läuft standardmäßig über Claude Desktop; das Setup trägt die Such- und Notizbuch-Werkzeuge zusätzlich automatisch in **LM Studio** ein, falls installiert — für einen vollständig lokalen Pfad. Weitere MCP-fähige Clients lassen sich ebenfalls anbinden — Claude Code baut dir die Brücke; siehe [Ausbau](#ausbau--automatisierung-mit-claude-code--co). ChatGPT ist als Frage-Oberfläche noch nicht vorkonfiguriert. Zitate werden automatisch in den Ordner zurückgeschrieben; eigene Schlussfolgerungen als freie Notizen festzuhalten ist eine optionale Obsidian-Erweiterung (siehe [Doku](docs/OBSIDIAN.de.md)).*
 
 ## Für wen?
 
@@ -74,7 +74,7 @@ Forschende, Lehrende, **Studierende** und Promovierende — und genauso Praktike
 - 🏗️ **Nach Projekt/Baustelle filtern** — *„Such **nur im Projekt Schulzentrum**:
   Welche Position deckt die Erdarbeiten ab?"* — jedes Vorhaben sauber getrennt.
 - 🧠 **Entscheidungen & Wissen festhalten** — Zitate landen automatisch in deinem
-  Wissensspeicher, eigene Schlussfolgerungen optional über Obsidian; ein neuer
+  Wissensspeicher, eigene Schlussfolgerungen als freie Notizen (Obsidian optional); ein neuer
   Chat Tage später macht genau dort weiter, wo der letzte aufhörte.
 - 🎓 **… und natürlich Forschung & Lehre** — *„Entwirf drei Prüfungsfragen aus
   Kapitel 4, mit Seitenangaben"* oder *„Wo widersprechen sich meine Quellen zu
@@ -99,7 +99,7 @@ Praxis — hat zwei Hälften, und ihre strikte Trennung ist der Kern dieses Desi
 | Ordner | dein ganzer **Projektordner** | `WissensWIKI/Wissen/` (und beliebige eigene Unterordner) |
 | Enthält | externe Quellen: Paper, Bücher, Berichte | **dein eigenes Denken**: Konzepte, Entwürfe, Lesenotizen |
 | Von Claude durchsuchbar? | ja — hybride Suche mit seitengenauen Belegen | freie Notizen bewusst **nein** · gespeicherte **Passagen: ja** (die dritte Ebene, siehe unten) |
-| Kann Claude lesen/schreiben? | nur lesen (über die Suche) | ja — über die Werkzeuge `read_note` / `write_note` (und optional Obsidian) |
+| Kann Claude lesen/schreiben? | über die Suche lesbar; **auch beschreibbar** — die `vault_*`-Dateiwerkzeuge erreichen den ganzen Projektordner (`VAULT_WRITE_PROTECT` in der `.env` schützt Bereiche) | ja — über die Werkzeuge `read_note` / `write_note` (und optional Obsidian) |
 
 **Dazu eine dritte Ebene dazwischen — gespeicherte Passagen.** Wenn du Claude
 (in Claude Desktop) sagst *„speichere diese Passage"*, schreibt es das Zitat
@@ -308,7 +308,8 @@ Ein gespeichertes Zitat (`save_passage`) wird zusätzlich eingebettet und ist da
 durchsuchbar; eigene Notizen (`write_note`) bleiben bewusst außerhalb des Suchindex.
 
 Mehr Tiefe (mit Zahlen) in [So funktioniert's](docs/HOW_IT_WORKS.de.md) und
-[Architektur](docs/ARCHITECTURE.de.md); alle Parameter in [`.env.example`](.env.example).
+[Architektur](docs/ARCHITECTURE.de.md); die Einstellungen, die man üblicherweise ändert,
+stehen in [`.env.example`](.env.example) — die vollständige Liste ist `brag/config.py`.
 
 ## Wähle dein Profil
 
@@ -322,7 +323,7 @@ wechseln, **ohne neu zu indexieren.**
 | **Gemini** (Standard) | Google Gemini (Free Tier) | gemini-2.5-flash-lite | jeder Laptop | ja (Google) |
 | **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini | jeder Laptop | ja (OpenAI) |
 | **Claude** | Anthropic Claude | claude-haiku-4-5 | jeder Laptop | ja (Anthropic) |
-| **Hybrid** | LM Studio (auf deinem Rechner) | dein lokales Modell — Voreinstellung `google/gemma-3-27b-it`, **muss Bilder sehen können** ([Details](docs/PROFILES.de.md#das-modell-muss-bilder-sehen-können)) | ab ~16 GB RAM (mehr für größere Modelle) | nein |
+| **Hybrid** | LM Studio (auf deinem Rechner) | dein lokales Modell — Voreinstellung `google/gemma-3-27b-it`, **muss Bilder sehen können** ([Details](docs/PROFILES.de.md#das-modell-muss-bilder-sehen-können)) | die Voreinstellung braucht ~64 GB RAM; kleinere multimodale Modelle laufen ab ~16 GB | nein |
 
 **Welche Hardware schaltet welche Stufe frei?** Cloud-Profile laufen auf jedem
 Rechner; lokale Text-KI und ein voll aufgedrehter Reranker brauchen mehr:
@@ -331,7 +332,7 @@ Rechner; lokale Text-KI und ein voll aufgedrehter Reranker brauchen mehr:
 |---|---|---|---|
 | **Leicht** | 8 GB Minimum, 16 GB komfortabel; jeder Rechner, keine GPU | Cloud-LLM, lokaler Index, Reranker sparsam/aus | API-Key nötig; Dokumenttext geht an Anbieter; der erste Ingest ist RAM-intensiv |
 | **Mittel** | ~16 GB RAM, LM Studio | + Reranker flüssig, optional erstes lokales LLM (LM Studio, z. B. `qwen2.5-7b-instruct` — reines Textmodell, dann ohne Bildbeschreibungen) | lokales LLM langsamer/schwächer |
-| **Privat-lokal** | M-Mac 32 GB, LM Studio | lokales LLM (z. B. qwen2.5-14b-instruct), Reranker voll, Vision lokal | nichts verlässt den Rechner; mehr Setup |
+| **Privat-lokal** | M-Mac 32 GB, LM Studio | lokales **multimodales** LLM (ein 12–14B-Vision-Modell; ein reines Textmodell wie `qwen2.5-14b-instruct` liefert nur Bildunterschriften), Reranker voll | nichts verlässt den Rechner; mehr Setup |
 | **Voll-Version** | M-Mac 64 GB+, LM Studio | großes lokales LLM (z. B. gemma-3-27b-it) + Vision + Reranker voll | höchste Qualität, höchste Last |
 
 ### Suchqualität einstellen: der Reranker
@@ -384,6 +385,7 @@ wählst du meist einen `mode` — er setzt beides passend zur Aufgabe:
 | `normal` *(Standard)* | 15 | 3 | normale Frage |
 | `review` | 50 | 2 | breiter Literaturüberblick |
 | `deep` | 30 | 15 | in *ein* Dokument vertiefen (mit `source_file`) |
+| `facts` | 3 | 1 | eine Tatsache über drei unabhängige Quellen gegenprüfen |
 
 „15 / max 3" gilt also nur für **`normal`**. Drei ehrliche Hinweise:
 - **„max je Quelle" ist eine *Präferenz*, kein harter Deckel.** Reichen die diversen
@@ -404,7 +406,7 @@ Suchaufruf schlägt das Preset.
 substanzielle von peripherer Abdeckung (*„wer schreibt zu X / Stand der
 Forschung"* — `mode='specific'` bevorzugt schmale Spezialquellen), `clusters`
 gruppiert die Treffer nach semantischer Nähe zu einer Themen-Landkarte
-(*„welche Unter-Aspekte hat X?"*), und `compare_positions` stellt 2–7 gewählte
+(*„welche Unter-Aspekte hat X?"*), und `compare_positions` stellt gewählte
 Quellen side-by-side zu einer Frage gegenüber (*„was sagen DIESE Quellen zu X"*).
 
 **Abbildungen als Bilder.** Treffer auf Abbildungen legen der Antwort bis zu 3
@@ -455,7 +457,7 @@ Cloud-Embedding-Opt-in: [docs/PROFILES.de.md](docs/PROFILES.de.md).
 **Absturzschutz (lokale Profile).** Wenn das Indexieren eines Dokuments deinen PC
 wiederholt hart neu startet, gibt BRAG nach ein paar Versuchen auf und legt statt
 eines erneuten Absturzes einen sichtbaren Marker `INDEXIERUNG-GESTOPPT.md` im
-Projektordner ab. Senke die GPU-Last oder wechsle auf ein Cloud-Profil und leg die
+Ordner `WissensWIKI/` ab. Senke die GPU-Last oder wechsle auf ein Cloud-Profil und leg die
 Datei dann erneut hinein.
 
 ## Einrichten — realistisch etwa 1 Stunde
@@ -531,10 +533,14 @@ siehst": [Installation macOS](docs/INSTALL_MAC.de.md) ·
 ## Der KI-Anschluss (MCP)
 
 Automatisch eingerichtet, gibt der **BRAG-MCP-Server** deinem Assistenten einen
-Anschluss mit Werkzeugen in vier Gruppen: **Suche** (durchsucht deinen Korpus),
+Anschluss mit Werkzeugen in sechs Gruppen: **Suche** (durchsucht deinen Korpus),
 **Korpus** (Inventar pflegen, taggen, umbenennen), **Belege** (zitierfähige
-Passagen sammeln) und **Notizbuch** (lesen/schreiben) — wobei die
-Notizbuch-Werkzeuge den Suchindex nie anfassen. Das Setup trägt den Anschluss in
+Passagen sammeln), **Notizbuch** (lesen/schreiben) — wobei die
+Notizbuch-Werkzeuge den Suchindex nie anfassen — dazu **PDF** (eine zitierte
+Seite in Skim öffnen, macOS) und **Dateien** (die Dateien im Projektordner
+direkt lesen und schreiben, ein eigener Dateisystem-Anschluss erübrigt sich).
+Die letzten beiden gibt es nur am Anschluss des Standardprojekts. Das Setup
+trägt den Anschluss in
 **Claude Desktop** ein — und in **LM Studio**, falls installiert (LM Studios Chat
 ist ein MCP-Host). Die Werkzeuge im Einzelnen:
 
@@ -543,14 +549,14 @@ ist ein MCP-Host). Die Werkzeuge im Einzelnen:
 | `search` | Hybride Suche; `mode` (precise/normal/review/deep) + Filter (Typ, Jahr, Tabellen/Abbildungen, Quelle); Abbildungs-Treffer legen die echten Bilder bei | *„Was sagen alle Berichte zu Nachträgen?"* |
 | `coverage` | „Wer schreibt zu X": Treffer pro Quelle gebündelt, substanziell vs. peripher | *„Was ist der Stand der Forschung zu Prozessreife?"* |
 | `clusters` | Themen-Map: Treffer nach semantischer Nähe gruppiert | *„Welche Unter-Aspekte hat KI im Bauwesen?"* |
-| `compare_positions` | 2–7 gewählte Quellen side-by-side zu einer Frage | *„Wie definieren Drittler und Hofstadler eine Bauablaufstörung?"* |
+| `compare_positions` | gewählte Quellen side-by-side zu einer Frage (sinnvoll 2–7) | *„Wie definieren Drittler und Hofstadler eine Bauablaufstörung?"* |
 | `list_sources` | Inventar aller indexierten Dokumente | *„Welche Dokumente sind in meiner Wissensbasis?"* |
 | `read_source` | Liest ein ganzes Dokument der Reihe nach — Bericht zusammenfassen/bewerten | *„Fass das Bodengutachten Müller zusammen."* |
 | `inspect_chunks` | Diagnose: was zu einer Quelle gespeichert ist | *„Zeig, was von Müller 2023, S. 14 indexiert wurde."* |
 | `set_metadata` | Taggt einen Korpus-Ordner (schreibt `_meta.txt`), damit die Suche danach filtern kann | *„Tagge den Ordner Nachträge als projekt=Schulzentrum."* |
 | `recent_sources` | Die zuletzt aufgenommenen Dokumente | *„Was ist diese Woche reingekommen?"* |
 | `remove_source` | Entfernt eine Quelle aus dem Index; verschiebt die Datei in einen `_inbox/` (umkehrbar, nicht gelöscht) | *„Entferne den veralteten Entwurf aus meinem Index."* |
-| `rename_source` | Benennt ein indexiertes Dokument um; Metadaten an Ort und Stelle, kein erneutes Embedding | *„Benenne Müller_2023_Entwurf in den finalen Titel um."* |
+| `rename_source` | Benennt ein indexiertes Dokument um; Metadaten an Ort und Stelle, ohne die Datei neu zu verarbeiten | *„Benenne Müller_2023_Entwurf in den finalen Titel um."* |
 | `save_passage` | Speichert einen zitierfähigen Treffer unter einem Thema (indexiert) | *„Speichere dieses Zitat fürs Methodenkapitel."* |
 | `list_passages` | Zeigt gesammelte Passagen pro Thema | *„Was habe ich fürs Methodenkapitel schon gesammelt?"* |
 | `delete_passage` | Löscht die Passagen eines Themas + ihre Index-Einträge (mit Rückfrage) | *„Lösch die Passagen zu Nachträgen."* |
@@ -559,6 +565,10 @@ ist ein MCP-Host). Die Werkzeuge im Einzelnen:
 | `list_notebook` | Listet dein Notizbuch | *„Was steht in meinem Notizbuch?"* |
 | `move_note` | Verschiebt/benennt eine Notizbuch-Datei um (legt Unterordner an) | *„Verschieb diese Notiz nach Kapitel/2."* |
 | `delete_note` | Löscht eine Notiz/einen Bericht (mit Rückfrage) | *„Lösch den alten Statusbericht."* |
+| `open_pdf` | Öffnet ein Korpus-PDF auf der zitierten Seite (Skim, macOS) | *„Öffne die Stelle im PDF."* |
+| `vault_read` · `vault_list` · `vault_search` | Liest, listet und durchsucht die Dateien in deinem Projektordner | *„Was liegt in meinem Konzepte-Ordner?"* |
+| `vault_write` · `vault_append` · `vault_edit` | Schreibt eine Datei, hängt an, oder ersetzt eine Stelle in-place | *„Trag die heutige Entscheidung ins Protokoll."* |
+| `vault_extract` | Holt den Text aus einer PDF-, Word- oder Excel-Datei | *„Lies die Tabelle aus."* |
 
 **Notizen auch in Obsidian bearbeiten (optional).** Claude kann dein Notizbuch
 bereits über die Werkzeuge `list_notebook` / `read_note` / `write_note` oben lesen
@@ -620,8 +630,9 @@ einem Projekt vermischt sich mit einem anderen.
 Änderungen in deinem Projektordner werden automatisch nachgezogen: Benennst du
 eine **bereits indexierte** Datei um oder **verschiebst** sie (auch zwischen
 Unterordnern), werden nur die Metadaten (Autor, Jahr, Typ, PDF-Pfad) an Ort und
-Stelle aktualisiert — **ohne neu einzulesen** (kein erneutes Embedding, keine
-API-Kosten); **überschreibst** du eine Datei mit einer neuen Version, wird sie neu
+Stelle aktualisiert — **ohne neu einzulesen** (die Datei wird nicht erneut
+geöffnet, keine API-Kosten; nur die Suchvektoren dieses Dokuments werden lokal
+aus dem Index neu berechnet); **überschreibst** du eine Datei mit einer neuen Version, wird sie neu
 indexiert; **löschst** du sie, verschwindet sie aus der Datenbank (Löschungen,
 während die App aus war, werden beim nächsten Start aufgeräumt). Der **erste**
 Unterordner-Name wird zum filterbaren Dokumenttyp (`<Projekt>/Paper/`,
@@ -756,6 +767,14 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 
 Aktuelle Version: **0.6.0** (August 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.6.0** — **Recherche-Werkzeuge und ehrliche Belege**: Abbildungstreffer
+  liefern das Bild selbst mit; `coverage`, `clusters` und `compare_positions`
+  gibt es in jedem Projekt; ein Müllbild-Filter wirft Logos, Symbole und Siegel
+  schon beim Einlesen aus; gedruckte Seitenzahlen liest BRAG aus den
+  `/PageLabels` des PDF, und ein Beleg benennt, welche Zählung er meint
+  (`S. 47` gegen `PDF S. 47`); der Bedeutungsvektor jedes Abschnitts trägt eine
+  kurze Kopfzeile mit dem Werk, sodass „was schreibt X zu Y" das richtige Werk
+  findet.
 - **0.5.x** — Eine audit-getriebene **Härtungs-, Feinschliff- und Umbau**-Runde: ein
   schlankeres WissensWIKI (`Quellenbelege/` · `Wissen/` · `Workflows/`), ein
   wachsendes/fortsetzbares Notizbuch, sicherere Ingest-/Watcher- und Multi-Projekt-
@@ -803,7 +822,7 @@ Aktuelle Version: **0.6.0** (August 2026). Vollständige Liste: [CHANGELOG.md](C
 
 ## Status
 
-Frühe Version (0.5.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
+Frühe Version (0.6.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
 übrigen Profile funktionieren, sind aber weniger erprobt. Roadmap: automatische
 Dateibenennung, Korpus-Überblicksmodi (Coverage/Cluster), optionale
 Wissensgraph-Ebene — und die oben skizzierten Anbindungen.

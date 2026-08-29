@@ -117,8 +117,11 @@ das Bild an den Anbieter übermittelt (siehe [LEGAL.de.md](LEGAL.de.md)).
 
 **Ich benenne eine schon eingelesene Datei um — stimmen die Metadaten dann noch?**
 Ja. Der Watcher erkennt die Umbenennung und aktualisiert Autor, Jahr, Typ und den
-PDF-Pfad **direkt im Index** — **ohne die Datei neu zu verarbeiten** (kein
-erneutes Embedding, keine API-Kosten); die Literaturnotiz wird mitgezogen. Das
+PDF-Pfad **direkt im Index** — die Datei wird nie erneut geöffnet und keine KI
+gerufen (keine API-Kosten); die Literaturnotiz wird mitgezogen. Die Suchvektoren
+dieses Dokuments werden allerdings neu berechnet, und zwar aus dem Index selbst:
+der Vektor trägt eine Kopfzeile mit dem Werknamen und würde sonst weiter den
+alten nennen. Das läuft lokal und dauert bei einem normalen Dokument Sekunden. Das
 gilt für eine echte Umbenennung (gleiche Datei, neuer Name). Meldet das System es
 stattdessen als Löschen + Neuanlegen, läuft ein normaler Re-Ingest — gleiches
 Ergebnis, nur langsamer.
@@ -199,12 +202,19 @@ Claude neu indexieren lassen). Die 404-Seite nennt jetzt den exakt gesuchten
 Pfad, der zeigt, was sich verschoben hat.
 
 **Im Chat wird die PDF-Seite zitiert, nicht die gedruckte (Buch-)Seite.**
-Standardmäßig ist der Beleg die physische PDF-Seite. Bei Dokumenten mit
-abweichender Zählung (Buch mit Vorspann, Zeitschriften-Sonderdruck) setz einen
-`page_offset` in einer `_meta.txt` — dann zeigt der Beleg die gedruckte Seite,
-während der Link weiter die richtige PDF-Seite öffnet. Regel: `page_offset =
-physische Seite − gedruckte Seite` (siehe `_meta.txt`-Abschnitt im README).
-Danach das Dokument neu indexieren.
+Seit 0.6.0 benennt der Beleg, welche Zählung gemeint ist. Trägt das PDF seine
+eigene gedruckte Nummerierung (`/PageLabels` — üblich bei Büchern mit Umschlag
+und römischem Vorspann), steht dort `S. xii` oder `S. 47`: die auf dem Papier
+gedruckte Seite. Trägt es keine, steht dort `PDF S. 47` — dieser Zusatz ist
+Absicht, damit eine ins Manuskript kopierte Zahl weiterhin sagt, welche Zählung
+sie meint. Quellen ohne Seiten (DOCX, PPTX) werden ganz ohne Seitenangabe
+zitiert.
+
+Um die gedruckte Nummerierung für eine Datei ohne Etiketten von Hand
+nachzureichen, setz einen `page_offset` in einer `_meta.txt` (Regel:
+`page_offset = physische Seite − gedruckte Seite`; siehe `_meta.txt`-Abschnitt
+im README) und indexiere das Dokument neu. Der Link öffnet immer die physische
+PDF-Seite, unabhängig davon, was der Beleg zeigt.
 
 **Die Suchqualität ist in meiner Sprache schlechter.**
 Setze `VAULT_LANGUAGE` in der `.env` auf deine Sprache (betrifft die

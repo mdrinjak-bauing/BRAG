@@ -94,7 +94,9 @@ single shared **model service** keeps RAM flat as projects are added.
 project, so nothing leaks across projects. The default project is served
 in-process by `mcp_server.py`; each *additional* project uses the thin,
 model-free `mcp_client.py`, which forwards search and index operations over the
-HTTP bridge — both surfaces expose the **same tool set** (kept byte-identical).
+HTTP bridge. The two surfaces are not identical: the thin client carries the
+search, corpus, evidence and notebook tools (19), while `open_pdf` and the
+`vault_*` file layer exist only on the default project's in-process server (27).
 
 ## Saving back (notebook & evidence)
 

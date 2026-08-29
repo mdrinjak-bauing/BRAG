@@ -107,8 +107,11 @@ is sent to the provider too (see [LEGAL.md](LEGAL.md)).
 
 **I rename a file that's already indexed — is the metadata still correct?**
 Yes. The watcher detects the rename and updates author, year, type and the PDF
-path **directly in the index** — **without reprocessing the file** (no
-re-embedding, no API cost); the literature note moves along too. This applies to
+path **directly in the index** — the file is never reopened and no AI is called
+(no API cost); the literature note moves along too. That document's search
+vectors *are* rebuilt, from the index itself: the vector carries a short header
+naming the work, so it would otherwise still claim the old name. That runs
+locally and takes seconds for a normal document. This applies to
 a true rename (same file, new name). If your system reports it as delete +
 create instead, a normal re-ingest runs — same result, just slower.
 
@@ -182,12 +185,17 @@ Claude to re-index). The 404 page now names the exact path it looked for, which
 tells you what moved.
 
 **The chat cites the PDF page, not the printed (book) page.**
-By default the citation is the physical PDF page. For documents whose printed
-numbering differs (a book with front matter, a journal offprint), set a
-`page_offset` in a `_meta.txt` — then citations show the printed page while the
-link still opens the correct PDF page. The rule is `page_offset = physical page
-− printed page`; see the `_meta.txt` section in the README. Re-index the
-document after setting it.
+Since 0.6.0 the citation NAMES which page count it means. When the PDF carries
+its own printed numbering (`/PageLabels` — common in books with a cover and roman
+front matter), the citation reads `p. xii` or `p. 47`: that is the page printed
+on the paper. When it carries none, the citation reads `PDF p. 47` — the prefix
+is deliberate, so a number copied into a manuscript still says which count it
+is. Sources without pages at all (DOCX, PPTX) are cited without one.
+
+To supply the printed numbering by hand for a file that has no labels, set a
+`page_offset` in a `_meta.txt` (`page_offset = physical page − printed page`;
+see the `_meta.txt` section in the README) and re-index the document. The deep
+link always opens the physical PDF page, whatever the citation says.
 
 **Search quality is worse in my language.**
 Set `VAULT_LANGUAGE` in `.env` to your language (affects keyword stemming)
