@@ -369,7 +369,9 @@ def rename_source(source_file: str, new_name: str) -> str:
         return f"Could not rename the file: {e}"
     n = _rename_source(key, new_path)
     return (f"Renamed to `{config.source_key_from_path(new_path)}` "
-            f"({n} chunks updated in place, no re-embedding).")
+            f"({n} chunks updated in place — the file was not reprocessed; "
+            f"the dense vectors were rebuilt from the index so they match "
+            f"the new metadata).")
 
 
 def _passage_file(topic: str):
@@ -526,7 +528,9 @@ def recent_sources(limit: int = 15, collection_name: str | None = None) -> str:
 
 def set_metadata(folder: str, key: str, value: str) -> str:
     """Write/merge `key: value` into a corpus folder's _meta.txt and re-apply it to
-    the already-indexed documents there (no re-embedding)."""
+    the already-indexed documents there. The documents are never reprocessed;
+    their dense vectors are rebuilt from the index, because author, year,
+    doc_type and source_file are part of the dense text."""
     key = key.strip().lower().replace(" ", "_")
     value = value.strip()
     if not key or not value:

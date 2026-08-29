@@ -123,6 +123,27 @@ gilt für eine echte Umbenennung (gleiche Datei, neuer Name). Meldet das System 
 stattdessen als Löschen + Neuanlegen, läuft ein normaler Re-Ingest — gleiches
 Ergebnis, nur langsamer.
 
+**Ich habe BRAG aktualisiert und in den Versionshinweisen steht etwas von einem
+Dokument-Kopf — muss ich jetzt alles neu einlesen?**
+Nein. Der Vektor eines Abschnitts trägt jetzt zusätzlich eine kurze
+Kopfzeile mit dem Werk, aus dem er stammt (`Hofstadler 2007 · Bauablaufplanung
+und Logistik · Fachbuch`). Sie soll dafür sorgen, dass „was schreibt Hofstadler
+zu X" das richtige Buch findet. Dokumente, die **vor** der Aktualisierung eingelesen
+wurden, haben sie nicht — dein Bestand wäre also gemischt, bis sie nachgezogen
+sind. Ein Befehl bringt ihn auf Stand:
+
+```
+docker exec brag-app python -m brag.ingest.reembed --dry-run   # nur zeigen, was passieren würde
+docker exec brag-app python -m brag.ingest.reembed             # ausführen
+```
+
+Er baut die Vektoren **aus dem Index selbst** neu — deine PDFs werden nicht
+geöffnet, kein Text neu ausgelesen und **kein Sprachmodell aufgerufen**; auf
+einem Cloud-Profil kostet es also nichts. Es läuft nur das Einbettungsmodell.
+Rechne mit gut einer Minute je 1.000 Abschnitte auf einem Notebook — ungemessen,
+also nur als Größenordnung zu verstehen. Die Stichwort-Seite (BM25) bleibt
+bewusst unangetastet.
+
 ## Leistung
 
 **Ist die Nutzung in Docker langsamer als nativ auf dem Rechner?**

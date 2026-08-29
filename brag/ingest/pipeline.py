@@ -315,7 +315,11 @@ def _ingest_inner(path: Path) -> bool:
     # chunk). embed_documents returns a list ALIGNED to its input: one entry per
     # chunk, in order, None where that chunk failed — so the zip below stays
     # correct and a failed chunk is skipped+logged exactly as before.
-    texts = [c.embedding_text() for c in chunks]
+    # dense_text(), not embedding_text(): the dense vector gets the document
+    # header (author · title · type · chapter). The sparse call below keeps the
+    # plain text — an identical header on every chunk of a work would blur
+    # document discrimination in BM25.
+    texts = [c.dense_text() for c in chunks]
     vectors = embedder.embed_documents(texts)
     if len(vectors) != len(chunks):
         # A backend broke the one-entry-per-text contract. Never risk a
@@ -325,7 +329,7 @@ def _ingest_inner(path: Path) -> bool:
         vectors = []
         for chunk in chunks:
             try:
-                vectors.append(embedder.embed_document(chunk.embedding_text()))
+                vectors.append(embedder.embed_document(chunk.dense_text()))
             except Exception:  # noqa: BLE001
                 vectors.append(None)
     paired = []
@@ -462,7 +466,9 @@ def remove_source(source_file: str) -> int:
 def rename_source(old_source_file: str, new_path: Path) -> int:
     """Lightweight rename of an already-indexed source: the content is the same,
     only the name/location changed, so patch the filename-derived metadata on
-    the existing chunks (no re-embedding) and move the literature note.
+    the existing chunks (the file is never reopened), rebuild that source's
+    dense vectors from the index — author/year/doc_type/source_file are part
+    of the dense text — and move the literature note.
 
     Returns the number of chunks updated, or 0 if the source was not indexed —
     in which case the caller should fall back to a full ingest.
@@ -477,6 +483,23 @@ def rename_source(old_source_file: str, new_path: Path) -> int:
     finally:
         client.close()
     if n:
+        # The patch rewrote author, year, doc_type and source_file in the
+        # payload — and all four are part of the DENSE text (the document
+        # header). Without this the vector would keep claiming the old author
+        # and title while the payload shows the new ones: a silent retrieval
+        # miss with nothing to notice it by. Only this document's chunks are
+        # rebuilt, and only from the payload — the file is never opened again.
+        from brag.ingest.reembed import reembed_dense
+        try:
+            r = reembed_dense(source_file=config.source_key_from_path(new_path),
+                              progress=lambda *_: None)
+            if r["updated"]:
+                print(f"  rebuilt {r['updated']} dense vectors for the new "
+                      f"metadata (no reprocessing of the file)")
+        except Exception as e:  # noqa: BLE001
+            print(f"  WARNING: metadata patched but the dense vectors still "
+                  f"carry the old header ({e}). Run "
+                  f"`python -m brag.ingest.reembed` to repair.")
         try:
             rename_note(old_source_file, derive_file_metadata(new_path))
         except Exception as e:  # noqa: BLE001 — the note is non-critical
@@ -486,7 +509,7 @@ def rename_source(old_source_file: str, new_path: Path) -> int:
 
 def reapply_folder_metadata(folder: Path) -> int:
     """Re-derive and patch the metadata of every already-indexed document under
-    `folder` — without re-embedding. Used when a `_meta.txt` is added, edited or
+    `folder` — without reopening any file. Used when a `_meta.txt` is added, edited or
     removed: the project/client/custom fields it defines must then propagate to
     documents that were indexed BEFORE the change (which the watcher otherwise
     never revisits, because the document files themselves did not change).
@@ -542,7 +565,7 @@ def index_passage(topic: str, text: str, source: str, page: str = "",
                          "from_page": str(page).strip()},
         )
         embedder = get_embedder()
-        dense = embedder.embed_document(chunk.embedding_text())
+        dense = embedder.embed_document(chunk.dense_text())
         sparse = embed_sparse_documents([chunk.embedding_text()])[0]
         client = storage.get_client()
         try:

@@ -112,6 +112,25 @@ re-embedding, no API cost); the literature note moves along too. This applies to
 a true rename (same file, new name). If your system reports it as delete +
 create instead, a normal re-ingest runs — same result, just slower.
 
+**I updated BRAG and the release notes mention a new document header — do I have
+to index everything again?**
+No. A chunk's dense vector now also carries a short header naming the
+work it comes from (`Hofstadler 2007 · Bauablaufplanung und Logistik · Fachbuch`),
+which is meant to help "what does Hofstadler write about X" find the right book.
+Documents indexed **before** the update do not have it, so your index would be
+mixed until they are re-indexed. One command brings it up to date:
+
+```
+docker exec brag-app python -m brag.ingest.reembed --dry-run   # see what it would do
+docker exec brag-app python -m brag.ingest.reembed             # do it
+```
+
+It rebuilds the vectors **from the index itself** — your PDFs are not opened, no
+text is re-extracted, and **no LLM is called**, so it costs nothing on a cloud
+profile. Only the embedding model runs. Expect roughly a minute per 1,000 chunks
+on a laptop — unverified, so treat it as an order of magnitude. The keyword
+(BM25) side is deliberately left untouched.
+
 ## Performance
 
 **Is running in Docker slower than natively on the machine?**
