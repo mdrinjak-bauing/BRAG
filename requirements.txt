@@ -13,7 +13,7 @@
 #     e2e (run 33273838065 vs 33275343462) — lint, unit and docker-build are
 #     all green on it.
 # Revisit when a docling release passes e2e with the multipage marker intact.
-docling==2.108.0
+docling==2.123.0
 qdrant-client==1.18.0
 google-genai==2.20.0
 fastembed==0.8.0
