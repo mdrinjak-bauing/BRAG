@@ -140,6 +140,12 @@ to the (multimodal) text AI, which writes one or two honest sentences about
 description is embedded too, so you can find a figure by its **content**, not
 just its caption.
 
+Since 0.6.0 the picture itself is kept as well, as a small local JPEG. When a
+search hits a figure, up to three of those images are handed to the answering
+model alongside the text — so it can read a value straight off the chart instead
+of relying on the sentence written at ingest. `SEARCH_IMAGES_ENABLED=false`
+switches the storing off.
+
 To keep it from inventing things, the task is deliberately sober: only describe
 what is clearly legible, don't guess illegible text, never invent numbers.
 

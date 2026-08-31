@@ -98,8 +98,10 @@ RAM-Bedarf flach, wenn Projekte hinzukommen. `config.project_context` (eine
 ContextVar) grenzt jede Anfrage auf das aktive Projekt ein, sodass nichts zwischen
 Projekten leckt. Das Standardprojekt bedient `mcp_server.py` in-process; jedes
 *zusätzliche* Projekt nutzt den schlanken, modellfreien `mcp_client.py`, der Such-
-und Index-Operationen über die HTTP-Bridge weiterleitet — beide Oberflächen bieten
-denselben Werkzeugsatz (byte-identisch gehalten).
+und Index-Operationen über die HTTP-Bridge weiterleitet. Die beiden Oberflächen sind
+nicht deckungsgleich: Der schlanke Client trägt die Such-, Korpus-,
+Belege- und Notizbuch-Werkzeuge (19); `open_pdf` und die `vault_*`-Dateiebene
+gibt es nur auf dem In-process-Server des Standardprojekts (27).
 
 ## Zurückschreiben (Notizbuch & Belege)
 

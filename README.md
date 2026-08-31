@@ -45,7 +45,7 @@ Three things set it apart:
 
 > *The name is a play on my field — civil engineering, where you* ***build*** *things — and on what the tool does: it builds up your knowledge and retrieves it when you need it.*
 
-*Note on scope (v0.5.0): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic; capturing your own conclusions as free-form notes is an optional Obsidian add-on (see [docs](docs/OBSIDIAN.md)).*
+*Note on scope (v0.6.0): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic, and your own conclusions are written as free-form notes by the built-in notebook tools; editing those notes in Obsidian's own interface is optional (see [docs](docs/OBSIDIAN.md)).*
 
 ## Who is it for?
 
@@ -73,7 +73,7 @@ Researchers, lecturers, **students** and PhD candidates — and just as much pra
 - 🏗️ **Filter by project/site** — *"Search **only in the School Center project**:
   which item covers the earthworks?"* — every job kept cleanly apart.
 - 🧠 **Capture decisions & knowledge** — quotes land in your knowledge store
-  automatically, your own conclusions optionally via Obsidian; a fresh chat days
+  automatically, your own conclusions as free-form notes (Obsidian optional); a fresh chat days
   later picks up exactly where the last one stopped.
 - 🎓 **… and research & teaching too** — *"Draft three exam questions from chapter
   4, with page numbers"* or *"Where do my sources disagree on maturity models?"*
@@ -97,7 +97,7 @@ alike — has two halves, and keeping them strictly apart is the heart of the de
 | Folder | your whole **project folder** | `WissensWIKI/Wissen/` (and any subfolders you create) |
 | Contains | external sources: papers, books, reports | **your own thinking**: concepts, drafts, reading notes |
 | Searchable by Claude? | yes — hybrid search with page-precise citations | free notes deliberately **no** · saved **passages: yes** (the third layer, see below) |
-| Claude can read/write it? | read-only (via search) | yes — via the `read_note` / `write_note` tools (and optionally Obsidian) |
+| Claude can read/write it? | read via search; **also writable** — the `vault_*` file tools reach the whole project folder (`VAULT_WRITE_PROTECT` in `.env` makes parts read-only) | yes — via the `read_note` / `write_note` tools (and optionally Obsidian) |
 
 **Plus a third, in-between layer — saved passages.** When you tell Claude (in
 Claude Desktop) *"save this passage,"* it writes the quote (with its source and
@@ -300,7 +300,8 @@ A saved quote (`save_passage`) is additionally embedded and thus searchable; you
 own notes (`write_note`) deliberately stay outside the search index.
 
 More depth (with numbers) in [How it works](docs/HOW_IT_WORKS.md) and
-[Architecture](docs/ARCHITECTURE.md); every parameter in [`.env.example`](.env.example).
+[Architecture](docs/ARCHITECTURE.md); the settings you are likely to change are in
+[`.env.example`](.env.example) — `brag/config.py` is the complete list.
 
 ## Choose your profile
 
@@ -314,7 +315,7 @@ re-indexing.**
 | **Gemini** (default) | Google Gemini (free tier) | gemini-2.5-flash-lite | any laptop | yes (Google) |
 | **OpenAI** | OpenAI / ChatGPT | gpt-4o-mini | any laptop | yes (OpenAI) |
 | **Claude** | Anthropic Claude | claude-haiku-4-5 | any laptop | yes (Anthropic) |
-| **Hybrid** | LM Studio (on your machine) | your local model — default `google/gemma-3-27b-it`, **must be multimodal** ([details](docs/PROFILES.md#the-model-has-to-be-able-to-see-images)) | ~16 GB+ RAM (more for bigger models) | no |
+| **Hybrid** | LM Studio (on your machine) | your local model — default `google/gemma-3-27b-it`, **must be multimodal** ([details](docs/PROFILES.md#the-model-has-to-be-able-to-see-images)) | the default needs ~64 GB RAM; smaller multimodal models run from ~16 GB (more for bigger models) | no |
 
 **Which hardware unlocks which tier?** Cloud profiles run on any machine; a local
 text AI and a fully cranked-up reranker need more:
@@ -323,7 +324,7 @@ text AI and a fully cranked-up reranker need more:
 |---|---|---|---|
 | **Light** | 8 GB minimum, 16 GB comfortable; any computer, no GPU | Cloud LLM, local index, reranker eco/off | API key needed; document text goes to the provider; the first ingest is RAM-heavy |
 | **Medium** | ~16 GB RAM, LM Studio | + smooth reranker, optionally a first local LLM (LM Studio, e.g. `qwen2.5-7b-instruct` — text-only, so no figure descriptions) | local LLM slower/weaker |
-| **Private-local** | M-Mac 32 GB, LM Studio | local LLM (e.g. qwen2.5-14b-instruct), reranker full, vision local | nothing leaves the machine; more setup |
+| **Private-local** | M-Mac 32 GB, LM Studio | local **multimodal** LLM (a 12–14B vision model; a text-only one such as `qwen2.5-14b-instruct` gives caption-only figures), reranker full | nothing leaves the machine; more setup |
 | **Full version** | M-Mac 64 GB+, LM Studio | large local LLM (e.g. gemma-3-27b-it) + vision + reranker full | highest quality, highest load |
 
 ### Tuning search quality: the reranker
@@ -373,6 +374,7 @@ it sets both to fit the task:
 | `normal` *(default)* | 15 | 3 | a normal question |
 | `review` | 50 | 2 | a broad literature survey |
 | `deep` | 30 | 15 | dig into *one* document (with `source_file`) |
+| `facts` | 3 | 1 | cross-check one fact across three independent sources |
 
 So "15 / max 3" only applies to **`normal`**. Three honest notes:
 - **"Max per source" is a *preference*, not a hard cap.** If diverse hits don't
@@ -393,7 +395,7 @@ beats the preset.
 peripheral coverage (*"who writes about X / state of research"* —
 `mode='specific'` favours narrow specialist sources), `clusters` groups the
 hits by semantic similarity into a topic map (*"which sub-aspects does X
-have?"*), and `compare_positions` puts 2–7 chosen sources side by side on one
+have?"*), and `compare_positions` puts chosen sources side by side on one
 question (*"what do THESE sources say about X"*).
 
 **Figures as images.** Hits on figures attach up to 3 of the **actual figure
@@ -439,7 +441,7 @@ Details, model recommendations and the cloud-embedding opt-in:
 
 **Crash guard (local profiles).** If indexing one document keeps hard-resetting
 your PC, BRAG stops retrying it after a couple of attempts and drops a visible
-`INDEXING-STOPPED.md` marker in the project folder instead of crashing the
+`INDEXING-STOPPED.md` marker in the `WissensWIKI/` folder instead of crashing the
 machine again. Lower the GPU load or switch to a cloud profile, then re-drop the
 file.
 
@@ -509,10 +511,13 @@ see": [Install macOS](docs/INSTALL_MAC.md) · [Windows](docs/INSTALL_WINDOWS.md)
 ## The AI connection (MCP)
 
 Set up automatically, the **BRAG MCP server** gives your assistant one
-connection with tools in four groups: **Search** (queries your corpus), **Corpus**
-(maintain the inventory, tag, rename), **Evidence** (collect quotable passages)
-and **Notebook** (read/write) — where the notebook tools never touch the
-search index. Setup wires the connection into **Claude Desktop**, and into **LM
+connection with tools in six groups: **Search** (queries your corpus), **Corpus**
+(maintain the inventory, tag, rename), **Evidence** (collect quotable passages),
+**Notebook** (read/write) — where the notebook tools never touch the search
+index — plus **PDF** (open a cited page in Skim on macOS) and **Files**
+(read and write the files in your project folder directly, so no separate
+filesystem connector is needed). The last two exist only on the default
+project's connector. Setup wires the connection into **Claude Desktop**, and into **LM
 Studio** as well if it is installed (LM Studio's chat is an MCP host). The tools
 in detail:
 
@@ -528,7 +533,7 @@ in detail:
 | `set_metadata` | Tags a corpus folder (writes `_meta.txt`) so search can filter by it | *"Tag the Nachträge folder as project=School Center."* |
 | `recent_sources` | The most recently ingested documents | *"What came in this week?"* |
 | `remove_source` | Drops a source from the index; moves the file to an `_inbox/` (reversible, not deleted) | *"Remove the outdated draft from my index."* |
-| `rename_source` | Re-files an indexed document; metadata patched in place, no re-embedding | *"Rename Smith_2023_draft to its final title."* |
+| `rename_source` | Re-files an indexed document; metadata patched in place, the file is not reprocessed | *"Rename Smith_2023_draft to its final title."* |
 | `save_passage` | Saves a quotable hit under a topic (indexed) | *"Save this quote for my methods chapter."* |
 | `list_passages` | Shows collected passages per topic | *"What have I collected for the methods chapter?"* |
 | `delete_passage` | Deletes a topic's passages + their index entries (asks to confirm) | *"Delete the passages on change orders."* |
@@ -537,6 +542,10 @@ in detail:
 | `list_notebook` | Lists your notebook | *"What's in my notebook?"* |
 | `move_note` | Moves or renames a notebook file (creates subfolders) | *"Move this note into Kapitel/2."* |
 | `delete_note` | Deletes a note/report (asks to confirm) | *"Delete the old status report."* |
+| `open_pdf` | Opens a corpus PDF at the cited page (Skim, macOS) | *"Open that passage in the PDF."* |
+| `vault_read` · `vault_list` · `vault_search` | Reads, lists and searches the files in your project folder | *"What's in my Konzepte folder?"* |
+| `vault_write` · `vault_append` · `vault_edit` | Writes a file, appends to one, or replaces a passage in place | *"Add today's decision to the log."* |
+| `vault_extract` | Pulls the text out of a PDF, Word or Excel file | *"Read that spreadsheet."* |
 
 **Edit notes in Obsidian too (optional).** Claude can already read and write your
 notebook through the `list_notebook` / `read_note` / `write_note` tools above. To
@@ -593,8 +602,9 @@ project to search; nothing from one project leaks into another.
 
 Changes in your project folder are handled automatically: **renaming or moving**
 an **already-indexed** file (including between subfolders) just updates its
-metadata (author, year, type, PDF path) in place — **no re-ingest** (no
-re-embedding, no API cost); **overwriting** a file with a new version re-indexes
+metadata (author, year, type, PDF path) in place — **no re-ingest** (the file is
+not reopened, no API cost; only that document's search vectors are rebuilt,
+locally, from the index); **overwriting** a file with a new version re-indexes
 it; **deleting** it removes it from the database (deletions made while the app was
 stopped are pruned on the next start). The **first** subfolder name becomes the
 filterable document type (`<project>/papers/`, `<project>/reports/` …); you can
@@ -720,6 +730,13 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 Current version: **0.6.0** (August 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.6.0** — **Research tools and honest citations**: figure hits attach the
+  actual figure image to the answer; `coverage`, `clusters` and
+  `compare_positions` work in every project; a junk-figure filter drops logos,
+  icons and seals at ingest; printed page numbers are read from the PDF's own
+  `/PageLabels`, and a citation names which count it means (`p. 47` vs
+  `PDF p. 47`); each chunk's meaning vector carries a short document header, so
+  "what does X write about Y" finds the right work.
 - **0.5.x** — An audit-driven **hardening, polish & restructure** pass: a leaner
   WissensWIKI layout (`Quellenbelege/` · `Wissen/` · `Workflows/`), a
   growing/continuable notebook, safer ingest/watcher and multi-project guards,
@@ -762,7 +779,7 @@ Current version: **0.6.0** (August 2026). Full list: [CHANGELOG.md](CHANGELOG.md
 
 ## Status
 
-Early release (0.5.0). The **Gemini profile** is the tested happy path; the
+Early release (0.6.0). The **Gemini profile** is the tested happy path; the
 other profiles work but are less battle-tested. Roadmap: automatic file naming,
 corpus overview modes (coverage/clusters), optional knowledge-graph layer — and
 the integrations sketched above.

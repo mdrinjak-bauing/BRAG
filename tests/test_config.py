@@ -240,3 +240,23 @@ def test_version_is_the_same_everywhere():
         f"CHANGELOG.md has no released section for {__version__} — either the "
         "bump is half-done or [Unreleased] was never closed"
     )
+
+
+def test_both_readmes_name_every_tool_the_server_registers():
+    """Eight tools — open_pdf and the whole vault_* file layer — existed for
+    releases without appearing in either README, so users had no way to learn
+    that BRAG can read and write the files in their project folder at all.
+
+    Parsed from the source rather than imported, so this holds whichever mcp
+    major version is installed.
+    """
+    import re
+    from pathlib import Path
+    repo = Path(__file__).resolve().parents[1]
+    quelle = (repo / "brag" / "mcp_server.py").read_text(encoding="utf-8")
+    werkzeuge = re.findall(r"@mcp\.tool\(\)\s*\ndef (\w+)", quelle)
+    assert len(werkzeuge) >= 20, f"only {len(werkzeuge)} tools parsed — did the syntax change?"
+    for name in ("README.md", "README.de.md"):
+        text = (repo / name).read_text(encoding="utf-8")
+        fehlt = [w for w in werkzeuge if f"`{w}`" not in text]
+        assert not fehlt, f"{name} never mentions these tools: {fehlt}"

@@ -152,6 +152,12 @@ beschreibt, *was* zu sehen ist — Diagrammtyp, Hauptelemente, lesbare Achsen od
 Beschriftungen. Diese Beschreibung wird mit eingebettet, sodass du eine
 Abbildung über ihren **Inhalt** findest, nicht nur über ihre Bildunterschrift.
 
+Seit 0.6.0 wird zusätzlich das Bild selbst aufbewahrt, als kleines lokales JPEG.
+Trifft eine Suche eine Abbildung, bekommt das antwortende Modell bis zu drei
+dieser Bilder mitgeliefert — es kann einen Wert also direkt aus dem Diagramm
+ablesen, statt sich auf den beim Einlesen geschriebenen Satz zu verlassen. Mit
+`SEARCH_IMAGES_ENABLED=false` wird das Ablegen abgeschaltet.
+
 Damit nichts erfunden wird, ist der Auftrag bewusst nüchtern: nur beschreiben,
 was klar erkennbar ist, unlesbaren Text nicht raten, keine Zahlen erfinden.
 

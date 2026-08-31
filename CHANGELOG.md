@@ -47,6 +47,31 @@ All notable changes to this project are documented here. The format follows
   pinned version, and a test fails if that drifts again. The pin itself stays at
   1.28.1: there is no advisory pressure, and moving it needs an e2e run to clear
   2.x's `pydantic>=2.12` and httpx2 against docling and sentence-transformers.
+- **Documentation audit against the 0.6.0 code — 17 findings, both languages.**
+  The docs had drifted from what the software does, in ways a reader would act
+  on. The six that mattered most:
+  - Eight tools existed without appearing in either README — `open_pdf` and the
+    whole `vault_*` file layer. So nobody could learn that BRAG reads and writes
+    the files in their project folder at all. A test now fails if a registered
+    tool goes unmentioned.
+  - The library was described as **read-only**; the `vault_*` tools write to it.
+  - The FAQ promised a rename costs **"no re-embedding"** — since 0.6.0 it does
+    re-embed that document (from the index, locally, no API cost). Four places
+    carried that stale promise; all now say what actually happens.
+  - `ARCHITECTURE` claimed the default connector and the thin client expose the
+    **same tool set, "kept byte-identical"**. They do not: 27 versus 19.
+  - The hardware table recommended `qwen2.5-14b-instruct` for **"vision local"**,
+    a text-only model — the project's own PROFILES page says so two pages later.
+  - The page-number FAQ still described the pre-0.6.0 behaviour, with no mention
+    of `/PageLabels` or the `PDF p.` prefix.
+
+  Plus: the version list had no 0.6.0 entry, the status section still said
+  0.5.0, the roadmap still promised `coverage`/`clusters` as future work, the
+  search-mode table was missing `facts`, `.env.example` mislabelled `VAULT_PATH`
+  as the knowledge store rather than the project folder, and the figures section
+  of HOW_IT_WORKS predated figure images. EN/DE structural parity verified after
+  every change (headings and table rows match 1:1 across all five document
+  pairs), and no link or anchor was broken.
 
 ### Added
 - **Setup now TESTS whether the local model can see images, instead of assuming
