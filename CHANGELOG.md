@@ -6,6 +6,29 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **The docling pin now says why it is held, and the image no longer relies on
+  luck.** `docling==2.108.0` sat in `requirements.txt` with no reason recorded
+  anywhere, so every dependabot bump had to re-litigate it from scratch — and
+  the one CI job that catches the problem is `e2e`, which is also the only one
+  that fails: lint, unit and docker-build all go green on a bad docling.
+
+  What the bumps actually do: 2.118.0 swapped the default layout engine to the
+  transformers object detector. 2.118.0–2.120.2 combined that with
+  `compile_torch_models=True`, so `torch.compile` ran inside an image with no
+  C++ compiler and **every PDF conversion failed** (`InvalidCxxCompiler`).
+  Upstream turned the flag off again in 2.121.0 — which makes the current state
+  luck, not design. 2.123.0 therefore no longer crashes, and that is the worse
+  case: on the same 2848-byte fixture it extracts **2 chunks where 2.108.0
+  extracts 4**, and the page-3 marker disappears from the corpus. Silent text
+  loss.
+
+  The pin keeps its reason next to it, three tests guard that, and the image now
+  sets `DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false` so no future docling can
+  re-enable runtime compilation in a container that cannot compile. Verified
+  against a real docling install: the variable flips
+  `settings.inference.compile_torch_models` from True to False.
+
 ### Added
 - **Setup now TESTS whether the local model can see images, instead of assuming
   it.** The local backend sets `vision_capable = True` unconditionally, because

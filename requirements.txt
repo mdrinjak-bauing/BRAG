@@ -1,4 +1,18 @@
 # BRAG — Building Retrieval-Augmented Generation — pinned versions (proven combination)
+
+# docling is HELD BACK deliberately. Do not bump it without an e2e run.
+# 2.118.0 swapped the default layout engine (layout_options now defaults to
+# LayoutObjectDetectionOptions), which routes through the transformers object
+# detector. Two consequences, both seen in CI:
+#   · 2.118.0-2.120.2 also had compile_torch_models=True, so every PDF failed
+#     with InvalidCxxCompiler — the slim image has no C++ compiler (run
+#     32389948150). Upstream turned that flag off again in 2.121.0.
+#   · 2.123.0 no longer crashes, and that is the dangerous part: on the SAME
+#     2848-byte fixture it extracts 2 chunks where 2.108.0 extracts 4, and the
+#     page-3 marker is gone from the corpus. Silent text loss, caught only by
+#     e2e (run 33273838065 vs 33275343462) — lint, unit and docker-build are
+#     all green on it.
+# Revisit when a docling release passes e2e with the multipage marker intact.
 docling==2.108.0
 qdrant-client==1.18.0
 google-genai==2.20.0
