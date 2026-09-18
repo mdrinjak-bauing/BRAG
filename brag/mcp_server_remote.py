@@ -33,8 +33,10 @@ import sys
 # call-compatible across both lines.
 try:  # mcp >= 2
     from mcp.server.mcpserver import MCPServer as FastMCP
+    _MCP2 = True
 except ModuleNotFoundError:  # mcp 1.x
     from mcp.server.fastmcp import FastMCP
+    _MCP2 = False
 from mcp.server.transport_security import TransportSecuritySettings
 
 from brag import mcp_server as _srv  # nur Import der Tool-Funktionen — startet KEINEN Server
@@ -119,11 +121,17 @@ if PUBLIC_URL:
         ),
     }
 
+# mcp 2.x moved host/port/transport_security off the constructor and onto the
+# transport runner (MCPServer.run_streamable_http_async), while auth stayed on the
+# constructor. Passing them to __init__ there raises
+# "TypeError: MCPServer.__init__() got an unexpected keyword argument 'host'" —
+# i.e. the remote connector dies on start, not on first use. Introspected against
+# mcp 2.1.1, the pinned version, rather than guessed.
+_netzwerk = {"host": HOST, "port": PORT, "transport_security": _transport_security}
+
 mcp = FastMCP(
     "brag-remote (vault read+write, no delete)",
-    host=HOST,
-    port=PORT,
-    transport_security=_transport_security,
+    **({} if _MCP2 else _netzwerk),
     **_auth_kwargs,
 )
 
@@ -190,4 +198,4 @@ if __name__ == "__main__":
           f"({'oeffentlich erlaubt: ' + ','.join(_extra) if _extra else 'nur localhost'}; "
           f"{'OAuth AKTIV — Issuer ' + PUBLIC_URL if PUBLIC_URL else 'OHNE Auth (lokal)'})",
           file=sys.stderr)
-    mcp.run(transport="streamable-http")
+    mcp.run(transport="streamable-http", **(_netzwerk if _MCP2 else {}))
