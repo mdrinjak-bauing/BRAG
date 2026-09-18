@@ -596,8 +596,11 @@ def test_unknown_rerank_profile_falls_back_to_eco(monkeypatch):
     """
     import importlib
 
-    import dotenv
-    monkeypatch.setattr(dotenv, "load_dotenv", lambda *a, **k: False)
+    try:
+        import dotenv
+        monkeypatch.setattr(dotenv, "load_dotenv", lambda *a, **k: False)
+    except ModuleNotFoundError:
+        pass  # ohne python-dotenv gibt es keine .env, gegen die abzuschirmen waere
     for name in ("RERANK_PREFETCH", "RERANK_FUSION_LIMIT", "RERANK_ENABLED"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("RERANK_PROFILE", "nonsense")
