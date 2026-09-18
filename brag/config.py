@@ -87,10 +87,28 @@ EXTRA_VAULT_ROOTS = _parse_roots(_env("VAULT_EXTRA_ROOTS", ""))
 VAULT_WRITE_PROTECT = {p.strip() for p in _env("VAULT_WRITE_PROTECT", "").split(",") if p.strip()}
 VAULT_SEARCH_SKIP = {p.strip() for p in _env("VAULT_SEARCH_SKIP", "").split(",") if p.strip()}
 
+# vault_read: Zeichen-Obergrenze gegen Kontext-Flut bei Riesendateien (analog vault_extract).
+# 0 = unbegrenzt.
+VAULT_READ_MAX_CHARS = int(_env("VAULT_READ_MAX_CHARS", "200000"))
+
 # ── Language ────────────────────────────────────────────────────
 # Controls BM25 stemming and the language of generated chunk contexts/notes.
+# Also gates German compound-word splitting on the query side
+# (embeddings/sparse.py decompose_compounds) — those 71 stems and the
+# capitalization heuristic are German-specific and must stay off an
+# english-default vault (a measured false positive: "Systematically" would
+# otherwise silently gain the appended token "System").
 VAULT_LANGUAGE = _env("VAULT_LANGUAGE", "english")   # snowball stemmer name
 ANSWER_LANGUAGE = _env("ANSWER_LANGUAGE", "English")  # for LLM prompts
+
+# fastembed caches its models under $TMPDIR by default, which macOS purges periodically.
+# With a cold cache SparseTextEmbedding falls back to an EMPTY stopword list without any
+# warning (fastembed/sparse/bm25.py: `self.stopwords: set[str] = set()`). Documents indexed
+# in that state keep their stopwords in the BM25 vector, which inflates doc_len and depresses
+# every term weight of that document relative to the rest of the corpus — it then ranks too
+# low in the sparse branch, silently. Pinning the cache rules this out.
+# setdefault, not assignment: an explicitly exported FASTEMBED_CACHE_PATH still wins.
+os.environ.setdefault("FASTEMBED_CACHE_PATH", os.path.expanduser("~/.cache/fastembed"))
 
 # ── Qdrant ──────────────────────────────────────────────────────
 QDRANT_URL = _env("QDRANT_URL", "http://qdrant:6333")
@@ -154,10 +172,37 @@ def _active_collection() -> str:
 # WissensWIKI is the user's space: Quellenbelege/ (verified passages, indexed via
 # save_passage), the user's own .md + free subfolders (the notebook — read/write,
 # NOT indexed, so notes don't echo the corpus), and a hidden .brag/ for logs.
-WISSENSWIKI_NAME = "WissensWIKI"
+# Env-overridable so a vault that already carries its own workspace folder keeps
+# its layout instead of growing a second one; the default is unchanged.
+WISSENSWIKI_NAME = _env("WISSENSWIKI_NAME", "WissensWIKI")
 PASSAGES_NAME = "Quellenbelege"
 NOTES_NAME = "Wissen"            # notebook (your own .md + auto literature notes), not indexed
 DATA_NAME = ".brag"
+
+# Which passage layout the MCP tools use. "topic" (default) is the built-in,
+# indexed one-file-per-topic store under PASSAGES_DIR. "promotion" switches
+# save_passage/list_passages over to brag.passages_promotion: one file per
+# chapter, not indexed. Deployment choice — set it in the environment, so no
+# site-specific value sits in this default.
+PASSAGES_LAYOUT = _env("BRAG_PASSAGES_LAYOUT", "topic").strip().lower()
+
+# Where the "promotion" (chapter) layout keeps its files — all three are paths
+# RELATIVE to the vault root, all three EMPTY by default so nothing site-specific
+# is baked in. brag.passages_promotion resolves them against config.VAULT and
+# falls back to the generic layout when a value is empty:
+#   BRAG_PASSAGES_ROOT  chapter files            → falls back to PASSAGES_DIR
+#   BRAG_OUTLINE_FILE   chapter-name outline     → empty means no name mapping,
+#                                                  the `chapter` argument is the file name
+#   BRAG_LITNOTES_DIR   per-source notes to cross-reference → falls back to NOTES_DIR
+PASSAGES_ROOT = _env("BRAG_PASSAGES_ROOT", "").strip()
+OUTLINE_FILE = _env("BRAG_OUTLINE_FILE", "").strip()
+LITNOTES_DIR = _env("BRAG_LITNOTES_DIR", "").strip()
+
+# Values of the corpus-wide `topic` metadata field, if the deployment uses one.
+# Only used to append a hint to the search tool description at runtime, so an
+# empty value simply yields no list and no install inherits another one's
+# taxonomy. Filtering itself needs no configuration: meta_filter='topic=<value>'.
+TOPIC_VALUES = [s.strip() for s in _env("BRAG_TOPIC_VALUES", "").split(",") if s.strip()]
 
 # Names whose value depends on the active project. Served via module __getattr__
 # so every `config.<NAME>` read is resolved live (never frozen at import).
@@ -374,6 +419,17 @@ MAX_CHUNKS_PER_SOURCE = int(_env("MAX_CHUNKS_PER_SOURCE", 3))
 # per-source cap above cannot see. High threshold so only genuine duplicates
 # are removed; set to 1.0 (or higher) to disable the filter entirely.
 DEDUP_SIMILARITY_THRESHOLD = float(_env("DEDUP_SIMILARITY_THRESHOLD", 0.90))
+# Default score floor for coverage()'s "substantial" bucket (a source counts as
+# substantial only once its best hit clears this). The tool's own min_score
+# argument always wins when the caller passes one explicitly.
+COVERAGE_MIN_SCORE = float(_env("COVERAGE_MIN_SCORE", "0.4"))
+# Ab welchem Reranker-Score (Sigmoid, [0,1]) ein Kandidat als "noch relevant" gilt.
+# Aktuell nur fuer query._quellen_abdeckung() verwendet (Nenner fuer den
+# Quellen-Zaehler: "8 von 23 beitragenden Quellen" statt nur "8 Quellen") — filtert
+# selbst nichts weg. 0.5 = das Modell haelt den Treffer fuer einschlaegig; am
+# Korpus gemessen trennt das Nischenfragen (Rang 30 bei 0,064) sauber von
+# tragfaehigen (Rang 30 bei 0,922).
+SATURATION_RELEVANT_SCORE = float(_env("SATURATION_RELEVANT_SCORE", 0.5))
 # A generous SANITY bound on top_k — NOT a feature cap. Large top_k stays
 # deliberately supported (see search/query.py); this only stops an absurd value
 # (e.g. a buggy caller passing a million) from making Qdrant prefetch/fuse a
@@ -419,6 +475,15 @@ SETUP_MODE = _env("SETUP_MODE", "") == "1"
 BRIDGE_PORT = int(_env("BRIDGE_PORT", 8765))
 # Public URL prefix as seen from the host browser (links in search results)
 BRIDGE_PUBLIC_URL = _env("BRIDGE_PUBLIC_URL", f"http://localhost:{BRIDGE_PORT}")
+
+# ── Click bridge (optional, macOS) ──────────────────────────────
+# Off by default. When enabled, brag.open_bridge serves a tiny localhost endpoint
+# that opens a corpus PDF in the Skim viewer at the right page, and search hits
+# link to it instead of the browser deep-link. Skim is macOS-only and the viewer
+# is driven via AppleScript, so this stays opt-in. The port defaults to one above
+# BRIDGE_PORT so the two can never collide out of the box.
+OPEN_BRIDGE_ENABLED = _env("BRAG_OPEN_BRIDGE", "false").strip().lower() == "true"
+OPEN_BRIDGE_PORT = int(_env("BRAG_OPEN_BRIDGE_PORT", BRIDGE_PORT + 1))
 
 # ── Watcher ─────────────────────────────────────────────────────
 WATCH_POLL_SECONDS = int(_env("WATCH_POLL_SECONDS", 10))

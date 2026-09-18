@@ -95,7 +95,8 @@ def delete_chunks_by_source(client, source_file: str,
 
 
 def patch_source_metadata(client, source_file: str, payload: dict,
-                          collection_name: str | None = None) -> int:
+                          collection_name: str | None = None,
+                          alte_meta_keys: set[str] | None = None) -> int:
     """Update the filename-derived payload fields (source_file, author, year,
     doc_type, rel_path, custom fields) for all chunks of a source IN PLACE —
     no reprocessing of the file. Used when a file is renamed/moved but its
@@ -122,26 +123,31 @@ def patch_source_metadata(client, source_file: str, payload: dict,
     # that the new location no longer defines would otherwise survive the move
     # (e.g. a stale `project=A` after moving into project B, leaking across the
     # project/course filter). Remove those stale custom keys explicitly.
-    # Everything a chunk derives from the DOCUMENT rather than from its folder.
-    # metadata_payload() re-supplies only the filename/_meta.txt fields, so any
-    # content key missing here is deleted by the sweep below — silently, and for
-    # the whole document. page_label_* and image_file were missing: a rename, or
-    # merely editing a _meta.txt (the watcher re-applies folder metadata by
-    # itself), stripped the printed page numbers and the figure images off every
-    # chunk, after which citations degraded to the physical PDF page with no
-    # visible change in the hit. Add new payload keys here, not below.
-    _PRESERVE = {
-        "text", "context", "chunk_type", "page_start", "page_end",
-        "chapter", "section", "language", "chunk_id", "ingest_timestamp",
-        "page_label_start", "page_label_end", "image_file",
-    }
+    #
+    # Which keys are stale is decided by a three-way rule, precise before
+    # guessed, guessed before nothing:
+    #   1. the sampled chunk itself says which keys it owes to a _meta.txt
+    #      (Chunk.payload's `_meta_keys`, recorded at ingest time) — the exact
+    #      answer, used whenever it is present;
+    #   2. otherwise, if the CALLER knows something the payload does not (e.g.
+    #      rename_source read the OLD folder's still-existing _meta.txt chain
+    #      before the move), it may pass that as `alte_meta_keys`;
+    #   3. otherwise delete nothing. A document with no record and no caller
+    #      knowledge — indexed before this change, ingested by a pipeline
+    #      outside this codebase, or whose old folder is gone — loses
+    #      nothing: the safe reading of "we cannot tell" is "delete nothing",
+    #      never "delete everything this codebase cannot name" — that guess
+    #      is exactly what used to silently destroy 10-24 fields per document
+    #      on the real corpus.
     points, _ = client.scroll(
         collection_name, scroll_filter=flt, limit=1,
         with_payload=True, with_vectors=False,
     )
     if points:
-        existing = set((points[0].payload or {}).keys())
-        stale = [k for k in existing if k not in payload and k not in _PRESERVE]
+        vom_ordner = (points[0].payload or {}).get("_meta_keys")
+        if vom_ordner is None:
+            vom_ordner = alte_meta_keys or ()
+        stale = sorted(set(vom_ordner) - set(payload))
         if stale:
             client.delete_payload(
                 collection_name=collection_name, keys=stale, points=flt,

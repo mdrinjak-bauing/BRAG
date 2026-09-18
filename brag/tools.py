@@ -16,8 +16,15 @@ config.project_context in a later phase; today they target the single vault.
 import shutil
 from datetime import date
 
-from brag import config, storage
-from brag.formatting import cite_reference, format_hit, parse_meta_filter
+from brag import activity_log, config, storage
+from brag.formatting import (
+    PREVIEW_CHARS,
+    cite_reference,
+    format_hit,
+    max_hits_for_budget,
+    parse_meta_filter,
+    preview_chars_for,
+)
 from brag.search import analytics
 from brag.search.query import search as run_search
 
@@ -50,10 +57,38 @@ def format_hits(hits: list[dict], query: str, project: str = "",
                 attached_ids: set[str] | None = None) -> str:
     """Render hits as the search tool's Markdown block. `attached_ids` marks the
     chunks whose figure image is attached to the same response as an image, so
-    the model knows the picture directly below belongs to that hit."""
-    out = [f"**{len(hits)} hits** for: {query}\n"]
+    the model knows the picture directly below belongs to that hit.
+
+    Same response-budget mechanism as mcp_client.search() (I-4, review): a
+    50-hit 'review' answer at the full preview length can run past the MCP
+    response limit unnoticed — this is the single-process/server search path
+    (mcp_server.search(), search_text()), which had no ceiling and no
+    trimming note of its own before this.
+
+    Deliberately does NOT pop/render `_coverage` or `_saturation` (Aufgabe 8
+    review, I-1): those source-denominator and list-exhaustion notes exist
+    only on the multi-project bridge path (mcp_client.search()). Established
+    by the earlier review as not a regression — this single-process path
+    never carried them — so leave the stray keys unconsumed here rather than
+    duplicating that logic; format_hit() ignores unknown dict keys, so they
+    are harmless noise, not a rendering bug."""
+    ceiling = max_hits_for_budget()
+    dropped = max(0, len(hits) - ceiling)
+    if dropped:
+        hits = hits[:ceiling]
+    per_hit = preview_chars_for(len(hits))
+    notes = []
+    if dropped:
+        notes.append(f"{dropped} further ranked hits omitted to fit the response limit "
+                     f"— narrow the query or re-run with a smaller top_k to see them")
+    if per_hit < PREVIEW_CHARS:
+        notes.append(f"previews shortened to {per_hit} chars; full text via read_source()")
+    head = f"**{len(hits)} hits** for: {query}"
+    if notes:
+        head += "\n_(" + " · ".join(notes) + ")_"
+    out = [head + "\n"]
     for i, h in enumerate(hits):
-        block = format_hit(i + 1, h, project=project)
+        block = format_hit(i + 1, h, project=project, preview_chars=per_hit)
         if attached_ids and str(h.get("chunk_id", "")) in attached_ids:
             block += "🖼️ Die Abbildung liegt dieser Antwort als Bild bei.\n"
         out.append(block)
@@ -77,9 +112,14 @@ def search_text(query: str, top_k: int = 0, doc_type: str = "",
     return format_hits(hits, query)
 
 
-def coverage(query: str, top_k: int = 50, min_score: float = 0.4,
+def coverage(query: str, top_k: int = 50, min_score: float | None = None,
              mode: str = "broad", collection_name: str | None = None) -> str:
-    """Stand der Forschung: aggregiert die Treffer pro Quelle (substanziell/peripheral)."""
+    """Stand der Forschung: aggregiert die Treffer pro Quelle (substanziell/peripheral).
+
+    min_score=None (default) falls back to config.COVERAGE_MIN_SCORE — an explicit
+    caller value always wins."""
+    if min_score is None:
+        min_score = config.COVERAGE_MIN_SCORE
     agg = analytics.source_coverage(query, top_k=top_k, min_score=min_score,
                                     mode=mode, collection_name=collection_name)
     if agg.get("error"):
@@ -223,6 +263,11 @@ def inspect_chunks(source_file: str, page: int = 0, limit: int = 10,
         "page_start", "page_end", "chapter", "section", "doc_type",
         "author", "year", "year_num", "language", "chunk_id",
         "ingest_timestamp",
+        # Bookkeeping, not user metadata: which keys this chunk owes to a
+        # _meta.txt (patch_source_metadata reads it to decide what a rename
+        # may sweep). Listing it here keeps it out of "Custom metadata" the
+        # same way the other system fields above are kept out.
+        "_meta_keys",
     }
     out = [f"**{len(points)} chunks** for `{source_file}`"
            + (f", page {page}" if page else "") + "\n"]
@@ -491,6 +536,8 @@ def write_note(path: str, content: str) -> str:
         target.write_text(content.rstrip() + "\n", encoding="utf-8")
     rel_out = target.relative_to(config.WISSENSWIKI_DIR).as_posix()
     verb = "Appended a dated section to" if existed else "Saved"
+    activity_log.log_op("write_note", path=f"WissensWIKI/{rel_out}",
+                        mode="append" if existed else "new")
     return f"{verb} WissensWIKI/{rel_out} — your notebook (not indexed)."
 
 
@@ -539,6 +586,22 @@ def set_metadata(folder: str, key: str, value: str) -> str:
     target_dir = _resolve_under(folder, config.SOURCES_DIR)
     if target_dir is None or not config.is_corpus_path(target_dir):
         return "Abgelehnt: Der Ordner muss im Korpus liegen (nicht WissensWIKI/)."
+    # set_metadata war der einzige Schreibpfad OHNE Schutzzaun — und der folgenreichste:
+    # es legt nicht nur _meta.txt an, sondern laesst reapply_folder_metadata den Ordner
+    # rekursiv durchlaufen und schreibt author/year/doc_type/rel_path auf JEDEN
+    # indexierten Chunk darunter neu. Auf einem geschuetzten Top-Level-Ordner
+    # (Korpus/Code) oder gar der Vault-Wurzel betrifft das den ganzen Bestand, lautlos —
+    # und das Werkzeug ist remote exponiert (mcp_server_remote.EXPOSED). Gleiche Grenze
+    # wie vault_write/vault_append/vault_edit (vault._write_protected): geschuetzte
+    # Top-Level-Ordner UND die Wurzel selbst (SOURCES_DIR IST die Vault-Wurzel,
+    # folder="" traefe also alles auf einmal).
+    _rel = target_dir.relative_to(config.SOURCES_DIR.resolve())
+    if not _rel.parts:
+        return ("Abgelehnt: set_metadata braucht einen Unterordner — die Vault-Wurzel "
+                "selbst wuerde den gesamten Korpus umetikettieren.")
+    if _rel.parts[0] in config.VAULT_WRITE_PROTECT:
+        return (f"Abgelehnt: '{_rel.parts[0]}' ist schreibgeschuetzt "
+                "(VAULT_WRITE_PROTECT).")
     if not target_dir.is_dir():
         return (f"Kein Ordner '{folder}' im Projektordner. "
                 "Prüfe die Ordner über list_sources().")
@@ -564,6 +627,7 @@ def set_metadata(folder: str, key: str, value: str) -> str:
     except Exception:  # noqa: BLE001 — index refresh is best-effort; the file is written
         pass
     tail = f"; {n} indexierte Chunks aktualisiert" if n >= 0 else ""
+    activity_log.log_op("set_metadata", folder=folder, key=key, value=value)
     return (f"Metadaten '{key}={value}' für Ordner '{folder}' gesetzt{tail}. "
             f"Jetzt filterbar mit meta_filter='{key}={value}'.")
 
@@ -584,6 +648,7 @@ def delete_note(path: str, confirm: bool = False) -> str:
         return (f"Sicher? Das löscht WissensWIKI/{rel} unwiderruflich. "
                 "Zum Bestätigen erneut mit confirm=True aufrufen.")
     target.unlink()
+    activity_log.log_op("delete_note", path=f"WissensWIKI/{rel}")
     return f"Gelöscht: WissensWIKI/{rel}."
 
 
@@ -613,6 +678,8 @@ def delete_passage(topic: str, confirm: bool = False) -> str:
                 "gelöscht (sonst bliebe ein verwaister Index-Eintrag). Bitte erneut "
                 "versuchen, sobald BRAG läuft.")
     path.unlink()
+    activity_log.log_op("delete_passage", topic=topic,
+                        file=f"Quellenbelege/{slug}.md")
     return (f"Gelöscht: WissensWIKI/Quellenbelege/{slug}.md, "
             f"{removed} Chunks aus dem Suchindex entfernt.")
 
@@ -645,4 +712,6 @@ def move_note(path: str, new_path: str) -> str:
     except OSError as e:
         return f"Konnte die Notiz nicht verschieben: {e}"
     dst_rel = dst.relative_to(config.WISSENSWIKI_DIR).as_posix()
+    activity_log.log_op("move_note", src=f"WissensWIKI/{src_rel}",
+                        dst=f"WissensWIKI/{dst_rel}")
     return f"Verschoben: WissensWIKI/{src_rel} → WissensWIKI/{dst_rel}."

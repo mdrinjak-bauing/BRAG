@@ -195,21 +195,29 @@ def test_collision_report_same_text_different_page_is_fine():
 
 
 # ── A rename must not wipe the printed page labels ────────────────────────────
-# patch_source_metadata deletes every payload key that is neither in the new
-# payload nor in its _PRESERVE set, so that a stale custom field from the old
-# folder's _meta.txt cannot survive a move. page_label_start/_end and image_file
-# are content, not folder metadata: metadata_payload() never carries them
-# (extract.py:179-192) and _PRESERVE did not list them — so renaming a file, or
-# merely editing a _meta.txt, silently stripped the printed pages and the figure
-# images from every chunk of that document. The watcher does both by itself
-# (watcher.py:70, :220). The citation then degrades from the printed page to the
+# patch_source_metadata deletes stale custom fields from the old folder's
+# _meta.txt so they cannot survive a move (e.g. a stale `project=A` leaking
+# into project B). Which keys count as stale is no longer a hardcoded
+# _PRESERVE set (Aufgabe 3 removed it): the precise answer is the sampled
+# chunk's own `_meta_keys` record (Chunk.payload, extract.py), naming exactly
+# which keys IT owes to a _meta.txt; a caller-supplied `alte_meta_keys` is the
+# fallback for a chunk indexed before that record existed; with neither,
+# nothing is deleted. page_label_start/_end and image_file are content, not
+# folder metadata — metadata_payload() never carries them (extract.py) and no
+# chunk ever records them in `_meta_keys`, so they can never be swept either
+# way. Before this record existed, renaming a file — or merely editing a
+# _meta.txt, which the watcher re-applies by itself (watcher.py:70, :220) —
+# silently stripped the printed pages and the figure images from every chunk
+# of a document. The citation then degraded from the printed page to the
 # physical PDF page with no visible change in the hit.
 
 class _PatchClient:
-    """Minimal stand-in for the Qdrant client used by patch_source_metadata."""
+    """Minimal stand-in for the Qdrant client used by patch_source_metadata.
+    Takes the actual sampled-point payload dict (not just a list of key names)
+    so a test can control real values, e.g. an explicit `_meta_keys` list."""
 
-    def __init__(self, payload_keys):
-        self._keys = list(payload_keys)
+    def __init__(self, payload):
+        self._payload = dict(payload)
         self.deleted = None
         self.patched = None
 
@@ -220,7 +228,7 @@ class _PatchClient:
     def scroll(self, collection_name, scroll_filter, limit,
                with_payload, with_vectors):
         from types import SimpleNamespace
-        return [SimpleNamespace(payload={k: "x" for k in self._keys})], None
+        return [SimpleNamespace(payload=dict(self._payload))], None
 
     def delete_payload(self, collection_name, keys, points):
         self.deleted = sorted(keys)
@@ -230,12 +238,16 @@ class _PatchClient:
 
 
 def test_rename_keeps_printed_page_labels_and_figure_images():
+    """The realistic case: a document ingested after Aufgabe 3, so the sampled
+    chunk carries its own `_meta_keys` record — the precise path, case 1 of the
+    three-way rule in patch_source_metadata."""
     from brag import storage
-    client = _PatchClient([
-        "source_file", "page_start", "text",
-        "page_label_start", "page_label_end", "image_file",
-        "projekt",  # a genuinely stale custom field from the old folder
-    ])
+    client = _PatchClient({
+        "source_file": "x", "page_start": "x", "text": "x",
+        "page_label_start": "x", "page_label_end": "x", "image_file": "x",
+        "projekt": "x",  # a genuinely stale custom field from the old folder
+        "_meta_keys": ["projekt"],  # recorded at ingest: owed to a _meta.txt
+    })
     storage.patch_source_metadata(
         client, "alt.pdf", {"source_file": "neu.pdf"}, collection_name="c",
     )
@@ -249,34 +261,122 @@ def test_rename_keeps_printed_page_labels_and_figure_images():
     assert "projekt" in weg, "the genuinely stale custom field must still go"
 
 
-def test_every_chunk_payload_key_survives_a_rename():
+def test_alte_meta_keys_still_cleans_up_a_chunk_indexed_before_the_record_existed():
+    """The migration case: a chunk indexed before Aufgabe 3 carries no
+    `_meta_keys` at all, so the precise path (case 1) has nothing to read. The
+    caller may then name what it separately knows — rename_source does this by
+    reading the OLD folder's still-existing `_meta.txt` chain (case 2 of the
+    three-way rule) — and the sweep still finds the stale field. Without this
+    fallback, every already-indexed document would stop being cleaned up on
+    rename forever, not just until its next re-ingest."""
+    from brag import storage
+    client = _PatchClient({
+        "source_file": "x", "page_label_start": "x", "image_file": "x",
+        "projekt": "x",  # stale, but unprovable from the payload alone
+    })
+    storage.patch_source_metadata(
+        client, "alt.pdf", {"source_file": "neu.pdf"}, collection_name="c",
+        alte_meta_keys={"projekt"},
+    )
+    weg = set(client.deleted or [])
+    assert "projekt" in weg, "alte_meta_keys must still let the migration case clean up"
+    assert "page_label_start" not in weg and "image_file" not in weg, (
+        "alte_meta_keys must not sweep content fields it was never told about: "
+        f"{sorted(weg)}"
+    )
+
+
+def test_every_chunk_payload_key_survives_a_rename_except_a_named_stale_one():
     """The bug class, not just the three keys that fell into it.
 
-    A rename patches the payload with metadata_payload() and deletes everything
-    else that _PRESERVE does not name. Any key a chunk writes must therefore be
-    covered by one of the two — otherwise adding a field to Chunk.payload()
-    silently makes a rename destroy it, months later and with no error.
+    A rename patches the payload with metadata_payload() and then sweeps stale
+    keys. Any key a chunk writes must therefore either be re-supplied by
+    metadata_payload() or simply not be named as stale — otherwise adding a
+    field to Chunk.payload() silently makes a rename destroy it, months later
+    and with no error.
+
+    The sweep mechanism changed (Aufgabe 3): it no longer reads a hardcoded
+    `_PRESERVE` set out of the source text — that variable no longer exists,
+    so a test introspecting for it would now always fail regardless of
+    correctness — but reads the chunk's own recorded `_meta_keys`. This test
+    exercises that mechanism end to end (real Chunk.payload() through real
+    patch_source_metadata) instead of parsing it out of source code, so the
+    check keeps testing the actual behaviour rather than a text pattern.
     """
     from brag import storage
     from brag.ingest.extract import metadata_payload
     from pathlib import Path
 
-    geschrieben = set(_chunk(
-        text="t", context="c", image_file="figures/a.jpg",
+    chunk = _chunk(
+        chunk_type="text", text="t", context="c", image_file="figures/a.jpg",
         page_label_start="xii", page_label_end="xiii",
-    ).payload())
-    ersetzt = set(metadata_payload(Path("papers/A_2024_X.pdf")))
-    # _PRESERVE is a local inside patch_source_metadata; read it from the source
-    # rather than duplicating the list here, so the test cannot drift from it.
-    import inspect, re
-    quelle = inspect.getsource(storage.patch_source_metadata)
-    bewahrt = set(re.findall(r'"(\w+)"', quelle.split("_PRESERVE = {")[1].split("}")[0]))
+        custom_meta={"projekt": "A"},
+    )
+    geschrieben = chunk.payload()
+    assert geschrieben["_meta_keys"] == ["projekt"]  # sanity: the record exists
 
-    ungedeckt = geschrieben - ersetzt - bewahrt
-    assert not ungedeckt, (
-        "these payload keys are written at ingest but neither re-supplied by "
-        f"metadata_payload() nor listed in _PRESERVE, so a rename deletes them: "
-        f"{sorted(ungedeckt)}"
+    client = _PatchClient(geschrieben)
+    neuer_ordner_payload = metadata_payload(Path("papers/A_2024_X.pdf"))  # no "projekt"
+    storage.patch_source_metadata(client, chunk.source_file, neuer_ordner_payload,
+                                  collection_name="c")
+
+    weg = set(client.deleted or [])
+    verloren = weg - {"projekt"}
+    assert not verloren, (
+        "these payload keys are written at ingest but were swept away by a "
+        "rename that should only remove what this chunk's own _meta_keys "
+        f"record names: {sorted(verloren)}"
+    )
+    assert "projekt" in weg, "the one field the record actually names must still be removed"
+
+
+def test_every_structural_payload_key_is_named_in_reserved_or_overridable_keys():
+    """The drift guard the test above no longer provides.
+
+    The original test_every_chunk_payload_key_survives_a_rename computed
+    `chunk_payload_keys - metadata_payload_keys - _PRESERVE` and went red
+    whenever ANY new field was added to Chunk.payload() without being
+    accounted for somewhere — "the bug class, not just the three keys that
+    fell into it" (its own docstring). The rewrite above
+    (test_every_chunk_payload_key_survives_a_rename_except_a_named_stale_one)
+    pins one concrete scenario end to end through the real sweep, which is
+    worth keeping on its own — but with `weg` constructed so it can only ever
+    contain `{"projekt"}` by construction, its assertion cannot go red no
+    matter what Chunk.payload() writes. The drift property is gone.
+
+    Under the new design the equivalent invariant is structural rather than
+    behavioural: every key Chunk.payload() writes OTHER than what custom_meta
+    contributes — the system's own fields — must be named in RESERVED_KEYS or
+    OVERRIDABLE_KEYS. Both sets are exactly what _parse_meta_file and
+    payload()'s own custom-field computation filter custom_meta against. If a
+    new structural field is ever added to payload() but forgotten in both
+    sets, a _meta.txt happening to define a key of that same name would then
+    both silently overwrite the structural value at ingest (no longer
+    filtered out as reserved) AND get treated as if it belonged to that
+    _meta.txt, so a later rename into a folder without that key would sweep
+    the SYSTEM field away as if it were stale custom data — the same bug
+    class this whole file exists to guard against, narrowed to "which keys is
+    a _meta.txt even allowed to touch". `_meta_keys` itself needs no separate
+    allowance here: Aufgabe 3 already put it inside RESERVED_KEYS, precisely
+    so a _meta.txt cannot dictate it (see test_a_meta_file_cannot_dictate_
+    what_a_rename_deletes in test_rename_payload.py).
+
+    Verified today: 20 structural keys, 0 uncovered.
+    """
+    from brag.ingest.extract import OVERRIDABLE_KEYS, RESERVED_KEYS
+
+    chunk = _chunk(
+        chunk_type="text", text="t", context="c", image_file="figures/a.jpg",
+        page_label_start="xii", page_label_end="xiii",
+        custom_meta={"projekt": "A"},
+    )
+    strukturell = set(chunk.payload()) - {"projekt"}
+    unbekannt = strukturell - (RESERVED_KEYS | OVERRIDABLE_KEYS)
+    assert not unbekannt, (
+        "Chunk.payload() writes structural keys that neither RESERVED_KEYS "
+        "nor OVERRIDABLE_KEYS names, so a same-named _meta.txt field could "
+        "overwrite them at ingest and a rename could later sweep them away "
+        f"as if they were stale custom data: {sorted(unbekannt)}"
     )
 
 

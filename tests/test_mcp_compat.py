@@ -52,3 +52,78 @@ def test_ci_installs_the_same_mcp_users_get():
             if "pip install" in z and re.search(r"\bmcp\b(?!==)", z)]
     assert not lose, f"mcp is installed unpinned in CI: {lose}"
 
+
+
+def test_the_remote_audit_sees_tools_behind_a_stacked_decorator():
+    """Die Selbstpruefung der Remote-Instanz suchte den Dekorator mit einem
+    regulaeren Ausdruck, der ihn DIREKT ueber `def` verlangte. Steht dazwischen ein
+    weiterer Dekorator (@with_topic_hint, @with_passage_layout_note), war das Tool
+    unsichtbar — gemessen 25 statt 27, ausgerechnet `search` und `save_passage`.
+    Die harte Absicherung greift weiter, verloren war die Drift-Warnung: ein neues,
+    unklassifiziertes Tool mit Zusatz-Dekorator haette niemand gemeldet."""
+    import ast
+
+    from brag.mcp_server_remote import _declared_tools
+    quelle = (REPO / "brag" / "mcp_server.py").read_text(encoding="utf-8")
+
+    gefunden = _declared_tools(quelle)
+    assert {"search", "save_passage"} <= gefunden, (
+        "genau die Tools mit Zusatz-Dekorator fehlen wieder")
+
+    # Gegenprobe gegen den Syntaxbaum selbst: KEIN dekoriertes Tool darf fehlen.
+    alle = {k.name for k in ast.walk(ast.parse(quelle))
+            if isinstance(k, (ast.FunctionDef, ast.AsyncFunctionDef))
+            for d in k.decorator_list
+            if getattr(getattr(d, "func", d), "attr", "") == "tool"}
+    assert gefunden == alle
+    # Der alte regulaere Ausdruck sah weniger — daran haengt der Befund.
+    alt = set(re.findall(r"@mcp\.tool\([^)]*\)\s*\ndef\s+(\w+)", quelle))
+    assert len(alt) < len(gefunden)
+
+
+def test_every_remote_tool_is_classified():
+    """Was die Warnung eigentlich absichert: jedes Tool ist entweder freigegeben
+    oder gesperrt — ein neues faellt per Default auf 'nicht exponiert', soll aber
+    auffallen."""
+    from brag.mcp_server_remote import EXPOSED, WITHHELD, _declared_tools
+    quelle = (REPO / "brag" / "mcp_server.py").read_text(encoding="utf-8")
+    unklassifiziert = _declared_tools(quelle) - set(EXPOSED) - set(WITHHELD)
+    assert not unklassifiziert, f"nicht klassifizierte Tools: {sorted(unklassifiziert)}"
+
+
+def test_the_topic_filter_is_a_parameter_on_both_search_surfaces():
+    """Der alte Thin-Client bot `search(..., topic=…)`; der neue nicht mehr. Die
+    Filterung selbst lief weiter ueber meta_filter='topic=…' — aber die eigene
+    Doku fuehrt `topic` als Filter, und jede gespeicherte Anweisung, die
+    search(topic="…") aufruft, scheiterte an der Schema-Pruefung."""
+    import inspect
+
+    import brag.mcp_client as c
+    import brag.mcp_server as s
+    for fn in (c.search, s.search):
+        assert "topic" in inspect.signature(fn).parameters, fn.__module__
+
+
+def test_the_topic_parameter_lands_on_the_existing_meta_mechanism(monkeypatch):
+    """Kein zweiter Filtermechanismus: `topic` ist ein gewoehnliches Payload-Feld
+    und wird auf denselben meta-Weg abgebildet."""
+    import brag.mcp_client as c
+    import brag.mcp_server as s
+
+    gesehen = {}
+    monkeypatch.setattr(c, "_post", lambda pfad, body, **k: gesehen.update(body) or None)
+    c.search("frage", topic="beispiel-thema")
+    assert gesehen["meta"] == {"topic": "beispiel-thema"}
+
+    # Ein ausdrueckliches meta_filter='topic=…' behaelt Vorrang.
+    gesehen.clear()
+    c.search("frage", topic="A", meta_filter="topic=B, projekt=X")
+    assert gesehen["meta"] == {"topic": "B", "projekt": "X"}
+
+    # Serverseitig dasselbe, ueber tools.search_hits' meta_filter-String.
+    gesehen.clear()
+    monkeypatch.setattr(s.tools, "search_hits",
+                        lambda *a, **k: gesehen.update(k) or [])
+    s.search("frage", topic="beispiel-thema")
+    from brag.formatting import parse_meta_filter
+    assert parse_meta_filter(gesehen["meta_filter"]) == {"topic": "beispiel-thema"}
