@@ -26,7 +26,15 @@ import ast
 import os
 import sys
 
-from mcp.server.fastmcp import FastMCP
+# mcp 2.x renamed FastMCP to MCPServer and left a tombstone module behind. Without
+# this switch the remote connector does not import at all on mcp >= 2 — and the
+# pinned requirement is 2.1.1, so that is the default install. Same shim as
+# mcp_server.py and mcp_client.py; constructor, .tool() and .run() are
+# call-compatible across both lines.
+try:  # mcp >= 2
+    from mcp.server.mcpserver import MCPServer as FastMCP
+except ModuleNotFoundError:  # mcp 1.x
+    from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
 from brag import mcp_server as _srv  # nur Import der Tool-Funktionen — startet KEINEN Server
