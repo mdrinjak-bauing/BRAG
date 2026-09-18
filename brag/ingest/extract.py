@@ -78,6 +78,8 @@ class Chunk:
 
     def payload(self) -> dict:
         from datetime import datetime
+        custom = {k: v for k, v in self.custom_meta.items()
+                  if k not in RESERVED_KEYS and k not in OVERRIDABLE_KEYS}
         return {
             "text": self.text, "context": self.context,
             "chunk_type": self.chunk_type, "source_file": self.source_file,
@@ -88,12 +90,14 @@ class Chunk:
             "year_num": int(self.year) if self.year.isdigit() else 0,
             "language": self.language, "chunk_id": self.chunk_id,
             "ingest_timestamp": datetime.now().isoformat(timespec="seconds"),
+            # Which keys this chunk owes to a _meta.txt. A later rename removes
+            # exactly those of them the new location no longer defines.
+            "_meta_keys": sorted(custom),
         } | ({"image_file": self.image_file} if self.image_file else {}) \
           | ({"page_label_start": self.page_label_start,
               "page_label_end": self.page_label_end}
              if self.page_label_start else {}) \
-          | {k: v for k, v in self.custom_meta.items()
-             if k not in RESERVED_KEYS and k not in OVERRIDABLE_KEYS}
+          | custom
 
 
 # Payload keys owned by the system — user metadata may override the three
@@ -102,7 +106,7 @@ RESERVED_KEYS = {
     "text", "context", "chunk_type", "source_file", "rel_path",
     "page_start", "page_end", "chapter", "section", "year_num",
     "language", "chunk_id", "ingest_timestamp", "image_file",
-    "page_label_start", "page_label_end",
+    "page_label_start", "page_label_end", "_meta_keys",
 }
 OVERRIDABLE_KEYS = {"author", "year", "doc_type"}
 
@@ -295,8 +299,10 @@ def metadata_payload(path: Path) -> dict:
         "year_num": int(m["year"]) if m["year"].isdigit() else 0,
         "doc_type": m["doc_type"],
     }
-    payload.update({k: v for k, v in m["custom_meta"].items()
-                    if k not in RESERVED_KEYS and k not in OVERRIDABLE_KEYS})
+    custom = {k: v for k, v in m["custom_meta"].items()
+              if k not in RESERVED_KEYS and k not in OVERRIDABLE_KEYS}
+    payload["_meta_keys"] = sorted(custom)
+    payload.update(custom)
     return payload
 
 

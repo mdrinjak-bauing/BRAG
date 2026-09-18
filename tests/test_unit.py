@@ -254,6 +254,52 @@ def test_diversify_identical_when_not_starved():
         ["A", "B", "C"]
 
 
+def test_quellen_abdeckung_counts_shown_vs_contributing():
+    # "8 hits" alone says nothing about whether that is most of the field or a
+    # sliver of it — the denominator is every candidate with a relevant score,
+    # shown or not.
+    from brag.search.query import _quellen_abdeckung
+    hits = [{"source_file": "A"}, {"source_file": "B"}]
+    candidates = hits + [
+        {"source_file": "C", "rerank_score": 0.9},   # relevant, not shown -> counts
+        {"source_file": "D", "rerank_score": 0.1},   # below threshold -> excluded
+        {"source_file": "A", "rerank_score": 0.2},   # low score but A already shown
+    ]
+    cov = _quellen_abdeckung(hits, candidates)
+    assert cov == {"gezeigt": 2, "beitragend": 3}   # A, B, C
+
+
+def test_quellen_abdeckung_names_no_denominator_without_any_score():
+    # Rewritten (it used to assert beitragend == 2 here and thereby pin the bug):
+    # with reranking off — RERANK_PROFILE=off is a documented setting — every
+    # candidate carries rerank_score None. Counting an UNSCORED candidate as
+    # contributing turned the whole fusion pool into the denominator, and the user
+    # was told "showing 10 of 45 sources that contribute" although nothing had been
+    # scored. Its sibling _saturation returns "unbewertet" and says nothing for the
+    # very same input; two mechanisms on one pool must not reach opposite
+    # conclusions. No scores -> no basis -> no denominator (the caller renders none).
+    from brag.search.query import _quellen_abdeckung
+    hits = [{"source_file": "A", "rerank_score": None}]
+    candidates = hits + [{"source_file": "B", "rerank_score": None}]
+    cov = _quellen_abdeckung(hits, candidates)
+    assert cov == {"gezeigt": 1, "beitragend": 0}
+    # And the consumer's condition (beitragend > gezeigt) is therefore false.
+    assert not cov["beitragend"] > cov["gezeigt"]
+
+
+def test_quellen_abdeckung_keeps_judging_a_partially_scored_pool():
+    # A partly scored pool is the rerank guard's normal outcome. The scored subset
+    # still stands: a relevant candidate that was found IS a find, so the
+    # denominator remains a lower bound rather than being dropped altogether.
+    from brag.search.query import _quellen_abdeckung
+    hits = [{"source_file": "A", "rerank_score": 0.95}]
+    candidates = hits + [
+        {"source_file": "B", "rerank_score": 0.9},     # scored + relevant -> counts
+        {"source_file": "C", "rerank_score": None},    # never scored -> no claim
+    ]
+    assert _quellen_abdeckung(hits, candidates) == {"gezeigt": 1, "beitragend": 2}
+
+
 def test_handler_pins_project_record_against_midrun_registry_change(tmp_path, monkeypatch):
     # A still-running observer must keep resolving to ITS project's collection
     # even if the project is removed from the registry mid-run (ING-05): the
@@ -539,7 +585,24 @@ def test_env_empty_or_missing_falls_back_to_default(monkeypatch):
 
 
 def test_unknown_rerank_profile_falls_back_to_eco(monkeypatch):
+    """An unknown profile must fall back to "eco".
+
+    2026-09-18: the test has to shield itself from the operator's environment. config.py
+    calls load_dotenv() on import, so a RERANK_PREFETCH in a local .env silently won.
+    The test then reported the user's setting instead of the code — and was inert for
+    exactly those who have a .env, which is every real installation. Measured: with
+    `RERANK_PREFETCH=150` in .env it asserted 150 == 80 and failed; in a checkout without
+    a .env it passed while testing nothing about the profile.
+    """
     import importlib
+
+    try:
+        import dotenv
+        monkeypatch.setattr(dotenv, "load_dotenv", lambda *a, **k: False)
+    except ModuleNotFoundError:
+        pass  # ohne python-dotenv gibt es keine .env, gegen die abzuschirmen waere
+    for name in ("RERANK_PREFETCH", "RERANK_FUSION_LIMIT", "RERANK_ENABLED"):
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("RERANK_PROFILE", "nonsense")
     importlib.reload(config)
     try:
@@ -547,5 +610,5 @@ def test_unknown_rerank_profile_falls_back_to_eco(monkeypatch):
         assert config.RERANK_PREFETCH == 80
         assert config.RERANK_FUSION_LIMIT == 40  # the "eco" preset
     finally:
-        monkeypatch.delenv("RERANK_PROFILE", raising=False)
+        monkeypatch.undo()        # .env-Lader und Profil-Variable zurueck
         importlib.reload(config)  # restore module state for other tests

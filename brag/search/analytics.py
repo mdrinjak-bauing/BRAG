@@ -23,15 +23,20 @@ from brag import config
 from brag.search.query import search as run_search
 
 
-def source_coverage(query: str, top_k: int = 50, min_score: float = 0.4,
+def source_coverage(query: str, top_k: int = 50, min_score: float | None = None,
                     mode: str = "broad", collection_name: str | None = None) -> dict:
     """Aggregate hits per source. mode:
       'broad'    — substantial = count>=3 AND max_score>=min_score (who writes A LOT);
       'specific' — substantial = max_score>=min_score, ranked by max_score x spec_factor
                    (a narrow specialist with one strong hit ranks above a broad source);
       'both'     — returns both tables (keys `substantial` = broad, `substantial_specific`).
+    min_score=None (default) falls back to config.COVERAGE_MIN_SCORE — every
+    current caller (tools.coverage) always passes an explicit value, so this
+    only matters for a future/direct caller that omits it.
     Returns total_sources / total_chunks_analyzed / mode and lists of
     (source_file, count, max_score, sample_text, page, chapters_list)."""
+    if min_score is None:
+        min_score = config.COVERAGE_MIN_SCORE
     try:
         results = run_search(query, top_k=top_k, reranking=True,
                              max_chunks_per_source=10, collection_name=collection_name)

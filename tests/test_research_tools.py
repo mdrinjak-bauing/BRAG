@@ -108,6 +108,61 @@ def test_format_hits_marks_attached_images(monkeypatch):
     assert "🖼️" not in tools.format_hits(hits, "q", attached_ids=set())
 
 
+def test_format_hits_stays_under_budget_for_a_50_hit_review(monkeypatch):
+    # I-4 (review): mcp_server.search() -> tools.format_hits() -> format_hit()
+    # had no ceiling and no per-hit preview limit at all — a 'review' search
+    # (50 hits, max_per_source=2 preset) at the full 2000-char preview measured
+    # ~100k characters, twice what the old stand's own comment records as
+    # already having been rejected outright once ("~110k characters ... was
+    # rejected outright"). Must behave like mcp_client.search(): budgeted and
+    # noted when it bites.
+    from brag import formatting
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    hits = [{"source_file": f"S{i}.pdf", "rel_path": f"S{i}.pdf", "text": "x" * 2000}
+            for i in range(50)]
+    out = tools.format_hits(hits, "Reifegrad")
+    # Budgeted text alone is <=45000 (RESPONSE_BUDGET_CHARS); the rest is markdown
+    # overhead (headers/links/meta lines) per hit, not unbounded preview text.
+    # Well under the ~107k this measured before the fix (assert independently
+    # of the exact per-hit markup, which is free to change).
+    assert len(out) < formatting.RESPONSE_BUDGET_CHARS * 1.5
+    assert "previews shortened" in out
+
+
+def test_mcp_server_search_collects_images_only_from_budget_trimmed_hits(monkeypatch):
+    # N-2 (re-review): mcp_server.search() called collect_hit_images(hits) on the
+    # FULL hit list, before tools.format_hits() trims internally for rendering.
+    # With more than the default 128-hit ceiling and a figure concentrated past
+    # it, the image would arrive with no corresponding hit block / no marker
+    # pointing at it. Spy on collect_hit_images to prove it only ever sees the
+    # hits that end up rendered.
+    import brag.images as images_mod
+    import brag.mcp_server as s
+    from brag.formatting import max_hits_for_budget
+
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    monkeypatch.setattr(config, "SEARCH_IMAGES_ENABLED", True, raising=False)
+    hits = [{"source_file": f"S{i}.pdf", "rel_path": f"S{i}.pdf", "text": "kurz",
+             "chunk_id": str(i)} for i in range(200)]
+    monkeypatch.setattr(tools, "search_hits", lambda *a, **k: hits)
+    seen = {}
+
+    def spy(hs, *a, **k):
+        seen["hits"] = hs
+        return [], set()
+
+    monkeypatch.setattr(images_mod, "collect_hit_images", spy)
+
+    s.search("frage")
+    ceiling = max_hits_for_budget()
+    assert "hits" in seen, "collect_hit_images was never called"
+    assert len(seen["hits"]) <= ceiling
+    assert seen["hits"][-1]["chunk_id"] == str(ceiling - 1), (
+        "collect_hit_images saw a hit beyond the budget ceiling")
+
+
 # ── analytics: coverage / clusters / compare (brag/search/analytics.py) ─────
 
 def _hit(src, score, chapter="", text="lorem", page=1, hid=None):
@@ -152,6 +207,71 @@ def test_coverage_tool_renders(monkeypatch):
                         lambda *a, **k: [_hit("Big", 0.9, chapter="4 Methodik")] * 3)
     out = tools.coverage("Reifegrad")
     assert "Coverage zu:" in out and "Big" in out and "Methodik" in out
+
+
+def test_coverage_env_override_reaches_the_default_min_score(monkeypatch):
+    """COVERAGE_MIN_SCORE used to be a dead knob: config read it, but tools.coverage
+    always passed a hardcoded 0.4, so the env var could never actually change the
+    threshold. Proves the env override now actually reaches source_coverage's
+    min_score when the caller doesn't pass one explicitly."""
+    import importlib
+
+    from brag.search import analytics
+    monkeypatch.setattr(analytics, "run_search",
+                        lambda *a, **k: [_hit("Big", 0.9)] * 3)
+    seen = {}
+    real_source_coverage = analytics.source_coverage
+
+    def spy(*a, **k):
+        seen["min_score"] = k.get("min_score")
+        return real_source_coverage(*a, **k)
+
+    monkeypatch.setattr(analytics, "source_coverage", spy)
+    monkeypatch.setenv("COVERAGE_MIN_SCORE", "0.7")
+    importlib.reload(config)
+    try:
+        tools.coverage("Reifegrad")  # no explicit min_score -> must fall back to config
+        assert seen["min_score"] == 0.7
+    finally:
+        monkeypatch.delenv("COVERAGE_MIN_SCORE", raising=False)
+        importlib.reload(config)   # restore module state for other tests
+
+
+def test_coverage_live_mcp_tool_reads_config_min_score(monkeypatch):
+    """C-2 (review): tools.coverage()'s own fallback was proven above, but every
+    call site a user actually reaches — mcp_server.coverage(), the live MCP tool —
+    still passed its OWN hardcoded 0.4 explicitly, which always wins over a
+    default and defeats the fallback entirely. This drives the real tool
+    function, not tools.coverage() directly, so it would have caught that."""
+    import importlib
+
+    import brag.mcp_server as s
+    from brag.search import analytics
+    monkeypatch.setattr(analytics, "run_search",
+                        lambda *a, **k: [_hit("Big", 0.9)] * 3)
+    monkeypatch.setenv("COVERAGE_MIN_SCORE", "0.6")
+    importlib.reload(config)
+    try:
+        out = s.coverage("Reifegrad")  # no explicit min_score — the live tool call
+        assert "min_score=0.6" in out
+    finally:
+        monkeypatch.delenv("COVERAGE_MIN_SCORE", raising=False)
+        importlib.reload(config)
+
+
+def test_mcp_client_coverage_forwards_none_min_score_not_hardcoded_04(monkeypatch):
+    # C-2 (review), 3rd of 4 hardcoded-0.4 sites: the thin-client tool wrapper
+    # itself defaulted min_score to 0.4 and always forwarded that literal value
+    # to the bridge — so even with the bridge and tools.coverage() both fixed,
+    # a caller who didn't pass min_score would still ship an explicit 0.4 that
+    # wins over config. Must forward None so the config fallback downstream
+    # actually gets a chance to apply.
+    from brag import mcp_client as c
+    seen = {}
+    monkeypatch.setattr(c, "_post", lambda path, payload, **k: seen.update(payload) or
+                        {"ok": True, "text": ""})
+    c.coverage("Reifegrad")  # no explicit min_score
+    assert seen["args"]["min_score"] is None
 
 
 def test_clusters_groups_two_obvious_clusters(monkeypatch):

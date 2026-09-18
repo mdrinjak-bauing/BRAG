@@ -463,6 +463,32 @@ def remove_source(source_file: str) -> int:
     return n
 
 
+def _alte_meta_keys(old_source_file: str) -> set[str] | None:
+    """Best-effort fallback for `patch_source_metadata`'s `alte_meta_keys`: the
+    custom keys the OLD folder's `_meta.txt` chain defined, read for a chunk
+    that was indexed before `_meta_keys` started being recorded on the payload
+    itself (case 2 of the three-way rule in storage.patch_source_metadata).
+
+    Returns None when the old folder is missing, unreadable, or anything else
+    goes wrong reading it — the caller's absence of proof then falls through
+    to the safe default (delete nothing) instead of ever widening what gets
+    swept away. Returns a (possibly empty) set when the folder itself was read
+    successfully — empty if its `_meta.txt` chain currently defines no custom
+    keys at all. `patch_source_metadata` treats `None` and an empty set the
+    same way downstream (`alte_meta_keys or ()`), but they are not the same
+    claim: `None` means "we could not check", an empty set means "we
+    checked, and there is nothing there"."""
+    from brag.ingest.extract import OVERRIDABLE_KEYS, RESERVED_KEYS, load_folder_meta
+    try:
+        alter_ordner = (config.SOURCES_DIR / old_source_file).parent
+        if not alter_ordner.is_dir():
+            return None
+        meta = load_folder_meta(config.SOURCES_DIR / old_source_file)
+        return {k for k in meta if k not in RESERVED_KEYS and k not in OVERRIDABLE_KEYS}
+    except Exception:  # noqa: BLE001 — a rename must never fail over this
+        return None
+
+
 def rename_source(old_source_file: str, new_path: Path) -> int:
     """Lightweight rename of an already-indexed source: the content is the same,
     only the name/location changed, so patch the filename-derived metadata on
@@ -477,9 +503,13 @@ def rename_source(old_source_file: str, new_path: Path) -> int:
     from brag.ingest.notes import rename_note
 
     payload = metadata_payload(new_path)
+    # Only used when the chunk itself carries no `_meta_keys` record (a
+    # document indexed before this change) — see patch_source_metadata.
+    alte_meta_keys = _alte_meta_keys(old_source_file)
     client = storage.get_client()
     try:
-        n = storage.patch_source_metadata(client, old_source_file, payload)
+        n = storage.patch_source_metadata(client, old_source_file, payload,
+                                          alte_meta_keys=alte_meta_keys)
     finally:
         client.close()
     if n:

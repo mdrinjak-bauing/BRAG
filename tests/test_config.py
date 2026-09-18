@@ -260,3 +260,38 @@ def test_both_readmes_name_every_tool_the_server_registers():
         text = (repo / name).read_text(encoding="utf-8")
         fehlt = [w for w in werkzeuge if f"`{w}`" not in text]
         assert not fehlt, f"{name} never mentions these tools: {fehlt}"
+
+
+def _fastembed_cache_in_a_fresh_interpreter(env_wert):
+    """Der Pin passiert beim IMPORT von brag.config — in diesem Prozess ist der
+    Import laengst gelaufen, also in einem frischen Interpreter messen."""
+    import os
+    import subprocess
+    import sys
+    env = dict(os.environ)
+    env.pop("FASTEMBED_CACHE_PATH", None)
+    if env_wert is not None:
+        env["FASTEMBED_CACHE_PATH"] = env_wert
+    lauf = subprocess.run(
+        [sys.executable, "-c",
+         "import os, brag.config; print(os.environ.get('FASTEMBED_CACHE_PATH', ''))"],
+        capture_output=True, text=True, env=env,
+        cwd=str(Path(__file__).resolve().parent.parent), check=True)
+    return lauf.stdout.strip()
+
+
+def test_the_fastembed_cache_is_pinned_away_from_tmpdir():
+    """Ohne Pin cacht fastembed unter $TMPDIR, das macOS periodisch leert. Bei
+    kaltem Cache faellt SparseTextEmbedding OHNE Warnung auf eine LEERE
+    Stoppwortliste zurueck; die so indexierten Dokumente behalten ihre Stoppwoerter
+    im BM25-Vektor, was doc_len aufblaeht und jedes Termgewicht dieses Dokuments
+    gegenueber dem restlichen Korpus druckt — es rankt danach lautlos zu tief."""
+    pfad = _fastembed_cache_in_a_fresh_interpreter(None)
+    assert pfad, "kein FASTEMBED_CACHE_PATH gesetzt — fastembed cacht unter $TMPDIR"
+    assert "/tmp" not in pfad and "/T/" not in pfad, f"Cache liegt im Wegwerf-Bereich: {pfad}"
+
+
+def test_an_explicitly_exported_fastembed_cache_still_wins():
+    """setdefault, nicht Zuweisung: eine Deployment-Vorgabe darf nicht ueberschrieben
+    werden (z. B. ein gemeinsamer Cache im Container-Volume)."""
+    assert _fastembed_cache_in_a_fresh_interpreter("/eigener/cache") == "/eigener/cache"

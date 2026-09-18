@@ -31,7 +31,14 @@ except ModuleNotFoundError:  # mcp 1.x
 from mcp.types import ImageContent, TextContent
 
 from brag import config
-from brag.formatting import format_hit, parse_meta_filter
+from brag.formatting import (
+    PREVIEW_CHARS,
+    format_hit,
+    max_hits_for_budget,
+    parse_meta_filter,
+    preview_chars_for,
+    with_topic_hint,
+)
 
 mcp = _MCPServer("brag")
 
@@ -44,7 +51,8 @@ _BUSY = ("BRAG's search service is starting up or unavailable — your documents
 def _post(path: str, payload: dict, timeout: int = 180) -> dict | None:
     """POST JSON to the in-container bridge. Returns the parsed dict, or None on
     any transport/parse failure (the caller turns that into a friendly message —
-    a bridge hiccup must never crash the MCP session)."""
+    a bridge hiccup must never crash the MCP session). An HTTP ERROR response is
+    not a transport failure: its body is passed through."""
     data = json.dumps(payload).encode()
     req = urllib.request.Request(
         _BASE + path, data=data,
@@ -53,6 +61,17 @@ def _post(path: str, payload: dict, timeout: int = 180) -> dict | None:
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        # Die Bridge HAT geantwortet (404/413/500 mit ok:False + message) — den Body
+        # durchreichen, damit die echte Ursache beim Nutzer ankommt statt _BUSY
+        # ("startet gerade"). HTTPError ist Subklasse von URLError und muss deshalb
+        # VOR dem Transportfall stehen; sonst liest sich jeder echte Fehler als
+        # Anlaufphase — am teuersten beim Umschalten, wo man dann auf eine
+        # Aufwaermphase wartet, die es gar nicht gibt.
+        try:
+            return json.loads(e.read() or b"{}")
+        except (OSError, json.JSONDecodeError, ValueError):
+            return None
     except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError):
         return None
 
@@ -67,9 +86,10 @@ def _index_op(op: str, **args) -> str:
 
 
 @mcp.tool()
+@with_topic_hint
 def search(query: str, top_k: int = 0, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
-           source_file: str = "", meta_filter: str = "",
+           source_file: str = "", topic: str = "", meta_filter: str = "",
            reranking: bool | None = None, max_per_source: int = 0,
            mode: str = "normal", include_images: bool = True):
     """Hybride Suche (Bedeutung + Stichwort) über den Dokumenten-Korpus.
@@ -89,6 +109,9 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
     chunk_type='table' für Zahlen/Statistiken, 'figure' für Abbildungen. Treffer
     auf Abbildungen legen der Antwort BIS ZU 3 BILDER bei (include_images=False
     schaltet das ab) — sieh sie dir an und lies konkrete Werte direkt daraus ab.
+    topic=… filtert thematisch über ALLE doc_types hinweg, für „alles zu Thema X"
+    (Kurzform von meta_filter='topic=…'; gültige Werte nennt der Hinweis unten,
+    sofern dieser Korpus ein topic-Feld führt).
     meta_filter schränkt auf eigene Metadaten-Felder ein (in _meta.txt im
     Wissensspeicher definiert), Format 'schlüssel=wert', mehrere mit Komma, z. B.
     meta_filter='projekt=Schulzentrum' oder 'kurs=Baumanagement, semester=WS25'.
@@ -103,7 +126,11 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
         "year_min": year_min, "year_max": year_max,
         "source_file": source_file, "reranking": reranking,
         "max_per_source": max_per_source, "mode": mode,
-        "meta": parse_meta_filter(meta_filter),
+        # `topic` ist ein gewoehnliches Payload-Feld — der eigene Parameter ist nur
+        # die Kurzform des dokumentierten Filters und wird hier darauf abgebildet.
+        # Ein ausdruecklich gesetztes meta_filter='topic=…' behaelt Vorrang.
+        "meta": {"topic": topic.strip(), **parse_meta_filter(meta_filter)}
+                if topic.strip() else parse_meta_filter(meta_filter),
         "include_images": bool(include_images),
     })
     if resp is None:
@@ -114,11 +141,58 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
     if not hits:
         return ("No hits. Try different phrasing, fewer filters, or check "
                 "list_sources() whether the document is indexed at all.")
+    # Keep the answer inside the MCP response budget — and SAY SO when it bites. A
+    # silently shortened list is the actual problem: it reads exactly like a
+    # complete one, so nobody thinks to ask for more.
+    ceiling = max_hits_for_budget()
+    dropped = max(0, len(hits) - ceiling)
+    if dropped:
+        hits = hits[:ceiling]
+    per_hit = preview_chars_for(len(hits))
     images = resp.get("images") or []
     attached = set(resp.get("attached_ids") or [])
-    out = [f"**{len(hits)} hits** for: {query}\n"]
+    notes = []
+    # Quellen-Nenner: "8 hits" allein sagt nichts darueber, ob das viel oder wenig
+    # vom Feld ist. _coverage ist Such-Metadatum (kein Payload-Feld) — abgeworfen,
+    # bevor der erste Treffer formatiert wird. gezeigt kommt aus query.search()'s
+    # EIGENER (Vor-Budget-)Trefferliste — trifft der Budget-Deckel hier oben noch
+    # zusaetzlich zu, ist das ein veralteter Zaehler; aus der tatsaechlich
+    # gerenderten (bereits gekuerzten) hits-Liste neu berechnet, sonst behauptet
+    # der Kopf mehr gezeigte Quellen, als Trefferbloecke folgen (N-1, Re-Review).
+    cov = hits[0].pop("_coverage", None) if hits else None
+    if cov:
+        cov = {**cov, "gezeigt": len({h.get("source_file") for h in hits
+                                       if h.get("source_file")})}
+    if cov and cov.get("beitragend", 0) > cov.get("gezeigt", 0):
+        notes.append(f"showing {cov['gezeigt']} of {cov['beitragend']} sources that "
+                     f"contribute to this question")
+    # Ist die Liste ZU ENDE oder nur ABGESCHNITTEN? Am Bildschirm sieht beides
+    # gleich aus; die Reranker-Scores kennen den Unterschied (query._saturation,
+    # Aufgabe 8). _saturation ist wie _coverage Such-Metadatum — abgeworfen, nicht
+    # gerendert, aus demselben (Vor-Budget-)Treffer-Objekt. Der Riegel-Zustand
+    # "unbewertet" (kein Reranker-Score vorhanden, z. B. RERANK_PROFILE=off, oder
+    # der Rest nur teilweise bewertet, M-7) rendert BEWUSST KEINE Notiz — Stille
+    # ist hier die richtige Antwort, nicht eine gehedgte: der Riegel existiert
+    # genau dafuer, keine Behauptung ohne Bewertungsgrundlage zu machen.
+    sat = hits[0].pop("_saturation", None) if hits else None
+    if sat and sat.get("state") == "abgeschnitten":
+        notes.append(f"list CUT OFF — {sat['weitere']} further hits are still relevant but "
+                     f"were held back by top_k or by the per-source cap; re-run with a "
+                     f"larger top_k / max_per_source to see them")
+    elif sat and sat.get("state") == "erschoepft":
+        notes.append("list EXHAUSTED — scores drop off after the last hit, "
+                     "nothing relevant follows")
+    if dropped:
+        notes.append(f"{dropped} further ranked hits omitted to fit the response limit "
+                     f"— narrow the query or re-run with a smaller top_k to see them")
+    if per_hit < PREVIEW_CHARS:
+        notes.append(f"previews shortened to {per_hit} chars; full text via read_source()")
+    head = f"**{len(hits)} hits** for: {query}"
+    if notes:
+        head += "\n_(" + " · ".join(notes) + ")_"
+    out = [head + "\n"]
     for i, h in enumerate(hits):
-        block = format_hit(i + 1, h, project=PROJECT)
+        block = format_hit(i + 1, h, project=PROJECT, preview_chars=per_hit)
         if attached and str(h.get("chunk_id", "")) in attached:
             block += "🖼️ Die Abbildung liegt dieser Antwort als Bild bei.\n"
         out.append(block)
@@ -133,7 +207,7 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
 
 
 @mcp.tool()
-def coverage(query: str, top_k: int = 50, min_score: float = 0.4,
+def coverage(query: str, top_k: int = 50, min_score: float | None = None,
              mode: str = "broad") -> str:
     """Stand der Forschung / „Wer schreibt zu X?" — aggregiert die Treffer PRO QUELLE
     (statt einer flachen Trefferliste) und teilt sie in substanziell vs. peripheral.
@@ -216,31 +290,49 @@ def rename_source(source_file: str, new_name: str) -> str:
     return _index_op("rename_source", source_file=source_file, new_name=new_name)
 
 
-@mcp.tool()
-def save_passage(topic: str, text: str, source: str, page: str = "",
-                 note: str = "") -> str:
-    """Sichert eine zitierfähige Passage unter einem Thema (z. B. ein Kapitel/Motiv).
+if config.PASSAGES_LAYOUT == "promotion":
+    # Signatures kept identical to brag.mcp_server; the bridge routes this layout
+    # to brag.passages_promotion (one file per chapter, not indexed).
+    @mcp.tool()
+    def save_passage(source: str, text: str, chapter: str, author: str = "",
+                     year: str = "", page_start: str = "", page_end: str = "",
+                     note: str = "") -> str:
+        """Store a corpus passage as evidence for a chapter. Required: source, text,
+        chapter; author/year/page_start/page_end/note refine the citation line."""
+        return _index_op("save_passage", source=source, text=text, chapter=chapter,
+                         author=author, year=year, page_start=page_start,
+                         page_end=page_end, note=note)
 
-    WANN was: ein wörtliches ZITAT aus einer Quelle → save_passage (wird durchsuchbarer
-    Beleg); EIGENER Text (Notizen, Entwürfe, Schlüsse, auch ein zusammengestelltes
-    Ergebnis) → write_note.
+    @mcp.tool()
+    def list_passages(chapter: str = "") -> str:
+        """Show stored evidence: with `chapter` the chapter file's contents, without it
+        an overview of all chapter files and how many passages each holds."""
+        return _index_op("list_passages", chapter=chapter)
+else:
+    @mcp.tool()
+    def save_passage(topic: str, text: str, source: str, page: str = "",
+                     note: str = "") -> str:
+        """Sichert eine zitierfähige Passage unter einem Thema (z. B. ein Kapitel/Motiv).
 
-    Baut deine Belegsammlung in WissensWIKI/Quellenbelege/<thema>.md auf UND indexiert die
-    Passage für die semantische Suche, sodass ein späterer Chat (auch mit einem anderen
-    Anbieter) sie über `search` wiederfindet — sie erscheint klar markiert als
-    „gespeicherte Passage", getrennt von Primärquellen. So hältst du Erkenntnisse,
-    Entscheidungen und Definitionen einer Arbeitssitzung fest, damit das Wissen im
-    Ordner lebt und nicht in einem Chat-Verlauf."""
-    return _index_op("save_passage", topic=topic, text=text, source=source,
-                     page=page, note=note)
+        WANN was: ein wörtliches ZITAT aus einer Quelle → save_passage (wird durchsuchbarer
+        Beleg); EIGENER Text (Notizen, Entwürfe, Schlüsse, auch ein zusammengestelltes
+        Ergebnis) → write_note.
 
+        Baut deine Belegsammlung in WissensWIKI/Quellenbelege/<thema>.md auf UND indexiert die
+        Passage für die semantische Suche, sodass ein späterer Chat (auch mit einem anderen
+        Anbieter) sie über `search` wiederfindet — sie erscheint klar markiert als
+        „gespeicherte Passage", getrennt von Primärquellen. So hältst du Erkenntnisse,
+        Entscheidungen und Definitionen einer Arbeitssitzung fest, damit das Wissen im
+        Ordner lebt und nicht in einem Chat-Verlauf."""
+        return _index_op("save_passage", topic=topic, text=text, source=source,
+                         page=page, note=note)
 
-@mcp.tool()
-def list_passages(topic: str = "") -> str:
-    """Listet gespeicherte Passagen: mit Thema die darunter gesicherten Passagen,
-    ohne Thema eine Übersicht aller Themen. (Gespeicherte Passagen erscheinen auch in
-    der Suche, markiert als „gespeicherte Passage" — dies ist die Themen-Übersicht.)"""
-    return _index_op("list_passages", topic=topic)
+    @mcp.tool()
+    def list_passages(topic: str = "") -> str:
+        """Listet gespeicherte Passagen: mit Thema die darunter gesicherten Passagen,
+        ohne Thema eine Übersicht aller Themen. (Gespeicherte Passagen erscheinen auch in
+        der Suche, markiert als „gespeicherte Passage" — dies ist die Themen-Übersicht.)"""
+        return _index_op("list_passages", topic=topic)
 
 
 @mcp.tool()
@@ -316,6 +408,74 @@ def move_note(path: str, new_path: str) -> str:
     (dort delete_passage + save_passage) und nie den Korpus. `path`/`new_path` sind
     relativ zu WissensWIKI/, z. B. move_note('Wissen/x.md', 'Kapitel/2/x.md')."""
     return _index_op("move_note", path=path, new_path=new_path)
+
+
+@mcp.tool()
+def open_pdf(source_file: str, pdf_page: int = 0, book_page: str = "",
+             page: int = 0) -> str:
+    """Open a corpus PDF at a given page in the desktop viewer. `source_file` is the
+    source key from the search results. Give either `book_page` (the printed page shown
+    in a hit, resolved via /PageLabels) or `pdf_page` (the physical page)."""
+    return _index_op("open_pdf", source_file=source_file, pdf_page=pdf_page,
+                     book_page=book_page, page=page)
+
+
+# ── Vault files — BRAG as a single MCP for corpus and notes alike ──────────────
+# Forwarded to the bridge process, which holds the vault paths and enforces the
+# write protection configured for it.
+
+@mcp.tool()
+def vault_read(path: str) -> str:
+    """Read a text/Markdown file (.md/.txt/.csv) from the vault; `path` is relative to
+    the vault root. For PDF/Word/Excel use `vault_extract`."""
+    return _index_op("vault_read", path=path)
+
+
+@mcp.tool()
+def vault_list(subdir: str = "") -> str:
+    """List files and folders under a vault path (empty = vault root)."""
+    return _index_op("vault_list", subdir=subdir)
+
+
+@mcp.tool()
+def vault_search(query: str, content: bool = True, limit: int = 40, root: str = "") -> str:
+    """Search vault FILES by name and optionally by content — not the corpus (use
+    `search` for that). `root` selects a configured secondary vault root."""
+    return _index_op("vault_search", query=query, content=content, limit=limit, root=root)
+
+
+@mcp.tool()
+def vault_write(path: str, content: str, overwrite: bool = False) -> str:
+    """Write or create a vault file. An existing file is replaced only with
+    `overwrite=True`. Write-protected areas are refused."""
+    return _index_op("vault_write", path=path, content=content, overwrite=overwrite)
+
+
+@mcp.tool()
+def vault_append(path: str, content: str) -> str:
+    """Append text to a vault file, creating it if absent. Same write protection as
+    `vault_write`."""
+    return _index_op("vault_append", path=path, content=content)
+
+
+@mcp.tool()
+def vault_edit(path: str, old_string: str, new_string: str,
+               replace_all: bool = False) -> str:
+    """Replace an exact snippet in an EXISTING vault file in place — the surgical
+    counterpart to `vault_write` (whole file) and `vault_append` (end only).
+    `old_string` must match exactly and be unique, otherwise the edit is refused; use
+    `replace_all=True` for every occurrence. Creates no new file."""
+    return _index_op("vault_edit", path=path, old_string=old_string,
+                     new_string=new_string, replace_all=replace_all)
+
+
+@mcp.tool()
+def vault_extract(path: str, page_from: int = 0, page_to: int = 0) -> str:
+    """Extract text from a vault PDF/Word/Excel file (.pdf/.docx/.xlsx), read-only.
+    Use it only when explicitly asked; `vault_read` stays the default for notes. PDFs
+    can be limited to `page_from`/`page_to` (1-based). Scans without a text layer
+    return nothing — no OCR here."""
+    return _index_op("vault_extract", path=path, page_from=page_from, page_to=page_to)
 
 
 if __name__ == "__main__":

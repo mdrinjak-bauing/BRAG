@@ -7,7 +7,9 @@ PDFs. This drives the Skim app on the user's Mac, so it lives OUTSIDE tools.py
 
 The printed-page -> physical-page translation reads the PDF's /PageLabels via
 pypdfium2 (imported lazily; falls back to treating the label as a physical page
-number when the library or the labels are absent — exactly the local behaviour).
+number when the library or the labels are absent). A PDF with front matter but no
+labels is caught in between by a deterministic header/footer scan for the printed
+number (_scan_printed_number) — see there.
 """
 
 from __future__ import annotations
@@ -82,11 +84,50 @@ def _resolve_book_page(pdf_path: Path, book_page) -> int | None:
                 return i + 1
         if str(book_page).isdigit():
             n = int(book_page)
+            # PDFs OHNE (passende) /PageLabels, aber MIT Vorspann (Titelei, roemische
+            # Seiten) landeten mit der naiven Annahme "gedruckt = physisch" konstant zu
+            # frueh — gemessen "mal 2, mal 18 Seiten daneben". Falsche Druckseiten waren
+            # im Manuskript-Audit die haeufigste Fehlerquelle ueberhaupt, und ein um 18
+            # Seiten danebenliegender Sprung faellt beim Nachschlagen nicht zwingend auf.
+            # Deterministischer Zwischenschritt: die GEDRUCKTE Nummer im Kopf-/Fussbereich
+            # suchen. Erst wenn auch das nichts findet (Seitenzahlen als Grafik), bleibt
+            # die naive Annahme als letzter Notnagel.
+            hit = _scan_printed_number(pdf, n)
+            if hit is not None:
+                return hit
             if 1 <= n <= len(pdf):
                 return n
         return None
     finally:
         pdf.close()
+
+
+def _scan_printed_number(pdf, n: int, max_offset: int = 40) -> int | None:
+    """Find the page whose header/footer carries the printed number `n`.
+
+    1-based; None when nothing unambiguous turns up inside the window (e.g. page
+    numbers set as graphics) — the caller's naive fallback then still applies.
+    Only the first and last 200 characters of a page are searched, so a bare
+    number in the body text cannot pose as a page number. The scan starts at
+    physical page n: printed page N can never sit BEFORE physical page N (front
+    matter only ever pushes it later), so everything earlier is wasted work.
+    """
+    import re
+    if n < 1:
+        return None
+    pat = re.compile(rf"(?<![\d.,]){n}(?![\d.,])")
+    start = max(0, n - 1)
+    for i in range(start, min(len(pdf), n + max_offset)):
+        try:
+            tp = pdf[i].get_textpage()
+            text = tp.get_text_range() or ""
+            tp.close()
+        except Exception:  # noqa: BLE001 — one unreadable page must not abort the scan
+            continue
+        edges = text[:200] + " \n " + text[-200:]
+        if pat.search(edges):
+            return i + 1
+    return None
 
 
 def open_pdf(source_file: str, pdf_page: int | None = None,
@@ -113,24 +154,32 @@ def open_pdf(source_file: str, pdf_page: int | None = None,
     import subprocess
 
     pdf_posix = str(pdf_path)
+    # SICHERHEIT: Pfad + Seite werden als osascript-ARGUMENTE (on run argv) uebergeben,
+    # NICHT in den AppleScript-Quelltext interpoliert. Damit behandelt osascript den
+    # Dateinamen ausschliesslich als Datenwert — ein Name mit `"`/Zeilenumbruch kann
+    # keinen AppleScript-/`do shell script`-Code mehr einschleusen (frueher moeglich).
     # Poll until Skim has loaded the document (open is async) — otherwise
     # `go to page` lands on an empty doc and silently fails.
     applescript = (
-        'tell application "Skim"\n'
-        '    activate\n'
-        f'    set theDoc to (open POSIX file "{pdf_posix}")\n'
-        '    set maxWait to 50\n'
-        '    set waited to 0\n'
-        '    repeat while (count of pages of theDoc) is 0 and waited < maxWait\n'
-        '        delay 0.1\n'
-        '        set waited to waited + 1\n'
-        '    end repeat\n'
-        f'    tell theDoc to go to page {target_page}\n'
-        'end tell\n'
+        'on run argv\n'
+        '    set pdfPath to item 1 of argv\n'
+        '    set pageNum to (item 2 of argv) as integer\n'
+        '    tell application "Skim"\n'
+        '        activate\n'
+        '        set theDoc to (open POSIX file pdfPath)\n'
+        '        set maxWait to 50\n'
+        '        set waited to 0\n'
+        '        repeat while (count of pages of theDoc) is 0 and waited < maxWait\n'
+        '            delay 0.1\n'
+        '            set waited to waited + 1\n'
+        '        end repeat\n'
+        '        tell theDoc to go to page pageNum\n'
+        '    end tell\n'
+        'end run\n'
     )
     try:
         res = subprocess.run(
-            ["osascript", "-e", applescript],
+            ["osascript", "-e", applescript, pdf_posix, str(target_page)],
             check=False, timeout=15, capture_output=True, text=True,
         )
         if res.returncode != 0:

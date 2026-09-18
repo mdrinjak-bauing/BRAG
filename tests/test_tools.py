@@ -10,6 +10,9 @@ from brag.formatting import format_hit, parse_meta_filter
 def test_format_hit_source_has_link_citation_and_rerank(monkeypatch):
     monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
                         raising=False)
+    # This test covers the browser deep-link. Pin the optional click bridge to
+    # off so an enabled one in the environment cannot swap the link format.
+    monkeypatch.setattr(config, "OPEN_BRIDGE_ENABLED", False, raising=False)
     hit = {"source_file": "papers/Smith.pdf", "rel_path": "sources/papers/Smith.pdf",
            "author": "Smith", "year": "2020", "page_start": 12, "doc_type": "paper",
            "chunk_type": "text", "text": "hello", "rerank_score": 0.5}
@@ -45,10 +48,106 @@ def test_format_hit_page_offset_shows_printed_page(monkeypatch):
 def test_format_hit_carries_project_in_link(monkeypatch):
     monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
                         raising=False)
+    # This test covers the browser deep-link. Pin the optional click bridge to
+    # off so an enabled one in the environment cannot swap the link format.
+    monkeypatch.setattr(config, "OPEN_BRIDGE_ENABLED", False, raising=False)
     hit = {"source_file": "a.pdf", "rel_path": "sources/a.pdf", "page_start": 3,
            "text": "x"}
     assert "project=projekta" in format_hit(1, hit, project="projekta")
     assert "project=" not in format_hit(1, hit)  # single-project: no query param
+
+
+def test_format_hit_cites_the_contribution_author_not_the_editor(monkeypatch):
+    """In einem Sammelband ist der datei-weite `author` der HERAUSGEBER. Kennt ein
+    Chunk seinen eigenen Verfasser, muss die Zitatzeile diesen nennen — sonst
+    wandert ein Tagungsbandbeitrag unter fremdem Namen ins Manuskript, und zwar
+    aus genau der Zeile, aus der zitiert wird."""
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    hit = {"source_file": "BBB_2024", "rel_path": "sources/BBB_2024.pdf",
+           "author": "BBB", "contribution_author": "Schmidt", "year": "2024",
+           "page_start": 46, "page_label_start": "46", "text": "Beitragstext."}
+    out = format_hit(1, hit)
+    assert "Schmidt (2024)" in out
+    assert "BBB (2024)" not in out
+
+
+def test_format_hit_falls_back_to_the_file_author_without_a_contribution(monkeypatch):
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    hit = {"source_file": "BBB_2024", "rel_path": "sources/BBB_2024.pdf",
+           "author": "BBB", "year": "2024", "page_start": 46, "text": "x"}
+    assert "BBB (2024)" in format_hit(1, hit)
+
+
+def test_format_hit_cites_a_page_range_when_the_chunk_spans_pages(monkeypatch):
+    """Ein Chunk kann ueber einen Seitenumbruch laufen. Der Treffer ist die einzige
+    Stelle, an der das lesende Modell das Ende erfaehrt — save_passage uebernimmt
+    seine Seitenwerte aus dem, was im Treffer stand, also faellt page_end sonst aus
+    jedem spaeter abgelegten Beleg heraus."""
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    monkeypatch.setattr(config, "OPEN_BRIDGE_ENABLED", False, raising=False)
+    gedruckt = {"source_file": "a", "rel_path": "sources/a.pdf", "page_start": 46,
+                "page_end": 48, "page_label_start": "46", "page_label_end": "48",
+                "text": "x"}
+    assert "p. 46–48" in format_hit(1, gedruckt)
+    # Der LINK bleibt auf der physischen Startseite, egal was das Zitat sagt.
+    assert "#page=46" in format_hit(1, gedruckt)
+
+    physisch = {"source_file": "a", "rel_path": "sources/a.pdf", "page_start": 46,
+                "page_end": 48, "text": "x"}
+    assert "PDF p. 46–48" in format_hit(1, physisch)
+
+    versetzt = {"source_file": "a", "rel_path": "sources/a.pdf", "page_start": 56,
+                "page_end": 58, "page_offset": 10, "text": "x"}
+    assert "p. 46–48" in format_hit(1, versetzt)
+
+
+def test_format_hit_prints_no_range_for_a_single_page(monkeypatch):
+    """Kein Umbruch, kein Bereich: "S. 46–46" behauptet eine Ausdehnung, die es
+    nicht gibt, und waere im Beleg genauso falsch wie eine fehlende Endseite."""
+    from brag.formatting import page_span
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    hit = {"source_file": "a", "rel_path": "sources/a.pdf", "page_start": 46,
+           "page_end": 46, "page_label_start": "46", "page_label_end": "46",
+           "text": "x"}
+    assert "p. 46]" in format_hit(1, hit) or "p. 46](" in format_hit(1, hit)
+    assert "–" not in format_hit(1, hit).splitlines()[0].split("](")[0]
+    # Roemische/gemischte Labels haben keine arithmetische Ordnung.
+    assert page_span("xii", "xiv") == "xii–xiv"
+    assert page_span("xii", "xii") == "xii"
+    assert page_span("A-3", None) == "A-3"
+
+
+def test_format_hit_renders_the_generated_context_sentence(monkeypatch):
+    """Der Kontext-Satz steckt im Payload und speist die Embeddings — wurde dem
+    lesenden Modell aber nicht gezeigt. Genau das war die gemessene Beschwerde
+    „der Kontext fehlt": ein Chunk, der mit einem Rueckverweis anfaengt
+    („Diese Annahme …"), liest sich ohne ihn wie ein Fragment."""
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    hit = {"source_file": "c.pdf", "rel_path": "sources/c.pdf", "page_start": 7,
+           "context": "Abschnitt 3.2, Argument zur Qualitaetssicherung.",
+           "text": "Diese Annahme traegt jedoch nur bedingt."}
+    out = format_hit(1, hit)
+    assert "> Kontext: Abschnitt 3.2, Argument zur Qualitaetssicherung." in out
+    assert "Diese Annahme traegt jedoch nur bedingt." in out
+
+
+def test_format_hit_without_a_context_stays_unchanged(monkeypatch):
+    """Nicht jeder Chunk traegt einen Kontext (Altbestand, Tabellen, abgeschaltete
+    Kontextualisierung) — dann darf keine leere Zitatzeile erscheinen."""
+    monkeypatch.setattr(config, "BRIDGE_PUBLIC_URL", "http://localhost:8765",
+                        raising=False)
+    ohne = {"source_file": "c.pdf", "rel_path": "sources/c.pdf", "page_start": 7,
+            "text": "Reiner Text."}
+    leer = dict(ohne, context="   ")
+    for hit in (ohne, leer):
+        out = format_hit(1, hit)
+        assert "Kontext" not in out
+        assert out.endswith("Reiner Text.\n")
 
 
 def test_format_hit_passage(monkeypatch):

@@ -30,7 +30,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from brag import config
+from brag import activity_log, config
 
 # Write-protected / search-skipped top-level folders are configured per deployment
 # (config.VAULT_WRITE_PROTECT / config.VAULT_SEARCH_SKIP); empty by default.
@@ -113,7 +113,12 @@ def vault_read(path: str) -> str:
     if not p.exists() or not p.is_file():
         return f"Datei nicht gefunden: {path}"
     try:
-        return p.read_text(encoding="utf-8")
+        text = p.read_text(encoding="utf-8")
+        cap = config.VAULT_READ_MAX_CHARS
+        if cap and len(text) > cap:   # gegen Kontext-Flut bei Riesendateien
+            text = text[:cap] + (f"\n\n[… bei {cap} Zeichen gekürzt — mit vault_extract oder "
+                                 "einem Zeilen-/Abschnittsbereich gezielt weiterlesen]")
+        return text
     except Exception as e:  # noqa: BLE001
         return (f"Konnte '{path}' nicht als Text lesen ({e}). Für PDF/Word/Excel "
                 f"vault_extract benutzen (nur auf ausdrückliche Aufforderung).")
@@ -214,6 +219,8 @@ def vault_write(path: str, content: str, overwrite: bool = False) -> str:
     try:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(content, encoding="utf-8")
+        activity_log.log_op("vault_write", path=_display(p, root, alias),
+                            chars=len(content))
         return f"✓ geschrieben: {_display(p, root, alias)} ({len(content)} Zeichen)"
     except Exception as e:  # noqa: BLE001
         return f"Konnte '{path}' nicht schreiben: {e}"
@@ -233,6 +240,8 @@ def vault_append(path: str, content: str) -> str:
         with p.open("a", encoding="utf-8") as f:
             f.write(sep + content)
         verb = "angehängt an" if existed else "neu angelegt"
+        activity_log.log_op("vault_append", path=_display(p, root, alias),
+                            chars=len(content))
         return f"✓ {verb}: {_display(p, root, alias)} (+{len(content)} Zeichen)"
     except Exception as e:  # noqa: BLE001
         return f"Konnte an '{path}' nicht anhängen: {e}"
@@ -286,6 +295,8 @@ def vault_edit(path: str, old_string: str, new_string: str,
     delta = len(new_text) - len(text)
     sign = "+" if delta >= 0 else ""
     verb = f"{count}× ersetzt" if replace_all and count > 1 else "ersetzt"
+    activity_log.log_op("vault_edit", path=_display(p, root, alias),
+                        delta=f"{sign}{delta}")
     return f"✓ {verb} in {_display(p, root, alias)} ({sign}{delta} Zeichen)"
 
 
@@ -353,8 +364,8 @@ def vault_extract(path: str, page_from: int = 0, page_to: int = 0) -> str:
     """Extrahiert TEXT aus einer Vault-PDF/-Word/-Excel — **nur auf ausdrückliche
     Aufforderung** (Standard ist vault_read für Markdown/Text). Erkennt das Format
     an der Endung (.pdf/.docx/.xlsx); read-only; auf die erlaubten Wurzeln begrenzt
-    (auch fh:). PDF optional auf einen Seitenbereich (page_from/page_to, 1-basiert)
-    einschränken. Lange Dokumente werden gedeckelt."""
+    (auch Neben-Wurzeln). PDF optional auf einen Seitenbereich (page_from/page_to,
+    1-basiert) einschränken. Lange Dokumente werden gedeckelt."""
     r = _resolve(path)
     if r is None:
         return _OUTSIDE + path

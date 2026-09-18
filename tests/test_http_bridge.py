@@ -330,6 +330,42 @@ def test_api_search_runs_when_setup_off(tmp_path, monkeypatch):
     assert seen["collection_name"] is None  # single-project default
 
 
+def test_api_search_collects_images_only_from_budget_trimmed_hits(tmp_path, monkeypatch):
+    # N-2 (re-review): the bridge called collect_hit_images(hits) on the FULL
+    # hit list run_search returned, unrelated to whatever ceiling the CLIENT
+    # (mcp_client.search()) will later trim to for rendering. With more than
+    # the default 128-hit ceiling and a figure concentrated past it, the image
+    # ships attached to the response with no rendered hit block to mark.
+    # Symmetric to the mcp_server.py fix — same fix, bridge side.
+    from brag.formatting import max_hits_for_budget
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setenv("BRAG_REGISTRY", str(tmp_path / "projects.json"))
+    hits = [{"source_file": f"S{i}.pdf", "text": "kurz", "chunk_id": str(i)}
+            for i in range(200)]
+    monkeypatch.setattr("brag.search.query.search", lambda query, **kw: hits)
+    seen = {}
+
+    def spy(hs, *a, **k):
+        seen["hits"] = hs
+        return [], set()
+
+    monkeypatch.setattr("brag.images.collect_hit_images", spy)
+    data = json.dumps({"query": "hello", "top_k": 200, "include_images": True}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/search"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    assert h.captured.code == 200
+    ceiling = max_hits_for_budget()
+    assert "hits" in seen, "collect_hit_images was never called"
+    assert len(seen["hits"]) <= ceiling
+    assert seen["hits"][-1]["chunk_id"] == str(ceiling - 1), (
+        "collect_hit_images saw a hit beyond the budget ceiling")
+    # response still carries the FULL hit list — the client does its own trim
+    # and note-building (N-1's fix), untouched by this change.
+    assert len(h.captured.json["hits"]) == 200
+
+
 # ── Tool dispatcher (/api/index-op) ──────────────────────────────
 def test_api_index_op_unknown_op_returns_404(monkeypatch):
     monkeypatch.setattr(config, "SETUP_MODE", False)
@@ -369,6 +405,68 @@ def test_api_index_op_runs_file_tool(tmp_path, monkeypatch):
     assert h.captured.code == 200
     assert h.captured.json["ok"] is True
     assert "a.md" in h.captured.json["text"]
+
+
+def _spy_source_coverage(monkeypatch):
+    """Patches analytics.source_coverage to record the min_score it actually
+    receives, while still running for real (run_search must be mocked by the
+    caller — no live Qdrant)."""
+    from brag.search import analytics
+    seen = {}
+    real = analytics.source_coverage
+
+    def spy(*a, **k):
+        seen["min_score"] = k.get("min_score")
+        return real(*a, **k)
+
+    monkeypatch.setattr(analytics, "source_coverage", spy)
+    return seen
+
+
+def _post_coverage_op(args: dict):
+    data = json.dumps({"op": "coverage", "args": args}).encode()
+    h = _make_handler({"Host": "localhost", "Content-Length": str(len(data))})
+    h.path = "/api/index-op"
+    h.rfile = _FakeRFile(data)
+    h.do_POST()
+    return h
+
+
+def test_api_index_op_coverage_reads_config_min_score_not_hardcoded(monkeypatch):
+    # C-2 (review): the bridge's own dispatcher line hardcoded 0.4 as the
+    # min_score default — the live path a thin-client project connector
+    # actually reaches — so config.COVERAGE_MIN_SCORE never took effect there
+    # either, even after tools.coverage()'s own fallback was fixed.
+    import importlib
+
+    from brag import config
+    from brag.search import analytics
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setattr(analytics, "run_search", lambda *a, **k: [])
+    seen = _spy_source_coverage(monkeypatch)
+    monkeypatch.setenv("COVERAGE_MIN_SCORE", "0.6")
+    importlib.reload(config)
+    try:
+        h = _post_coverage_op({"query": "x"})  # no min_score in the request at all
+        assert h.captured.code == 200
+        assert seen["min_score"] == 0.6
+    finally:
+        monkeypatch.delenv("COVERAGE_MIN_SCORE", raising=False)
+        importlib.reload(config)
+
+
+def test_api_index_op_coverage_preserves_explicit_zero_min_score(monkeypatch):
+    # "min_score=float(a.get('min_score', 0.4) or 0.4)" turned an explicit
+    # min_score=0.0 into 0.4 too (0.0 is falsy) — a caller who deliberately
+    # wants no floor at all must get exactly 0.0, not a silently substituted one.
+    from brag import config
+    from brag.search import analytics
+    monkeypatch.setattr(config, "SETUP_MODE", False)
+    monkeypatch.setattr(analytics, "run_search", lambda *a, **k: [])
+    seen = _spy_source_coverage(monkeypatch)
+    h = _post_coverage_op({"query": "x", "min_score": 0.0})
+    assert h.captured.code == 200
+    assert seen["min_score"] == 0.0
 
 
 def test_serve_vault_file_scopes_to_project(tmp_path, monkeypatch):

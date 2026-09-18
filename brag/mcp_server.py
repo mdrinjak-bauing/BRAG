@@ -24,15 +24,17 @@ except ModuleNotFoundError:  # mcp 1.x
     from mcp.server.fastmcp import FastMCP as _MCPServer
 from mcp.types import ImageContent, TextContent
 
-from brag import config, pdf_open, tools, vault
+from brag import config, passages_promotion, pdf_open, tools, vault
+from brag.formatting import with_passage_layout_note, with_topic_hint
 
 mcp = _MCPServer("brag")
 
 
 @mcp.tool()
+@with_topic_hint
 def search(query: str, top_k: int = 0, doc_type: str = "",
            chunk_type: str = "", year_min: int = 0, year_max: int = 0,
-           source_file: str = "", meta_filter: str = "",
+           source_file: str = "", topic: str = "", meta_filter: str = "",
            reranking: bool | None = None, max_per_source: int = 0,
            mode: str = "normal", include_images: bool = True):
     """Hybride Suche (Bedeutung + Stichwort) über den Dokumenten-Korpus.
@@ -52,6 +54,9 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
     chunk_type='table' für Zahlen/Statistiken, 'figure' für Abbildungen. Treffer
     auf Abbildungen legen der Antwort BIS ZU 3 BILDER bei (include_images=False
     schaltet das ab) — sieh sie dir an und lies konkrete Werte direkt daraus ab.
+    topic=… filtert thematisch über ALLE doc_types hinweg, für „alles zu Thema X"
+    (Kurzform von meta_filter='topic=…'; gültige Werte nennt der Hinweis unten,
+    sofern dieser Korpus ein topic-Feld führt).
     meta_filter schränkt auf eigene Metadaten-Felder ein (in _meta.txt im
     Wissensspeicher definiert), Format 'schlüssel=wert', mehrere mit Komma, z. B.
     meta_filter='projekt=Schulzentrum' oder 'kurs=Baumanagement, semester=WS25'.
@@ -60,6 +65,11 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
     Jede Treffer-Überschrift ist ein anklickbarer Link, der das PDF an der richtigen
     Seite öffnet — übernimm ihn IMMER in deine Antwort, wenn du die Quelle zitierst.
     """
+    # `topic` ist ein gewoehnliches Payload-Feld — der eigene Parameter ist nur die
+    # Kurzform des dokumentierten Filters und wird hier darauf abgebildet. Ein
+    # ausdruecklich gesetztes meta_filter='topic=…' behaelt Vorrang.
+    if topic.strip():
+        meta_filter = f"topic={topic.strip()}" + (f", {meta_filter}" if meta_filter else "")
     hits = tools.search_hits(
         query, top_k=top_k, doc_type=doc_type, chunk_type=chunk_type,
         year_min=year_min, year_max=year_max, source_file=source_file,
@@ -69,8 +79,12 @@ def search(query: str, top_k: int = 0, doc_type: str = "",
         return tools.NO_HITS_MSG
     images, attached = ([], set())
     if include_images and config.SEARCH_IMAGES_ENABLED:
+        from brag.formatting import max_hits_for_budget
         from brag.images import collect_hit_images
-        images, attached = collect_hit_images(hits)
+        # Collect from the SAME slice tools.format_hits() below will render
+        # (N-2, review): an image collected from a hit beyond the budget
+        # ceiling would arrive with no corresponding hit block to mark.
+        images, attached = collect_hit_images(hits[:max_hits_for_budget()])
     text = tools.format_hits(hits, query, attached_ids=attached)
     if not images:
         return text
@@ -89,7 +103,7 @@ def list_sources(doc_type: str = "") -> str:
 
 
 @mcp.tool()
-def coverage(query: str, top_k: int = 50, min_score: float = 0.4,
+def coverage(query: str, top_k: int = 50, min_score: float | None = None,
              mode: str = "broad") -> str:
     """Stand der Forschung / „Wer schreibt zu X?" — aggregiert die Treffer PRO QUELLE
     (statt einer flachen Trefferliste) und teilt sie in substanziell vs. peripheral.
@@ -254,28 +268,34 @@ def rename_source(source_file: str, new_name: str) -> str:
 
 
 @mcp.tool()
+@with_passage_layout_note
 def save_passage(topic: str, text: str, source: str, page: str = "",
-                 note: str = "") -> str:
-    """Sichert eine zitierfähige Passage unter einem Thema (z. B. ein Kapitel/Motiv).
+                 note: str = "", chapter: str = "", author: str = "",
+                 year: str = "", page_start: str = "", page_end: str = "") -> str:
+    """Sichert eine zitierfähige Passage als Beleg.
 
-    WANN was: ein wörtliches ZITAT aus einer Quelle → save_passage (wird durchsuchbarer
-    Beleg); EIGENER Text (Notizen, Entwürfe, Schlüsse) → write_note bzw. vault_write.
-
-    Baut die Belegsammlung in WissensWIKI/Quellenbelege/<thema>.md auf UND indexiert die
-    Passage für die semantische Suche, sodass ein späterer Chat sie über `search`
-    wiederfindet — klar markiert als „gespeicherte Passage", getrennt von Primärquellen.
+    WANN was: ein wörtliches ZITAT aus einer Quelle → save_passage; EIGENER Text
+    (Notizen, Entwürfe, Schlüsse) → write_note bzw. vault_write.
 
     `page`: GENAU so übergeben, wie der Treffer sie angezeigt hat. Steht dort
     „PDF p. 61", dann „PDF p. 61" — das ist die Seite der DATEI, nicht die gedruckte,
     und der Vorbehalt muss bis in den Beleg mitwandern. Steht dort „p. xii", dann
     „xii" oder „p. xii". Nicht selbst umrechnen."""
+    if config.PASSAGES_LAYOUT == "promotion":
+        # Chapter-based store (brag.passages_promotion): `chapter` wins, `topic`
+        # stands in for it when a caller still sends the topic-layout argument.
+        return passages_promotion.save_passage(
+            source, text, chapter or topic, author=author, year=year,
+            page_start=page_start or page, page_end=page_end, note=note)
     return tools.save_passage(topic, text, source, page=page, note=note)
 
 
 @mcp.tool()
-def list_passages(topic: str = "") -> str:
+def list_passages(topic: str = "", chapter: str = "") -> str:
     """Listet gespeicherte Passagen: mit Thema die darunter gesicherten Passagen, ohne
     Thema eine Übersicht aller Themen (markiert als „gespeicherte Passage")."""
+    if config.PASSAGES_LAYOUT == "promotion":
+        return passages_promotion.list_passages(chapter or topic)
     return tools.list_passages(topic=topic)
 
 
@@ -376,4 +396,9 @@ if __name__ == "__main__":
     if config.RERANK_ENABLED and config.RERANK_WARMUP:
         import threading
         threading.Thread(target=_warmup_reranker, daemon=True).start()
+    if config.OPEN_BRIDGE_ENABLED:
+        # Click bridge on localhost: makes the hit links openable in the local
+        # PDF viewer without the assistant opening anything by itself.
+        from brag import open_bridge
+        open_bridge.start()
     mcp.run()

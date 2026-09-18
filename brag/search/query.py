@@ -12,6 +12,7 @@ so scores are reported transparently instead of filtered.
 
 from __future__ import annotations
 
+import sys
 import threading
 from typing import TYPE_CHECKING
 
@@ -136,6 +137,110 @@ def _diversify(candidates: list[dict], top_k: int, max_per_source: int) -> list[
     return hits
 
 
+def _saturation(hits: list[dict], candidates: list[dict]) -> dict:
+    """Was der Nutzer nicht sehen kann: ob die Liste ZU ENDE ist oder nur ABGESCHNITTEN.
+
+    Beides sieht am Bildschirm gleich aus — eine Liste, die aufhört. Der Unterschied
+    steckt in den Reranker-Scores, die ohnehin vorliegen: Bricht die Kurve hinter dem
+    letzten gelieferten Treffer ein, kam dahinter nichts Relevantes mehr (erschoepft).
+    Liegt der erste NICHT gelieferte Kandidat noch fast gleichauf, wurde die Liste nur
+    vom Limit gekappt und es gibt nachweislich mehr (abgeschnitten).
+
+    Entscheidend ist der ABSOLUTE Score der ungezeigten Kandidaten, nicht die Steigung
+    am Listenende (erster Entwurf, am 20.07. verworfen: bei einer guten Frage faellt die
+    Kurve ueberall steil ab, bei einer sinnlosen ist sie ueberall flach — die Steigung
+    unterscheidet also gerade NICHT die beiden Faelle, sie kehrte das Urteil sogar um).
+
+    Der bge-reranker-v2-m3 liefert Sigmoid-Werte in [0,1]; gemessen am Korpus:
+    gute Fachfrage 0,999 -> 0,922 auf Rang 30, Nischenfrage 0,989 -> 0,064,
+    sinnlose Frage 0,005 -> 0,000. Ab RELEVANT_SCORE haelt das Modell einen Treffer
+    fuer einschlaegig — genau das ist die Grenze, die den Nutzer interessiert.
+
+    Riegel (2026-09-17, hier ergaenzt): OHNE Reranker-Scores ist "erschoepft" keine
+    vorsichtige, sondern eine falsche Aussage. RERANK_PROFILE=off ist eine dokumentierte
+    Einstellung (config.py) — dann ist JEDER rerank_score None, die Restliste filtert
+    sich leer, und die alte Logik meldete trotzdem "erschoepft". Massgeblich ist NICHT,
+    ob IRGENDEIN Kandidat im ganzen Pool einen Score traegt (ein einzelner bewerteter
+    Treffer wuerde sonst reichen, um die 45 unbewerteten Kandidaten dahinter zu
+    uebertuenchen — Review-Befund M-7, gemessen mit 5 bewerteten Treffern + 45
+    unbewerteten Rest-Kandidaten: dieselbe falsche "erschoepft"-Aussage auf einem
+    anderen Weg, erreichbar unter RERANK_PREFETCH=150 / RERANK_FUSION_LIMIT=80).
+    Massgeblich ist, ob der REST — die Kandidaten AUSSERHALB der gezeigten Treffer,
+    also genau die Menge, ueber die das Urteil eine Aussage trifft — VOLLSTAENDIG
+    bewertet ist. Eine positive Aussage ("abgeschnitten": es gibt nachweislich mehr)
+    bleibt dagegen auch bei nur TEILWEISE bewertetem Rest gueltig — ein gefundener
+    relevanter Kandidat ist ein Fund, unabhaengig davon, was in der unbewerteten
+    Teilmenge noch steckt.
+    """
+    if not hits:
+        return {"state": "leer", "weitere": 0}
+    ids = {id(h) for h in hits}
+    rest = [c for c in candidates if id(c) not in ids]
+    if not rest:
+        return {"state": "erschoepft", "weitere": 0}
+    scored = [c for c in rest if isinstance(c.get("rerank_score"), (int, float))]
+    if not scored:
+        return {"state": "unbewertet", "weitere": 0}
+
+    werte = [c["rerank_score"] for c in scored]
+    # Nur fuer eine Sigmoid-Skala belegt. Laeuft der Reranker auf Logits (oder gar
+    # nicht), lieber keine Aussage als eine falsche.
+    if not all(0.0 <= w <= 1.0 for w in werte):
+        return {"state": "unbekannt", "weitere": len(scored)}
+
+    relevant = [w for w in werte if w >= config.SATURATION_RELEVANT_SCORE]
+    if relevant:
+        return {"state": "abgeschnitten", "weitere": len(relevant)}
+    if len(scored) < len(rest):
+        # Der Rest ist nur TEILWEISE bewertet und die bewertete Teilmenge zeigt
+        # nichts Relevantes — ueber die UNbewertete Teilmenge ist damit nichts
+        # gesagt. "erschoepft" waere hier wieder die Behauptung, die der Riegel
+        # verhindern soll, nur ueber die zweite Haelfte der Kandidaten statt
+        # ueber alle.
+        return {"state": "unbewertet", "weitere": 0}
+    return {"state": "erschoepft", "weitere": 0}
+
+
+def _quellen_abdeckung(hits: list[dict], candidates: list[dict]) -> dict:
+    """Wie viele Quellen tragen zur Frage bei — und wie viele davon sieht der Nutzer?
+
+    Ein Zaehler ohne Nenner ("8 Quellen") sagt nichts darueber, ob das viel oder wenig
+    ist. Der Nenner steht bereits im Kandidatenpool: Er enthaelt alle Quellen, die zu
+    dieser Frage ueberhaupt einen hinreichend gut bewerteten Abschnitt beisteuern.
+    Kostet keine zusaetzliche Abfrage — die Kandidaten liegen ohnehin vor.
+
+    Gezaehlt werden nur Quellen mit mindestens einem relevanten Abschnitt, damit der
+    Nenner nicht durch Zufallstreffer am Pool-Ende aufgeblaeht wird.
+
+    Derselbe Riegel wie in _saturation, und aus demselben Grund: Traegt KEIN Kandidat
+    einen numerischen Score — RERANK_PROFILE=off ist eine dokumentierte Einstellung,
+    und nach dem Rerank-Riegel ist es ebenso der Fall — dann gibt es keine Grundlage
+    fuer ein Urteil "traegt bei". Die alte Fassung zaehlte einen UNBEWERTETEN
+    Kandidaten als beitragend; der Nenner war dann der ganze Fusionspool, und der
+    Nutzer las "showing 10 of 45 sources that contribute", obwohl nichts bewertet
+    worden war. Zwei Mechanismen auf demselben Pool kamen so zu entgegengesetzten
+    Schluessen: _saturation schwieg ("unbewertet"), der Nenner behauptete eine Zahl.
+    Ohne Bewertung wird deshalb gar kein Nenner geliefert — der Aufrufer rendert
+    dann nichts.
+
+    Ist der Pool nur TEILWEISE bewertet, bleibt die bewertete Teilmenge massgeblich:
+    ein gefundener relevanter Kandidat ist ein Fund. Der Nenner ist dann eine
+    Untergrenze, keine Erfindung.
+    """
+    gezeigt = {h.get("source_file") for h in hits if h.get("source_file")}
+    bewertet = [c for c in candidates
+                if isinstance(c.get("rerank_score"), (int, float))]
+    if not bewertet:
+        return {"gezeigt": len(gezeigt), "beitragend": 0}
+    beitragend = {
+        c.get("source_file") for c in bewertet
+        if c.get("source_file")
+        and c["rerank_score"] >= config.SATURATION_RELEVANT_SCORE
+    }
+    beitragend |= gezeigt          # Gezeigtes zaehlt immer mit
+    return {"gezeigt": len(gezeigt), "beitragend": len(beitragend)}
+
+
 # Task presets → (top_k, max_per_source). "normal" uses the config defaults; an
 # explicit top_k / max_chunks_per_source argument still overrides the preset.
 _MODE_PRESETS = {
@@ -153,6 +258,38 @@ def _rerank_text(c: dict) -> str:
     if config.RERANK_INPUT == "text":
         return c.get("text", "")
     return c.get("context", "") + "\n" + c.get("text", "")
+
+
+def _rerank(query: str, candidates: list[dict], expanded: str | None = None) -> None:
+    """Cross-encoder-score `candidates` in place and sort by rerank_score
+    (descending). Raises on any reranker failure (model load, OOM, a bad
+    predict call) — `search()` catches that and degrades to fusion order."""
+    reranker = _get_reranker()
+    pairs = [(query, _rerank_text(c)) for c in candidates]
+    with _RERANK_LOCK:
+        scores = [float(s) for s in
+                  reranker.predict(pairs, batch_size=config.RERANK_BATCH_SIZE)]
+    # Language gate (ported from the local RAG): re-score EN chunks against the
+    # ENGLISH suffix of the expanded query and keep the max, so a German query no
+    # longer systematically under-ranks English sources. Gated to language=="en"
+    # candidates (generic EN hits must not overtake solid German ones); needs >=2
+    # English suffix tokens.
+    if (config.LANGUAGE_GATE_ENABLED and expanded
+            and expanded.startswith(query) and len(expanded) > len(query)):
+        en_suffix = expanded[len(query):].strip()
+        if len(en_suffix.split()) >= 2:
+            en_idx = [i for i, c in enumerate(candidates)
+                      if (c.get("language") or "").lower() == "en"]
+            if en_idx:
+                with _RERANK_LOCK:
+                    scores2 = reranker.predict(
+                        [(en_suffix, _rerank_text(candidates[i])) for i in en_idx],
+                        batch_size=config.RERANK_BATCH_SIZE)
+                for j, i in enumerate(en_idx):
+                    scores[i] = max(scores[i], config.EN_BOOST_ALPHA * float(scores2[j]))
+    for c, s in zip(candidates, scores):
+        c["rerank_score"] = s
+    candidates.sort(key=lambda c: c["rerank_score"], reverse=True)
 
 
 def search(query: str, top_k: int | None = None, reranking: bool | None = None,
@@ -246,34 +383,27 @@ def search(query: str, top_k: int | None = None, reranking: bool | None = None,
     ]
 
     if reranking and candidates:
-        reranker = _get_reranker()
-        pairs = [(query, _rerank_text(c)) for c in candidates]
-        with _RERANK_LOCK:
-            scores = [float(s) for s in
-                      reranker.predict(pairs, batch_size=config.RERANK_BATCH_SIZE)]
-        # Language gate (ported from the local RAG): re-score EN chunks against the
-        # ENGLISH suffix of the expanded query and keep the max, so a German query no
-        # longer systematically under-ranks English sources. Gated to language=="en"
-        # candidates (generic EN hits must not overtake solid German ones); needs >=2
-        # English suffix tokens.
-        if (config.LANGUAGE_GATE_ENABLED and expanded
-                and expanded.startswith(query) and len(expanded) > len(query)):
-            en_suffix = expanded[len(query):].strip()
-            if len(en_suffix.split()) >= 2:
-                en_idx = [i for i, c in enumerate(candidates)
-                          if (c.get("language") or "").lower() == "en"]
-                if en_idx:
-                    with _RERANK_LOCK:
-                        scores2 = reranker.predict(
-                            [(en_suffix, _rerank_text(candidates[i])) for i in en_idx],
-                            batch_size=config.RERANK_BATCH_SIZE)
-                    for j, i in enumerate(en_idx):
-                        scores[i] = max(scores[i], config.EN_BOOST_ALPHA * float(scores2[j]))
-        for c, s in zip(candidates, scores):
-            c["rerank_score"] = s
-        candidates.sort(key=lambda c: c["rerank_score"], reverse=True)
+        # A broken reranker (model load failure, OOM, a bad predict call) must not
+        # crash the search — degrade to fusion (RRF) order instead. stderr, not
+        # stdout: stdout is the JSON-RPC channel of the stdio MCP server, and a
+        # stray print there corrupts the protocol.
+        try:
+            _rerank(query, candidates, expanded)
+        except Exception as e:  # noqa: BLE001 — any reranker failure degrades, never crashes
+            print(f"  rerank failed ({type(e).__name__}: {e}) — Fusion-Reihenfolge "
+                  "wird beibehalten (keine Feinsortierung)", file=sys.stderr)
 
     # Source diversity: cap hits per source so one book cannot fill the list and
     # drop cross-source near-duplicates — then backfill so a source-skewed pool
     # still returns ~top_k instead of a short answer (RET-F02).
-    return _diversify(candidates, top_k, max_chunks_per_source)
+    hits = _diversify(candidates, top_k, max_chunks_per_source)
+    # Saettigung UND Quellen-Nenner am ersten Treffer mitgeben — beide sind
+    # Such-Metadaten, kein Payload-Feld aus der Datenbank (Unterstrich-Praefix).
+    # _saturation sagt, ob die Liste zu Ende ist oder nur gekappt wurde (mit dem
+    # Riegel aus Aufgabe 8: kein Urteil ohne Reranker-Scores). _coverage bleibt
+    # unangetastet — beide lesen denselben (Vor-Budget-)candidates-Pool, der
+    # Trim auf die Antwort-Budgetgrenze passiert erst spaeter in mcp_client.
+    if hits:
+        hits[0]["_saturation"] = _saturation(hits, candidates)
+        hits[0]["_coverage"] = _quellen_abdeckung(hits, candidates)
+    return hits

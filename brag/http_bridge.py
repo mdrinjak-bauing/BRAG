@@ -341,10 +341,17 @@ class BridgeHandler(BaseHTTPRequestHandler):
         # figures. Encoded here — the client stays model- and Pillow-free. The
         # project context scopes DATA_DIR to the right project's vault.
         if body.get("include_images"):
+            from brag.formatting import max_hits_for_budget
             from brag.images import collect_hit_images
             try:
                 with config.project_context(rec):
-                    images, attached = collect_hit_images(hits)
+                    # Collect from the SAME slice mcp_client.search() will
+                    # render after its own response-budget trim (N-2, review):
+                    # an image collected from a hit beyond that ceiling ships
+                    # with no rendered hit block to mark. `hits` in the
+                    # response stays the FULL list — the client's own trim and
+                    # note-building (N-1's fix) are untouched by this.
+                    images, attached = collect_hit_images(hits[:max_hits_for_budget()])
                 response["images"] = images
                 response["attached_ids"] = sorted(attached)
             except Exception:  # noqa: BLE001 — images are best-effort, hits already stand
@@ -357,7 +364,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
         its text. `project` scopes the index reads to that project's collection;
         the file-side ops use the vault paths (per-project scoping arrives with
         config.project_context in a later phase — today there is one vault)."""
-        from brag import registry, tools
+        from brag import passages_promotion, pdf_open, registry, tools, vault
 
         project = str(body.get("project", "")).strip()
         rec = None
@@ -377,6 +384,18 @@ class BridgeHandler(BaseHTTPRequestHandler):
             except (TypeError, ValueError):
                 return default
 
+        def _float_or_none(value):
+            # Missing/None -> None, so the callee's own default (which reads
+            # config, e.g. tools.coverage's min_score) actually applies. An "or
+            # default" pattern here would also turn an explicit 0.0 into the
+            # default — 0.0 is a legitimate, deliberate "no floor" value.
+            if value is None:
+                return None
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return None
+
         ops = {
             "list_sources": lambda: tools.list_sources(
                 doc_type=str(a.get("doc_type", "")), collection_name=collection),
@@ -390,11 +409,47 @@ class BridgeHandler(BaseHTTPRequestHandler):
             "remove_source": lambda: tools.remove_source(str(a.get("source_file", ""))),
             "rename_source": lambda: tools.rename_source(
                 str(a.get("source_file", "")), str(a.get("new_name", ""))),
-            "save_passage": lambda: tools.save_passage(
+            # PASSAGES_LAYOUT="promotion" routes to the chapter-based store.
+            # Clients still sending topic/page are mapped onto chapter/page_start
+            # rather than rejected.
+            "save_passage": lambda: (passages_promotion.save_passage(
+                str(a.get("source", "")), str(a.get("text", "")),
+                str(a.get("chapter", "") or a.get("topic", "")),
+                author=str(a.get("author", "")), year=str(a.get("year", "")),
+                page_start=str(a.get("page_start", "") or a.get("page", "")),
+                page_end=str(a.get("page_end", "")), note=str(a.get("note", "")))
+                if config.PASSAGES_LAYOUT == "promotion" else tools.save_passage(
                 str(a.get("topic", "")), str(a.get("text", "")),
                 str(a.get("source", "")), page=str(a.get("page", "")),
-                note=str(a.get("note", ""))),
-            "list_passages": lambda: tools.list_passages(topic=str(a.get("topic", ""))),
+                note=str(a.get("note", "")))),
+            "list_passages": lambda: (passages_promotion.list_passages(
+                str(a.get("chapter", "") or a.get("topic", "")))
+                if config.PASSAGES_LAYOUT == "promotion"
+                else tools.list_passages(topic=str(a.get("topic", "")))),
+            # Corpus PDF in the desktop viewer (GUI, runs on the bridge's machine).
+            "open_pdf": lambda: pdf_open.open_pdf(
+                str(a.get("source_file", "")),
+                pdf_page=(_int(a.get("pdf_page")) or None),
+                book_page=(str(a.get("book_page", "")) or None),
+                page=(_int(a.get("page")) or None)),
+            # Vault files — read + write.
+            "vault_read": lambda: vault.vault_read(str(a.get("path", ""))),
+            "vault_list": lambda: vault.vault_list(str(a.get("subdir", ""))),
+            "vault_search": lambda: vault.vault_search(
+                str(a.get("query", "")), content=bool(a.get("content", True)),
+                limit=_int(a.get("limit", 40), 40), root=str(a.get("root", ""))),
+            "vault_write": lambda: vault.vault_write(
+                str(a.get("path", "")), str(a.get("content", "")),
+                overwrite=bool(a.get("overwrite", False))),
+            "vault_append": lambda: vault.vault_append(
+                str(a.get("path", "")), str(a.get("content", ""))),
+            "vault_edit": lambda: vault.vault_edit(
+                str(a.get("path", "")), str(a.get("old_string", "")),
+                str(a.get("new_string", "")),
+                replace_all=bool(a.get("replace_all", False))),
+            "vault_extract": lambda: vault.vault_extract(
+                str(a.get("path", "")), page_from=_int(a.get("page_from")),
+                page_to=_int(a.get("page_to"))),
             "list_notebook": tools.list_notebook,
             "read_note": lambda: tools.read_note(str(a.get("path", ""))),
             "write_note": lambda: tools.write_note(
@@ -415,7 +470,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
             # uses, scoped to this project's collection.
             "coverage": lambda: tools.coverage(
                 str(a.get("query", "")), top_k=_int(a.get("top_k", 50), 50),
-                min_score=float(a.get("min_score", 0.4) or 0.4),
+                min_score=_float_or_none(a.get("min_score")),
                 mode=str(a.get("mode", "broad") or "broad"),
                 collection_name=collection),
             "clusters": lambda: tools.clusters(
