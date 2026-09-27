@@ -64,6 +64,7 @@ if errorlevel 1 (
 REM Recreate the app so the new folder is mounted and watched.
 echo Applying...
 docker compose up -d
+if errorlevel 1 goto up_failed
 
 REM Connect the new project to Claude + LM Studio, alongside the existing ones.
 REM Quit Claude first so the entry persists (Claude rewrites its config while up).
@@ -79,3 +80,12 @@ echo Done! Reopen Claude Desktop - the connector for "%PROJNAME%" appears next t
 echo your other ones. Drop documents straight into your project folder:
 echo   %PROJDIR%
 pause
+exit /b 0
+
+:up_failed
+echo.
+echo The project is registered, but BRAG could not restart ^(see the message
+echo above^). Make sure Docker Desktop is running, then double-click status.bat
+echo to see what is wrong.
+pause
+exit /b 1

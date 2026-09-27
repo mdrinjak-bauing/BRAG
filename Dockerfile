@@ -20,6 +20,11 @@ COPY vault_template/ /app/vault_template/
 # by design. Pin the behaviour: BRAG never wants runtime compilation here.
 ENV DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false
 ENV HF_HOME=/models
+# The BM25 model must live on the models_cache volume too. brag/config.py
+# otherwise defaults it to ~/.cache/fastembed, which inside the container is the
+# throwaway image layer: every update/recreate re-downloads it, and offline that
+# silently degrades BM25 (see the comment at FASTEMBED_CACHE_PATH in config.py).
+ENV FASTEMBED_CACHE_PATH=/models/fastembed
 ENV PYTHONUNBUFFERED=1
 
 # Run as a non-root user (defense in depth). /models is a named volume — Docker

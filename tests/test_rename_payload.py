@@ -26,8 +26,6 @@ location no longer defines. Then no content field can be touched, whoever wrote
 it. A document with nothing recorded — every document indexed before this change
 — loses nothing at all.
 """
-import pytest
-
 from brag import storage
 from brag.ingest.extract import Chunk, metadata_payload
 from pathlib import Path

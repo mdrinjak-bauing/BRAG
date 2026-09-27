@@ -60,7 +60,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-REM ── Step 1 of 2: where the BRAG Assistent program should live ────────────────
+REM -- Step 1 of 2: where the BRAG Assistent program should live ----------------
 echo === Step 1 of 2: where should the BRAG Assistent (the program) live? ===
 echo A "BRAG Assistent" folder is created there - it IS the tool; keep it, don't
 echo delete it. A picker window opens...
@@ -76,7 +76,7 @@ del ".ragpick" >nul 2>nul
 if not defined ENGINEPARENT set "INPLACE=1"
 if not defined INPLACE set "ENGINE=%ENGINEPARENT%\BRAG Assistent"
 
-REM ── Step 2 of 2: the project folder (the documents to index) ─────────────────
+REM -- Step 2 of 2: the project folder (the documents to index) -----------------
 echo.
 echo === Step 2 of 2: choose your PROJECT folder (your documents) ===
 echo Everything in it is indexed, except the WissensWIKI workspace. A picker opens...
@@ -107,7 +107,7 @@ robocopy "%~dp0vault_template" "%PROJDIR%\WissensWIKI" /E /NFL /NDL /NJH /NJS /N
 
 if defined INPLACE goto engine_inplace
 
-REM ── Relocate the program into the BRAG Assistent folder ──────────────────────
+REM -- Relocate the program into the BRAG Assistent folder ----------------------
 if not exist "%ENGINE%\.ragsetup_home" goto do_relocate
 echo BRAG Assistent already installed at: %ENGINE% - continuing there...
 start "" "%ENGINE%\setup.bat"
@@ -245,7 +245,8 @@ goto waitloop
 
 echo Applying your settings...
 docker compose --profile setup rm -sf setup >nul 2>nul
-docker compose up -d >nul 2>nul
+docker compose up -d >"%TEMP%\brag_up.log" 2>&1
+if errorlevel 1 goto up_failed
 
 REM Connect BRAG to Claude Desktop from the HOST (a container write does not
 REM reliably reach the host on Windows), then LM Studio if it is installed. Claude
@@ -267,3 +268,13 @@ echo folder anytime - they are indexed automatically.
 echo Quit Claude Desktop completely ^(tray ^> Quit^) and reopen it.
 echo (If you use LM Studio, also fully restart it so the new connection loads.)
 pause
+exit /b 0
+
+:up_failed
+type "%TEMP%\brag_up.log"
+echo.
+echo BRAG could not start ^(see the message above^). Your settings are saved.
+echo Make sure Docker Desktop is running, then double-click status.bat to see
+echo what is wrong, or run setup.bat again.
+pause
+exit /b 1

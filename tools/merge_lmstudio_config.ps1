@@ -17,7 +17,7 @@ $cfg = Join-Path $dir "mcp.json"
 
 $current = ""
 if (Test-Path $cfg) {
-    $current = Get-Content $cfg -Raw
+    $current = Get-Content $cfg -Raw -Encoding UTF8
     Copy-Item $cfg "$cfg.backup" -Force
 }
 
