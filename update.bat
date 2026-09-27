@@ -43,6 +43,7 @@ if errorlevel 1 goto build_failed
 echo   [ OK ]  App image rebuilt
 echo   [ .. ]  Restarting...
 docker compose up -d
+if errorlevel 1 goto up_failed
 echo.
 echo   [ OK ]  BRAG is up to date and running.
 echo.
@@ -64,6 +65,13 @@ exit /b 0
 :no_docker
 echo   [FAIL]  Docker is not running - open Docker Desktop, wait until it
 echo           says "running", then run this again.
+echo.
+pause
+exit /b 1
+
+:up_failed
+echo   [FAIL]  BRAG could not restart - see the messages above.
+echo           Make sure Docker Desktop is running, then run this again.
 echo.
 pause
 exit /b 1

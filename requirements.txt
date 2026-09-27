@@ -1,6 +1,6 @@
 # BRAG — Building Retrieval-Augmented Generation — pinned versions (proven combination)
 
-# docling is HELD BACK deliberately. Do not bump it without an e2e run.
+# docling: never bump it without a green e2e run (the H2 multipage check).
 # 2.118.0 swapped the default layout engine (layout_options now defaults to
 # LayoutObjectDetectionOptions), which routes through the transformers object
 # detector. Two consequences, both seen in CI:
@@ -12,7 +12,9 @@
 #     page-3 marker is gone from the corpus. Silent text loss, caught only by
 #     e2e (run 33273838065 vs 33275343462) — lint, unit and docker-build are
 #     all green on it.
-# Revisit when a docling release passes e2e with the multipage marker intact.
+# 2.124.0 passed e2e with the multipage marker intact (PR #97 run 33776542183,
+# main run 34314997599), so the hold on 2.108.0 was lifted. The rule stays:
+# the next bump needs the same green e2e before it is merged.
 docling==2.124.0
 qdrant-client==1.18.0
 google-genai==2.20.0

@@ -52,7 +52,7 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   deleted (gets a Windows folder icon + a do-not-delete note). Setup asks two things:
   where the engine goes, then the project folder. `VAULT_PATH` = the project root.
 
-## Status (update me as it changes — June 2026)
+## Status (update me as it changes — September 2026)
 - **0.4.0 shipped:** multi-project + the project-folder-as-corpus layout rework + the
   install rework — all merged to `main`.
 - **0.4.1 shipped:** per-connector uninstall now removes the connector (incl. the
@@ -74,8 +74,7 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   overview** in the status check; **PDF deep-link 404 hardened** (NFD/NFC + lost-
   subfolder tolerant, repairs existing indexes without re-ingest) + raw link line for
   LM Studio; search-modes docs + fuller disclaimer; setup first-run note.
-- **Unreleased (on `claude/image-analysis-adaptation-7hgwut`, PR #64): research
-  package** — features ported from the author's tuned local sister pipeline.
+- **0.6.0 (merged to `main`, PR #64): research package** — features ported from the author's tuned local sister pipeline.
   Query side: **figures as images in search** (compact local JPEGs stored at
   ingest → up to 3 hit figures attached as MCP images; `SEARCH_IMAGES_ENABLED`),
   plus bridge/thin-client wiring + tests for the **`coverage`/`clusters`/
@@ -86,9 +85,19 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   page numbers via PDF `/PageLabels`** (beats manual `page_offset`, links stay
   physical), **"Related sources" wikilinks** in the auto literature notes
   (`RELATED_SOURCES_TOP`), **plain-language `SYSTEM-STATUS.md`** rewritten by
-  the watcher (`STATUS_NOTE_INTERVAL_HOURS`). Details: CHANGELOG "Unreleased".
+  the watcher (`STATUS_NOTE_INTERVAL_HOURS`). Details: CHANGELOG "0.6.0".
+- **Unreleased on `main` (Sept 2026):** PR #104 (retrieval/display/safety work
+  from daily use; thin client now = same 27 tools as the default server; opt-in
+  remote OAuth, click-bridge, activity log, chapter passage layout), PR #105
+  (mcp 2.x remote fix), deps `mcp` 2.1.1 + `docling` 2.124.0 (e2e-verified),
+  plus a plug-and-play audit fix (update.bat CRLF, exec bit, visible start
+  failures, UTF-8 config merge, fastembed cache on the volume). See CHANGELOG.
 - **Current version: 0.6.0.** The repo + the GHCR `brag` package are kept **PRIVATE**
-  for now. No data migration — fresh installs only. **Windows install still
+  for now. **The v0.6.0 image was never published** — `release-image.yml` fails
+  with `denied: permission_denied: write_package` (0.5.1 too), so `:latest` is
+  still 0.5.0. Grant the workflow write access to the GHCR package, then re-run.
+  Until then, setup's `docker compose pull` hands a GHCR-logged-in machine the
+  stale 0.5.0 app; everyone else falls back to a local build. No data migration — fresh installs only. **Windows install still
   unverified live** (Gatekeeper/SmartScreen + the new `.bat` port preflight need a
   real Windows run).
 

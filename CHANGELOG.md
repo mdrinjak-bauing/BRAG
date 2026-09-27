@@ -7,6 +7,46 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- **Plug-and-play audit (September 2026).** A full check of scripts, code, docs
+  and CI turned up these breaks in the install path:
+  - `update.bat` was stored with LF line endings. Because `.gitattributes` ships
+    Windows scripts verbatim (`-text`), every download got the LF file, and
+    `cmd.exe` mis-executes goto-heavy batch files with LF. It is CRLF again.
+  - `Verbindung reparieren.command` lacked the executable bit, so a double-click
+    on macOS failed with a permissions error. It is `100755` now.
+  - `setup`, `update` and `Projekt hinzufuegen` (both platforms) ran
+    `docker compose up -d` with its output discarded or its exit code ignored,
+    so they reported success even when BRAG never started. A failed start now
+    shows Docker's message and a plain-language next step.
+  - `tools/merge_claude_config.ps1` and `merge_lmstudio_config.ps1` read the
+    config with Windows PowerShell 5.1's default ANSI decoding and wrote it back
+    as UTF-8, garbling umlauts in the user's other MCP entries. They read UTF-8
+    explicitly now.
+  - The BM25 model cache (`FASTEMBED_CACHE_PATH`) lived in the container's home
+    directory, outside the `models_cache` volume. Every update or recreate
+    re-downloaded it, and offline that silently degrades BM25 ranking. The image
+    now points it at `/models/fastembed`.
+  - `setup.bat` carried non-ASCII box-drawing characters in three REM lines;
+    they are plain ASCII now, as the batch convention requires.
+- **mcp 2.x: the remote server passes host/port to `run()`** (#105). In mcp 2.x
+  the constructor no longer accepts them, so the remote connector failed at
+  start with `TypeError: ... unexpected keyword argument 'host'`.
+
+### Changed
+- **Retrieval, display and safety work from a year of daily use** (#104):
+  AppleScript injection in `pdf_open` closed, `set_metadata` honours
+  `VAULT_WRITE_PROTECT`, renames no longer drop unknown payload fields, the
+  reranker degrades instead of failing, responses are budgeted
+  (`PREVIEW_CHARS` 1000 → 2000, `RESPONSE_BUDGET_CHARS`, `VAULT_READ_MAX_CHARS`),
+  and the thin client now registers the same 27 tools as the default server.
+  New opt-in features, all off by default: remote access over OAuth 2.1
+  (`BRAG_REMOTE_*`), a Skim click-bridge (`BRAG_OPEN_BRIDGE`), a JSONL activity
+  log (`BRAG_ACTIVITY_LOG`) and a chapter-based passage layout
+  (`BRAG_PASSAGES_LAYOUT`).
+- **Dependencies** (#96, #97): `mcp` 1.28.1 → 2.1.1 and `docling`
+  2.108.0 → 2.124.0. The docling bump passed e2e including the H2 multipage
+  check, so the hold on 2.108.0 is lifted; the entries below that describe the
+  1.28.1 and 2.108.0 pins record the state before these bumps.
 - **The docling pin now says why it is held, and the image no longer relies on
   luck.** `docling==2.108.0` sat in `requirements.txt` with no reason recorded
   anywhere, so every dependabot bump had to re-litigate it from scratch — and

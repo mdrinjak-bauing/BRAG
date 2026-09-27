@@ -216,7 +216,15 @@ echo
 
 echo "Applying your settings..."
 docker compose --profile setup rm -sf setup >/dev/null 2>&1
-docker compose up -d >/dev/null 2>&1
+if ! UP_OUT=$(docker compose up -d 2>&1); then
+  echo "$UP_OUT"
+  echo
+  echo "BRAG could not start (see the message above). Your settings are saved."
+  echo "Make sure Docker Desktop is running, then double-click status.command"
+  echo "to see what is wrong, or run setup.command again."
+  read -r -p "Press Enter to close..."
+  exit 1
+fi
 
 # Connect BRAG to Claude Desktop from the HOST. Claude rewrites its config while
 # running and would drop an entry added underneath it, so wait until it is fully

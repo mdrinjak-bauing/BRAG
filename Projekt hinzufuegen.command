@@ -48,7 +48,15 @@ if ! docker compose run --rm setup python -m brag.projects add "$PROJNAME" "$PRO
 fi
 
 echo "Applying..."
-docker compose up -d >/dev/null 2>&1
+if ! UP_OUT=$(docker compose up -d 2>&1); then
+  echo "$UP_OUT"
+  echo
+  echo "The project is registered, but BRAG could not restart (see the message"
+  echo "above). Make sure Docker Desktop is running, then double-click"
+  echo "status.command to see what is wrong."
+  read -r -p "Press Enter to close..."
+  exit 1
+fi
 
 # Connect to Claude (after it is fully quit, so it persists) + LM Studio.
 if command -v python3 >/dev/null 2>&1; then
