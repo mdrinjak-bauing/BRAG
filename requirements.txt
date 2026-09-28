@@ -17,7 +17,7 @@
 # the next bump needs the same green e2e before it is merged.
 docling==2.130.0
 qdrant-client==1.18.0
-google-genai==2.20.0
+google-genai==2.25.0
 fastembed==0.8.0
 sentence-transformers==6.0.0
 mcp==2.1.1
