@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.6.0** ([changes](#versions))
+**🇬🇧 English | 🇩🇪 [Deutsch](README.de.md)**  ·  **Version 0.6.1** ([changes](#versions))
 
 > **An AI assistant that actually knows your sources.** Drop your documents — PDFs, Word, PowerPoint, your own notes — into a folder. BRAG **reads them on your own machine, makes them searchable down to the page**, and hands the AI exactly the matching passages for every question — **cited, one click to the original**. Whether that AI runs locally or in the cloud is your call; at most your question and the matching passages are sent — never the whole corpus.
 
@@ -45,7 +45,7 @@ Three things set it apart:
 
 > *The name is a play on my field — civil engineering, where you* ***build*** *things — and on what the tool does: it builds up your knowledge and retrieves it when you need it.*
 
-*Note on scope (v0.6.0): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic, and your own conclusions are written as free-form notes by the built-in notebook tools; editing those notes in Obsidian's own interface is optional (see [docs](docs/OBSIDIAN.md)).*
+*Note on scope (v0.6.1): asking runs through Claude Desktop by default; setup also wires the search + notebook tools into **LM Studio** automatically if it is installed, for a fully local path. Other MCP-capable clients can connect too — Claude Code can build the bridge; see [Extension](#extension--automation-with-claude-code--co). ChatGPT is not yet preconfigured as a place to ask questions. Saving quotes back to the folder is automatic, and your own conclusions are written as free-form notes by the built-in notebook tools; editing those notes in Obsidian's own interface is optional (see [docs](docs/OBSIDIAN.md)).*
 
 ## Who is it for?
 
@@ -728,8 +728,14 @@ Short version — details and the full notice: **[docs/LEGAL.md](docs/LEGAL.md)*
 
 ## Versions
 
-Current version: **0.6.0** (August 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
+Current version: **0.6.1** (September 2026). Full list: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.6.1** — **Plug-and-play fixes and daily-use improvements**: the Windows
+  update script starts again, every setup/update step says so when BRAG fails
+  to start, umlauts in other Claude connectors survive setup on Windows, and
+  the keyword-search model stays cached across updates. Plus safety and
+  retrieval fixes from a year of daily use, all projects get the same tools,
+  and updated dependencies.
 - **0.6.0** — **Research tools and honest citations**: figure hits attach the
   actual figure image to the answer; `coverage`, `clusters` and
   `compare_positions` work in every project; a junk-figure filter drops logos,
@@ -779,7 +785,7 @@ Current version: **0.6.0** (August 2026). Full list: [CHANGELOG.md](CHANGELOG.md
 
 ## Status
 
-Early release (0.6.0). The **Gemini profile** is the tested happy path; the
+Early release (0.6.1). The **Gemini profile** is the tested happy path; the
 other profiles work but are less battle-tested. Roadmap: automatic file naming,
 corpus overview modes (coverage/clusters), optional knowledge-graph layer — and
 the integrations sketched above.

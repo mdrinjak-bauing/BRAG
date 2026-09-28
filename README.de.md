@@ -2,7 +2,7 @@
 
 # BRAG — Building Retrieval-Augmented Generation
 
-**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.6.0** ([Änderungen](#versionen))
+**🇬🇧 [English](README.md) | 🇩🇪 Deutsch**  ·  **Version 0.6.1** ([Änderungen](#versionen))
 
 > **Ein KI-Assistent, der deine eigenen Quellen wirklich kennt.** Leg deine Dokumente — PDFs, Word, PowerPoint, deine eigenen Notizen — in einen Ordner. BRAG **liest sie auf deinem Rechner ein, macht sie seitengenau durchsuchbar** und reicht der KI bei jeder Frage genau die passenden Stellen — **belegt, ein Klick führt aufs Original**. Ob die KI dabei lokal oder in der Cloud rechnet, entscheidest du; gesendet werden höchstens deine Frage und die passenden Stellen — nie der ganze Korpus.
 
@@ -46,7 +46,7 @@ Drei Dinge machen den Unterschied:
 
 > *Der Name ist ein Wortspiel — mit meinem Fach, dem Bauingenieurwesen, in dem man Dinge* ***baut***, *und mit dem, was das Werkzeug tut: Es baut dein Wissen auf und ruft es bei Bedarf wieder ab.*
 
-*Zum Funktionsumfang (v0.6.0): Das Fragen läuft standardmäßig über Claude Desktop; das Setup trägt die Such- und Notizbuch-Werkzeuge zusätzlich automatisch in **LM Studio** ein, falls installiert — für einen vollständig lokalen Pfad. Weitere MCP-fähige Clients lassen sich ebenfalls anbinden — Claude Code baut dir die Brücke; siehe [Ausbau](#ausbau--automatisierung-mit-claude-code--co). ChatGPT ist als Frage-Oberfläche noch nicht vorkonfiguriert. Zitate werden automatisch in den Ordner zurückgeschrieben; eigene Schlussfolgerungen als freie Notizen festzuhalten ist eine optionale Obsidian-Erweiterung (siehe [Doku](docs/OBSIDIAN.de.md)).*
+*Zum Funktionsumfang (v0.6.1): Das Fragen läuft standardmäßig über Claude Desktop; das Setup trägt die Such- und Notizbuch-Werkzeuge zusätzlich automatisch in **LM Studio** ein, falls installiert — für einen vollständig lokalen Pfad. Weitere MCP-fähige Clients lassen sich ebenfalls anbinden — Claude Code baut dir die Brücke; siehe [Ausbau](#ausbau--automatisierung-mit-claude-code--co). ChatGPT ist als Frage-Oberfläche noch nicht vorkonfiguriert. Zitate werden automatisch in den Ordner zurückgeschrieben; eigene Schlussfolgerungen als freie Notizen festzuhalten ist eine optionale Obsidian-Erweiterung (siehe [Doku](docs/OBSIDIAN.de.md)).*
 
 ## Für wen?
 
@@ -765,8 +765,15 @@ Kurzfassung — Details und der vollständige Hinweis: **[docs/LEGAL.de.md](docs
 
 ## Versionen
 
-Aktuelle Version: **0.6.0** (August 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
+Aktuelle Version: **0.6.1** (September 2026). Vollständige Liste: [CHANGELOG.md](CHANGELOG.md).
 
+- **0.6.1** — **Plug-and-play-Korrekturen und Verbesserungen aus dem Alltag**:
+  Das Windows-Update-Skript startet wieder, Setup und Update melden es, wenn
+  BRAG nicht startet, Umlaute in anderen Claude-Verbindungen überstehen das
+  Setup unter Windows, und das Modell für die Stichwortsuche bleibt über
+  Updates hinweg erhalten. Dazu Sicherheits- und Suchkorrekturen aus einem
+  Jahr täglicher Nutzung, dieselben Werkzeuge in allen Projekten und
+  aktualisierte Abhängigkeiten.
 - **0.6.0** — **Recherche-Werkzeuge und ehrliche Belege**: Abbildungstreffer
   liefern das Bild selbst mit; `coverage`, `clusters` und `compare_positions`
   gibt es in jedem Projekt; ein Müllbild-Filter wirft Logos, Symbole und Siegel
@@ -822,7 +829,7 @@ Aktuelle Version: **0.6.0** (August 2026). Vollständige Liste: [CHANGELOG.md](C
 
 ## Status
 
-Frühe Version (0.6.0). Das **Gemini-Profil** ist der getestete Hauptweg; die
+Frühe Version (0.6.1). Das **Gemini-Profil** ist der getestete Hauptweg; die
 übrigen Profile funktionieren, sind aber weniger erprobt. Roadmap: automatische
 Dateibenennung, Korpus-Überblicksmodi (Coverage/Cluster), optionale
 Wissensgraph-Ebene — und die oben skizzierten Anbindungen.
