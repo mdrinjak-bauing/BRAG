@@ -17,7 +17,7 @@
 # too (PR #109 run 36334606171). The rule stays: the next bump needs the same
 # green e2e before it is merged.
 docling==2.130.0
-qdrant-client==1.18.0
+qdrant-client==1.19.1
 google-genai==2.25.0
 fastembed==0.8.0
 sentence-transformers==6.1.0
