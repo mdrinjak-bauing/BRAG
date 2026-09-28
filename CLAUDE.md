@@ -86,18 +86,19 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short:
   physical), **"Related sources" wikilinks** in the auto literature notes
   (`RELATED_SOURCES_TOP`), **plain-language `SYSTEM-STATUS.md`** rewritten by
   the watcher (`STATUS_NOTE_INTERVAL_HOURS`). Details: CHANGELOG "0.6.0".
-- **Unreleased on `main` (Sept 2026):** PR #104 (retrieval/display/safety work
-  from daily use; thin client now = same 27 tools as the default server; opt-in
-  remote OAuth, click-bridge, activity log, chapter passage layout), PR #105
-  (mcp 2.x remote fix), deps `mcp` 2.1.1 + `docling` 2.124.0 (e2e-verified),
-  plus a plug-and-play audit fix (update.bat CRLF, exec bit, visible start
-  failures, UTF-8 config merge, fastembed cache on the volume). See CHANGELOG.
-- **Current version: 0.6.0.** The repo + the GHCR `brag` package are kept **PRIVATE**
-  for now. **The v0.6.0 image was never published** — `release-image.yml` fails
-  with `denied: permission_denied: write_package` (0.5.1 too), so `:latest` is
-  still 0.5.0. Grant the workflow write access to the GHCR package, then re-run.
-  Until then, setup's `docker compose pull` hands a GHCR-logged-in machine the
-  stale 0.5.0 app; everyone else falls back to a local build. No data migration — fresh installs only. **Windows install still
+- **0.6.1 (Sept 2026):** PR #104 (retrieval/display/safety work from daily use;
+  thin client now = same 27 tools as the default server; opt-in remote OAuth,
+  click-bridge, activity log, chapter passage layout), PR #105 (mcp 2.x remote
+  fix), PR #110 (plug-and-play audit: update.bat CRLF, exec bit, visible start
+  failures, UTF-8 config merge, fastembed cache on the volume), deps `mcp`
+  2.1.1, `docling` 2.130.0 (e2e-verified), `google-genai` 2.25.0,
+  `sentence-transformers` 6.1.0. `qdrant-client` stays 1.18.0 until the Qdrant
+  server (1.17.1) is bumped with it (dependabot #107).
+- **Current version: 0.6.1.** The repo + the GHCR `brag` package are kept **PRIVATE**
+  for now. Image publishing works again since 2026-09-27: the GHCR package's
+  "Manage Actions access" had to list the `BRAG` repo with **Write** (the
+  `write_package` denial that failed 0.5.1 and the first 0.6.0 run). A `v*` tag
+  push publishes `X.Y.Z`, `X.Y` and `latest`. No data migration — fresh installs only. **Windows install still
   unverified live** (Gatekeeper/SmartScreen + the new `.bat` port preflight need a
   real Windows run).
 

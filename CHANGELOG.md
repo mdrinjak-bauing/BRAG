@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-09-28 — plug-and-play fixes, daily-use improvements, dependency updates
+
 ### Fixed
 - **Plug-and-play audit (September 2026).** A full check of scripts, code, docs
   and CI turned up these breaks in the install path:
@@ -32,21 +34,6 @@ All notable changes to this project are documented here. The format follows
   the constructor no longer accepts them, so the remote connector failed at
   start with `TypeError: ... unexpected keyword argument 'host'`.
 
-### Changed
-- **Retrieval, display and safety work from a year of daily use** (#104):
-  AppleScript injection in `pdf_open` closed, `set_metadata` honours
-  `VAULT_WRITE_PROTECT`, renames no longer drop unknown payload fields, the
-  reranker degrades instead of failing, responses are budgeted
-  (`PREVIEW_CHARS` 1000 → 2000, `RESPONSE_BUDGET_CHARS`, `VAULT_READ_MAX_CHARS`),
-  and the thin client now registers the same 27 tools as the default server.
-  New opt-in features, all off by default: remote access over OAuth 2.1
-  (`BRAG_REMOTE_*`), a Skim click-bridge (`BRAG_OPEN_BRIDGE`), a JSONL activity
-  log (`BRAG_ACTIVITY_LOG`) and a chapter-based passage layout
-  (`BRAG_PASSAGES_LAYOUT`).
-- **Dependencies** (#96, #97): `mcp` 1.28.1 → 2.1.1 and `docling`
-  2.108.0 → 2.124.0. The docling bump passed e2e including the H2 multipage
-  check, so the hold on 2.108.0 is lifted; the entries below that describe the
-  1.28.1 and 2.108.0 pins record the state before these bumps.
 - **The docling pin now says why it is held, and the image no longer relies on
   luck.** `docling==2.108.0` sat in `requirements.txt` with no reason recorded
   anywhere, so every dependabot bump had to re-litigate it from scratch — and
@@ -112,6 +99,25 @@ All notable changes to this project are documented here. The format follows
   of HOW_IT_WORKS predated figure images. EN/DE structural parity verified after
   every change (headings and table rows match 1:1 across all five document
   pairs), and no link or anchor was broken.
+
+### Changed
+- **Retrieval, display and safety work from a year of daily use** (#104):
+  AppleScript injection in `pdf_open` closed, `set_metadata` honours
+  `VAULT_WRITE_PROTECT`, renames no longer drop unknown payload fields, the
+  reranker degrades instead of failing, responses are budgeted
+  (`PREVIEW_CHARS` 1000 → 2000, `RESPONSE_BUDGET_CHARS`, `VAULT_READ_MAX_CHARS`),
+  and the thin client now registers the same 27 tools as the default server.
+  New opt-in features, all off by default: remote access over OAuth 2.1
+  (`BRAG_REMOTE_*`), a Skim click-bridge (`BRAG_OPEN_BRIDGE`), a JSONL activity
+  log (`BRAG_ACTIVITY_LOG`) and a chapter-based passage layout
+  (`BRAG_PASSAGES_LAYOUT`).
+- **Dependencies** (#96, #97, #106, #108, #109): `mcp` 1.28.1 → 2.1.1,
+  `docling` 2.108.0 → 2.130.0, `google-genai` 2.20.0 → 2.25.0,
+  `sentence-transformers` 6.0.0 → 6.1.0. Each docling step passed e2e including
+  the H2 multipage check, so the hold on 2.108.0 is lifted; the entries under
+  Fixed that describe the 1.28.1 and 2.108.0 pins record the state before these
+  bumps. `qdrant-client` stays at 1.18.0 until the Qdrant server (1.17.1) is
+  raised with it.
 
 ### Added
 - **Setup now TESTS whether the local model can see images, instead of assuming
@@ -798,6 +804,7 @@ re-index).
 - Knowledge store (library vs. notebook) and the search MCP server for
   Claude Desktop.
 
+[0.6.1]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.6.1
 [0.6.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.6.0
 [0.5.1]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.5.1
 [0.5.0]: https://github.com/mdrinjak-bauing/BRAG/releases/tag/v0.5.0
