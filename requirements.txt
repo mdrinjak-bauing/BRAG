@@ -18,7 +18,7 @@
 # green e2e before it is merged.
 docling==2.130.0
 qdrant-client==1.18.0
-google-genai==2.25.0
+google-genai==2.28.0
 fastembed==0.8.0
 sentence-transformers==6.1.0
 mcp==2.1.1
